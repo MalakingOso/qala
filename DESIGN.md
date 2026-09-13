@@ -85,17 +85,17 @@ Already in the repo; copy to `apps/web/public/fonts/` at scaffold time and add t
 
 | File | Bytes | sha256 | Source |
 |---|---|---|---|
-| `assets/fonts/qala-test/QalaTestV2-Bold.woff2` | 29,596 | `c3cd18662bde7a0ab6d791b654793a6119a4290a3ac091d56f06f78f59f40eea` | The owner's face, made with Muse; renamed OFL fork of Faustina with the lowercase narrowed toward Alegreya and serif wedges unified on n, l, a. Build scripts in `qala-test/work/`. |
-| `assets/fonts/qala-test/QalaTestV2-Bold.ttf` | 75,376 | `8a3292eaa0abcbbc6c7eb789b1a70ea3ecdaa2d00c660f249fd57859010ec5a9` | same |
-| `assets/fonts/qala-test/QalaTest-Medium.woff2` | 29,932 | `3348e1e07d4df84488228fc447d9fe93de4b40a45fe94235917e07b01cf9bbf8` | v1 Medium |
-| `assets/fonts/qala-test/QalaTest-Bold.woff2` | 29,500 | `750b88bb25473f76189a9ab48a3baafde0b250a83341db4b6699db656c1fb5e5` | v1 Bold, superseded by V2 |
-| `assets/fonts/qala-test/OFL.txt` | 4,390 | `2d8f6a7be96a15fd2deaa8e6b5320cec6c253216b5a8f7e1becccfc51147b877` | Faustina's OFL 1.1, applies to the fork (Faustina has no Reserved Font Name) |
+| `assets/fonts/QalaTestV2-Bold.woff2` | 29,596 | `c3cd18662bde7a0ab6d791b654793a6119a4290a3ac091d56f06f78f59f40eea` | The owner's face, made with Muse; renamed OFL fork of Faustina with the lowercase narrowed toward Alegreya and serif wedges unified on n, l, a. Build scripts in `qala-test/work/`. |
+| `assets/fonts/QalaTestV2-Bold.ttf` | 75,376 | `8a3292eaa0abcbbc6c7eb789b1a70ea3ecdaa2d00c660f249fd57859010ec5a9` | same |
+| `assets/fonts/QalaTest-Medium.woff2` | 29,932 | `3348e1e07d4df84488228fc447d9fe93de4b40a45fe94235917e07b01cf9bbf8` | v1 Medium |
+| `assets/fonts/QalaTest-Bold.woff2` | 29,500 | `750b88bb25473f76189a9ab48a3baafde0b250a83341db4b6699db656c1fb5e5` | v1 Bold, superseded by V2 |
+| `assets/fonts/QalaTest-OFL.txt` | 4,390 | `2d8f6a7be96a15fd2deaa8e6b5320cec6c253216b5a8f7e1becccfc51147b877` | Faustina's OFL 1.1, applies to the fork (Faustina has no Reserved Font Name) |
 | `assets/fonts/DMMono-Regular.woff2`, `DMMono-Medium.woff2` | 14,820 / 14,988 | `e1896b13b2b1bb112fac2f9571bd6c40e118746e77a4511edbf43fbb41bf3e1e` / `9964608a849396bd00c4bfd7034afe03486469dcf20b4f6b8cbdfdd310369951` | copied from Beamer |
 | `assets/fonts/DMMono-OFL.txt` | 4,484 | `2bada5ea45c3c63b7f1ea1f88ce9672c9e4f0c42b2c3b7378949084fe55a3066` | google/fonts |
 | `assets/fonts/Faustina-qala.woff2`, `Faustina-Italic-qala.woff2` | 25,168 / 26,548 | `0ee13dc9b35cc8677a62ce1c3c545f7e43d6a075685b6aea119dd9d862bec1ac` / `7cf80a7f9a25b5a7751a518701cdde63ca2589b824dc6bad914ac72acd382c9a` | fallback; google/fonts variable wght 300-800, Latin subset with all layout features |
-| `assets/fonts/Faustina-OFL.txt` | 4,390 | `2d8f6a7be96a15fd2deaa8e6b5320cec6c253216b5a8f7e1becccfc51147b877` | google/fonts; byte-identical to `qala-test/OFL.txt` |
+| `assets/fonts/Faustina-OFL.txt` | 4,390 | `2d8f6a7be96a15fd2deaa8e6b5320cec6c253216b5a8f7e1becccfc51147b877` | google/fonts; byte-identical to `QalaTest-OFL.txt` |
 
-`assets/fonts/Recursive-qala.woff2` and `Recursive-OFL.txt` are no longer used; delete them at scaffold time.
+`assets/fonts/Recursive-qala.woff2` and `Recursive-OFL.txt` were removed 2026-09-13; the Qala Test files moved up from `assets/fonts/qala-test/` to `assets/fonts/` the same day, leaving only `qala-test/work/` (build scripts) and `README-test.md` behind.
 
 ### 3.3 CSS
 

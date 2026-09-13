@@ -59,7 +59,7 @@ qala/
   deno.json                 workspace; tasks: dev, build, test, serve, vendor, build:android (web build, cap sync, Gradle release, apksigner), tiles:extract (pmtiles extract + unpack to z/x/y), dem:fetch (GLO-30 tiles for the region)
   LICENSE (AGPL-3.0), NOTICE (liftosaur, fonts, Lucide, visx, uPlot attributions), README.md
   PLAN.md, DECISIONS.md, DESIGN.md, RESEARCH-*.md    this plan, the owner's decision log, the design system and screens, the evidence
-  assets/fonts/             qala-test/ (owner's title face), DM Mono, Faustina fallback
+  assets/fonts/             QalaTest-*, DMMono-*, Faustina-* faces; qala-test/work/ (font build scripts)
   mockups/                  build.mjs and the generated review canvas; not app code
   packages/
     liftoscript/            vendored from liftosaur, same file names; runtime.ts is ours
@@ -414,7 +414,7 @@ Panels: program list; CodeMirror 6 editor with Lezer highlighting for both gramm
 
 Graphs (library split and chart rules in `DESIGN.md` section 6; visx for most, uPlot where marked): e1RM per main lift with daily best dots, the Kalman line and tested-1RM diamonds (uPlot, zoomable over the full history); weekly NL85/T85 per main lift against the block table; weekly `directSets_m`/`fracSets_m` per muscle against the band and RP caps; rep and load PRs per exercise; fitness and fatigue curves for lifting and running (uPlot); VDOT trend; readiness with the average and low line; combined sRPE-load with the lift/run split; weekly distance with long-run and growth flags; run detail pace, heart rate and elevation (uPlot); calibration residuals (uPlot). Every chart has a table view.
 
-Theme, type, icons and components are specified once in `DESIGN.md` (tokens section 2, type section 3, icons section 4, components section 5, charts section 6) and implemented in `apps/web/src/theme/tokens.css`, `apps/web/src/theme/fonts.css` and `apps/web/src/shared/charts/`, shared by both shells. Font files are already in the repo: `assets/fonts/qala-test/` (the owner's Qala Test face, with Muse's build scripts in `work/`), `assets/fonts/DMMono-*.woff2`, and `assets/fonts/Faustina-*-qala.woff2` as the fallback; checksums in `DESIGN.md` 3.2. `assets/fonts/Recursive-*` is no longer used; delete it at scaffold time. Add the OFL texts (Qala Test, Faustina, DM Mono) and the Lucide, visx and uPlot licenses to NOTICE.
+Theme, type, icons and components are specified once in `DESIGN.md` (tokens section 2, type section 3, icons section 4, components section 5, charts section 6) and implemented in `apps/web/src/theme/tokens.css`, `apps/web/src/theme/fonts.css` and `apps/web/src/shared/charts/`, shared by both shells. Font files are already in the repo: `assets/fonts/QalaTest-*.woff2` (the owner's Qala Test face; build scripts in `qala-test/work/`), `assets/fonts/DMMono-*.woff2`, and `assets/fonts/Faustina-*-qala.woff2` as the fallback; checksums in `DESIGN.md` 3.2. `assets/fonts/Recursive-*` was removed 2026-09-13. Add the OFL texts (Qala Test, Faustina, DM Mono) and the Lucide, visx and uPlot licenses to NOTICE.
 
 ## 10. Milestone M6: wire check-in, engine, and the default adaptive program
 
