@@ -14,7 +14,6 @@ export function LandingPage() {
     <div className="landing-page">
       <header className="landing-header">
         <a className="brand" href="#/" aria-label="Qala home">
-          <span className="brand-mark title" aria-hidden="true">q</span>
           <span className="brand-name title">Qala</span>
         </a>
         <a className="toolbar-link" href="#/desktop/overview">

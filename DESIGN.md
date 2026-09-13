@@ -2,19 +2,16 @@
 
 The single reference for how Qala looks and behaves on screen. The owner's choices behind it are in `DECISIONS.md` (codes like L4 or U3 below point there). Engine rules the screens display are in `PLAN.md` section 6. The review canvas that shows all of this is `mockups/qala-app-mockups.html` (section 8 below).
 
-Visual refinement, 2026-09-13: the owner asked for a smoother, professional app
-and explicitly allowed changing the original styling and chart implementation.
-The alternatives, implementation notes, and browser checks are recorded in
-`docs/visual-refinement.md`. The app now uses lighter borders, soft shadows,
-responsive charts, and a full-height desktop workspace. The review canvas
-predates this refinement.
+Visual refinement, 2026-09-13: a smoothing pass (`docs/visual-refinement.md`)
+gave the app responsive charts, consistent controls, a full-height desktop
+workspace and a recomposed Today and Plan. Those stay. Its surface treatment
+(1px borders, blurred shadows, 6/10/12px radii, a logo tile) made Qala read as
+a generic app rather than a Beamer sibling, and the owner had it reverted the
+same day (L8). The review canvas predates both passes.
 
 ## 1. Principles
 
-1. **Quiet, structured surfaces.** Off-white ground, white surfaces, 1px borders,
-   and restrained soft shadows. Qala keeps its serif and mono identity while
-   giving each screen a clear reading order. This refines the earlier Beamer
-   treatment (L1).
+1. **Beamer first.** Qala should look like a sibling of the owner's Beamer app: off-white ground, white surfaces, 2px borders, hard offset shadows with zero blur, 4/6/8px radii, no pills, no logo tile (the Qala Test wordmark is the brand). Cards are flat at rest and lift on hover or press. Each screen still gets one clear reading order (L1, L8).
 2. **Light and breezy.** Generous space, one strong element per card, nothing dense or dark by default.
 3. **One action color.** Ember marks the one thing to do on a screen: the primary button, the current stage, today's column. Everything else is ink and gray. (L3)
 4. **Numbers are the hero.** Big figures in the owner's Qala Test face; everything readable at a glance mid-set with sweaty hands.
@@ -33,7 +30,7 @@ Implemented in `apps/web/src/theme/tokens.css`, shared by both shells. Beamer's 
   /* ink */
   --fg:#0f152a; /* 16.61 */ --fg-secondary:#4a5578; /* 6.74 */ --fg-muted:#64708b; /* 4.56 */ --fg-faint:#94a0b8; /* 2.42, decorative only */
   /* lines */
-  --border:rgba(15,21,42,.10); --border-strong:rgba(15,21,42,.22); --border-width:1px; --grid:#e3e6ee;
+  --border:rgba(15,21,42,.10); --border-strong:rgba(15,21,42,.22); --border-width:2px; --grid:#e3e6ee;
   /* action */
   --accent:#c2410c; /* 4.76 as text */ --accent-hover:#9a3412; --accent-subtle:rgba(194,65,12,.08); --on-accent:#fff; /* 5.18 */
   /* running, progress, status */
@@ -48,10 +45,10 @@ Implemented in `apps/web/src/theme/tokens.css`, shared by both shells. Beamer's 
   /* bar drawing */
   --bar:#9aa1ad; --bar-collar:#6b7280;
   /* shape and motion */
-  --radius:6px; --radius-md:10px; --radius-lg:12px;
-  --shadow-card:0 4px 20px rgba(15,21,42,.05);
-  --shadow-cta:0 2px 4px rgba(15,21,42,.12);
-  --shadow-modal:0 12px 40px rgba(15,21,42,.14);
+  --radius:4px; --radius-md:6px; --radius-lg:8px;          /* no pill radius anywhere */
+  --shadow-card:2px 4px 0 0 rgba(15,21,42,.10);            /* hover and press; cards are flat at rest, except the Today hero */
+  --shadow-cta:2px 4px 0 0 #4a4a4a, 0 0 0 1px #c2410c;     /* :active drops it and translates 1px 2px */
+  --shadow-modal:4px 8px 0 0 rgba(15,21,42,.12), 0 0 0 2px var(--border);
   --duration-fast:150ms; --duration:200ms; --ease:cubic-bezier(0.25, 1, 0.5, 1);
 }
 [data-theme=dark] {
@@ -65,8 +62,8 @@ Implemented in `apps/web/src/theme/tokens.css`, shared by both shells. Beamer's 
   --int-1:#184f95; --int-2:#256abf; --int-3:#3987e5; --int-4:#6da7ec; --int-5:#9ec5f4;
   --mark-gray:#39425f; --low-zone:rgba(248,113,113,.40);
   --bar:#6b7384; --bar-collar:#9aa1ad;
-  --shadow-card:0 4px 20px rgba(0,0,0,.12); --shadow-cta:0 2px 4px rgba(0,0,0,.2);
-  --shadow-modal:0 12px 40px rgba(0,0,0,.3);
+  --shadow-card:2px 4px 0 0 #2a3350; --shadow-cta:2px 4px 0 0 #3a4466, 0 0 0 1px #fb923c;   /* black shadows vanish on the dark ground */
+  --shadow-modal:4px 8px 0 0 #2a3350, 0 0 0 2px var(--border);
 }
 ```
 
@@ -147,12 +144,12 @@ Lucide via `lucide-react` (ISC; add to NOTICE). Stroke 2 at 24px, `currentColor`
 
 Anatomy copies Beamer; phone controls scale up to a 44px minimum touch target.
 
-1. **Card:** `--bg-surface`, 1px `--border`, `--radius-md`, 20px phone / 24px desktop padding. Static cards stay flat on hover; the Today hero has `--shadow-card`.
-2. **Group:** one bordered container with a `--bg-recessed` header band holding the group label, optional right-side action, and 1px dividers inside.
-3. **Buttons:** primary is ember fill, `--on-accent` text, `--radius`, `--shadow-cta`, 52px tall on phone; the large primary on Today is 64px with a 22px icon. Secondary is a 1px bordered surface button. Utility actions use neutral ink.
+1. **Card:** `--bg-surface`, 2px `--border`, `--radius-md`, 20px phone / 24px desktop padding, flat at rest, `--shadow-card` on hover or press; the Today hero carries it at rest.
+2. **Group:** one bordered container with a `--bg-recessed` header band holding the group label, optional right-side action, a 2px line under the band and 1px dividers between rows (Beamer's settings groups).
+3. **Buttons:** primary is ember fill, `--on-accent` text, `--radius`, `--shadow-cta`, 52px tall on phone; the large primary on Today is 64px with a 22px icon. Secondary is a 2px bordered surface button. Utility actions use neutral ink. Inputs are 2px bordered, `--border-strong` on hover, ember on focus.
 4. **Chips and segmented controls:** 4px radius chips on `--bg-active`; segmented controls are one bordered strip with the selected cell on `--bg-active`.
 5. **Toggles:** square-cornered, ember when on.
-6. **Tab bar:** 72px plus the device safe area, 1px top border, a 3px ember bar above the active tab's icon. Capped to the phone shell width.
+6. **Tab bar:** 72px plus the device safe area, 2px top border, a 3px ember bar above the active tab's icon. Capped to the phone shell width.
 7. **Exercise note card:** `--note` fill, `--note-border`, sticky-note icon, date label, Got it / Pin / Resolved.
 8. **Plate drawing and plate chips.** The drawing shows one side of the bar: sleeve to the left, collar and bar label to the right, plates heaviest innermost, each plate labeled with its weight (rotated on tall plates, below on small ones). Plate heights step down with weight. Chips are small filled rectangles in plate color with the weight printed, used as shorthand ("45 · 45 · 10"). Colors, text color on each, and editability are in PLAN 6.8; defaults: 55 red `#d64541`, 45 blue `#2f6bd1`, 35 yellow `#e9b824` (ink text), 25 green `#2f9c5a`, 10 white `#eef0f4` with a hairline (ink text), 5 charcoal `#3b404c`, 2.5 silver `#b9bfca` (ink text).
 9. **Readiness ring** (section 6.4).
@@ -198,7 +195,7 @@ Code lives in `apps/web/src/shared/charts/`. The plate drawing and the readiness
 
 | Chart | Where | Form | Library |
 |---|---|---|---|
-| This week's load | Today hero, Body | stacked columns per day, lifting under running, done filled, planned outlined, today highlighted and named | visx |
+| This week | Today hero, desktop Overview, landing | seven-day strip: one bar per day, height the day's load, fill the part done; done teal, today ember on an `--accent-subtle` band, later outlined, rest a dash; a lift/run/both/rest glyph and the day letter under each; a caption naming the tapped, hovered or focused day (today by default) and a week total line (U13) | HTML/CSS, no plotting library |
 | Readiness ring | Today hero | ring meter out of 100 with average and low markers (6.4) | visx `Arc` |
 | Readiness, last 7 days | Body | line with markers, average and low as hairlines | visx |
 | Where the time went | Session complete | one stacked horizontal bar, categorical | visx |
@@ -243,7 +240,7 @@ Layout: a branded utility header, date and block week above the page title, a
 
 The current phone lift/warm-up card refines the original before-lift composition:
 day title, top-set figure, readiness score and reason, duration, primary action,
-then the next run. The ring and weekly-load plot live in a full-width expandable
+then the next run. The ring and the week strip live in a full-width expandable
 "Readiness & weekly load" section beneath the action. This avoids squeezing two
 chart columns beside the rail.
 

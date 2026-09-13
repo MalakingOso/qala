@@ -1,337 +1,241 @@
-/* This week's load: stacked columns per day, lifting under running, done
- * filled, planned outlined, today highlighted and named (DESIGN 6.3).
+/* This week: a seven-day strip (DESIGN 6.3, DECISIONS U13). One bar per
+ * day, its height the day's load and its fill how much of that load is done,
+ * in the timeline rail's own vocabulary: done days teal and filled, today
+ * ember (outlined, filling as the day goes), later days outlined, rest days a
+ * dash. A glyph under each bar says lift, run, both or rest. Tap, hover or
+ * focus a day and the caption names it with its numbers; the caption shows
+ * today otherwise. Plain HTML so the seven columns wrap to any card width.
  *
- * Sized with Plot so bars, gridlines and axis text are drawn in real
- * pixels for whatever width the card gives it, instead of a fixed 560-unit
- * viewBox getting crushed down to a handful of px inside a mobile card. */
+ * It replaces the stacked columns that put planned load on top of done load
+ * (a finished 420 day drew as 840, half filled) and split lift/run inside
+ * every column, which the owner found impossible to follow. */
 
-import { useMemo } from "react";
-import type { MouseEvent, TouchEvent } from "react";
-import { scaleBand, scaleLinear } from "@visx/scale";
-import { AxisBottom } from "@visx/axis";
-import { localPoint } from "@visx/event";
-import { TooltipWithBounds, useTooltip } from "@visx/tooltip";
+import { useState } from "react";
+import { weekTotals } from "../../logic/weeklyLoad.ts";
 import type { WeekLoadDay } from "../../store/types.ts";
+import { Bed, Dumbbell, SportShoe } from "../icons.ts";
 import { ChartShell } from "./ChartShell.tsx";
-import { ChartLegend, Plot } from "./Plot.tsx";
-import { CATEGORICAL } from "./tokens.ts";
+import { ChartLegend } from "./Plot.tsx";
 
-const H = 200;
-const PAD = { top: 30, right: 4, bottom: 32, left: 4 };
-const MAX_BAR_W = 24;
-const GAP = 2; // surface gap between touching segments (DESIGN 6.2)
+const DAY_NAMES = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday",
+];
 
-/** A rect with only its top corners rounded (DESIGN 6.2's "4px rounded data
- * end and a square baseline"). */
-function roundedTopPath(x: number, y: number, w: number, h: number, r: number) {
-  if (h <= 0 || w <= 0) return "";
-  const rr = Math.min(r, w / 2, h);
-  return `M${x},${y + h} V${y + rr} Q${x},${y} ${x + rr},${y} H${x + w - rr} Q${
-    x + w
-  },${y} ${x + w},${y + rr} V${y + h} Z`;
-}
+type DayKind = "lift" | "run" | "both" | "rest";
+type DayState = "done" | "today" | "later" | "rest";
 
-interface TipDatum {
-  day: string;
+interface DayView {
+  index: number;
+  name: string;
+  letter: string;
+  kind: DayKind;
+  state: DayState;
   done: number;
   planned: number;
+  size: number;
+  session: string;
+  today: boolean;
+  liftDone: number;
+  runDone: number;
+  liftPlanned: number;
+  runPlanned: number;
 }
 
-function ChartInner({
-  width,
-  days,
-}: {
-  width: number;
-  days: WeekLoadDay[];
-}) {
-  const {
-    tooltipData,
-    tooltipLeft,
-    tooltipTop,
-    tooltipOpen,
-    showTooltip,
-    hideTooltip,
-  } = useTooltip<TipDatum>();
+function n(v: number) {
+  return v.toLocaleString("en-US");
+}
 
-  const { x, y } = useMemo(() => {
-    const max = Math.max(
-      1,
-      ...days.map((d) => d.liftDone + d.runDone + d.liftPlanned + d.runPlanned),
-    );
+function describe(days: WeekLoadDay[]): DayView[] {
+  return days.map((d, i) => {
+    const done = d.liftDone + d.runDone;
+    const planned = d.liftPlanned + d.runPlanned;
+    const lifts = d.liftPlanned + d.liftDone > 0;
+    const runs = d.runPlanned + d.runDone > 0;
+    const kind: DayKind = lifts && runs
+      ? "both"
+      : lifts
+      ? "lift"
+      : runs
+      ? "run"
+      : "rest";
+    const size = Math.max(done, planned);
+    const state: DayState = kind === "rest"
+      ? "rest"
+      : d.today
+      ? "today"
+      : done > 0 && done >= planned
+      ? "done"
+      : "later";
+    const session = d.label ??
+      (kind === "both"
+        ? "Lift + run"
+        : kind === "lift"
+        ? "Lift"
+        : kind === "run"
+        ? "Run"
+        : "Rest");
     return {
-      x: scaleBand<string>({
-        domain: days.map((_, i) => String(i)),
-        range: [PAD.left, width - PAD.right],
-        padding: 0.3,
-      }),
-      y: scaleLinear<number>({
-        domain: [0, max],
-        range: [H - PAD.bottom, PAD.top],
-        nice: true,
-      }),
+      index: i,
+      name: days.length === 7 ? DAY_NAMES[i] : d.day,
+      letter: d.day,
+      kind,
+      state,
+      done,
+      planned,
+      size,
+      session,
+      today: d.today === true,
+      liftDone: d.liftDone,
+      runDone: d.runDone,
+      liftPlanned: d.liftPlanned,
+      runPlanned: d.runPlanned,
     };
-  }, [days, width]);
+  });
+}
 
-  const gridTicks = y.ticks(3);
+function Glyph({ kind }: { kind: DayKind }) {
+  if (kind === "both") {
+    return (
+      <>
+        <Dumbbell size={13} />
+        <SportShoe size={13} />
+      </>
+    );
+  }
+  if (kind === "lift") return <Dumbbell size={14} />;
+  if (kind === "run") return <SportShoe size={14} />;
+  return <Bed size={14} />;
+}
 
-  return (
-    <div style={{ position: "relative" }}>
-      <svg width={width} height={H} role="presentation">
-        {gridTicks.map((t) => (
-          <line
-            key={t}
-            x1={PAD.left}
-            x2={width - PAD.right}
-            y1={y(t)}
-            y2={y(t)}
-            stroke="var(--grid)"
-            strokeWidth={1}
-          />
-        ))}
-        {days.map((d, i) => {
-          const bandX = x(String(i)) ?? 0;
-          const bandW = x.bandwidth();
-          const bw = Math.min(MAX_BAR_W, bandW);
-          const bx = bandX + (bandW - bw) / 2;
+/** "420 done", "750 planned (lift 510, run 240)" or "300 of 750 done". */
+function captionNums(v: DayView) {
+  if (v.done === 0) {
+    const split = v.kind === "both"
+      ? ` (lift ${n(v.liftPlanned)}, run ${n(v.runPlanned)})`
+      : "";
+    return `${n(v.planned)} planned${split}`;
+  }
+  if (v.done >= v.planned) {
+    const split = v.kind === "both"
+      ? ` (lift ${n(v.liftDone)}, run ${n(v.runDone)})`
+      : "";
+    return `${n(v.done)} done${split}`;
+  }
+  return `${n(v.done)} of ${n(v.planned)} done`;
+}
 
-          const doneTotal = d.liftDone + d.runDone;
-          const grandTotal = doneTotal + d.liftPlanned + d.runPlanned;
-          const hasRunDone = d.runDone > 0;
-          const hasRunPlanned = d.runPlanned > 0;
-
-          // done stack: lifting under running, 2px gap between them
-          const liftDoneTop = y(d.liftDone);
-          const runDoneTop = y(d.liftDone + d.runDone);
-          const liftDoneBottom = hasRunDone ? liftDoneTop + GAP : y(0);
-          // planned stack continues above the done total, 2px gap between its own segments
-          const liftPlannedTop = y(doneTotal + d.liftPlanned);
-          const plannedTotalTop = y(grandTotal);
-          const liftPlannedBottom = hasRunPlanned
-            ? liftPlannedTop + GAP
-            : y(doneTotal);
-
-          // topmost non-zero segment gets the rounded data end
-          const topKey = d.runPlanned > 0
-            ? "runPlanned"
-            : d.liftPlanned > 0
-            ? "liftPlanned"
-            : d.runDone > 0
-            ? "runDone"
-            : "liftDone";
-
-          const tip: TipDatum = {
-            day: d.today && d.label ? `${d.day} (${d.label})` : d.day,
-            done: doneTotal,
-            planned: d.liftPlanned + d.runPlanned,
-          };
-          const onPoint = (
-            e: TouchEvent<SVGRectElement> | MouseEvent<SVGRectElement>,
-          ) => {
-            const p = localPoint(e);
-            showTooltip({
-              tooltipData: tip,
-              tooltipLeft: p?.x,
-              tooltipTop: p?.y,
-            });
-          };
-          const onFocusPoint = () => {
-            showTooltip({
-              tooltipData: tip,
-              tooltipLeft: bandX + bandW / 2,
-              tooltipTop: PAD.top,
-            });
-          };
-
-          return (
-            <g key={i}>
-              {d.today
-                ? (
-                  <rect
-                    x={bandX - 4}
-                    y={y(grandTotal) - 6}
-                    width={bandW + 8}
-                    height={y(0) - y(grandTotal) + 6}
-                    fill="var(--accent-subtle)"
-                    stroke="var(--accent)"
-                    strokeWidth={2}
-                  />
-                )
-                : null}
-              {/* done: filled, lifting under running */}
-              <path
-                d={roundedTopPath(
-                  bx,
-                  liftDoneTop,
-                  bw,
-                  y(0) - liftDoneTop,
-                  topKey === "liftDone" ? 4 : 0,
-                )}
-                fill={CATEGORICAL[0]}
-              />
-              {hasRunDone
-                ? (
-                  <path
-                    d={roundedTopPath(
-                      bx,
-                      runDoneTop,
-                      bw,
-                      liftDoneBottom - runDoneTop,
-                      topKey === "runDone" ? 4 : 0,
-                    )}
-                    fill={CATEGORICAL[1]}
-                  />
-                )
-                : null}
-              {/* planned: 2px outline in the same series color, stacked above done */}
-              {d.liftPlanned > 0
-                ? (
-                  <path
-                    d={roundedTopPath(
-                      bx + 1,
-                      liftPlannedTop + 1,
-                      bw - 2,
-                      y(doneTotal) - liftPlannedTop - 2,
-                      topKey === "liftPlanned" ? 4 : 0,
-                    )}
-                    fill="none"
-                    stroke={CATEGORICAL[0]}
-                    strokeWidth={2}
-                  />
-                )
-                : null}
-              {hasRunPlanned
-                ? (
-                  <path
-                    d={roundedTopPath(
-                      bx + 1,
-                      plannedTotalTop + 1,
-                      bw - 2,
-                      liftPlannedBottom - plannedTotalTop - 2,
-                      topKey === "runPlanned" ? 4 : 0,
-                    )}
-                    fill="none"
-                    stroke={CATEGORICAL[1]}
-                    strokeWidth={2}
-                  />
-                )
-                : null}
-              {d.today
-                ? (() => {
-                  // Anchor the label so it never overflows the chart's
-                  // left/right edge for a first- or last-day "today".
-                  const anchor = i === 0
-                    ? "start"
-                    : i === days.length - 1
-                    ? "end"
-                    : "middle";
-                  const tx = anchor === "start"
-                    ? bandX
-                    : anchor === "end"
-                    ? bandX + bandW
-                    : bandX + bandW / 2;
-                  return (
-                    <text
-                      x={tx}
-                      y={14}
-                      fontSize={10}
-                      textAnchor={anchor}
-                      fill="var(--accent)"
-                    >
-                      today
-                    </text>
-                  );
-                })()
-                : null}
-              {/* tap/hover hit area, full band width x plotting height */}
-              <rect
-                x={bandX}
-                y={PAD.top}
-                width={bandW}
-                height={H - PAD.top - PAD.bottom}
-                fill="transparent"
-                tabIndex={0}
-                role="img"
-                aria-label={`${tip.day}: done ${tip.done}, planned ${tip.planned}`}
-                onMouseMove={onPoint}
-                onMouseLeave={hideTooltip}
-                onTouchStart={onPoint}
-                onTouchEnd={hideTooltip}
-                onFocus={onFocusPoint}
-                onBlur={hideTooltip}
-              >
-                <title>
-                  {`${tip.day}: done ${tip.done}, planned ${tip.planned}`}
-                </title>
-              </rect>
-            </g>
-          );
-        })}
-        <AxisBottom
-          top={H - PAD.bottom}
-          scale={x}
-          tickFormat={(i) => days[Number(i)]?.day ?? ""}
-          tickLabelProps={{
-            fontSize: 11,
-            fill: "var(--fg-muted)",
-            textAnchor: "middle",
-          }}
-          hideAxisLine
-          hideTicks
-        />
-      </svg>
-      {tooltipOpen && tooltipData
-        ? (
-          <TooltipWithBounds
-            left={tooltipLeft}
-            top={tooltipTop}
-            style={{
-              background: "var(--bg-surface)",
-              color: "var(--fg)",
-              border: "1px solid var(--border-strong)",
-              borderRadius: 6,
-              padding: "8px 12px",
-              fontSize: 11,
-              boxShadow: "var(--shadow-card)",
-              maxWidth: 200,
-              pointerEvents: "none",
-            }}
-          >
-            <strong>{tooltipData.day}</strong>: done {tooltipData.done}, planned
-            {" "}
-            {tooltipData.planned}
-          </TooltipWithBounds>
-        )
-        : null}
-    </div>
-  );
+function dayLabel(v: DayView) {
+  const when = v.today ? ", today" : "";
+  if (v.state === "rest") return `${v.name}${when}: rest`;
+  return `${v.name}${when}, ${v.session}: ${n(v.done)} done of ${
+    n(v.planned)
+  } planned`;
 }
 
 export function WeeklyLoad(
   { days, flat }: { days: WeekLoadDay[]; flat?: boolean },
 ) {
-  const rows = days.map((d) => [
-    d.today && d.label ? `${d.day} (${d.label})` : d.day,
-    String(d.liftDone + d.runDone),
-    String(d.liftPlanned + d.runPlanned),
+  const views = describe(days);
+  const todayIndex = views.findIndex((v) => v.today);
+  const [pinned, setPinned] = useState<number | null>(null);
+  const [hover, setHover] = useState<number | null>(null);
+  const shownIndex = hover ?? pinned ?? (todayIndex >= 0 ? todayIndex : 0);
+  const shown = views[shownIndex];
+  const max = Math.max(1, ...views.map((v) => v.size));
+  const totals = weekTotals(days);
+
+  const rows = views.map((v) => [
+    v.today ? `${v.name} (today)` : v.name,
+    v.session,
+    n(v.done),
+    n(v.planned),
+    v.kind === "both"
+      ? `lift ${n(v.liftDone)} · run ${n(v.runDone)}`
+      : v.kind === "rest"
+      ? "—"
+      : v.kind,
   ]);
-  const label = `Weekly load. Today ${days.find((d) => d.today)?.label ?? ""}.`;
+  const label = `This week's load by day. ${
+    todayIndex >= 0 ? `Today is ${views[todayIndex].name}. ` : ""
+  }${n(totals.done)} done of ${n(totals.planned)} planned.`;
 
   return (
     <ChartShell
-      title="This week's load"
-      head={["Day", "Done", "Planned"]}
+      title="This week"
+      head={["Day", "Session", "Done", "Planned", "Split"]}
       rows={rows}
       label={label}
       flat={flat}
     >
-      <Plot height={H}>
-        {(width) => <ChartInner width={width} days={days} />}
-      </Plot>
+      <div
+        className="week-strip"
+        onMouseLeave={() => setHover(null)}
+      >
+        {views.map((v) => {
+          const barH = v.size > 0 ? Math.max(8, (v.size / max) * 100) : 0;
+          const fillH = v.size > 0 ? (v.done / v.size) * 100 : 0;
+          return (
+            <button
+              key={v.index}
+              type="button"
+              className={`week-day ${v.state}`}
+              aria-label={dayLabel(v)}
+              aria-pressed={pinned === v.index}
+              onClick={() => setPinned((p) => (p === v.index ? null : v.index))}
+              onMouseEnter={() => setHover(v.index)}
+              onFocus={() => setHover(v.index)}
+              onBlur={() => setHover(null)}
+            >
+              <span className="week-track" aria-hidden="true">
+                {v.state === "rest"
+                  ? <span className="week-rest" />
+                  : (
+                    <span className="week-bar" style={{ height: `${barH}%` }}>
+                      <span
+                        className="week-fill"
+                        style={{ height: `${fillH}%` }}
+                      />
+                    </span>
+                  )}
+              </span>
+              <span className="week-glyph" aria-hidden="true">
+                <Glyph kind={v.kind} />
+              </span>
+              <span className="week-letter" aria-hidden="true">
+                {v.letter}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+      <p className="week-caption" aria-live="polite">
+        <strong className={shown.today ? "week-caption-today" : undefined}>
+          {shown.today ? "Today" : shown.name}
+          {" · "}
+          {shown.session}
+        </strong>
+        {shown.state === "rest" ? null : (
+          <span className="week-caption-nums">
+            {" · "}
+            {captionNums(shown)}
+          </span>
+        )}
+      </p>
+      <p className="week-total kbd-hint">
+        Week: {n(totals.done)} done of {n(totals.planned)} planned
+      </p>
       <ChartLegend
-        items={[{ label: "Lifting", color: CATEGORICAL[0] }, {
-          label: "Running",
-          color: CATEGORICAL[1],
-        }, { label: "Planned", color: "var(--fg-muted)", outline: true }]}
+        items={[
+          { label: "Done", color: "var(--progress-fill)" },
+          { label: "Today", color: "var(--accent)", outline: true },
+          { label: "Later", color: "var(--fg-faint)", outline: true },
+        ]}
       />
     </ChartShell>
   );

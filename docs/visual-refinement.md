@@ -4,6 +4,13 @@ Working review, 2026-09-13. This records the visual directions considered,
 implementation decisions, and remaining recommendations. `DESIGN.md` remains
 the reference for the product's interaction and chart rules.
 
+Follow-up, later the same day: the owner kept this pass's chart, control and
+layout work but judged the surface treatment (1px borders, blurred shadows,
+6/10/12px radii, the logo tile) a drift away from Beamer, and had it reverted
+(`DECISIONS.md` L8). The stacked weekly-load columns were replaced by a
+seven-day strip (U13). Where this document and `DESIGN.md` disagree on
+borders, shadows, radii or the week chart, `DESIGN.md` wins.
+
 ## Direction
 
 Three approaches fit Qala:

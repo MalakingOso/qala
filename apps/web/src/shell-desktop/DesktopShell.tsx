@@ -153,7 +153,6 @@ export function DesktopShell({ route }: { route: string }) {
             href="#/desktop/overview"
             aria-label="Qala overview"
           >
-            <span className="brand-mark title" aria-hidden="true">q</span>
             <span className="brand-name title">Qala</span>
           </a>
           <NavGroup label="Training" items={STATS_NAV} part={part} />

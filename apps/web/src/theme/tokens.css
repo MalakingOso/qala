@@ -13,7 +13,7 @@
   /* lines */
   --border: rgba(15,21,42,.10);
   --border-strong: rgba(15,21,42,.22);
-  --border-width: 1px;
+  --border-width: 2px;
   --grid: #e3e6ee;
   /* action */
   --accent: #c2410c; /* 4.76 as text */
@@ -57,12 +57,14 @@
   --space-5: 24px;
   --space-6: 32px;
   --space-7: 48px;
-  --radius: 6px;
-  --radius-md: 10px;
-  --radius-lg: 12px;
-  --shadow-card: 0 4px 20px rgba(15,21,42,.05);
-  --shadow-cta: 0 2px 4px rgba(15,21,42,.12);
-  --shadow-modal: 0 12px 40px rgba(15,21,42,.14);
+  --radius: 4px; /* no pill radius anywhere (L1) */
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  /* Beamer: hard offset, zero blur. Cards are flat at rest and lift on
+   * hover or press; the Today hero and the CTA carry theirs at rest. */
+  --shadow-card: 2px 4px 0 0 rgba(15,21,42,.10);
+  --shadow-cta: 2px 4px 0 0 #4a4a4a, 0 0 0 1px #c2410c;
+  --shadow-modal: 4px 8px 0 0 rgba(15,21,42,.12), 0 0 0 2px var(--border);
   --duration-fast: 150ms;
   --duration: 200ms;
   --ease: cubic-bezier(0.25, 1, 0.5, 1);
@@ -104,7 +106,8 @@
   --low-zone: rgba(248,113,113,.40);
   --bar: #6b7384;
   --bar-collar: #9aa1ad;
-  --shadow-card: 0 4px 20px rgba(0,0,0,.12);
-  --shadow-cta: 0 2px 4px rgba(0,0,0,.2);
-  --shadow-modal: 0 12px 40px rgba(0,0,0,.3);
+  /* black offsets vanish on the dark ground, so the shadows are lighter inks */
+  --shadow-card: 2px 4px 0 0 #2a3350;
+  --shadow-cta: 2px 4px 0 0 #3a4466, 0 0 0 1px #fb923c;
+  --shadow-modal: 4px 8px 0 0 #2a3350, 0 0 0 2px var(--border);
 }
