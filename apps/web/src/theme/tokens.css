@@ -1,0 +1,40 @@
+:root {
+  /* surfaces */
+  --bg:#f5f5f7; --bg-surface:#fff; --bg-hover:#f1f3f9; --bg-active:#e8ebf4; --bg-recessed:#f1f3f9;
+  /* ink */
+  --fg:#0f152a; /* 16.61 */ --fg-secondary:#4a5578; /* 6.74 */ --fg-muted:#64708b; /* 4.56 */ --fg-faint:#94a0b8; /* 2.42, decorative only */
+  /* lines */
+  --border:rgba(15,21,42,.10); --border-strong:rgba(15,21,42,.22); --border-width:2px; --grid:#e3e6ee;
+  /* action */
+  --accent:#c2410c; /* 4.76 as text */ --accent-hover:#9a3412; --accent-subtle:rgba(194,65,12,.08); --on-accent:#fff; /* 5.18 */
+  /* running, progress, status */
+  --run:#485cc7; --progress:#0a8078; --progress-fill:#08a49c; --danger:#b91c1c; /* 5.94 */ --success:#15803d; /* 4.61 */
+  --zone-1:#3a4a9f; --zone-2:#08a49c; --zone-3:#e5c73a; --zone-4:#fb923c; --zone-5:#c2410c;   /* heart-rate zones, run screens only */
+  /* notes */
+  --note:#fff7e6; --note-border:rgba(180,110,0,.28); --note-ink:#8a5a00;
+  /* charts (section 6): categorical, ordinal ramp, emphasis gray, low-readiness zone */
+  --viz-1:#c2410c; --viz-2:#485cc7; --viz-3:#08a49c;
+  --int-1:#86b6ef; --int-2:#5598e7; --int-3:#2a78d6; --int-4:#1c5cab; --int-5:#104281;
+  --mark-gray:#c9ced9; --low-zone:rgba(185,28,28,.34);
+  /* bar drawing */
+  --bar:#9aa1ad; --bar-collar:#6b7280;
+  /* shape and motion */
+  --radius:4px; --radius-md:6px; --radius-lg:8px;          /* no pill radius anywhere */
+  --shadow-card:2px 4px 0 0 rgba(15,21,42,.10);            /* hover and press; cards are flat at rest, except the Today hero */
+  --shadow-cta:2px 4px 0 0 #4a4a4a, 0 0 0 1px #c2410c;     /* :active drops it and translates 1px 2px */
+  --shadow-modal:4px 8px 0 0 rgba(15,21,42,.12), 0 0 0 2px var(--border);
+  --duration-fast:150ms; --duration:200ms; --ease:cubic-bezier(0.25, 1, 0.5, 1);
+}
+[data-theme=dark] {
+  --bg:#0b1020; --bg-surface:#121a33; --bg-hover:#18213f; --bg-active:#1f2a4d; --bg-recessed:#0f1529;
+  --fg:#e8ecf6; /* 16.01 */ --fg-secondary:#aab4cc; /* 9.11 */ --fg-muted:#8a93ab; /* 6.17 */ --fg-faint:#5d6680;
+  --border:rgba(232,236,246,.12); --border-strong:rgba(232,236,246,.24); --grid:#232c4a;
+  --accent:#fb923c; /* 8.37 */ --accent-subtle:rgba(251,146,60,.12); --on-accent:#0b1020; /* white would be 2.26 */
+  --run:#8e9cf0; --progress:#2dd4bf; --progress-fill:#2dd4bf; --danger:#f87171; --success:#4ade80;
+  --note:#2a2412; --note-border:rgba(251,191,36,.30); --note-ink:#fbbf24;
+  --viz-1:#e0652b; --viz-2:#6f80e6; --viz-3:#16a390;
+  --int-1:#184f95; --int-2:#256abf; --int-3:#3987e5; --int-4:#6da7ec; --int-5:#9ec5f4;
+  --mark-gray:#39425f; --low-zone:rgba(248,113,113,.40);
+  --bar:#6b7384; --bar-collar:#9aa1ad;
+  --shadow-card:2px 4px 0 0 #2a3350; --shadow-cta:2px 4px 0 0 #3a4466, 0 0 0 1px #fb923c;   /* black shadows vanish on the dark ground */
+}
