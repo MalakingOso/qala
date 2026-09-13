@@ -1,7 +1,7 @@
 /* This week's load: stacked columns per day, lifting under running, done
  * filled, planned outlined, today highlighted and named (DESIGN 6.3).
  *
- * Sized with ParentSize so bars, gridlines and axis text are drawn in real
+ * Sized with Plot so bars, gridlines and axis text are drawn in real
  * pixels for whatever width the card gives it, instead of a fixed 560-unit
  * viewBox getting crushed down to a handful of px inside a mobile card. */
 
@@ -9,15 +9,15 @@ import { useMemo } from "react";
 import type { MouseEvent, TouchEvent } from "react";
 import { scaleBand, scaleLinear } from "@visx/scale";
 import { AxisBottom } from "@visx/axis";
-import { ParentSize } from "@visx/responsive";
 import { localPoint } from "@visx/event";
-import { useTooltip, TooltipWithBounds } from "@visx/tooltip";
+import { TooltipWithBounds, useTooltip } from "@visx/tooltip";
 import type { WeekLoadDay } from "../../store/types.ts";
 import { ChartShell } from "./ChartShell.tsx";
+import { ChartLegend, Plot } from "./Plot.tsx";
 import { CATEGORICAL } from "./tokens.ts";
 
 const H = 200;
-const PAD = { top: 16, right: 4, bottom: 22, left: 4 };
+const PAD = { top: 30, right: 4, bottom: 32, left: 4 };
 const MAX_BAR_W = 24;
 const GAP = 2; // surface gap between touching segments (DESIGN 6.2)
 
@@ -232,12 +232,12 @@ function ChartInner({
                   return (
                     <text
                       x={tx}
-                      y={y(grandTotal) - 12}
+                      y={14}
                       fontSize={10}
                       textAnchor={anchor}
                       fill="var(--accent)"
                     >
-                      today{d.label ? ` · ${d.label}` : ""}
+                      today
                     </text>
                   );
                 })()
@@ -259,7 +259,9 @@ function ChartInner({
                 onFocus={onFocusPoint}
                 onBlur={hideTooltip}
               >
-                <title>{`${tip.day}: done ${tip.done}, planned ${tip.planned}`}</title>
+                <title>
+                  {`${tip.day}: done ${tip.done}, planned ${tip.planned}`}
+                </title>
               </rect>
             </g>
           );
@@ -279,7 +281,21 @@ function ChartInner({
       </svg>
       {tooltipOpen && tooltipData
         ? (
-          <TooltipWithBounds left={tooltipLeft} top={tooltipTop}>
+          <TooltipWithBounds
+            left={tooltipLeft}
+            top={tooltipTop}
+            style={{
+              background: "var(--bg-surface)",
+              color: "var(--fg)",
+              border: "1px solid var(--border-strong)",
+              borderRadius: 6,
+              padding: "8px 12px",
+              fontSize: 11,
+              boxShadow: "var(--shadow-card)",
+              maxWidth: 200,
+              pointerEvents: "none",
+            }}
+          >
             <strong>{tooltipData.day}</strong>: done {tooltipData.done}, planned
             {" "}
             {tooltipData.planned}
@@ -308,58 +324,15 @@ export function WeeklyLoad(
       label={label}
       flat={flat}
     >
-      <div style={{ width: "100%", height: H }}>
-        <ParentSize debounceTime={10}>
-          {({ width }) => (width > 0 ? <ChartInner width={width} days={days} /> : null)}
-        </ParentSize>
-      </div>
-      <div
-        style={{
-          display: "flex",
-          gap: 16,
-          marginTop: 6,
-          fontSize: 11,
-          color: "var(--fg)",
-        }}
-      >
-        <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-          <span
-            aria-hidden="true"
-            style={{
-              display: "inline-block",
-              width: 10,
-              height: 10,
-              background: CATEGORICAL[0],
-            }}
-          />
-          lifting
-        </span>
-        <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-          <span
-            aria-hidden="true"
-            style={{
-              display: "inline-block",
-              width: 10,
-              height: 10,
-              background: CATEGORICAL[1],
-            }}
-          />
-          running
-        </span>
-        <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-          <span
-            aria-hidden="true"
-            style={{
-              display: "inline-block",
-              width: 10,
-              height: 10,
-              border: "2px solid var(--fg-muted)",
-              boxSizing: "border-box",
-            }}
-          />
-          planned
-        </span>
-      </div>
+      <Plot height={H}>
+        {(width) => <ChartInner width={width} days={days} />}
+      </Plot>
+      <ChartLegend
+        items={[{ label: "Lifting", color: CATEGORICAL[0] }, {
+          label: "Running",
+          color: CATEGORICAL[1],
+        }, { label: "Planned", color: "var(--fg-muted)", outline: true }]}
+      />
     </ChartShell>
   );
 }

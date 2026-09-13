@@ -56,24 +56,26 @@ export function LiftDetailPage({ id }: { id: string }) {
         })}
         label={`${lift.name} e1RM full history with Kalman line, zoom and drag.`}
       />
-      <BulletNl85
-        lifts={[{
-          lift: lift.name,
-          actual: lift.nl85.actual,
-          target: lift.nl85.target,
-        }]}
-      />
-      <Card title="Calibration">
-        <DataTable
-          head={["p0", "k1", "theta", "Obs"]}
-          rows={[[
-            String(lift.calibration.p0),
-            String(lift.calibration.k1),
-            lift.calibration.theta,
-            String(lift.calibration.obs),
-          ]]}
+      <div className="card-grid">
+        <BulletNl85
+          lifts={[{
+            lift: lift.name,
+            actual: lift.nl85.actual,
+            target: lift.nl85.target,
+          }]}
         />
-      </Card>
+        <Card title="Calibration">
+          <DataTable
+            head={["p0", "k1", "theta", "Obs"]}
+            rows={[[
+              String(lift.calibration.p0),
+              String(lift.calibration.k1),
+              lift.calibration.theta,
+              String(lift.calibration.obs),
+            ]]}
+          />
+        </Card>
+      </div>
       <DenseSeries
         title={`${lift.name} calibration residuals`}
         x={lift.residuals.map((_, i) => i + 1)}

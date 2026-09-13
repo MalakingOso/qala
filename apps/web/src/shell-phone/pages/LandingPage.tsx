@@ -1,62 +1,150 @@
-/* Landing page (DESIGN 7.17) for tailnet visitors: headline, one
- * paragraph, Open Qala + How it decides, four sections from real screen
- * fragments, AGPL + liftosaur credit in the footer. No testimonials. */
+/* A wide entry page with a real chart preview and entry points to both shells. */
 
-import { Card, PrimaryButton, SecondaryButton } from "../../shared/ui.tsx";
+import {
+  ArrowRight,
+  Dumbbell,
+  SportShoe,
+  TrendingUp,
+} from "../../shared/icons.ts";
+import { WeeklyLoad } from "../../shared/charts/index.ts";
+import { sampleWeekLoad } from "../../store/sample.ts";
 
 export function LandingPage() {
   return (
-    <div className="page">
-      <div className="landing-hero">
-        <h1 className="title">Lift and run from one plan.</h1>
+    <div className="landing-page">
+      <header className="landing-header">
+        <a className="brand" href="#/" aria-label="Qala home">
+          <span className="brand-mark title" aria-hidden="true">q</span>
+          <span className="brand-name title">Qala</span>
+        </a>
+        <a className="toolbar-link" href="#/desktop/overview">
+          Training workspace <ArrowRight size={16} />
+        </a>
+      </header>
+      <main>
+        <section className="landing-hero">
+          <div className="landing-copy">
+            <p className="group-label page-eyebrow">
+              Lifting + running / one adaptive plan
+            </p>
+            <h1 className="title">
+              Train with<br />the whole picture.
+            </h1>
+            <p className="landing-intro">
+              Your lifts, your miles, and the recovery between them. Qala brings
+              it all into one plan that adapts with you.
+            </p>
+            <div className="landing-actions">
+              <a
+                className="btn-primary landing-desktop-entry"
+                href="#/desktop/overview"
+              >
+                Open Qala <ArrowRight size={18} />
+              </a>
+              <a
+                className="btn-primary landing-phone-entry"
+                href="#/phone/today"
+              >
+                Open Qala <ArrowRight size={18} />
+              </a>
+              <button
+                className="toolbar-link"
+                type="button"
+                onClick={() => {
+                  const section = document.getElementById("how-it-decides");
+                  section?.scrollIntoView({
+                    behavior:
+                      window.matchMedia("(prefers-reduced-motion: reduce)")
+                          .matches
+                        ? "instant"
+                        : "smooth",
+                  });
+                  section?.focus({ preventScroll: true });
+                }}
+              >
+                How it decides <span aria-hidden="true">↓</span>
+              </button>
+            </div>
+            <p className="landing-footnote">
+              Self-hosted. Your training stays yours.
+            </p>
+          </div>
+          <div className="landing-preview">
+            <div className="landing-preview-head">
+              <span className="group-label">A day with Qala</span>
+              <span className="kbd-hint">Example</span>
+            </div>
+            <div className="landing-session">
+              <div>
+                <h2 className="title">Lower A</h2>
+                <p className="kbd-hint">Squat day · strength block</p>
+              </div>
+              <Dumbbell size={28} />
+            </div>
+            <div className="landing-topset">
+              <span className="figure">
+                245 <span className="figure-unit">lb</span> × 4
+              </span>
+              <span className="group-label">Top set</span>
+            </div>
+            <p className="landing-reason">
+              A little under your average, so squat holds.
+            </p>
+            <WeeklyLoad days={sampleWeekLoad} flat />
+            <div className="landing-next">
+              <SportShoe size={18} />
+              <span>Then, an easy 3-mile run</span>
+            </div>
+          </div>
+        </section>
+        <section
+          className="landing-features"
+          id="how-it-decides"
+          tabIndex={-1}
+          aria-labelledby="landing-features-title"
+        >
+          <div className="landing-section-head">
+            <p className="group-label">Built around your training</p>
+            <h2 className="title" id="landing-features-title">
+              A reason behind every number.
+            </h2>
+          </div>
+          <div className="landing-grid">
+            <article>
+              <span className="feature-number">01 / PLAN</span>
+              <h3 className="title">One week. Both sports.</h3>
+              <p>
+                Barbell programs you can read and edit. Runs beside your lifts
+                in the same split, with one fatigue model across both.
+              </p>
+            </article>
+            <article>
+              <span className="feature-number">02 / ADAPT</span>
+              <h3 className="title">Work with your readiness.</h3>
+              <p>
+                Your check-in and muscle fatigue shape the day's loads. Every
+                adjustment comes with a short explanation.
+              </p>
+            </article>
+            <article>
+              <span className="feature-number">03 / UNDERSTAND</span>
+              <h3 className="title">See the longer view.</h3>
+              <p>
+                Follow your strength, running fitness, and recovery. Talk it
+                through with Coach, with clear limits on every suggestion.
+              </p>
+            </article>
+          </div>
+        </section>
+      </main>
+      <footer className="landing-footer">
         <p>
-          Qala is a self-hosted training app: barbell programs as text, GPS run
-          recording, and one fatigue model across both, with a local coach that
-          can only nudge inside fixed limits.
-        </p>
-        <div className="row-btns">
-          <PrimaryButton href="#/phone/today">Open Qala</PrimaryButton>
-          <SecondaryButton href="#how-it-decides">
-            How it decides
-          </SecondaryButton>
-        </div>
-      </div>
-      <div className="landing-grid">
-        <Card title="How it decides">
-          <p id="how-it-decides">
-            Check-in, readiness, and per-muscle fatigue set the day's weights.
-            Every adjusted number shows its reason in one line.
-          </p>
-        </Card>
-        <Card title="Plans">
-          <p>
-            Strength, hypertrophy, or meet prep as liftoscript text you can read
-            and edit. Runs live beside the lifts in one week.
-          </p>
-        </Card>
-        <Card title="Running">
-          <p>
-            Time, distance, pace, splits, route with mile markers, audio cues,
-            and guided workouts. Leg fatigue feeds the next lift.
-          </p>
-        </Card>
-        <Card title="Coach">
-          <p>
-            Open conversation inside training topics. Suggestions arrive as
-            engine-vs-coach cards; one tap reverts.
-          </p>
-        </Card>
-      </div>
-      <footer>
-        <p className="kbd-hint">
           Qala is AGPL-3.0. Program language and exercise data build on
-          liftosaur (AGPL-3.0).
+          liftosaur.
         </p>
-        <p>
-          <a className="link-btn" href="#/desktop/programs">
-            Desktop author shell
-          </a>
-        </p>
+        <a className="toolbar-link" href="#/phone/today">
+          <TrendingUp size={16} /> Open workout view
+        </a>
       </footer>
     </div>
   );

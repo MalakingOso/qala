@@ -5,6 +5,7 @@
 
 import { E1rmLine } from "../shared/charts/index.ts";
 import { sampleLifts } from "../store/sample.ts";
+import { Card } from "../shared/ui.tsx";
 
 export function LiftsPage() {
   return (
@@ -14,7 +15,7 @@ export function LiftsPage() {
       </div>
       <div className="card-grid">
         {sampleLifts.map((l) => (
-          <div key={l.id}>
+          <Card key={l.id}>
             <div
               style={{
                 display: "flex",
@@ -38,13 +39,13 @@ export function LiftsPage() {
                 {l.weekDeltaPct}% this block
               </span>
             </p>
-            <E1rmLine lift={l.name} points={l.recent} />
+            <E1rmLine lift={l.name} points={l.recent} flat />
             <p>
               <a className="link-btn" href={`#/desktop/lifts/${l.id}`}>
                 Full history &amp; calibration
               </a>
             </p>
-          </div>
+          </Card>
         ))}
       </div>
     </div>

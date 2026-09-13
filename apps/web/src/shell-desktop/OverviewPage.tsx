@@ -5,6 +5,7 @@
 
 import { useQala } from "../store/qalaStore.tsx";
 import { Card, DataTable, StatTiles } from "../shared/ui.tsx";
+import { ArrowRight } from "../shared/icons.ts";
 import {
   E1rmLine,
   ReadinessRing,
@@ -48,10 +49,17 @@ export function OverviewPage() {
   return (
     <div>
       <div className="page-head">
-        <h1 className="page-title title">Overview</h1>
-        <span className="kbd-hint">
-          {sessions.length} sessions this week · {milesThisWeek.toFixed(1)} mi
-        </span>
+        <div>
+          <h1 className="page-title title">Overview</h1>
+          <p className="page-subtitle">
+            {sessions.length} sessions this week · {milesThisWeek.toFixed(1)}
+            {" "}
+            miles on the road
+          </p>
+        </div>
+        <a className="toolbar-link" href="#/desktop/history">
+          View history <ArrowRight size={16} />
+        </a>
       </div>
       <StatTiles
         tiles={[

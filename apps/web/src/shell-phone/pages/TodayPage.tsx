@@ -13,6 +13,7 @@ import { ReadinessRing, WeeklyLoad } from "../../shared/charts/index.ts";
 import {
   Bed,
   CircleCheck,
+  Clock,
   Dumbbell,
   Flame,
   Hourglass,
@@ -54,7 +55,12 @@ export function TodayPage() {
   return (
     <div>
       <div className="page-head">
-        <h1 className="page-title title">Sun · Strength B2 W3</h1>
+        <div>
+          <p className="group-label page-eyebrow">
+            Sunday · Strength block 2 / week 3
+          </p>
+          <h1 className="page-title title">Today</h1>
+        </div>
       </div>
       <div className="rail">
         <div className="rail-nodes" role="tablist" aria-label="Day stages">
@@ -99,54 +105,31 @@ export function TodayPage() {
         </div>
         <div className="rail-body">
           <Card hero>
-            <p className="group-label">
-              Now · {viewed.label}
-              {viewed.id !== now.id
-                ? ` (previewing, back to ${now.label} soon)`
-                : ""}
+            <p className="group-label today-stage">
+              {viewed.id === now.id ? "Now" : "Preview"} · {viewed.label}
+              {viewed.id !== now.id ? ` · back to ${now.label} soon` : ""}
             </p>
             {viewed.id === "lift" || viewed.id === "warmup"
               ? (
                 <>
-                  <h2
-                    className="title"
-                    style={{ margin: "0 0 4px", fontSize: 24 }}
-                  >
-                    Lower A · Squat day
+                  <h2 className="title today-title">
+                    Lower A
                   </h2>
-                  <div
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "1fr 156px",
-                      gap: 8,
-                      alignItems: "start",
-                    }}
-                  >
-                    <div>
-                      <p style={{ margin: "0 0 4px" }}>Top set 245 x 4.</p>
-                      <p className="kbd-hint" style={{ margin: 0 }}>
-                        A little under your average, so squat holds.
-                      </p>
-                      <p
-                        className="figure"
-                        style={{ fontSize: 22, margin: "16px 0 0" }}
-                      >
-                        10 + 15 min
-                      </p>
-                      <p className="kbd-hint" style={{ margin: 0 }}>
-                        warm-up + lift window
-                      </p>
-                    </div>
-                    <ReadinessRing
-                      readiness={0.72}
-                      avg={76}
-                      lowLine={64}
-                      checkins={20}
-                      prs={7}
-                      flat
-                    />
+                  <p className="today-exercise">Squat day</p>
+                  <div className="today-topset">
+                    <span className="group-label">Your top set</span>
+                    <p className="figure">
+                      245 <span className="figure-unit">lb</span> × 4
+                    </p>
+                    <p className="kbd-hint">
+                      Readiness 72 / 100. A little under your average, so squat
+                      holds.
+                    </p>
                   </div>
-                  <WeeklyLoad days={sampleWeekLoad} flat />
+                  <div className="today-timing">
+                    <Clock size={16} />
+                    <span>10 min warm-up · 15 min lift</span>
+                  </div>
                   <PrimaryButton
                     large
                     href={viewed.id === "warmup"
@@ -155,7 +138,25 @@ export function TodayPage() {
                   >
                     <Flame size={22} /> Start warm-up
                   </PrimaryButton>
-                  <p className="kbd-hint">Then: Easy run · 3.0 mi · 6 pm</p>
+                  <div className="today-next">
+                    <SportShoe size={18} />
+                    <p>
+                      <span className="group-label">Then · 6 pm</span>
+                      <br />Easy run · 3.0 mi
+                    </p>
+                  </div>
+                  <details className="today-context">
+                    <summary>Readiness &amp; weekly load</summary>
+                    <ReadinessRing
+                      readiness={0.72}
+                      avg={76}
+                      lowLine={64}
+                      checkins={20}
+                      prs={7}
+                      flat
+                    />
+                    <WeeklyLoad days={sampleWeekLoad} flat />
+                  </details>
                 </>
               )
               : viewed.id === "recover"
@@ -255,7 +256,7 @@ export function TodayPage() {
               </SecondaryButton>
             )
             : null}
-          <p className="kbd-hint" style={{ marginTop: 8 }}>
+          <p className="today-demo">
             <button
               type="button"
               className="link-btn"

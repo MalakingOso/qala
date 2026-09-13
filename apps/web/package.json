@@ -16,6 +16,7 @@
     "@codemirror/state": "^6.5.0",
     "@codemirror/view": "^6.36.0",
     "@visx/axis": "4.0.0",
+    "@visx/curve": "4.0.0",
     "@visx/event": "4.0.0",
     "@visx/grid": "4.0.0",
     "@visx/group": "4.0.0",

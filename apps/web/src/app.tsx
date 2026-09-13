@@ -26,6 +26,10 @@ function Shell() {
   const { settings } = useQala();
 
   useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }, [route]);
+
+  useEffect(() => {
     applyTheme(settings.theme);
     return watchSystemTheme(settings.theme);
   }, [settings.theme]);

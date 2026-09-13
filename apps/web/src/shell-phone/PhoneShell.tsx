@@ -103,20 +103,14 @@ export function PhoneShell({ route }: { route: string }) {
   const { online, outbox, stages } = useQala();
   const { tab, node } = pageFor(route, isRestDay(stages));
   return (
-    <div>
+    <div className="phone-shell">
       <div className="page">
-        <div
-          className="page-head"
-          style={{
-            position: "sticky",
-            top: 0,
-            background: "var(--bg)",
-            zIndex: 5,
-            padding: "8px 0",
-          }}
-        >
-          <OfflineBadge online={online} pending={outbox.length} />
-          <span style={{ display: "flex", gap: 8 }}>
+        <header className="phone-topbar">
+          <a className="brand" href="#/phone/today" aria-label="Qala today">
+            <span className="brand-name title">Qala</span>
+          </a>
+          <span className="phone-tools">
+            <OfflineBadge online={online} pending={outbox.length} />
             <a className="icon-btn" href="#/phone/history" aria-label="History">
               <History size={20} />
             </a>
@@ -128,7 +122,7 @@ export function PhoneShell({ route }: { route: string }) {
               <Settings size={20} />
             </a>
           </span>
-        </div>
+        </header>
         {node}
       </div>
       <nav className="tabbar" aria-label="Primary">

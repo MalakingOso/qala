@@ -10,7 +10,13 @@ import {
   PrimaryButton,
   SegmentedControl,
 } from "../../shared/ui.tsx";
-import { Bed, ChevronLeft, Dumbbell, SportShoe } from "../../shared/icons.ts";
+import {
+  Bed,
+  ChevronLeft,
+  ChevronRight,
+  Dumbbell,
+  SportShoe,
+} from "../../shared/icons.ts";
 
 const DAYS = [
   { d: "Mon", glyph: Bed, title: "Rest", detail: "Walk + mobility as wanted." },
@@ -62,29 +68,32 @@ export function PlanPage() {
   return (
     <div>
       <div className="page-head">
-        <h1 className="page-title title">Strength B2</h1>
+        <div>
+          <p className="group-label page-eyebrow">Your split</p>
+          <h1 className="page-title title">Strength block 2</h1>
+        </div>
       </div>
       <Card>
-        <p className="group-label">
+        <div className="plan-week-nav">
           <button
             type="button"
-            className="link-btn"
+            className="icon-btn"
             onClick={() => setWeek((w) => Math.max(1, w - 1))}
             aria-label="Previous week"
           >
             <ChevronLeft size={16} />
             {" "}
           </button>
-          Week {week} of 6
+          <span className="group-label">Week {week} of 6</span>
           <button
             type="button"
-            className="link-btn"
+            className="icon-btn"
             onClick={() => setWeek((w) => Math.min(6, w + 1))}
             aria-label="Next week"
           >
-            {" "}›
+            <ChevronRight size={16} />
           </button>
-        </p>
+        </div>
         <div style={{ display: "flex", gap: 4 }} aria-label="Block weeks">
           {[1, 2, 3, 4, 5, 6].map((w) => (
             <span
@@ -105,7 +114,7 @@ export function PlanPage() {
           ))}
         </div>
       </Card>
-      <div className="seg" role="tablist" aria-label="Days">
+      <div className="day-tabs" role="tablist" aria-label="Days">
         {DAYS.map((d, i) => {
           const G = d.glyph;
           return (
@@ -117,7 +126,6 @@ export function PlanPage() {
               onClick={() => setDay(i)}
             >
               <G size={16} />
-              <br />
               {d.d}
             </button>
           );
@@ -151,31 +159,16 @@ export function PlanPage() {
         {view === "overview" || sel.glyph !== Dumbbell
           ? <p>{sel.detail}</p>
           : (
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr",
-                gap: 8,
-                marginTop: 8,
-              }}
-            >
+            <div className="exercise-grid">
               {exercises.map((e) => (
-                <div key={e.id} className="group" style={{ margin: 0 }}>
-                  <div
-                    className="group-row"
-                    style={{
-                      flexDirection: "column",
-                      alignItems: "flex-start",
-                    }}
-                  >
-                    <strong>{e.name}</strong>
-                    <span className="kbd-hint">
-                      {e.sets.length} x {e.sets[0]?.r} @ {e.sets[0]?.w}
-                    </span>
-                    {e.note
-                      ? <span className="kbd-hint">▦ note waiting</span>
-                      : null}
-                  </div>
+                <div key={e.id} className="exercise-preview">
+                  <strong>{e.name}</strong>
+                  <span className="kbd-hint">
+                    {e.sets.length} x {e.sets[0]?.r} @ {e.sets[0]?.w}
+                  </span>
+                  {e.note
+                    ? <span className="kbd-hint">▦ note waiting</span>
+                    : null}
                 </div>
               ))}
             </div>

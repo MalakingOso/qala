@@ -1,7 +1,5 @@
-/* uPlot wrapper for dense or zoomable time series (DESIGN 6.1): run pace /
- * heart rate / elevation, full-history e1RM, fitness-fatigue curves,
- * calibration residuals. Resolves CSS tokens at mount (canvas cannot use
- * var()) and re-creates the plot when the theme changes. */
+/* Dense time series resize with the workspace and redraw when tokens change.
+ * A separate plot component remounts correctly after switching to table view. */
 
 import { useEffect, useRef } from "react";
 import uPlot from "uplot";
@@ -15,82 +13,112 @@ export interface DenseSeriesInput {
   values: (number | null)[];
 }
 
-export function DenseSeries({
-  title,
-  x,
-  xLabel,
-  series,
-  height = 220,
-  head,
-  rows,
-  label,
-}: {
-  title: string;
+interface PlotProps {
   x: number[];
   xLabel: string;
   series: DenseSeriesInput[];
-  height?: number;
-  head: string[];
-  rows: string[][];
-  label: string;
-}) {
-  const host = useRef<HTMLDivElement>(null);
-  const theme = typeof document !== "undefined"
-    ? document.documentElement.dataset.theme
-    : "light";
+  height: number;
+  syncKey?: string;
+}
 
+function DensePlot({ x, xLabel, series, height, syncKey }: PlotProps) {
+  const host = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const el = host.current;
     if (!el) return;
-    el.innerHTML = "";
-    const colors = resolveTokens(series.map((s) => s.color));
-    const grid = resolveTokens(["var(--grid)"])[0];
-    const ink = resolveTokens(["var(--fg-muted)"])[0];
-    const opts: uPlot.Options = {
-      width: Math.max(280, el.clientWidth || 520),
-      height,
-      legend: { show: true },
-      scales: { x: { time: false } },
-      axes: [
+    let plot: uPlot | undefined;
+    const draw = () => {
+      if (el.clientWidth === 0) return;
+      plot?.destroy();
+      const colors = resolveTokens(series.map((s) => s.color));
+      const [grid, ink] = resolveTokens(["var(--grid)", "var(--fg-muted)"]);
+      plot = new uPlot(
         {
-          stroke: ink,
-          grid: { stroke: grid, width: 1 },
-          font: "10px DM Mono, monospace",
+          width: el.clientWidth,
+          height,
+          padding: [16, 16, 0, 0],
+          legend: { show: true },
+          scales: { x: { time: false } },
+          cursor: {
+            sync: syncKey ? { key: syncKey, scales: ["x", null] } : undefined,
+          },
+          axes: [
+            {
+              stroke: ink,
+              grid: { show: false },
+              ticks: { show: false },
+              font: "11px DM Mono, monospace",
+              space: 80,
+              size: 36,
+            },
+            {
+              stroke: ink,
+              grid: { stroke: grid, width: 1 },
+              ticks: { show: false },
+              font: "11px DM Mono, monospace",
+              size: 48,
+              space: 48,
+            },
+          ],
+          series: [
+            { label: xLabel },
+            ...series.map((s, i) => ({
+              label: s.label,
+              stroke: colors[i],
+              width: 2,
+              paths: uPlot.paths.spline?.(),
+              points: { show: false },
+              spanGaps: false,
+            })),
+          ],
         },
-        {
-          stroke: ink,
-          grid: { stroke: grid, width: 1 },
-          font: "10px DM Mono, monospace",
-        },
-      ],
-      series: [
-        { label: xLabel },
-        ...series.map((s, i) => ({
-          label: s.label,
-          stroke: colors[i],
-          width: 2,
-          points: { show: false },
-        })),
-      ],
+        [x, ...series.map((s) => s.values)],
+        el,
+      );
     };
-    const data: uPlot.AlignedData = [
-      x,
-      ...series.map((s) => s.values.map((v) => v ?? NaN)),
-    ];
-    const plot = new uPlot(opts, data, el);
-    return () => plot.destroy();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    theme,
-    title,
-    height,
-    JSON.stringify(x),
-    JSON.stringify(series.map((s) => s.values)),
-  ]);
+    draw();
+    const resize = new ResizeObserver(() => {
+      if (el.clientWidth === 0) return;
+      if (!plot) draw();
+      else if (plot.width !== el.clientWidth) {
+        plot.setSize({ width: el.clientWidth, height });
+      }
+    });
+    resize.observe(el);
+    const theme = new MutationObserver(draw);
+    theme.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-theme"],
+    });
+    return () => {
+      resize.disconnect();
+      theme.disconnect();
+      plot?.destroy();
+    };
+  }, [x, xLabel, series, height, syncKey]);
+  return <div ref={host} className="dense-plot" />;
+}
 
+export function DenseSeries(
+  { title, x, xLabel, series, height = 240, syncKey, head, rows, label }:
+    & Omit<PlotProps, "height">
+    & {
+      title: string;
+      height?: number;
+      head: string[];
+      rows: string[][];
+      label: string;
+    },
+) {
   return (
     <ChartShell title={title} head={head} rows={rows} label={label}>
-      <div ref={host} style={{ width: "100%" }} />
+      <DensePlot
+        x={x}
+        xLabel={xLabel}
+        series={series}
+        height={height}
+        syncKey={syncKey}
+      />
     </ChartShell>
   );
 }

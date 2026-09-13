@@ -1,18 +1,14 @@
-/* Fatigue by muscle: paired bars, lifting vs running set-equivalents.
- * Running fitness: sparkline. Splits: table with inline bars. */
+/* Fatigue labels have dedicated left/right gutters. Running fitness shares
+ * the same smooth, pixel-sized trend drawing as the strength charts. */
 
-import { useMemo } from "react";
-import { Bar, LinePath } from "@visx/shape";
-import { scaleBand, scaleLinear, scalePoint } from "@visx/scale";
+import { scaleLinear } from "@visx/scale";
 import { ChartShell } from "./ChartShell.tsx";
+import { ChartLegend, Plot, roundedBar } from "./Plot.tsx";
+import { TrendPlot } from "./TrendPlot.tsx";
 import { CATEGORICAL } from "./tokens.ts";
 import { formatPace } from "../../logic/pace.ts";
 
-const W = 560;
-
-export function FatigueByMuscle({
-  muscles,
-}: {
+export function FatigueByMuscle({ muscles }: {
   muscles: {
     muscle: string;
     lifting: number;
@@ -20,101 +16,103 @@ export function FatigueByMuscle({
     ready: string;
   }[];
 }) {
-  const H = muscles.length * 40 + 30;
-  const { x, y } = useMemo(() => {
-    const max = Math.max(1, ...muscles.map((m) => m.lifting + m.running));
-    // Leave room right of the longest bar for the "ready" label (W-12); the
-    // longest bar's total always equals `max`, so without this gap its bar
-    // and label collide.
-    return {
-      x: scaleLinear<number>({ domain: [0, max], range: [120, W - 56] }),
-      y: scaleBand<string>({
-        domain: muscles.map((m) => m.muscle),
-        range: [8, H - 22],
-        padding: 0.4,
-      }),
-    };
-  }, [muscles, H]);
-  const rows = muscles.map((
-    m,
-  ) => [m.muscle, m.lifting.toFixed(1), m.running.toFixed(1), m.ready]);
+  const height = muscles.length * 40 + 24;
+  const max = Math.max(1, ...muscles.map((m) => m.lifting + m.running));
   return (
     <ChartShell
       title="Fatigue by muscle"
       head={["Muscle", "Lifting", "Running", "Ready"]}
-      rows={rows}
+      rows={muscles.map((
+        m,
+      ) => [m.muscle, m.lifting.toFixed(1), m.running.toFixed(1), m.ready])}
       label="Fatigue split lifting and running per muscle."
     >
-      <svg viewBox={`0 0 ${W} ${H}`} width="100%" role="presentation">
-        {muscles.map((m) => {
-          const yy = y(m.muscle) ?? 0;
-          const bh = y.bandwidth() / 2;
-          const lw = Math.max(0, x(m.lifting) - 120);
-          const rw = Math.max(0, x(m.lifting + m.running) - x(m.lifting));
+      <Plot height={height}>
+        {(width) => {
+          const left = 88;
+          const x = scaleLinear<number>({
+            domain: [0, max],
+            range: [left, Math.max(left + 1, width - 56)],
+          });
           return (
-            <g
-              key={m.muscle}
-              tabIndex={0}
-              role="img"
-              aria-label={`${m.muscle}: lifting ${m.lifting}, running ${m.running}, ready ${m.ready}`}
-            >
-              <title>{`${m.muscle}: ready ${m.ready}`}</title>
+            <svg width={width} height={height} role="presentation">
               <text
-                x={112}
-                y={yy + bh + 2}
-                fontSize={11}
+                x={width - 2}
+                y={12}
                 textAnchor="end"
-                fill="var(--fg)"
-              >
-                {m.muscle}
-              </text>
-              <Bar
-                x={120}
-                y={yy}
-                width={lw}
-                height={bh}
-                fill={CATEGORICAL[0]}
-                rx={0}
-              />
-              <Bar
-                x={120 + lw}
-                y={yy}
-                width={rw}
-                height={bh}
-                fill={CATEGORICAL[1]}
-                rx={0}
-              />
-              <text
-                x={W - 12}
-                y={yy + bh + 2}
                 fontSize={10}
-                textAnchor="end"
                 fill="var(--fg-muted)"
               >
-                {m.ready}
+                Ready
               </text>
-            </g>
+              {muscles.map((m, i) => {
+                const yy = 26 + i * 40;
+                const split = x(m.lifting);
+                const end = x(m.lifting + m.running);
+                return (
+                  <g
+                    className="bar-row"
+                    key={m.muscle}
+                    tabIndex={0}
+                    role="img"
+                    aria-label={`${m.muscle}: lifting ${m.lifting}, running ${m.running}, ready ${m.ready}`}
+                  >
+                    <title>
+                      {`${m.muscle}: lifting ${m.lifting}, running ${m.running}, ready ${m.ready}`}
+                    </title>
+                    <rect
+                      x={0}
+                      y={yy - 8}
+                      width={width}
+                      height={36}
+                      fill="transparent"
+                    />
+                    <text
+                      x={left - 10}
+                      y={yy + 13}
+                      fontSize={11}
+                      textAnchor="end"
+                      fill="var(--fg-secondary)"
+                    >
+                      {m.muscle}
+                    </text>
+                    <path
+                      d={roundedBar(left, yy, end - left, 18)}
+                      fill={CATEGORICAL[0]}
+                    />
+                    {m.running > 0 && (
+                      <path
+                        d={roundedBar(
+                          split + 2,
+                          yy,
+                          Math.max(0, end - split - 2),
+                          18,
+                        )}
+                        fill={CATEGORICAL[1]}
+                      />
+                    )}
+                    <text
+                      x={width - 2}
+                      y={yy + 13}
+                      fontSize={10}
+                      textAnchor="end"
+                      fill="var(--fg-muted)"
+                    >
+                      {m.ready}
+                    </text>
+                  </g>
+                );
+              })}
+            </svg>
           );
-        })}
-        <g fontSize={11} fill="var(--fg)">
-          <rect
-            x={120}
-            y={H - 16}
-            width={10}
-            height={10}
-            fill={CATEGORICAL[0]}
-          />
-          <text x={134} y={H - 7}>lifting</text>
-          <rect
-            x={190}
-            y={H - 16}
-            width={10}
-            height={10}
-            fill={CATEGORICAL[1]}
-          />
-          <text x={204} y={H - 7}>running</text>
-        </g>
-      </svg>
+        }}
+      </Plot>
+      <ChartLegend
+        items={[{ label: "Lifting", color: CATEGORICAL[0] }, {
+          label: "Running",
+          color: CATEGORICAL[1],
+        }]}
+      />
     </ChartShell>
   );
 }
@@ -122,25 +120,6 @@ export function FatigueByMuscle({
 export function RunSpark(
   { points, label }: { points: number[]; label: string },
 ) {
-  const H = 64;
-  const x = useMemo(
-    () =>
-      scalePoint<number>({
-        domain: points.map((_, i) => i),
-        range: [4, W - 4],
-        padding: 0.5,
-      }),
-    [points],
-  );
-  const y = useMemo(() => {
-    const lo = Math.min(...points);
-    const hi = Math.max(...points);
-    const pad = Math.max(0.5, (hi - lo) * 0.2);
-    return scaleLinear<number>({
-      domain: [lo - pad, hi + pad],
-      range: [H - 6, 6],
-    });
-  }, [points]);
   return (
     <ChartShell
       title="Running fitness"
@@ -148,33 +127,24 @@ export function RunSpark(
       rows={points.map((p, i) => [`w${i + 1}`, p.toFixed(1)])}
       label={label}
     >
-      <svg viewBox={`0 0 ${W} ${H}`} width="100%" role="presentation">
-        <LinePath
-          data={points}
-          x={(_, i) => x(i) ?? 0}
-          y={(d) => y(d)}
-          stroke="var(--run)"
-          strokeWidth={2}
-          strokeLinejoin="round"
-          strokeLinecap="round"
-        />
-      </svg>
+      <TrendPlot
+        points={points.map((p, i) => ({ label: `W${i + 1}`, value: p }))}
+        height={160}
+        color="var(--run)"
+      />
     </ChartShell>
   );
 }
 
-export function SplitsTable({
-  splits,
-}: {
-  splits: { mile: number; sec: number }[];
-}) {
+export function SplitsTable(
+  { splits }: { splits: { mile: number; sec: number }[] },
+) {
   const slowest = Math.max(1, ...splits.map((s) => s.sec));
-  const rows = splits.map((s) => [`Mile ${s.mile}`, formatPace(s.sec)]);
   return (
     <ChartShell
       title="Splits"
       head={["Split", "Pace"]}
-      rows={rows}
+      rows={splits.map((s) => [`Mile ${s.mile}`, formatPace(s.sec)])}
       label={splits.map((s) => `mile ${s.mile} ${formatPace(s.sec)}`).join(
         ", ",
       )}
@@ -187,9 +157,10 @@ export function SplitsTable({
               <td style={{ width: "50%" }}>
                 <div
                   style={{
-                    height: 14,
+                    height: 10,
                     width: `${Math.round((s.sec / slowest) * 100)}%`,
                     background: "var(--run)",
+                    borderRadius: "0 4px 4px 0",
                   }}
                   role="img"
                   aria-label={`${formatPace(s.sec)} pace`}

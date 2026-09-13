@@ -89,7 +89,7 @@ export function ProgramEditorPage() {
           Generate next block
         </button>
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+      <div className="card-grid editor-layout">
         <Card title="liftoscript">
           <div
             className="code-editor"

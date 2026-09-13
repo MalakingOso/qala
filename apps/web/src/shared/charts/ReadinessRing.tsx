@@ -1,15 +1,15 @@
 /* Readiness ring (DESIGN 6.4): value arc out of 100, low zone tint, average
  * and low ticks, two-line legend. Geometry math lives in logic/.
  *
- * Sized with ParentSize so the ring, its ticks and its 40px number are drawn
+ * Sized with Plot so the ring, its ticks and its 40px number are drawn
  * in real pixels for whatever width the caller gives it, instead of a fixed
  * 200-unit viewBox getting crushed inside a narrow card column. */
 
-import { ParentSize } from "@visx/responsive";
 import { Arc } from "@visx/shape";
 import { Group } from "@visx/group";
 import { readinessRing } from "../../logic/readinessRing.ts";
 import { ChartShell } from "./ChartShell.tsx";
+import { Plot } from "./Plot.tsx";
 
 const MIN_S = 140;
 const LEGEND_H = 40;
@@ -191,24 +191,19 @@ export function ReadinessRing({
       }. ${m.legendAvg}. ${m.legendLow}.`}
       flat={flat}
     >
-      <div style={{ width: "100%", minWidth: MIN_S, height: 234 }}>
-        <ParentSize debounceTime={10}>
-          {({ width, height }) =>
-            width > 0
-              ? (
-                <RingInner
-                  width={width}
-                  height={height}
-                  readiness={readiness}
-                  avg={avg}
-                  lowLine={lowLine}
-                  checkins={checkins}
-                  prs={prs}
-                />
-              )
-              : null}
-        </ParentSize>
-      </div>
+      <Plot height={234}>
+        {(width) => (
+          <RingInner
+            width={width}
+            height={234}
+            readiness={readiness}
+            avg={avg}
+            lowLine={lowLine}
+            checkins={checkins}
+            prs={prs}
+          />
+        )}
+      </Plot>
     </ChartShell>
   );
 }

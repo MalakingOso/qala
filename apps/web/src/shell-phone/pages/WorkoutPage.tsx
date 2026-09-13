@@ -228,7 +228,7 @@ function WorkoutBody({
           </a>
         </p>
         <p className="group-label">RPE (target {ex.targetRpe})</p>
-        <div style={{ display: "flex", gap: 4 }}>
+        <div className="rpe-options">
           {[7, 7.5, 8, 8.5, 9, 9.5, 10].map((v) => (
             <button
               key={v}

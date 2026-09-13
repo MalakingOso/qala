@@ -436,35 +436,42 @@ export function DataTable(
   },
 ) {
   return (
-    <table className="data">
-      <thead>
-        <tr>
-          {head.map((h) => (
-            <th key={h} scope="col">
-              {h}
-            </th>
-          ))}
-        </tr>
-      </thead>
-      <tbody>
-        {rows.map((r, i) => {
-          const href = rowHrefs?.[i];
-          return (
-            <tr key={i} className={href ? "row-link" : undefined}>
-              {r.map((c, j) =>
-                href && j === 0
-                  ? (
-                    <td key={j}>
-                      <a href={href}>{c}</a>
-                    </td>
-                  )
-                  : <td key={j}>{c}</td>
-              )}
-            </tr>
-          );
-        })}
-      </tbody>
-    </table>
+    <div
+      className="table-scroll"
+      role="region"
+      aria-label={`${head.filter(Boolean).join(", ")} table`}
+      tabIndex={0}
+    >
+      <table className="data">
+        <thead>
+          <tr>
+            {head.map((h) => (
+              <th key={h} scope="col">
+                {h}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r, i) => {
+            const href = rowHrefs?.[i];
+            return (
+              <tr key={i} className={href ? "row-link" : undefined}>
+                {r.map((c, j) =>
+                  href && j === 0
+                    ? (
+                      <td key={j}>
+                        <a href={href}>{c}</a>
+                      </td>
+                    )
+                    : <td key={j}>{c}</td>
+                )}
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
   );
 }
 

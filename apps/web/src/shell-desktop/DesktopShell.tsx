@@ -6,6 +6,10 @@
  * (`#/desktop/lifts/squat`) for drill-down detail pages. Shares theme, type,
  * icons and charts with the phone shell. */
 
+import { useEffect, useState } from "react";
+import { useQala } from "../store/qalaStore.tsx";
+import { OfflineBadge } from "../shared/ui.tsx";
+import { SettingsPage } from "../shell-phone/pages/SettingsPage.tsx";
 import {
   Activity,
   Cylinder,
@@ -13,10 +17,13 @@ import {
   History,
   LayoutGrid,
   ListChecks,
+  Menu,
   MessageSquareText,
   Settings,
   SlidersHorizontal,
+  Smartphone,
   SportShoe,
+  X,
 } from "../shared/icons.ts";
 import { OverviewPage } from "./OverviewPage.tsx";
 import { LiftsPage } from "./LiftsPage.tsx";
@@ -75,6 +82,9 @@ function NavGroup(
 }
 
 export function DesktopShell({ route }: { route: string }) {
+  const { online, outbox } = useQala();
+  const [navOpen, setNavOpen] = useState(false);
+  useEffect(() => setNavOpen(false), [route]);
   const rest = route.replace(/^\/desktop\/?/, "");
   const [rawPart, id] = rest.split("/");
   const part = rawPart || "overview";
@@ -111,10 +121,9 @@ export function DesktopShell({ route }: { route: string }) {
       break;
     case "settings":
       body = (
-        <p>
-          Settings live on the phone shell for now.{" "}
-          <a href="#/phone/settings">Open Settings</a>
-        </p>
+        <div className="desktop-settings">
+          <SettingsPage />
+        </div>
       );
       break;
     default:
@@ -123,10 +132,32 @@ export function DesktopShell({ route }: { route: string }) {
 
   return (
     <div className="page-desktop">
+      <a
+        className="skip-link"
+        href="#desktop-content"
+        onClick={(e) => {
+          e.preventDefault();
+          document.getElementById("desktop-content")?.focus();
+        }}
+      >
+        Skip to content
+      </a>
       <div className="desktop-layout">
-        <nav className="sidebar" aria-label="Desktop">
-          <NavGroup label="Stats" items={STATS_NAV} part={part} />
-          <NavGroup label="Author" items={AUTHOR_NAV} part={part} />
+        <nav
+          className={`sidebar${navOpen ? " is-open" : ""}`}
+          id="desktop-navigation"
+          aria-label="Desktop"
+        >
+          <a
+            className="brand sidebar-brand"
+            href="#/desktop/overview"
+            aria-label="Qala overview"
+          >
+            <span className="brand-mark title" aria-hidden="true">q</span>
+            <span className="brand-name title">Qala</span>
+          </a>
+          <NavGroup label="Training" items={STATS_NAV} part={part} />
+          <NavGroup label="Workspace" items={AUTHOR_NAV} part={part} />
           <div className="sidebar-foot">
             <a
               href="#/desktop/settings"
@@ -134,10 +165,46 @@ export function DesktopShell({ route }: { route: string }) {
             >
               <Settings size={18} /> Settings
             </a>
-            <a href="#/phone/today">← Phone shell</a>
+            <a href="#/phone/today">
+              <Smartphone size={18} /> Workout view
+            </a>
+            <div className="sidebar-status">
+              <OfflineBadge online={online} pending={outbox.length} />
+            </div>
           </div>
         </nav>
-        <div>{body}</div>
+        <div className="desktop-workspace">
+          <header className="desktop-toolbar">
+            <div className="toolbar-location">
+              <button
+                className="icon-btn nav-menu"
+                type="button"
+                aria-label={navOpen ? "Close navigation" : "Open navigation"}
+                aria-expanded={navOpen}
+                aria-controls="desktop-navigation"
+                onClick={() => setNavOpen((v) => !v)}
+              >
+                {navOpen ? <X size={20} /> : <Menu size={20} />}
+              </button>
+              <span className="group-label">
+                {AUTHOR_NAV.some((n) => n.id === part)
+                  ? "Workspace"
+                  : "Training"}
+              </span>
+              <span className="toolbar-divider" aria-hidden="true">/</span>
+              <span>
+                {[...STATS_NAV, ...AUTHOR_NAV].find((n) => n.id === part)
+                  ?.label ?? (part === "settings" ? "Settings" : "Overview")}
+              </span>
+            </div>
+            <a className="toolbar-link" href="#/desktop/programs">
+              <ListChecks size={16} /> Your program
+            </a>
+          </header>
+          <main id="desktop-content" className="desktop-content" tabIndex={-1}>
+            {body}
+          </main>
+        </div>
       </div>
     </div>
   );

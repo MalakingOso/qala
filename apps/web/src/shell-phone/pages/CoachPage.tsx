@@ -102,21 +102,13 @@ export function CoachPage() {
           ]);
           setDraft("");
         }}
-        style={{
-          display: "flex",
-          gap: 8,
-          position: "sticky",
-          bottom: 80,
-          background: "var(--bg)",
-          padding: "8px 0",
-        }}
+        className="coach-composer"
       >
         <input
           aria-label="Ask the coach"
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           placeholder="Ask about training, recovery, running..."
-          style={{ flex: 1, minHeight: 44, font: "inherit", padding: 8 }}
         />
         <button type="submit" className="btn-primary" style={{ width: "auto" }}>
           Send

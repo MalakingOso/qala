@@ -3,6 +3,8 @@
  * that shows the same as hover. */
 
 import { type ReactNode, useState } from "react";
+import { Table2, TrendingUp } from "../icons.ts";
+import { DataTable } from "../ui.tsx";
 
 export function ChartShell({
   title,
@@ -27,42 +29,25 @@ export function ChartShell({
       className={flat ? "chart-wrap" : "card flat-rest chart-wrap"}
       aria-label={title}
     >
-      <div className="page-head" style={{ marginBottom: 4 }}>
-        <h3 className="card-title title" style={{ margin: 0 }}>
+      <div className="chart-head">
+        <h3 className="card-title title">
           {title}
         </h3>
         <button
           type="button"
-          className="link-btn"
+          className="chart-toggle"
           onClick={() => setTable((t) => !t)}
-          aria-expanded={table}
+          aria-pressed={table}
+          aria-label={`${table ? "Show chart" : "Show table"}: ${title}`}
         >
-          {table ? "Chart" : "Table"}
+          {table ? <TrendingUp size={15} /> : <Table2 size={15} />}
+          <span>{table ? "Chart" : "Table"}</span>
         </button>
       </div>
       {table
-        ? (
-          <table className="data">
-            <thead>
-              <tr>
-                {head.map((h) => (
-                  <th key={h} scope="col">
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((r, i) => (
-                <tr key={i}>
-                  {r.map((c, j) => <td key={j}>{c}</td>)}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )
+        ? <DataTable head={head} rows={rows} />
         : (
-          <div tabIndex={0} role="img" aria-label={label}>
+          <div className="chart-plot" role="group" aria-label={label}>
             {children}
           </div>
         )}

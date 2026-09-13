@@ -2,9 +2,19 @@
 
 The single reference for how Qala looks and behaves on screen. The owner's choices behind it are in `DECISIONS.md` (codes like L4 or U3 below point there). Engine rules the screens display are in `PLAN.md` section 6. The review canvas that shows all of this is `mockups/qala-app-mockups.html` (section 8 below).
 
+Visual refinement, 2026-09-13: the owner asked for a smoother, professional app
+and explicitly allowed changing the original styling and chart implementation.
+The alternatives, implementation notes, and browser checks are recorded in
+`docs/visual-refinement.md`. The app now uses lighter borders, soft shadows,
+responsive charts, and a full-height desktop workspace. The review canvas
+predates this refinement.
+
 ## 1. Principles
 
-1. **Beamer first.** Qala should look like a sibling of the owner's Beamer app: off-white ground, white surfaces, 2px borders, hard offset shadows, small radii. (L1)
+1. **Quiet, structured surfaces.** Off-white ground, white surfaces, 1px borders,
+   and restrained soft shadows. Qala keeps its serif and mono identity while
+   giving each screen a clear reading order. This refines the earlier Beamer
+   treatment (L1).
 2. **Light and breezy.** Generous space, one strong element per card, nothing dense or dark by default.
 3. **One action color.** Ember marks the one thing to do on a screen: the primary button, the current stage, today's column. Everything else is ink and gray. (L3)
 4. **Numbers are the hero.** Big figures in the owner's Qala Test face; everything readable at a glance mid-set with sweaty hands.
@@ -23,7 +33,7 @@ Implemented in `apps/web/src/theme/tokens.css`, shared by both shells. Beamer's 
   /* ink */
   --fg:#0f152a; /* 16.61 */ --fg-secondary:#4a5578; /* 6.74 */ --fg-muted:#64708b; /* 4.56 */ --fg-faint:#94a0b8; /* 2.42, decorative only */
   /* lines */
-  --border:rgba(15,21,42,.10); --border-strong:rgba(15,21,42,.22); --border-width:2px; --grid:#e3e6ee;
+  --border:rgba(15,21,42,.10); --border-strong:rgba(15,21,42,.22); --border-width:1px; --grid:#e3e6ee;
   /* action */
   --accent:#c2410c; /* 4.76 as text */ --accent-hover:#9a3412; --accent-subtle:rgba(194,65,12,.08); --on-accent:#fff; /* 5.18 */
   /* running, progress, status */
@@ -38,24 +48,25 @@ Implemented in `apps/web/src/theme/tokens.css`, shared by both shells. Beamer's 
   /* bar drawing */
   --bar:#9aa1ad; --bar-collar:#6b7280;
   /* shape and motion */
-  --radius:4px; --radius-md:6px; --radius-lg:8px;          /* no pill radius anywhere */
-  --shadow-card:2px 4px 0 0 rgba(15,21,42,.10);            /* hover and press; cards are flat at rest, except the Today hero */
-  --shadow-cta:2px 4px 0 0 #4a4a4a, 0 0 0 1px #c2410c;     /* :active drops it and translates 1px 2px */
-  --shadow-modal:4px 8px 0 0 rgba(15,21,42,.12), 0 0 0 2px var(--border);
+  --radius:6px; --radius-md:10px; --radius-lg:12px;
+  --shadow-card:0 4px 20px rgba(15,21,42,.05);
+  --shadow-cta:0 2px 4px rgba(15,21,42,.12);
+  --shadow-modal:0 12px 40px rgba(15,21,42,.14);
   --duration-fast:150ms; --duration:200ms; --ease:cubic-bezier(0.25, 1, 0.5, 1);
 }
 [data-theme=dark] {
   --bg:#0b1020; --bg-surface:#121a33; --bg-hover:#18213f; --bg-active:#1f2a4d; --bg-recessed:#0f1529;
   --fg:#e8ecf6; /* 16.01 */ --fg-secondary:#aab4cc; /* 9.11 */ --fg-muted:#8a93ab; /* 6.17 */ --fg-faint:#5d6680;
   --border:rgba(232,236,246,.12); --border-strong:rgba(232,236,246,.24); --grid:#232c4a;
-  --accent:#fb923c; /* 8.37 */ --accent-subtle:rgba(251,146,60,.12); --on-accent:#0b1020; /* white would be 2.26 */
+  --accent:#fb923c; /* 8.37 */ --accent-hover:#fdba74; --accent-subtle:rgba(251,146,60,.12); --on-accent:#0b1020; /* white would be 2.26 */
   --run:#8e9cf0; --progress:#2dd4bf; --progress-fill:#2dd4bf; --danger:#f87171; --success:#4ade80;
   --note:#2a2412; --note-border:rgba(251,191,36,.30); --note-ink:#fbbf24;
   --viz-1:#e0652b; --viz-2:#6f80e6; --viz-3:#16a390;
   --int-1:#184f95; --int-2:#256abf; --int-3:#3987e5; --int-4:#6da7ec; --int-5:#9ec5f4;
   --mark-gray:#39425f; --low-zone:rgba(248,113,113,.40);
   --bar:#6b7384; --bar-collar:#9aa1ad;
-  --shadow-card:2px 4px 0 0 #2a3350; --shadow-cta:2px 4px 0 0 #3a4466, 0 0 0 1px #fb923c;   /* black shadows vanish on the dark ground */
+  --shadow-card:0 4px 20px rgba(0,0,0,.12); --shadow-cta:0 2px 4px rgba(0,0,0,.2);
+  --shadow-modal:0 12px 40px rgba(0,0,0,.3);
 }
 ```
 
@@ -136,12 +147,12 @@ Lucide via `lucide-react` (ISC; add to NOTICE). Stroke 2 at 24px, `currentColor`
 
 Anatomy copies Beamer; phone controls scale up to a 44px minimum touch target.
 
-1. **Card:** `--bg-surface`, 2px `--border`, `--radius-md`, 14-16px padding, flat at rest, `--shadow-card` on hover or press.
-2. **Group:** one bordered container with a `--bg-recessed` header band holding the group label, optional right-side action, 2px divider rows inside.
-3. **Buttons:** primary is ember fill, `--on-accent` text, `--radius`, `--shadow-cta`, 52px tall on phone; the **large primary** on Today is 64px with a 22px icon. Secondary is a 2px bordered surface button. No pills.
+1. **Card:** `--bg-surface`, 1px `--border`, `--radius-md`, 20px phone / 24px desktop padding. Static cards stay flat on hover; the Today hero has `--shadow-card`.
+2. **Group:** one bordered container with a `--bg-recessed` header band holding the group label, optional right-side action, and 1px dividers inside.
+3. **Buttons:** primary is ember fill, `--on-accent` text, `--radius`, `--shadow-cta`, 52px tall on phone; the large primary on Today is 64px with a 22px icon. Secondary is a 1px bordered surface button. Utility actions use neutral ink.
 4. **Chips and segmented controls:** 4px radius chips on `--bg-active`; segmented controls are one bordered strip with the selected cell on `--bg-active`.
 5. **Toggles:** square-cornered, ember when on.
-6. **Tab bar:** 72px, 2px top border, a 3px ember bar above the active tab's icon.
+6. **Tab bar:** 72px plus the device safe area, 1px top border, a 3px ember bar above the active tab's icon. Capped to the phone shell width.
 7. **Exercise note card:** `--note` fill, `--note-border`, sticky-note icon, date label, Got it / Pin / Resolved.
 8. **Plate drawing and plate chips.** The drawing shows one side of the bar: sleeve to the left, collar and bar label to the right, plates heaviest innermost, each plate labeled with its weight (rotated on tall plates, below on small ones). Plate heights step down with weight. Chips are small filled rectangles in plate color with the weight printed, used as shorthand ("45 · 45 · 10"). Colors, text color on each, and editability are in PLAN 6.8; defaults: 55 red `#d64541`, 45 blue `#2f6bd1`, 35 yellow `#e9b824` (ink text), 25 green `#2f9c5a`, 10 white `#eef0f4` with a hairline (ink text), 5 charcoal `#3b404c`, 2.5 silver `#b9bfca` (ink text).
 9. **Readiness ring** (section 6.4).
@@ -173,6 +184,11 @@ Code lives in `apps/web/src/shared/charts/`. The plate drawing and the readiness
 - **Done versus planned:** done load is filled; planned load is a 2px outline in the same series color. **Today** gets an `--accent-subtle` band, a 2px ember outline and a short ember label.
 - Every chart has a table view built from the same data, tap or hover tooltips with at least a 24px hit area, and keyboard focus that shows the same as hover.
 - SVG charts use `var(--token)` directly, so theme changes need no re-render. uPlot draws on canvas, so its wrapper resolves the tokens with `getComputedStyle` at mount and re-creates the plot when the theme changes.
+- Measure chart width with the shared `Plot` component and draw in CSS pixels.
+  Resizing a card must preserve text and stroke sizes. Legends wrap in normal
+  document flow outside the SVG; labels get dedicated gutters. Trend lines use
+  monotone interpolation through the recorded samples. Dense charts preserve
+  missing-value gaps and observe their container's size.
 - Palettes are validated with the dataviz script in both themes before use:
   - Categorical (time split: warm-up, lifting, rest): light `#c2410c #485cc7 #08a49c` on `#ffffff` passes every check (worst adjacent CVD delta E 20.6); dark `#e0652b #6f80e6 #16a390` on `#121a33` passes (worst adjacent CVD delta E 15.2).
   - Ordinal (intensity zones): one-hue blue, light `#86b6ef #5598e7 #2a78d6 #1c5cab #104281`, dark `#184f95 #256abf #3987e5 #6da7ec #9ec5f4`, both pass `--ordinal`.
@@ -211,7 +227,8 @@ Today, Plan, Body, Progress, Coach (decided 2026-09-13). Settings and history ar
 
 ### 7.1 Today (U3)
 
-Layout: header (date and block week, history and settings buttons), a timeline rail on the left edge (70px), the stage card to its right, the tab bar.
+Layout: a branded utility header, date and block week above the page title, a
+52px timeline rail with a 16px gap, the stage card to its right, and the tab bar.
 
 **Timeline rail.** The day's stages in order: check-in, warm-up, lift, recover, run, wind down, each with its planned time. Stages without a planned item are skipped; a rest day shows check-in, recover and wind down (decided; DECISIONS U10). Done stages are teal with a check; the current stage is a larger ember node with the CTA shadow; later stages are outlined. A vertical flick on the rail or the card moves between stage cards to preview what's next or look back; small chevrons at the rail's ends show it scrolls. It snaps back to "now" after 10 s idle (decided; DECISIONS U9) and advances on its own when a stage completes (warm-up done, session finished, run saved) or its planned time passes.
 
@@ -223,6 +240,12 @@ Layout: header (date and block week, history and settings buttons), a timeline r
 | After the lift ("Now · recover") | "Lift done", three figures (58 min, 20,420 lb +6%, 1 PR), this week's load with today's lift now filled and the run still outlined, one recovery line, the large "See session" button, a secondary "Run earlier instead". Below: "Next · in 9 h 40 m · Easy run". |
 | During a run | Hands off to the run screens (7.14); the rail shows run as current. |
 | Evening ("Now · wind down") | "Day complete", today's totals (lift minutes, run miles, load), the full week, tomorrow's plan ("Monday · rest day"), the sleep target, the large "See day summary" button. |
+
+The current phone lift/warm-up card refines the original before-lift composition:
+day title, top-set figure, readiness score and reason, duration, primary action,
+then the next run. The ring and weekly-load plot live in a full-width expandable
+"Readiness & weekly load" section beneath the action. This avoids squeezing two
+chart columns beside the rail.
 
 ### 7.2 Plan (U4)
 
@@ -280,13 +303,27 @@ Start (map, GPS status, the planned run, Start run), Live (time, miles largest, 
 
 Sidebar groups into Stats (Overview, Lifts, Running, Body, History) and Author (Programs, Exercises, Coach memory, Calibration), with Settings and the phone-shell link pinned below both (DECISIONS U11; supersedes the earlier Today/Plan/Programs/Run plans/Exercises/Body/Progress/Coach/Settings list, which the shipped v1 build had already diverged from). The Programs page itself is unchanged: a header with the block and Generate next block, the liftoscript editor with inline errors, and the evaluated week preview with week totals.
 
+The refined shell labels these groups Training and Workspace. It uses a
+232-256px full-height sidebar, a 72px workspace toolbar, and a wide, responsive
+content region. Overview is the default desktop entry, statistics share one
+strip, and related charts align in a two-column grid. Settings opens inside the
+desktop shell. Below 760px, an explicit menu toggles the sidebar. Program source
+and its week preview share a responsive split view. Run detail uses three
+separate plots for pace, heart rate, and elevation, with synchronized time
+windows and cursors.
+
 ### 7.16 Desktop: coach memory
 
 Dated, sourced facts with Accept / Reject for pending ones, the profile the coach reads, and the coach log including clamped and discarded adjustments.
 
 ### 7.17 Landing page (U7)
 
-For people reaching Qala on the tailnet: headline "Lift and run from one plan.", one paragraph, Open Qala and How it decides, then four sections (how it decides, plans, running, coach) using real screen fragments; AGPL and liftosaur credit in the footer. No testimonials or invented claims.
+For people reaching Qala on the tailnet: a wide editorial hero, "Train with the
+whole picture.", concise supporting copy, Open Qala and How it decides, and a
+clearly labeled example training card using the real weekly-load chart. Three
+sections explain planning, adaptation, and progress. Open Qala enters the
+desktop workspace on wide screens and Today on phones. AGPL and liftosaur
+credit remain in the footer.
 
 ## 8. Mockups
 
