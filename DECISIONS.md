@@ -4,7 +4,7 @@ Every choice berkley (the owner) made while planning Qala on 2026-09-13, in one 
 
 Status: **decided** means the owner said so. **Recommended** means Claude proposed it and the owner accepted it or didn't push back; confirm before building if in doubt. **Assumption** means it was chosen without asking and is cheap to change. **Open** means the owner still has to answer.
 
-Nothing is being built yet. The owner reviews plans and mockups first and says when to start.
+Planning and mockups are done; the owner said to start building, and there is now a working v1 build (README "Status"). P5 below records the original plan-first decision for history; it no longer describes the current phase.
 
 ## 1. Product and scope
 
@@ -14,7 +14,7 @@ Nothing is being built yet. The owner reviews plans and mockups first and says w
 | P2 | Built around liftosaur's liftoscript: programs are text, vendored as a new TypeScript codebase, not a fork of their app. | decided | Forking liftosaur. | PLAN 3, 5 |
 | P3 | Adaptive engine (fitness and fatigue, per-muscle soreness check-ins, evidence-based volume and deload rules), a local Gemma coach that can only nudge inside fixed limits, and a goal-driven generator like Evolve's. | decided | An LLM that writes programs freely. | PLAN 6, 11, 12 |
 | P4 | Self-hosted on `callisto`, reached over Tailscale; several users, some on iOS, later. AGPL-3.0, public repo, liftosaur credited. | decided | Cloud hosting, accounts. | PLAN 2, 3 |
-| P5 | Plan, research and mockups first; no code until the owner says build. | decided | Starting the scaffold now. | this file |
+| P5 | Plan, research and mockups first; no code until the owner says build. | superseded (owner said to start building; see README "Status") | Starting the scaffold now. | this file |
 | P6 | No watch app. | decided | | PLAN 16 |
 
 ## 2. Training
@@ -78,6 +78,7 @@ Nothing is being built yet. The owner reviews plans and mockups first and says w
 | U8 | The Coach tab is open-ended conversation within fitness/training/health topics (declines unrelated requests); any action it proposes still passes through the P3 envelope. | decided (confirmed 2026-09-13) | Bounding the conversation itself to PLAN 11's seven features. | DESIGN 7.11, `docs/adr/0001-coach-open-chat.md` |
 | U9 | The Today rail snaps back to "now" 10 s after being left idle. | decided (confirmed 2026-09-13) | Leaving it wherever the user last scrolled. | DESIGN 7.1 |
 | U10 | Rest-day mobility work is a suggestion line on the check-in card (from soreness answers and owned equipment), not a tracked stage. | decided (2026-09-13) | A dedicated mobility/recovery stage on rest days. | DESIGN 7.1, 7.3 |
+| U11 | `ChartShell` gets a `flat` mode (no card border/shadow/padding) for charts nested inside a card that already supplies chrome, e.g. the Today hero. The readiness ring's grid column got a fixed 156px width instead of an even `1fr 1fr` split with the top-set text, since an even split on a 390px phone left the ring too small to read (owner: "the readiness graph is poorly shifted"). | decided (2026-09-13, visual tightening pass) | Card-in-card chrome around every chart on Today; an even-split grid for the readiness ring row. | DESIGN 6.2, 7.1 |
 
 ## 7. Questions resolved (grilled 2026-09-13)
 

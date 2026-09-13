@@ -7,19 +7,49 @@ import {
   checkRunFatigueHold,
   checkSameDayOrder,
 } from "./running.ts";
-import { ReasonCode, countSets } from "./volume.ts";
+import { countSets, ReasonCode } from "./volume.ts";
 import { assert } from "./testutil.ts";
 
-const RUN = { minutes: 45, endedAtIso: "2026-01-06T22:00:00Z", distanceM: 10000, z: 1 as const };
+const RUN = {
+  minutes: 45,
+  endedAtIso: "2026-01-06T22:00:00Z",
+  distanceM: 10000,
+  z: 1 as const,
+};
 
 Deno.test("row 1 run-before-lift fires on boundary, not below", () => {
-  assert(checkRunBeforeLift(RUN, "2026-01-07T05:59:00Z", ["squat"]) !== null, "7:59 fires");
-  assert(checkRunBeforeLift(RUN, "2026-01-07T06:00:00Z", ["squat"]) === null, "8:00 does not");
-  assert(checkRunBeforeLift({ ...RUN, minutes: 30 }, "2026-01-07T05:00:00Z", ["deadlift"]) !== null, "30 min fires");
-  assert(checkRunBeforeLift({ ...RUN, minutes: 29 }, "2026-01-07T05:00:00Z", ["deadlift"]) === null, "29 min does not");
-  assert(checkRunBeforeLift(RUN, "2026-01-07T05:00:00Z", ["bench"]) === null, "upper body exempt");
-  assert(checkRunBeforeLift(RUN, "2026-01-07T05:00:00Z", ["lunge"]) !== null, "lunge covered");
-  assert(checkRunBeforeLift(RUN, "2026-01-07T05:00:00Z", ["leg-press"]) !== null, "leg press covered");
+  assert(
+    checkRunBeforeLift(RUN, "2026-01-07T05:59:00Z", ["squat"]) !== null,
+    "7:59 fires",
+  );
+  assert(
+    checkRunBeforeLift(RUN, "2026-01-07T06:00:00Z", ["squat"]) === null,
+    "8:00 does not",
+  );
+  assert(
+    checkRunBeforeLift({ ...RUN, minutes: 30 }, "2026-01-07T05:00:00Z", [
+      "deadlift",
+    ]) !== null,
+    "30 min fires",
+  );
+  assert(
+    checkRunBeforeLift({ ...RUN, minutes: 29 }, "2026-01-07T05:00:00Z", [
+      "deadlift",
+    ]) === null,
+    "29 min does not",
+  );
+  assert(
+    checkRunBeforeLift(RUN, "2026-01-07T05:00:00Z", ["bench"]) === null,
+    "upper body exempt",
+  );
+  assert(
+    checkRunBeforeLift(RUN, "2026-01-07T05:00:00Z", ["lunge"]) !== null,
+    "lunge covered",
+  );
+  assert(
+    checkRunBeforeLift(RUN, "2026-01-07T05:00:00Z", ["leg-press"]) !== null,
+    "leg press covered",
+  );
 });
 
 Deno.test("row 2 lift-before-hard-run boundaries", () => {
@@ -32,12 +62,35 @@ Deno.test("row 2 lift-before-hard-run boundaries", () => {
 
 Deno.test("row 3 same-day order boundaries", () => {
   const lift = "2026-01-07T08:00:00Z";
-  assert(checkSameDayOrder(lift, "2026-01-07T14:00:00Z", true, false) === null, "6 h gap ok");
-  assert(checkSameDayOrder(lift, "2026-01-07T13:59:00Z", true, false) !== null, "<6 h warns");
-  assert(checkSameDayOrder(lift, "2026-01-08T07:00:00Z", true, true) !== null, "23 h warns for strength");
-  assert(checkSameDayOrder(lift, "2026-01-08T08:00:00Z", true, true) === null, "24 h ok for strength");
-  assert(checkSameDayOrder("2026-01-07T18:00:00Z", "2026-01-07T08:00:00Z", true, false) !== null, "run-first warns");
-  assert(checkSameDayOrder(lift, "2026-01-07T14:00:00Z", false, false) === null, "different days silent");
+  assert(
+    checkSameDayOrder(lift, "2026-01-07T14:00:00Z", true, false) === null,
+    "6 h gap ok",
+  );
+  assert(
+    checkSameDayOrder(lift, "2026-01-07T13:59:00Z", true, false) !== null,
+    "<6 h warns",
+  );
+  assert(
+    checkSameDayOrder(lift, "2026-01-08T07:00:00Z", true, true) !== null,
+    "23 h warns for strength",
+  );
+  assert(
+    checkSameDayOrder(lift, "2026-01-08T08:00:00Z", true, true) === null,
+    "24 h ok for strength",
+  );
+  assert(
+    checkSameDayOrder(
+      "2026-01-07T18:00:00Z",
+      "2026-01-07T08:00:00Z",
+      true,
+      false,
+    ) !== null,
+    "run-first warns",
+  );
+  assert(
+    checkSameDayOrder(lift, "2026-01-07T14:00:00Z", false, false) === null,
+    "different days silent",
+  );
 });
 
 Deno.test("row 4 run-fatigue hold above one typical session", () => {
@@ -47,11 +100,20 @@ Deno.test("row 4 run-fatigue hold above one typical session", () => {
 });
 
 Deno.test("rows 5-6 post-race boundaries", () => {
-  assert(checkPostRace(21000, 1)?.code === ReasonCode.POST_RACE_48H, "half at z1");
+  assert(
+    checkPostRace(21000, 1)?.code === ReasonCode.POST_RACE_48H,
+    "half at z1",
+  );
   assert(checkPostRace(20900, 1) === null, "20.9 km silent");
   assert(checkPostRace(21000, 0.5) === null, "half easy silent");
-  assert(checkPostRace(42000, 0.5)?.code === ReasonCode.POST_RACE_5D, "marathon any pace");
-  assert(checkPostRace(41900, 1.5)?.code === ReasonCode.POST_RACE_48H, "41.9k hard still 48h");
+  assert(
+    checkPostRace(42000, 0.5)?.code === ReasonCode.POST_RACE_5D,
+    "marathon any pace",
+  );
+  assert(
+    checkPostRace(41900, 1.5)?.code === ReasonCode.POST_RACE_48H,
+    "41.9k hard still 48h",
+  );
   assert(checkPostRace(41900, 0.5) === null, "41.9 km easy silent");
 });
 
@@ -67,5 +129,8 @@ Deno.test("running set-equivalents never change weekly set counts", () => {
     { muscle: "quads", direct: false, hard: true, runningEquivalent: true },
   ];
   const c = countSets(sets);
-  assert(c.direct === 1 && c.frac === 1, `run eq excluded: ${JSON.stringify(c)}`);
+  assert(
+    c.direct === 1 && c.frac === 1,
+    `run eq excluded: ${JSON.stringify(c)}`,
+  );
 });

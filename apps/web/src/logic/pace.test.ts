@@ -1,5 +1,11 @@
 import { assertEquals } from "@std/assert";
-import { avgPace, cueLabel, formatElapsed, formatPace, mpsToPaceSecPerMi } from "./pace.ts";
+import {
+  avgPace,
+  cueLabel,
+  formatElapsed,
+  formatPace,
+  mpsToPaceSecPerMi,
+} from "./pace.ts";
 
 Deno.test("pace conversions round-trip through a mile", () => {
   // 9:00/mi is 1609.344/540 = 2.9799 m/s.

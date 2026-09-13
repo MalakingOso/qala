@@ -76,15 +76,19 @@ export function serializeProposals(list: MemoryProposal[]): string {
 
 export function deserializeProposals(json: string): MemoryProposal[] {
   const parsed: unknown = JSON.parse(json);
-  if (!Array.isArray(parsed)) throw new Error("proposals JSON must be an array");
+  if (!Array.isArray(parsed)) {
+    throw new Error("proposals JSON must be an array");
+  }
   return parsed.map((entry) => {
     const p = entry as Record<string, unknown>;
     if (
       typeof p["id"] !== "string" ||
       typeof p["date"] !== "string" ||
       typeof p["text"] !== "string" ||
-      (p["source"] !== "user" && p["source"] !== "gemma" && p["source"] !== "engine") ||
-      (p["status"] !== "proposed" && p["status"] !== "accepted" && p["status"] !== "rejected")
+      (p["source"] !== "user" && p["source"] !== "gemma" &&
+        p["source"] !== "engine") ||
+      (p["status"] !== "proposed" && p["status"] !== "accepted" &&
+        p["status"] !== "rejected")
     ) {
       throw new Error("invalid memory proposal entry");
     }

@@ -6,7 +6,13 @@
 // 30% across two weeks; a down week every 3-4 weeks; a two-week race taper
 // with volume cut 41-60% and intensity kept. No 10% rule (failed its trial).
 
-import type { RunPlan, RunPlanDay, RunPlanWeek, RunWorkout, RunWorkoutType } from "./types.ts";
+import type {
+  RunPlan,
+  RunPlanDay,
+  RunPlanWeek,
+  RunWorkout,
+  RunWorkoutType,
+} from "./types.ts";
 
 export const EASY_CS_FRACTION = 0.78;
 export const EASY_TIME_SHARE = 0.8;
@@ -26,7 +32,11 @@ export interface RunPlanInput {
   raceDate?: string;
 }
 
-function riegelPredict(knownM: number, knownSec: number, targetM: number): number {
+function riegelPredict(
+  knownM: number,
+  knownSec: number,
+  targetM: number,
+): number {
   return knownSec * Math.pow(targetM / knownM, 1.06);
 }
 
@@ -76,7 +86,11 @@ function makeWorkout(
   if (type === "easy" || type === "recovery" || type === "long") {
     return {
       type,
-      steps: [{ kind: "work", seconds: Math.round(targetMin * 60), paceZone: easy }],
+      steps: [{
+        kind: "work",
+        seconds: Math.round(targetMin * 60),
+        paceZone: easy,
+      }],
       targetMin,
       targetKm,
       hard: false,
@@ -101,7 +115,11 @@ function makeWorkout(
       type,
       steps: [
         { kind: "warmup", seconds: 600, paceZone: easy },
-        { kind: "work", seconds: Math.round(targetMin * 0.6 * 60), paceZone: "tempo near CS" },
+        {
+          kind: "work",
+          seconds: Math.round(targetMin * 0.6 * 60),
+          paceZone: "tempo near CS",
+        },
         { kind: "cooldown", seconds: 600, paceZone: easy },
       ],
       targetMin,
@@ -145,7 +163,9 @@ export function weeklyDistances(input: RunPlanInput): number[] {
       d = out[w - 1] * 1.12;
     }
     if (w >= 2) d = Math.min(d, out[w - 2] * TWO_WEEK_GROWTH_CAP);
-    if (w >= 1 && input.goal !== "race") d = Math.min(d, out[w - 1] * TWO_WEEK_GROWTH_CAP);
+    if (w >= 1 && input.goal !== "race") {
+      d = Math.min(d, out[w - 1] * TWO_WEEK_GROWTH_CAP);
+    }
     out.push(Math.round(d * 10) / 10);
   }
   return out;
@@ -172,6 +192,17 @@ export function generateRunPlan(input: RunPlanInput): RunPlan {
     const longIdx = input.runsPerWeek - 1;
     const qualIdxs = new Set<number>();
     if (input.runsPerWeek >= 2) qualIdxs.add(1);
+    // NOTE (see DECISIONS.md / report): at runsPerWeek === 4, longIdx is 3,
+    // the same slot this would use for a second quality session, so the
+    // `.delete(longIdx)` below silently drops back to one quality session
+    // here even though `qualityCount(4)` says two. Moving the second
+    // session to a free slot (index 2) is possible but was reverted: it
+    // pushes two of this test suite's other specified invariants below
+    // their stated bounds for a 4-day week (easyTimeShare's 80% floor, and
+    // the race-taper week's "only the race is hard" rule) — a genuine
+    // conflict between "two quality sessions at 4+" and those two rules,
+    // not a one-line fix. Left as documented, owner-facing behavior
+    // pending a decision on which rule gives way for a 4-day week.
     if (nQuality === 2 && input.runsPerWeek >= 4) qualIdxs.add(3);
     qualIdxs.delete(longIdx);
 
@@ -185,15 +216,23 @@ export function generateRunPlan(input: RunPlanInput): RunPlan {
       let workout: RunWorkout;
       if (i === longIdx && !taperWeek) {
         workout = makeWorkout("long", 60 + (longKm / 10) * 55, longKm, input);
-      } else if (i === longIdx && input.goal === "race" && w === input.weeks - 1) {
+      } else if (
+        i === longIdx && input.goal === "race" && w === input.weeks - 1
+      ) {
         const rd = (input.raceDistanceM ?? 5000) / 1000;
         workout = makeWorkout("race", 30 + rd * 5, rd, input);
       } else if (qualIdxs.has(i)) {
         const q = quals[sortedQuals.indexOf(i) % quals.length];
         workout = makeWorkout(q, 45, Math.round(qualKmEach * 10) / 10, input);
       } else {
-        const share = easyKm / Math.max(1, input.runsPerWeek - qualIdxs.size - 1);
-        workout = makeWorkout("easy", 30 + share * 5, Math.round(share * 10) / 10, input);
+        const share = easyKm /
+          Math.max(1, input.runsPerWeek - qualIdxs.size - 1);
+        workout = makeWorkout(
+          "easy",
+          30 + share * 5,
+          Math.round(share * 10) / 10,
+          input,
+        );
       }
       days.push({ dayOfWeek: runDays[i], workout });
     }
@@ -204,7 +243,11 @@ export function generateRunPlan(input: RunPlanInput): RunPlan {
     }
     weeks.push({ week: w + 1, downWeek, taperWeek, days });
   }
-  return { name: `${kinds} plan, ${input.runsPerWeek} runs/wk`, goal: kinds, weeks };
+  return {
+    name: `${kinds} plan, ${input.runsPerWeek} runs/wk`,
+    goal: kinds,
+    weeks,
+  };
 }
 
 // Spread run days across the week: long run Sunday, quality mid-week.

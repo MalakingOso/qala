@@ -65,6 +65,7 @@ import {
 import type { IPlannerProgramExercise } from "./pages/planner/models/types.ts";
 import type { IByTag } from "./pages/planner/plannerEvaluator.ts";
 import { PlannerProgram_evaluateText } from "./pages/planner/models/plannerProgram.ts";
+import { PlannerKey_fromExerciseType } from "./pages/planner/plannerKey.tsx";
 import { ProgramToPlanner } from "./models/programToPlanner.ts";
 import { PlannerProgram_generateFullText } from "./pages/planner/models/plannerProgram.ts";
 import { ProgramExercise_applyVariables } from "./models/programExercise.ts";
@@ -339,22 +340,26 @@ export function runAllFinishDayScripts(
   const exerciseData: Record<string, { rm1: IWeight }> = {};
   const errors: string[] = [];
   const newEvaluatedProgram = ObjectUtils_clone(program);
-  const dayData: IDayData = {
-    day,
-    week: program.weeks.length > 0 ? 1 : 1,
-    dayInWeek: day,
-  };
   const programDay = Program_getProgramDay(newEvaluatedProgram, day);
   if (!programDay) {
+    const message = `No program day found for day ${day}; nothing was run.`;
+    errors.push(message);
+    opts?.onError?.(message);
+    // Return the program's own current text, not "": a caller that writes
+    // `plannerText` straight back as the program source must never see an
+    // empty result wipe the program on a bad day index.
+    const plannerText = PlannerProgram_generateFullText(
+      new ProgramToPlanner(program, settings).convertToPlanner().weeks,
+    );
     return {
       evaluatedProgram: program,
-      plannerText: "",
+      plannerText,
       nextDay: day,
       exerciseData,
       errors,
     };
   }
-  const resolvedDayData = programDay.dayData ?? dayData;
+  const resolvedDayData = programDay.dayData;
   for (const entry of entries) {
     if (
       entry != null && !entry.isSuppressed &&
@@ -425,6 +430,11 @@ export function runAllFinishDayScripts(
             console.error(message);
           }
         }
+      } else if (entry.programExerciseId != null) {
+        const message =
+          `No program exercise found for key "${entry.programExerciseId}" on day ${day}; its finish-day script did not run.`;
+        errors.push(message);
+        opts?.onError?.(message);
       }
     }
   }
@@ -545,16 +555,30 @@ export function qalaSettingsToLiftoscript(core: CoreSettings): ISettings {
 export function qalaExerciseIdToType(exerciseId: string): IExerciseType {
   const found = Exercise_findByName(exerciseId, {});
   if (found) {
-    return { id: found.id };
+    // Equipment must carry through: it's part of the planner key
+    // (`Exercise_toKey` appends `_<equipment>`), so dropping it here would
+    // make `qalaLiftEntryToHistoryEntry`'s programExerciseId mismatch any
+    // planner exercise line that specifies equipment.
+    return { id: found.id, equipment: found.equipment };
   }
   return { id: exerciseId } as IExerciseType;
 }
 
-/** Map one core lift entry to a liftoscript history entry (planned targets filled by the caller). */
+/**
+ * Map one core lift entry to a liftoscript history entry (planned targets
+ * filled by the caller). `programExerciseKey` should be the matching program
+ * exercise's own `.key` from the evaluated day (e.g.
+ * `Program_getProgramDay(program, day)?.exercises[index]?.key`) whenever the
+ * caller has that context: a program's own key can carry a label prefix
+ * (GZCLP's "T1"/"T2") that can't be derived from the exercise id alone.
+ * Without it, this falls back to the label-free planner key, which is
+ * only correct for a program whose exercise lines don't use labels.
+ */
 export function qalaLiftEntryToHistoryEntry(
   liftEntry: LiftEntry,
   index: number,
   planned?: { weight?: { value: number; unit: "lb" | "kg" }; reps?: number }[],
+  programExerciseKey?: string,
 ): IHistoryEntry {
   const exercise = qalaExerciseIdToType(liftEntry.exerciseId);
   const sets: ISet[] = liftEntry.sets.map((s, i) => {
@@ -586,18 +610,33 @@ export function qalaLiftEntryToHistoryEntry(
     id: `${liftEntry.exerciseId}_${index}`,
     index,
     exercise,
-    programExerciseId: liftEntry.exerciseId,
+    // Must be the planner's own key (label-prefixed, equipment-suffixed,
+    // lower-cased), not the bare core exercise id: `runAllFinishDayScripts`
+    // looks the program exercise up by this value via
+    // `Program_getProgramExerciseForKeyAndDay`, and a mismatch means the
+    // exercise's finish-day script silently never runs.
+    programExerciseId: programExerciseKey ??
+      PlannerKey_fromExerciseType(exercise),
     sets,
     warmupSets: [],
   };
 }
 
-/** Build a history record shell for one core lift session day. */
+/**
+ * Build a history record shell for one core lift session day. `program`,
+ * when given, resolves each entry's real program-exercise key (label and
+ * equipment included) by day position instead of the label-free fallback
+ * key `qalaLiftEntryToHistoryEntry` derives on its own.
+ */
 export function qalaLiftSessionToHistoryRecord(
   session: LiftSession,
   day: number,
   programName: string,
+  program?: IEvaluatedProgram,
 ): IHistoryRecord {
+  const dayExercises = program
+    ? Program_getProgramDay(program, day)?.exercises
+    : undefined;
   return {
     vtype: "history_record",
     date: session.date,
@@ -605,7 +644,9 @@ export function qalaLiftSessionToHistoryRecord(
     programName,
     day,
     dayName: session.day,
-    entries: session.entries.map((e, i) => qalaLiftEntryToHistoryEntry(e, i)),
+    entries: session.entries.map((e, i) =>
+      qalaLiftEntryToHistoryEntry(e, i, undefined, dayExercises?.[i]?.key)
+    ),
     startTime: Date.parse(session.date),
     id: 0,
   };

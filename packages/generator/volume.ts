@@ -80,7 +80,12 @@ export function weeklyFracTarget(
   const rp = rpRow(muscle);
   const band = bandFor(priority);
   if (priority === "maintain") {
-    return { fracTarget: rp.mev[1], directMin: rp.mv[1], directMax: rp.mev[1], capped: false };
+    return {
+      fracTarget: rp.mev[1],
+      directMin: rp.mv[1],
+      directMax: rp.mev[1],
+      capped: false,
+    };
   }
   const start = Math.max(band.lo, rp.mev[1] + indirectCredit);
   // RP MRV (recovery guard) beats the owner floor: the most fractional sets we
@@ -95,7 +100,13 @@ export function weeklyFracTarget(
     capped = true;
     reason = VOLUME_CAPPED_BY_MRV;
   }
-  return { fracTarget: target, directMin: rp.mev[0], directMax: rp.mrv[0], capped, reason };
+  return {
+    fracTarget: target,
+    directMin: rp.mev[0],
+    directMax: rp.mrv[0],
+    capped,
+    reason,
+  };
 }
 
 // Strength-block volume: MEV to about 10 fractional sets per muscle.
@@ -106,7 +117,12 @@ export function strengthFracTarget(
 ): FracTarget {
   const rp = rpRow(muscle);
   if (priority === "maintain") {
-    return { fracTarget: rp.mev[1], directMin: rp.mv[1], directMax: rp.mev[1], capped: false };
+    return {
+      fracTarget: rp.mev[1],
+      directMin: rp.mv[1],
+      directMax: rp.mev[1],
+      capped: false,
+    };
   }
   const lo = priority === "emphasise" ? 14 : 10;
   const target = Math.min(10, Math.max(lo, rp.mev[1] + indirectCredit));
@@ -120,7 +136,12 @@ export function strengthFracTarget(
       reason: VOLUME_CAPPED_BY_MRV,
     };
   }
-  return { fracTarget: target, directMin: rp.mev[0], directMax: rp.mrv[0], capped: false };
+  return {
+    fracTarget: target,
+    directMin: rp.mev[0],
+    directMax: rp.mrv[0],
+    capped: false,
+  };
 }
 
 export const DELOAD_FACTOR = 0.5;
@@ -190,7 +211,10 @@ export function setCostSec(approach: Approach, klass: ExerciseClass): number {
   return baseRestSec(approach, klass) + (approach === "strength" ? 30 : 40);
 }
 
-export function warmupMinutes(day: DayPlan, referenceRm: Record<string, number>): number {
+export function warmupMinutes(
+  day: DayPlan,
+  referenceRm: Record<string, number>,
+): number {
   for (const ex of day.exercises) {
     if (ex.mainLift && referenceRm[ex.exerciseId] !== undefined) {
       if (ex.loadPct >= 85) return 15;
@@ -219,22 +243,40 @@ export function fitToTimeBudget(
   approach: Approach,
   referenceRm: Record<string, number>,
   budgetMin: number,
-): { day: DayPlan; estimatedMin: number; withinBudget: boolean; removedSets: number } {
+): {
+  day: DayPlan;
+  estimatedMin: number;
+  withinBudget: boolean;
+  removedSets: number;
+} {
   const copy: DayPlan = {
     ...day,
     exercises: day.exercises.map((e) => ({ ...e })),
   };
   let removedSets = 0;
   const rank = (e: PlannedExercise) =>
-    e.klass === "isolation" ? 0 : e.slot === "accessoryHigh" ? 1 : e.slot === "accessoryLow" ? 2 : 3;
+    e.klass === "isolation"
+      ? 0
+      : e.slot === "accessoryHigh"
+      ? 1
+      : e.slot === "accessoryLow"
+      ? 2
+      : 3;
   for (;;) {
     const est = estimateSessionMinutes(copy, approach, referenceRm);
-    if (est <= budgetMin) return { day: copy, estimatedMin: est, withinBudget: true, removedSets };
+    if (est <= budgetMin) {
+      return { day: copy, estimatedMin: est, withinBudget: true, removedSets };
+    }
     const candidates = copy.exercises
       .filter((e) => e.sets > 1 && !e.mainLift)
       .sort((a, b) => rank(a) - rank(b));
     if (candidates.length === 0) {
-      return { day: copy, estimatedMin: est, withinBudget: est <= budgetMin * 1.1, removedSets };
+      return {
+        day: copy,
+        estimatedMin: est,
+        withinBudget: est <= budgetMin * 1.1,
+        removedSets,
+      };
     }
     candidates[0].sets -= 1;
     removedSets += 1;

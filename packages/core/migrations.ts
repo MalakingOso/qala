@@ -1,24 +1,17 @@
 /** Schema version handling and migrations for the user document. */
 
-import { bumperColorFor, defaultBarbellStep } from "./plates.ts";
+import { defaultBarbellStep, defaultLbInventory } from "./plates.ts";
+import { emptyOverlay } from "./exerciseTypes.ts";
 import type { QalaDocument, Settings } from "./schema.ts";
 
 /** Current document version. v0 (no `schemaVersion`) migrates to this. */
 export const CURRENT_SCHEMA_VERSION = 1;
 
 function defaultSettings(): Settings {
-  const plates = [
-    { weight: 45, pairs: "enough" as const, color: bumperColorFor(45, "lb") },
-    { weight: 35, pairs: "enough" as const, color: bumperColorFor(35, "lb") },
-    { weight: 25, pairs: "enough" as const, color: bumperColorFor(25, "lb") },
-    { weight: 10, pairs: "enough" as const, color: bumperColorFor(10, "lb") },
-    { weight: 5, pairs: "enough" as const, color: bumperColorFor(5, "lb") },
-    { weight: 2.5, pairs: "enough" as const, color: bumperColorFor(2.5, "lb") },
-    { weight: 1.25, pairs: 0 as const, color: bumperColorFor(1.25, "lb") },
-  ];
+  const plates = defaultLbInventory();
   return {
     units: { weight: "lb", distance: "mi" },
-    barbellStep: defaultBarbellStep(plates),
+    barbellStep: defaultBarbellStep(plates.plates),
     dumbbellStep: 5,
     mainLifts: ["squat", "bench", "deadlift", "overheadPress"],
     theme: "system",
@@ -30,18 +23,7 @@ function defaultSettings(): Settings {
     },
     hybridPriority: "lifting",
     injuries: [],
-    plates: {
-      unit: "lb",
-      collarWeight: 0,
-      bars: [{
-        id: "bar-olympic",
-        name: "Olympic bar",
-        weight: 45,
-        default: true,
-      }],
-      plates,
-      colorScheme: "bumper",
-    },
+    plates,
     warmup: {
       enabled: true,
       softTissue: true,
@@ -63,7 +45,7 @@ export function createBaselineDocument(): QalaDocument {
   return {
     schemaVersion: CURRENT_SCHEMA_VERSION,
     settings: defaultSettings(),
-    exercises: { hidden: [], custom: {}, overrides: {} },
+    exercises: emptyOverlay(),
     exerciseNotes: {},
     equipment: {
       recovery: ["foamRoller", "percussionMassager"],

@@ -4,7 +4,12 @@
 import { useState } from "react";
 import { useQala } from "../../store/qalaStore.tsx";
 import { Card, Chip, PrimaryButton, StatTiles } from "../../shared/ui.tsx";
-import { E1rmLine, RepsIntensity, SetsByMuscle, TimeSplit } from "../../shared/charts/index.ts";
+import {
+  E1rmLine,
+  RepsIntensity,
+  SetsByMuscle,
+  TimeSplit,
+} from "../../shared/charts/index.ts";
 
 export function SessionCompletePage() {
   const { queueOp } = useQala();
@@ -64,7 +69,9 @@ export function SessionCompletePage() {
       />
       <Card>
         <p className="group-label">Exercises · volume vs last time</p>
-        {["Back Squat +6%", "RDL +3%", "Lunge +0%", "Calf raise +8%"].map((r) => (
+        {["Back Squat +6%", "RDL +3%", "Lunge +0%", "Calf raise +8%"].map((
+          r,
+        ) => (
           <p key={r} style={{ margin: "4px 0" }}>
             {r}
           </p>
@@ -72,9 +79,20 @@ export function SessionCompletePage() {
       </Card>
       <Card>
         <p className="group-label">Two quick questions</p>
-        <p>How did each muscle perform? (1 exceeded · 2 hit · 3 struggled · 4 no match)</p>
+        <p>
+          How did each muscle perform? (1 exceeded · 2 hit · 3 struggled · 4 no
+          match)
+        </p>
         {["quads", "glutes", "hamstrings"].map((m) => (
-          <div key={m} style={{ display: "flex", gap: 4, alignItems: "center", marginBottom: 6 }}>
+          <div
+            key={m}
+            style={{
+              display: "flex",
+              gap: 4,
+              alignItems: "center",
+              marginBottom: 6,
+            }}
+          >
             <span style={{ width: 110, textTransform: "capitalize" }}>{m}</span>
             {[1, 2, 3, 4].map((v) => (
               <button
@@ -83,7 +101,9 @@ export function SessionCompletePage() {
                 aria-pressed={perf[m] === v}
                 onClick={() => setPerf((p) => ({ ...p, [m]: v }))}
                 className="icon-btn"
-                style={perf[m] === v ? { outline: "2px solid var(--accent)" } : undefined}
+                style={perf[m] === v
+                  ? { outline: "2px solid var(--accent)" }
+                  : undefined}
               >
                 {v}
               </button>
@@ -99,7 +119,9 @@ export function SessionCompletePage() {
               aria-pressed={srpe === v}
               onClick={() => setSrpe(v)}
               className="icon-btn"
-              style={srpe === v ? { outline: "2px solid var(--accent)" } : undefined}
+              style={srpe === v
+                ? { outline: "2px solid var(--accent)" }
+                : undefined}
             >
               {v}
             </button>

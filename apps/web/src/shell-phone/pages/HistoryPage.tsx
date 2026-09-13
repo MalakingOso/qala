@@ -7,7 +7,9 @@ export function HistoryPage() {
         <h1 className="page-title title">History</h1>
       </div>
       <Card>
-        <p className="kbd-hint">Starts cold; every session lands here and replays into the engine.</p>
+        <p className="kbd-hint">
+          Starts cold; every session lands here and replays into the engine.
+        </p>
       </Card>
       <Group label="This week">
         <GroupRow>

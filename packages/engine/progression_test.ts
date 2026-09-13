@@ -1,8 +1,7 @@
 // PLAN 6.5 bullet 6: RP table, deload triggers, Helms cap, envelope, plates.
-import { recommendNextSession, clampWeightPct, clampSets } from "./mod.ts";
+import { clampSets, clampWeightPct, recommendNextSession } from "./mod.ts";
 import { initialState } from "./state.ts";
 import {
-  ReasonCode,
   bandTarget,
   blockStartFrac,
   countSets,
@@ -12,6 +11,7 @@ import {
   isWorkSet,
   mondayKey,
   rampWeek,
+  ReasonCode,
   roundWeight,
   rpProgression,
   rpRow,
@@ -20,18 +20,39 @@ import {
 import { assert, assertClose, assertEqual } from "./testutil.ts";
 
 Deno.test("RP rule table", () => {
-  assertEqual(rpProgression(1, 1, 7), { sets: 2, code: ReasonCode.RP_ADD_2 }, "1/1 -> +2");
-  assertEqual(rpProgression(2, 2, 7), { sets: 1, code: ReasonCode.RP_ADD_1 }, "2/2 -> +1");
-  assertEqual(rpProgression(1, 2, 7), { sets: 1, code: ReasonCode.RP_ADD_1 }, "1/2 -> +1");
+  assertEqual(
+    rpProgression(1, 1, 7),
+    { sets: 2, code: ReasonCode.RP_ADD_2 },
+    "1/1 -> +2",
+  );
+  assertEqual(
+    rpProgression(2, 2, 7),
+    { sets: 1, code: ReasonCode.RP_ADD_1 },
+    "2/2 -> +1",
+  );
+  assertEqual(
+    rpProgression(1, 2, 7),
+    { sets: 1, code: ReasonCode.RP_ADD_1 },
+    "1/2 -> +1",
+  );
   assert(rpProgression(3, 2, 7).code === ReasonCode.RP_HOLD, "any 3 holds");
   assert(rpProgression(2, 3, 7).code === ReasonCode.RP_HOLD, "perf 3 holds");
   assert(rpProgression(1, 2, 7).sets === 1, "+1 set");
   const d = rpProgression(2, 4, 7);
-  assert(d.code === ReasonCode.MUSCLE_DELOAD && "deload" in d, "perf 4 deloads");
+  assert(
+    d.code === ReasonCode.MUSCLE_DELOAD && "deload" in d,
+    "perf 4 deloads",
+  );
   const d2 = rpProgression(2, 2, 4);
   assert(d2.code === ReasonCode.MUSCLE_DELOAD, "prs<=4 deloads");
-  assert(rpProgression(4, 2, 7).code === ReasonCode.RP_HOLD, "soreness 4 holds");
-  assert(rpProgression(2, 2, 5).code === ReasonCode.RP_ADD_1, "prs 5 progresses");
+  assert(
+    rpProgression(4, 2, 7).code === ReasonCode.RP_HOLD,
+    "soreness 4 holds",
+  );
+  assert(
+    rpProgression(2, 2, 5).code === ReasonCode.RP_ADD_1,
+    "prs 5 progresses",
+  );
 });
 
 Deno.test("whole-body deload trigger: two lifts below median twice", () => {
@@ -39,10 +60,20 @@ Deno.test("whole-body deload trigger: two lifts below median twice", () => {
     { squat: [180, 182], bench: [120, 122] },
     { squat: 190, bench: 130 },
   );
-  assert(yes.deload && yes.setsFactor === 0.6 && yes.loadFactor === 0.9 && yes.days === 7, "deload 5-7d");
-  const one = wholeBodyDeload({ squat: [180, 182], bench: [120, 135] }, { squat: 190, bench: 130 });
+  assert(
+    yes.deload && yes.setsFactor === 0.6 && yes.loadFactor === 0.9 &&
+      yes.days === 7,
+    "deload 5-7d",
+  );
+  const one = wholeBodyDeload({ squat: [180, 182], bench: [120, 135] }, {
+    squat: 190,
+    bench: 130,
+  });
   assert(!one.deload, "one lift recovering: no deload");
-  const once = wholeBodyDeload({ squat: [180, 192], bench: [120, 122] }, { squat: 190, bench: 130 });
+  const once = wholeBodyDeload({ squat: [180, 192], bench: [120, 122] }, {
+    squat: 190,
+    bench: 130,
+  });
   assert(!once.deload, "one session only: no deload");
 });
 
@@ -81,7 +112,10 @@ Deno.test("recommendation clamps double progression into envelope", () => {
     lastTwoHits: [true, true],
   }], "2026-01-07T18:00:00Z");
   // Lower-body double progression wants +5%; envelope caps at +2.5.
-  assert(rec.lifts[0].recWeightPct === 2.5, `clamped: ${rec.lifts[0].recWeightPct}`);
+  assert(
+    rec.lifts[0].recWeightPct === 2.5,
+    `clamped: ${rec.lifts[0].recWeightPct}`,
+  );
   assert(rec.reasons.includes(ReasonCode.DOUBLE_PROGRESSION), "reason kept");
 });
 
@@ -97,10 +131,19 @@ Deno.test("double progression needs two consecutive hits", () => {
 Deno.test("volume counting: work/hard/direct/frac + RP rows + bands", () => {
   assert(!isWorkSet({ completed: false }), "incomplete not work");
   assert(!isWorkSet({ completed: true, warmup: true }), "warmup not work");
-  assert(!isWorkSet({ completed: true, load: 40, referenceRm: 100, isMain: true }), "main <50% not work");
-  assert(isWorkSet({ completed: true, load: 50, referenceRm: 100, isMain: true }), "main 50% is work");
+  assert(
+    !isWorkSet({ completed: true, load: 40, referenceRm: 100, isMain: true }),
+    "main <50% not work",
+  );
+  assert(
+    isWorkSet({ completed: true, load: 50, referenceRm: 100, isMain: true }),
+    "main 50% is work",
+  );
   assert(isHardSet(7) && !isHardSet(6.5), "logged rpe gate");
-  assert(isHardSet(undefined, 7) && !isHardSet(undefined, 6.5), "target rpe gate");
+  assert(
+    isHardSet(undefined, 7) && !isHardSet(undefined, 6.5),
+    "target rpe gate",
+  );
   const c = countSets([
     { muscle: "chest", direct: true, hard: true },
     { muscle: "chest", direct: false, hard: true },
@@ -115,10 +158,19 @@ Deno.test("volume counting: work/hard/direct/frac + RP rows + bands", () => {
   const emph = bandTarget("chest", "emphasise");
   assert(emph.fracMin === 14 && emph.fracMax === 20, "emphasise band");
   const maint = bandTarget("chest", "maintain");
-  assert(maint.fracMin === null && maint.directMin === 4 && maint.directMax === 6, "maintain MV..MEV");
+  assert(
+    maint.fracMin === null && maint.directMin === 4 && maint.directMax === 6,
+    "maintain MV..MEV",
+  );
   assert(blockStartFrac("chest", "grow", 2) === 10, "chest start");
   assert(blockStartFrac("back", "grow", 0) === 14, "back starts at 14");
-  assert(rampWeek(10, 1) === 10 && rampWeek(10, 5) === 18 && rampWeek(14, 5) === 20, "ramp +2 capped");
+  assert(
+    rampWeek(10, 1) === 10 && rampWeek(10, 5) === 18 && rampWeek(14, 5) === 20,
+    "ramp +2 capped",
+  );
   assert(mondayKey("2026-01-07T18:00:00Z") === "2026-01-05", "wed -> monday");
-  assert(mondayKey("2026-01-04T18:00:00Z") === "2025-12-29", "sunday -> prior monday");
+  assert(
+    mondayKey("2026-01-04T18:00:00Z") === "2025-12-29",
+    "sunday -> prior monday",
+  );
 });

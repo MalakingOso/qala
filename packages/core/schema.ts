@@ -4,8 +4,8 @@
  * seconds, m/s); lifting weights are `{ value, unit }` passthrough.
  */
 
-import type { ColorScheme, PlateUnit } from "./plates.ts";
-import type { Exercise, RestClass } from "./exerciseTypes.ts";
+import type { PlateInventory } from "./plates.ts";
+import type { ExerciseOverlay } from "./exerciseTypes.ts";
 import type { DistanceUnit, WeightUnit, WeightValue } from "./units.ts";
 
 export type Theme = "light" | "dark" | "system";
@@ -13,27 +13,6 @@ export type TitleFont = "qalaTest" | "faustina";
 export type Approach = "strength" | "hypertrophy" | "maintenance";
 export type Periodization = "linear" | "dup" | "block";
 export type HybridPriority = "lifting" | "running";
-
-export interface PlateBarSetting {
-  id: string;
-  name: string;
-  weight: number;
-  default?: boolean;
-}
-
-export interface PlateSettingEntry {
-  weight: number;
-  pairs: number | "enough";
-  color: string;
-}
-
-export interface PlateSettings {
-  unit: PlateUnit;
-  collarWeight: number;
-  bars: PlateBarSetting[];
-  plates: PlateSettingEntry[];
-  colorScheme: ColorScheme;
-}
 
 export interface RunSettings {
   hrMax?: number;
@@ -81,24 +60,13 @@ export interface Settings {
   hybridPriority: HybridPriority;
   injuries: Injury[];
   /** PLAN 6.8; the owner's real inventory is still to enter. */
-  plates: PlateSettings;
+  plates: PlateInventory;
   /** PLAN 6.7. */
   warmup: WarmupSettings;
   /** PLAN 6.6. */
   rest: RestSettings;
   /** DESIGN 3.3. */
   titleFont: TitleFont;
-}
-
-export interface ExercisesState {
-  hidden: string[];
-  custom: Record<string, Exercise>;
-  overrides: Record<string, {
-    increment?: number;
-    rounding?: number;
-    bar?: string;
-    restClass?: RestClass;
-  }>;
 }
 
 export interface ExerciseNote {
@@ -307,7 +275,7 @@ export interface LlmLogEntry {
 export interface QalaDocument {
   schemaVersion: number;
   settings: Settings;
-  exercises: ExercisesState;
+  exercises: ExerciseOverlay;
   exerciseNotes: Record<string, ExerciseNote[]>;
   equipment: EquipmentState;
   restProfile: RestProfile;

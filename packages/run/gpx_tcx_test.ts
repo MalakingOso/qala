@@ -50,6 +50,22 @@ Deno.test("GPX round-trip preserves points and HR", () => {
   assert(back.every((p) => p.hr === 150), "HR on every point");
 });
 
+Deno.test("GPX starts a new trkseg at a gap point instead of a straight line", () => {
+  const pts = filterFixes(lineFixes({ count: 5, speedMps: 3 }));
+  // Simulate a re-anchor: filter.ts sets `gap: true` on the point right
+  // after an unfiltered jump was excluded from the counted distance.
+  pts[3] = { ...pts[3], gap: true };
+  const gpx = exportRunGpx({ startTimeMs: 1700000000000, points: pts });
+  const segCount = (gpx.match(/<trkseg>/g) ?? []).length;
+  assert(segCount === 2, `one new segment per gap point, got ${segCount}`);
+  assert(
+    (gpx.match(/<\/trkseg>/g) ?? []).length === segCount,
+    "every trkseg is closed",
+  );
+  const back = trkpts(gpx);
+  assert(back.length === pts.length, "no points dropped across the split");
+});
+
 Deno.test("TCX laps: one per workout step, one per split without a workout", () => {
   const workout: RunWorkout = {
     type: "intervals",
@@ -74,6 +90,15 @@ Deno.test("TCX laps: one per workout step, one per split without a workout", () 
   const lapCount = (tcx.match(/<Lap /g) ?? []).length;
   assert(lapCount === 4, `TCX carries 4 laps, got ${lapCount}`);
   assert(tcx.includes('Sport="Running"'), "running sport");
+  const caloriesCount = (tcx.match(/<Calories>/g) ?? []).length;
+  assert(
+    caloriesCount === 4,
+    `every lap has the schema-required Calories element, got ${caloriesCount}`,
+  );
+  assert(
+    /<DistanceMeters>[^<]*<\/DistanceMeters><Calories>/.test(tcx),
+    "Calories comes right after DistanceMeters, before AverageHeartRateBpm",
+  );
 
   const pts = filterFixes(lineFixes({ count: 1100, speedMps: 3 }));
   const splits = computeSplits(pts);

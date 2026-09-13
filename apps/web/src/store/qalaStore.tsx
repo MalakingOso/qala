@@ -1,17 +1,18 @@
 /* Local-first store for the web shells. React context over useState for the
  * document, plus a useSyncExternalStore live-run ticker (PLAN 3: the live
- * run store goes through useSyncExternalStore). Sync against the automerge
- * server document happens in syncClient.ts; every mutation also lands in the
- * offline outbox so airplane-mode sessions replay on reconnect. */
+ * run store goes through useSyncExternalStore). Every mutation lands in the
+ * offline outbox so airplane-mode sessions replay on reconnect, but nothing
+ * yet drains that outbox against the server's real automerge-repo protocol
+ * (PLAN 7) — that client-side document layer isn't built. See the report. */
 
 import {
   createContext,
+  type ReactNode,
   useCallback,
   useContext,
   useEffect,
   useMemo,
   useState,
-  type ReactNode,
 } from "react";
 import type { SettingsModel, StageState, WorkoutExercise } from "./types.ts";
 import {
@@ -21,7 +22,11 @@ import {
   sampleMemory,
   sampleStages,
 } from "./sample.ts";
-import { loadOutbox, saveOutbox, type QueuedOp } from "../logic/offlineQueue.ts";
+import {
+  loadOutbox,
+  type QueuedOp,
+  saveOutbox,
+} from "../logic/offlineQueue.ts";
 import type { EnvelopeCardModel, MemoryProposal } from "./types.ts";
 
 export interface LiveRunSnapshot {
@@ -42,6 +47,8 @@ function makeLiveRunStore() {
     paceSecPerMi: 0,
     avgSecPerMi: 0,
   };
+  /** The snapshot at the moment `stop()` was called, for the summary screen. */
+  let last: LiveRunSnapshot | null = null;
   const listeners = new Set<() => void>();
   let timer: ReturnType<typeof setInterval> | null = null;
   const emit = () => {
@@ -70,8 +77,16 @@ function makeLiveRunStore() {
       };
     },
     getSnapshot: () => snap,
+    getLast: () => last,
     start: () => {
-      snap = { running: true, paused: false, elapsedSec: 0, miles: 0, paceSecPerMi: 540, avgSecPerMi: 540 };
+      snap = {
+        running: true,
+        paused: false,
+        elapsedSec: 0,
+        miles: 0,
+        paceSecPerMi: 540,
+        avgSecPerMi: 540,
+      };
       if (!timer) timer = setInterval(tick, 1000);
       emit();
     },
@@ -85,6 +100,7 @@ function makeLiveRunStore() {
     },
     stop: () => {
       snap = { ...snap, running: false };
+      last = snap;
       if (timer) {
         clearInterval(timer);
         timer = null;
@@ -102,7 +118,11 @@ interface QalaStore {
   stages: StageState[];
   setStageStatus: (id: StageState["id"], status: StageState["status"]) => void;
   exercises: WorkoutExercise[];
-  logSet: (exerciseId: string, setIndex: number) => void;
+  logSet: (
+    exerciseId: string,
+    setIndex: number,
+    patch?: { w?: number; r?: number; rpe?: number },
+  ) => void;
   envelopes: EnvelopeCardModel[];
   decideEnvelope: (id: string, accept: boolean) => void;
   memory: MemoryProposal[];
@@ -120,12 +140,16 @@ let opCounter = 0;
 export function QalaProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<SettingsModel>(defaultSettings);
   const [stages, setStages] = useState<StageState[]>(sampleStages);
-  const [exercises, setExercises] = useState<WorkoutExercise[]>(sampleExercises);
-  const [envelopes, setEnvelopes] = useState<EnvelopeCardModel[]>(sampleEnvelopes);
+  const [exercises, setExercises] = useState<WorkoutExercise[]>(
+    sampleExercises,
+  );
+  const [envelopes, setEnvelopes] = useState<EnvelopeCardModel[]>(
+    sampleEnvelopes,
+  );
   const [memory, setMemory] = useState<MemoryProposal[]>(sampleMemory);
   const [outbox, setOutbox] = useState<QueuedOp[]>(() => loadOutbox());
   const [online, setOnline] = useState<boolean>(() =>
-    typeof navigator === "undefined" ? true : navigator.onLine,
+    typeof navigator === "undefined" ? true : navigator.onLine
   );
 
   useEffect(() => saveOutbox(outbox), [outbox]);
@@ -148,33 +172,15 @@ export function QalaProvider({ children }: { children: ReactNode }) {
       setStages((st) => st.map((s) => (s.id === id ? { ...s, status } : s))),
     [],
   );
-  const logSet = useCallback((exerciseId: string, setIndex: number) => {
-    setExercises((exs) =>
-      exs.map((e) =>
-        e.id !== exerciseId
-          ? e
-          : {
-              ...e,
-              sets: e.sets.map((s, i) => (i === setIndex ? { ...s, done: true } : s)),
-            },
-      ),
-    );
-    setOutbox((q) => [
-      ...q,
-      {
-        id: `op-${Date.now()}-${opCounter++}`,
-        kind: "log-set",
-        at: new Date().toISOString(),
-        payload: { exerciseId, setIndex },
-        attempts: 0,
-      },
-    ]);
-  }, []);
   const decideEnvelope = useCallback((id: string, accept: boolean) => {
-    setEnvelopes((es) => es.map((e) => (e.id === id ? { ...e, accepted: accept } : e)));
+    setEnvelopes((es) =>
+      es.map((e) => (e.id === id ? { ...e, accepted: accept } : e))
+    );
   }, []);
   const decideMemory = useCallback((id: string, accept: boolean) => {
-    setMemory((ms) => ms.map((m) => (m.id === id ? { ...m, accepted: accept } : m)));
+    setMemory((ms) =>
+      ms.map((m) => (m.id === id ? { ...m, accepted: accept } : m))
+    );
   }, []);
   const queueOp = useCallback((kind: string, payload: unknown) => {
     setOutbox((q) => [
@@ -188,6 +194,27 @@ export function QalaProvider({ children }: { children: ReactNode }) {
       },
     ]);
   }, []);
+  const logSet = useCallback(
+    (
+      exerciseId: string,
+      setIndex: number,
+      patch?: { w?: number; r?: number; rpe?: number },
+    ) => {
+      setExercises((exs) =>
+        exs.map((e) =>
+          e.id !== exerciseId ? e : {
+            ...e,
+            sets: e.sets.map((
+              s,
+              i,
+            ) => (i === setIndex ? { ...s, ...patch, done: true } : s)),
+          }
+        )
+      );
+      queueOp("log-set", { exerciseId, setIndex, ...patch });
+    },
+    [queueOp],
+  );
 
   const value = useMemo<QalaStore>(
     () => ({

@@ -2,21 +2,37 @@
 // recommendNextSession / calibrate. Pure functions over EngineState.
 
 import {
-  initialState,
-  isLowerBodyLift,
   type Checkin,
   type EngineState,
+  initialState,
+  isLowerBodyLift,
   type LiftWorkout,
   type RunWorkout,
   type Workout,
 } from "./state.ts";
-import { TAU_DAMAGE, TAU_FITNESS_LIFT, TAU_FITNESS_RUN, TAU_SYSTEMIC, daysBetween, decayRecord, decayValue, muscleTau } from "./decay.ts";
+import {
+  daysBetween,
+  decayRecord,
+  decayValue,
+  muscleTau,
+  TAU_DAMAGE,
+  TAU_FITNESS_LIFT,
+  TAU_FITNESS_RUN,
+  TAU_SYSTEMIC,
+} from "./decay.ts";
 import { bestObservation } from "./e1rm.ts";
 import { initKalman, kalmanUpdate } from "./kalman.ts";
-import { predictReadiness as readinessCore, type Readiness } from "./readiness.ts";
-import { ReasonCode, doubleProgression, roundWeight, wholeBodyDeload } from "./volume.ts";
 import {
-  SRPE_PER_100_RTSS_PRIOR,
+  predictReadiness as readinessCore,
+  type Readiness,
+} from "./readiness.ts";
+import {
+  doubleProgression,
+  ReasonCode,
+  roundWeight,
+  wholeBodyDeload,
+} from "./volume.ts";
+import {
   checkPostRace,
   checkRunBeforeLift,
   checkRunFatigueHold,
@@ -27,20 +43,29 @@ import {
   rbeFactor,
   rtss,
   runSetEquivalents,
+  type RunZone,
   runZone,
+  SRPE_PER_100_RTSS_PRIOR,
   srpeLoadRatio,
   vdotFromEffort,
-  type RunZone,
 } from "./running.ts";
 
-export const ENVELOPE = { weightPctMin: -10, weightPctMax: 2.5, setsMin: -2, setsMax: 1 } as const;
+export const ENVELOPE = {
+  weightPctMin: -10,
+  weightPctMax: 2.5,
+  setsMin: -2,
+  setsMax: 1,
+} as const;
 
 export function clampWeightPct(pct: number): number {
   return Math.min(ENVELOPE.weightPctMax, Math.max(ENVELOPE.weightPctMin, pct));
 }
 
 export function clampSets(delta: number): number {
-  return Math.min(ENVELOPE.setsMax, Math.max(ENVELOPE.setsMin, Math.round(delta)));
+  return Math.min(
+    ENVELOPE.setsMax,
+    Math.max(ENVELOPE.setsMin, Math.round(delta)),
+  );
 }
 
 function setFactor(rpe?: number, targetRpe?: number): number {
@@ -54,11 +79,17 @@ function clone(s: EngineState): EngineState {
 
 function decayAll(s: EngineState, dt: number): void {
   if (!(dt > 0)) return;
-  for (const k of Object.keys(s.fitness)) s.fitness[k] = decayValue(s.fitness[k], dt, TAU_FITNESS_LIFT);
+  for (const k of Object.keys(s.fitness)) {
+    s.fitness[k] = decayValue(s.fitness[k], dt, TAU_FITNESS_LIFT);
+  }
   s.fatigueMuscle = decayRecord(s.fatigueMuscle, dt, muscleTau);
   s.runFatigueMuscle = decayRecord(s.runFatigueMuscle, dt, muscleTau);
-  for (const k of Object.keys(s.fatigueDamage)) s.fatigueDamage[k] = decayValue(s.fatigueDamage[k], dt, TAU_DAMAGE);
-  for (const k of Object.keys(s.runFatigueDamage)) s.runFatigueDamage[k] = decayValue(s.runFatigueDamage[k], dt, TAU_DAMAGE);
+  for (const k of Object.keys(s.fatigueDamage)) {
+    s.fatigueDamage[k] = decayValue(s.fatigueDamage[k], dt, TAU_DAMAGE);
+  }
+  for (const k of Object.keys(s.runFatigueDamage)) {
+    s.runFatigueDamage[k] = decayValue(s.runFatigueDamage[k], dt, TAU_DAMAGE);
+  }
   s.fatigueSystemic = decayValue(s.fatigueSystemic, dt, TAU_SYSTEMIC);
   s.fitnessRun = decayValue(s.fitnessRun, dt, TAU_FITNESS_RUN);
 }
@@ -72,6 +103,18 @@ function applyLift(s: EngineState, w: LiftWorkout): void {
   let heavyLower = false;
   for (const e of w.entries) {
     const main = e.isMain ?? s.mainLifts.includes(e.exerciseId);
+    // Snapshot the e1RM observation's inputs before this entry's own sets
+    // add to fitness/fatigue below: the Kalman filter must be fit against
+    // the state the lifter carried into the set, not state already
+    // inflated by the very sets that produced the observation.
+    const prevFitness = s.fitness[e.exerciseId] ?? 0;
+    const prevGw = main
+      ? e.targets.reduce((a, t) => a + (s.fatigueMuscle[t] ?? 0), 0) +
+        (e.synergists ?? []).reduce(
+          (a, m) => a + 0.5 * (s.fatigueMuscle[m] ?? 0),
+          0,
+        )
+      : 0;
     let liftInput = 0;
     let volLoad = 0;
     for (const set of e.sets) {
@@ -83,36 +126,79 @@ function applyLift(s: EngineState, w: LiftWorkout): void {
       }
       for (const sy of e.synergists ?? []) addTo(s.fatigueMuscle, sy, 0.5 * f);
       volLoad += set.w * set.r;
-      if (e.targets.some((t) => t.toLowerCase().includes("quad"))) quadSetEq += f;
-      if (set.jointPain) s.jointPainLog.push({ date: w.date, exerciseId: e.exerciseId });
+      if (e.targets.some((t) => t.toLowerCase().includes("quad"))) {
+        quadSetEq += f;
+      }
+      if (set.jointPain) {
+        s.jointPainLog.push({ date: w.date, exerciseId: e.exerciseId });
+      }
     }
     if (main) {
+      // CONTEXT.md: reference 1RM updates "only at block boundaries or on a
+      // new tested 1RM." The engine has no block-boundary concept yet, so
+      // only the tested-1RM trigger is implemented here; that's this
+      // session's own open question (see the report), not invented here.
       const est = s.referenceRm[e.exerciseId]?.weight ?? 100;
-      s.fitness[e.exerciseId] = (s.fitness[e.exerciseId] ?? 0) + volLoad / Math.max(1, est);
+      s.fitness[e.exerciseId] = prevFitness + volLoad / Math.max(1, est);
       const obs = bestObservation(e.sets);
       if (obs) {
-        if (!s.kalman[e.exerciseId]) s.kalman[e.exerciseId] = initKalman(est, 0.5, 4);
+        if (!s.kalman[e.exerciseId]) {
+          // `p0`'s seed value here is inert: kalmanUpdate's first-observation
+          // branch exact-fits p0 to `y` regardless of what it starts at
+          // (verified: initKalman(100,...) then one update lands p0 = y
+          // exactly). Passing `est` costs nothing but don't read anything
+          // into this beyond "some finite starting number."
+          s.kalman[e.exerciseId] = initKalman(est, 0.5, 4);
+        }
         const k = s.kalman[e.exerciseId];
-        const gw = e.targets.reduce((a, t) => a + (s.fatigueMuscle[t] ?? 0), 0) +
-          (e.synergists ?? []).reduce((a, m) => a + 0.5 * (s.fatigueMuscle[m] ?? 0), 0);
         const noise = obs.tested ? 0.25 : 1; // tested 1RM: quarter noise
-        const runBeforeLift = s.lastRun && (Date.parse(w.date) - Date.parse(s.lastRun.date)) / 3600000 < 8 &&
+        // `.date` is the run's start (matches RunWorkout.date); the gap to
+        // the lift is measured from when the run actually ended.
+        const lastRunEndMs = s.lastRun
+          ? Date.parse(s.lastRun.date) + s.lastRun.minutes * 60000
+          : NaN;
+        const runBeforeLift = s.lastRun &&
+          (Date.parse(w.date) - lastRunEndMs) / 3600000 < 8 &&
           s.lastRun.minutes >= 30 && isLowerBodyLift(e.exerciseId);
-        s.kalman[e.exerciseId] = kalmanUpdate(k, s.fitness[e.exerciseId], gw + s.fatigueSystemic, obs.e1rm, runBeforeLift ? noise * 2 : noise);
-        (s.e1rmObs[e.exerciseId] ??= []).push({ date: w.date, value: obs.e1rm });
+        s.kalman[e.exerciseId] = kalmanUpdate(
+          k,
+          prevFitness,
+          prevGw + s.fatigueSystemic,
+          obs.e1rm,
+          runBeforeLift ? noise * 2 : noise,
+        );
+        (s.e1rmObs[e.exerciseId] ??= []).push({
+          date: w.date,
+          value: obs.e1rm,
+        });
+        if (obs.tested) {
+          s.referenceRm[e.exerciseId] = {
+            weight: obs.e1rm,
+            date: w.date,
+            source: "tested",
+          };
+        }
       }
     }
     if (isLowerBodyLift(e.exerciseId) && volLoad > 0) heavyLower = true;
   }
-  if (w.srpe !== undefined && w.minutes) s.fatigueSystemic += (w.srpe * w.minutes) / 100;
+  if (w.srpe !== undefined && w.minutes) {
+    s.fatigueSystemic += (w.srpe * w.minutes) / 100;
+  }
   s.liftSessions.push({ date: w.date, quadSetEq, heavyLower, srpe: w.srpe });
   if (w.checkin) {
     s.prsHistory.push({ date: w.date, value: w.checkin.prs });
     s.sorenessPrevPrev = s.sorenessPrev;
     s.sorenessPrev = { ...w.checkin.soreness };
-    s.lastCheckin = { ...w.checkin, soreness: { ...w.checkin.soreness }, date: w.date };
+    s.lastCheckin = {
+      ...w.checkin,
+      soreness: { ...w.checkin.soreness },
+      date: w.date,
+    };
   }
-  if (w.srpe !== undefined && w.minutes) s.dailyLoad.push({ date: w.date, load: (w.srpe * w.minutes) / 100 });
+  if (w.srpe !== undefined && w.minutes) {
+    s.dailyLoad.push({ date: w.date, load: (w.srpe * w.minutes) / 100 });
+  }
 }
 
 function thresholdPace(s: EngineState, nowIso: string): number | null {
@@ -120,6 +206,11 @@ function thresholdPace(s: EngineState, nowIso: string): number | null {
 }
 
 function applyRun(s: EngineState, w: RunWorkout): void {
+  // Snapshot for the Kalman VDOT observation below, before this run's own
+  // load contributes to fitnessRun/fatigueSystemic (same reasoning as the
+  // lift-side snapshot in applyLift).
+  const prevFatigueSystemic = s.fatigueSystemic;
+  const prevFitnessRun = s.fitnessRun;
   const speed = w.movingSec > 0 ? w.distanceM / w.movingSec : 0;
   const gap = meanGapFactor(w.gradeProfile);
   const ngpSpeed = speed * gap;
@@ -158,7 +249,11 @@ function applyRun(s: EngineState, w: RunWorkout): void {
     addTo(s.runFatigueDamage, m, v * fracDamage);
   }
   // Eccentric damage into D_m with RBE.
-  const n = s.runs.filter((r) => Date.parse(w.date) - Date.parse(r.date) <= 42 * 86400000 && r.descentM >= 200).length;
+  const n =
+    s.runs.filter((r) =>
+      Date.parse(w.date) - Date.parse(r.date) <= 42 * 86400000 &&
+      r.descentM >= 200
+    ).length;
   const dd = descentDamage(w.descentM ?? 0, rbeFactor(n));
   addTo(s.fatigueDamage, "quads", dd.quads);
   addTo(s.fatigueDamage, "calves", dd.calves);
@@ -169,10 +264,28 @@ function applyRun(s: EngineState, w: RunWorkout): void {
   const mins = w.movingSec / 60;
   if (mins >= 3.5 && mins <= 230 && (w.srpe ?? 0) >= 8 && w.distanceM > 0) {
     const vdot = vdotFromEffort(w.distanceM, w.movingSec);
-    s.kalmanRun = kalmanUpdate(s.kalmanRun, s.fitnessRun, s.fatigueSystemic, vdot, 1);
+    s.kalmanRun = kalmanUpdate(
+      s.kalmanRun,
+      prevFitnessRun,
+      prevFatigueSystemic,
+      vdot,
+      1,
+    );
   }
-  if (w.distanceM > 0) s.bestEfforts.push({ distanceM: w.distanceM, seconds: w.movingSec, date: w.date });
-  s.runs.push({ date: w.date, distanceM: w.distanceM, movingSec: w.movingSec, descentM: w.descentM ?? 0, z });
+  if (w.distanceM > 0) {
+    s.bestEfforts.push({
+      distanceM: w.distanceM,
+      seconds: w.movingSec,
+      date: w.date,
+    });
+  }
+  s.runs.push({
+    date: w.date,
+    distanceM: w.distanceM,
+    movingSec: w.movingSec,
+    descentM: w.descentM ?? 0,
+    z,
+  });
   s.lastRun = { date: w.date, minutes: minutes, distanceM: w.distanceM, z };
 }
 
@@ -191,7 +304,12 @@ export function predictReadiness(
   checkin: Checkin,
   sessionMuscles?: string[],
 ): Readiness {
-  return readinessCore(state, checkin, sessionMuscles ?? Object.keys(checkin.soreness), state.updated);
+  return readinessCore(
+    state,
+    checkin,
+    sessionMuscles ?? Object.keys(checkin.soreness),
+    state.updated,
+  );
 }
 
 export interface RecommendedLift {
@@ -235,7 +353,9 @@ export function recommendNextSession(
     if (obs.length < 2) continue;
     recent[lift] = obs.slice(-2).map((o) => o.value);
     const cutoff = Date.parse(targetDate) - 28 * 86400000;
-    const vals = obs.filter((o) => Date.parse(o.date) >= cutoff).map((o) => o.value).sort((a, b) => a - b);
+    const vals = obs.filter((o) => Date.parse(o.date) >= cutoff).map((o) =>
+      o.value
+    ).sort((a, b) => a - b);
     if (vals.length) medians[lift] = vals[Math.floor(vals.length / 2)];
   }
   const wb = wholeBodyDeload(recent, medians);
@@ -257,19 +377,31 @@ export function recommendNextSession(
     let recSets = 0;
     let targetReps = e.reps;
     if (lastRun && lb) {
-      const gapH = (Date.parse(targetDate) - Date.parse(lastRun.date)) / 3600000;
+      // `.date` is the run's start (matches RunWorkout.date); both checks
+      // below measure the gap from when the run actually ended.
+      const lastRunEndIso = new Date(
+        Date.parse(lastRun.date) + lastRun.movingSec * 1000,
+      ).toISOString();
       const hit = checkRunBeforeLift(
-        { minutes: lastRun.movingSec / 60, endedAtIso: lastRun.date, distanceM: lastRun.distanceM, z: lastRun.z as RunZone },
+        {
+          minutes: lastRun.movingSec / 60,
+          endedAtIso: lastRunEndIso,
+          distanceM: lastRun.distanceM,
+          z: lastRun.z as RunZone,
+        },
         targetDate,
         [e.exerciseId],
       );
-      void gapH;
       if (hit) {
         targetReps = Math.max(1, e.reps - 1); // expected reps -1 per set
         reasons.push(hit.code);
       }
       const post = checkPostRace(lastRun.distanceM, lastRun.z as RunZone);
-      if (post && (Date.parse(targetDate) - Date.parse(lastRun.date)) / 3600000 < (post.code === ReasonCode.POST_RACE_5D ? 5 * 24 : 48)) {
+      if (
+        post &&
+        (Date.parse(targetDate) - Date.parse(lastRunEndIso)) / 3600000 <
+          (post.code === ReasonCode.POST_RACE_5D ? 5 * 24 : 48)
+      ) {
         action = action === "deload" ? action : "maintenance";
         reasons.push(post.code);
       }
@@ -295,7 +427,9 @@ export function recommendNextSession(
     recSets = clampSets(recSets);
     return {
       exerciseId: e.exerciseId,
-      targetWeight: roundWeight(e.lastWeight * loadFactor * (1 + recWeightPct / 100)),
+      targetWeight: roundWeight(
+        e.lastWeight * loadFactor * (1 + recWeightPct / 100),
+      ),
       targetSets: Math.max(1, Math.round(e.sets * setsFactor) + recSets),
       targetReps,
       targetRpe: e.targetRpe,
@@ -303,12 +437,21 @@ export function recommendNextSession(
       recSets,
     };
   });
-  if (action === "maintenance" && lifts.some((l) => l.recWeightPct > 0)) action = "progression";
-  return { action, lifts, envelope: { ...ENVELOPE }, reasons: [...new Set(reasons)] };
+  if (action === "maintenance" && lifts.some((l) => l.recWeightPct > 0)) {
+    action = "progression";
+  }
+  return {
+    action,
+    lifts,
+    envelope: { ...ENVELOPE },
+    reasons: [...new Set(reasons)],
+  };
 }
 
 export function calibrate(history: Workout[]): EngineState {
-  const ordered = [...history].sort((a, b) => Date.parse(a.date) - Date.parse(b.date));
+  const ordered = [...history].sort((a, b) =>
+    Date.parse(a.date) - Date.parse(b.date)
+  );
   let s = initialState();
   for (const w of ordered) s = logSession(s, w);
   return s;

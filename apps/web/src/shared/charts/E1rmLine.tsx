@@ -17,7 +17,9 @@ export interface E1rmPoint {
   tested?: boolean;
 }
 
-export function E1rmLine({ lift, points }: { lift: string; points: E1rmPoint[] }) {
+export function E1rmLine(
+  { lift, points }: { lift: string; points: E1rmPoint[] },
+) {
   const { x, y } = useMemo(() => {
     const vs = points.map((p) => p.e1rm);
     const lo = Math.min(...vs);
@@ -29,10 +31,16 @@ export function E1rmLine({ lift, points }: { lift: string; points: E1rmPoint[] }
         range: [PAD.left, W - PAD.right],
         padding: 0.5,
       }),
-      y: scaleLinear<number>({ domain: [lo - pad, hi + pad], range: [H - PAD.bottom, PAD.top], nice: true }),
+      y: scaleLinear<number>({
+        domain: [lo - pad, hi + pad],
+        range: [H - PAD.bottom, PAD.top],
+        nice: true,
+      }),
     };
   }, [points]);
-  const rows = points.map((p) => [p.label, String(p.e1rm), p.tested ? "tested" : "estimate"]);
+  const rows = points.map((
+    p,
+  ) => [p.label, String(p.e1rm), p.tested ? "tested" : "estimate"]);
   return (
     <ChartShell
       title={`${lift} e1RM, recent`}
@@ -55,12 +63,33 @@ export function E1rmLine({ lift, points }: { lift: string; points: E1rmPoint[] }
           const cy = y(p.e1rm);
           const last = i === points.length - 1;
           return (
-            <Hit key={i} x={cx} y={cy} label={`${p.label}: ${p.e1rm}${p.tested ? " tested" : ""}`}>
-              {p.tested ? (
-                <rect x={-6} y={-6} width={12} height={12} transform="rotate(45)" fill="var(--viz-2)" stroke="var(--bg-surface)" strokeWidth={2} />
-              ) : (
-                <circle r={5} fill={last ? "var(--accent)" : "var(--bg-surface)"} stroke={last ? "var(--accent)" : "var(--viz-2)"} strokeWidth={2} />
-              )}
+            <Hit
+              key={i}
+              x={cx}
+              y={cy}
+              label={`${p.label}: ${p.e1rm}${p.tested ? " tested" : ""}`}
+            >
+              {p.tested
+                ? (
+                  <rect
+                    x={-6}
+                    y={-6}
+                    width={12}
+                    height={12}
+                    transform="rotate(45)"
+                    fill="var(--viz-2)"
+                    stroke="var(--bg-surface)"
+                    strokeWidth={2}
+                  />
+                )
+                : (
+                  <circle
+                    r={5}
+                    fill={last ? "var(--accent)" : "var(--bg-surface)"}
+                    stroke={last ? "var(--accent)" : "var(--viz-2)"}
+                    strokeWidth={2}
+                  />
+                )}
             </Hit>
           );
         })}
@@ -68,7 +97,11 @@ export function E1rmLine({ lift, points }: { lift: string; points: E1rmPoint[] }
           left={PAD.left}
           scale={y}
           numTicks={4}
-          tickLabelProps={{ fontSize: 10, fill: "var(--fg-muted)", textAnchor: "end" }}
+          tickLabelProps={{
+            fontSize: 10,
+            fill: "var(--fg-muted)",
+            textAnchor: "end",
+          }}
           hideAxisLine
           hideTicks
         />

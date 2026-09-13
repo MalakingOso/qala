@@ -3,7 +3,13 @@
 // editor as a normal program). Deterministic: exercises sorted, fixed number
 // formatting, no randomness, no dates except meet-taper sessions.
 
-import type { BlockDef, BlockWeek, DayPlan, GeneratorInput, PlannedExercise } from "./types.ts";
+import type {
+  BlockDef,
+  BlockWeek,
+  DayPlan,
+  GeneratorInput,
+  PlannedExercise,
+} from "./types.ts";
 
 function fmtLoad(ex: PlannedExercise): string {
   if (ex.load !== undefined) return `${ex.load}lb`;
@@ -26,19 +32,29 @@ function progressScript(ex: PlannedExercise): string {
 }
 
 function exerciseLine(ex: PlannedExercise): string {
-  const reps = ex.repsLow === ex.repsHigh ? `${ex.repsLow}` : `${ex.repsLow}-${ex.repsHigh}`;
-  return `${ex.name} / ${ex.sets}x${reps} @ ${fmtLoad(ex)} / RPE ${ex.rpe} / ${progressScript(ex)}`;
+  const reps = ex.repsLow === ex.repsHigh
+    ? `${ex.repsLow}`
+    : `${ex.repsLow}-${ex.repsHigh}`;
+  return `${ex.name} / ${ex.sets}x${reps} @ ${fmtLoad(ex)} / RPE ${ex.rpe} / ${
+    progressScript(ex)
+  }`;
 }
 
 function dayBlock(day: DayPlan, dayIndex: number): string {
   const lines = [`### Day ${dayIndex} - ${day.label} (${day.focus})`];
-  const sorted = [...day.exercises].sort((a, b) => a.name.localeCompare(b.name));
+  const sorted = [...day.exercises].sort((a, b) =>
+    a.name.localeCompare(b.name)
+  );
   for (const ex of sorted) lines.push(exerciseLine(ex));
   return lines.join("\n");
 }
 
 function weekBlock(week: BlockWeek): string {
-  const lines = [``, `## Week ${week.week}${week.deload ? " - deload" : ""}`, ``];
+  const lines = [
+    ``,
+    `## Week ${week.week}${week.deload ? " - deload" : ""}`,
+    ``,
+  ];
   week.days.forEach((day, i) => lines.push(dayBlock(day, i + 1), ``));
   return lines.join("\n").trimEnd();
 }

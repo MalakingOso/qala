@@ -32,7 +32,9 @@ export function readinessRing(
     avgFrac: settled && avg !== null ? avg / 100 : null,
     lowFrac: (settled ? lowLine : 50) / 100,
     low,
-    legendAvg: settled && avg !== null ? `your avg ${Math.round(avg)}` : "avg needs 14 check-ins",
+    legendAvg: settled && avg !== null
+      ? `your avg ${Math.round(avg)}`
+      : "avg needs 14 check-ins",
     legendLow: `low under ${settled ? Math.round(lowLine) : 50}`,
   };
 }

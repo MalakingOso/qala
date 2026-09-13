@@ -10,7 +10,13 @@ export function decayValue(x: number, dtDays: number, tau: number): number {
   return x * Math.exp(-dtDays / tau);
 }
 
-export function applyInput(x: number, dtDays: number, tau: number, k: number, input: number): number {
+export function applyInput(
+  x: number,
+  dtDays: number,
+  tau: number,
+  k: number,
+  input: number,
+): number {
   return decayValue(x, dtDays, tau) + k * input;
 }
 
@@ -20,12 +26,26 @@ export function decayRecord(
   tauFor: (key: string) => number,
 ): Record<string, number> {
   const out: Record<string, number> = {};
-  for (const key of Object.keys(rec)) out[key] = decayValue(rec[key], dtDays, tauFor(key));
+  for (const key of Object.keys(rec)) {
+    out[key] = decayValue(rec[key], dtDays, tauFor(key));
+  }
   return out;
 }
 
 /** Per-muscle fatigue tau (PLAN 6.2): 2.0 d default, 2.5 d for posterior/large groups. */
-const TAU_2_5 = new Set(["lats", "upperback", "upper-back", "back", "quads", "quadriceps", "hamstrings", "glutes", "calves", "lowerback", "lower-back"]);
+const TAU_2_5 = new Set([
+  "lats",
+  "upperback",
+  "upper-back",
+  "back",
+  "quads",
+  "quadriceps",
+  "hamstrings",
+  "glutes",
+  "calves",
+  "lowerback",
+  "lower-back",
+]);
 
 export function muscleTau(muscle: string): number {
   const key = muscle.toLowerCase().replace(/[_\s]/g, "");

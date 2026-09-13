@@ -28,7 +28,11 @@ export function GraphsPage() {
         xLabel="session"
         series={[
           { label: "daily best", color: "var(--viz-2)", values: E1RM_HIST },
-          { label: "Kalman", color: "var(--accent)", values: E1RM_HIST.map((v) => v - 1.5) },
+          {
+            label: "Kalman",
+            color: "var(--accent)",
+            values: E1RM_HIST.map((v) => v - 1.5),
+          },
         ]}
         head={["Session", "Daily best", "Kalman"]}
         rows={HISTORY_X.slice(-5).map((i) => [
@@ -70,14 +74,25 @@ export function GraphsPage() {
         x={HISTORY_X}
         xLabel="day"
         series={[
-          { label: "fitness", color: "var(--viz-2)", values: HISTORY_X.map((i) => 40 + i * 0.4) },
-          { label: "fatigue", color: "var(--viz-1)", values: HISTORY_X.map((i) => 20 + 8 * Math.sin(i / 4) + i * 0.05) },
+          {
+            label: "fitness",
+            color: "var(--viz-2)",
+            values: HISTORY_X.map((i) => 40 + i * 0.4),
+          },
+          {
+            label: "fatigue",
+            color: "var(--viz-1)",
+            values: HISTORY_X.map((i) => 20 + 8 * Math.sin(i / 4) + i * 0.05),
+          },
         ]}
         head={["Day", "Fitness", "Fatigue"]}
         rows={[["60", "64.0", "24.1"]]}
         label="Lifting fitness and fatigue curves."
       />
-      <RunSpark points={[38.5, 39.1, 39.0, 39.8, 40.2, 40.5]} label="VDOT trend rising." />
+      <RunSpark
+        points={[38.5, 39.1, 39.0, 39.8, 40.2, 40.5]}
+        label="VDOT trend rising."
+      />
       <ReadinessLine values={[78, 74, 80, 76, 71, 69, 72]} avg={76} low={64} />
       <E1rmLine
         lift="Bench"
@@ -92,7 +107,13 @@ export function GraphsPage() {
         x={HISTORY_X.slice(0, 30)}
         xLabel="observation"
         series={[
-          { label: "residual", color: "var(--viz-3)", values: HISTORY_X.slice(0, 30).map((i) => 3 * Math.sin(i / 2) * Math.exp(-i / 40)) },
+          {
+            label: "residual",
+            color: "var(--viz-3)",
+            values: HISTORY_X.slice(0, 30).map((i) =>
+              3 * Math.sin(i / 2) * Math.exp(-i / 40)
+            ),
+          },
         ]}
         head={["Obs", "Residual"]}
         rows={[["30", "0.4"]]}

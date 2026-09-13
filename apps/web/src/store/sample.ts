@@ -11,6 +11,7 @@ import type {
   WeekLoadDay,
   WorkoutExercise,
 } from "./types.ts";
+import { bumperColorFor } from "../../../../packages/core/plates.ts";
 
 export const sampleStages: StageState[] = [
   { id: "checkin", label: "Check-in", time: "4:30p", status: "done" },
@@ -34,7 +35,15 @@ export const sampleWeekLoad: WeekLoadDay[] = [
   { day: "T", liftDone: 0, runDone: 0, liftPlanned: 0, runPlanned: 180 },
   { day: "F", liftDone: 450, runDone: 0, liftPlanned: 450, runPlanned: 0 },
   { day: "S", liftDone: 0, runDone: 290, liftPlanned: 0, runPlanned: 290 },
-  { day: "S", liftDone: 0, runDone: 0, liftPlanned: 510, runPlanned: 240, today: true, label: "Lower A" },
+  {
+    day: "S",
+    liftDone: 0,
+    runDone: 0,
+    liftPlanned: 510,
+    runPlanned: 240,
+    today: true,
+    label: "Lower A",
+  },
 ];
 
 export const sampleExercises: WorkoutExercise[] = [
@@ -48,7 +57,12 @@ export const sampleExercises: WorkoutExercise[] = [
       { w: 245, r: 4, rpe: 9, done: true },
       { w: 245, r: 4, done: false },
     ],
-    note: { id: "n1", date: "Sep 6", text: "Knees caved on last rep. Cue: spread the floor.", pinned: true },
+    note: {
+      id: "n1",
+      date: "Sep 6",
+      text: "Knees caved on last rep. Cue: spread the floor.",
+      pinned: true,
+    },
   },
   {
     id: "rdl",
@@ -90,7 +104,6 @@ export const sampleRest: RestPrescription = {
   nextLoad: 245,
   platesNow: [45, 45, 10],
   platesNext: [45, 45, 10],
-  changeText: "Same as last set",
 };
 
 export const sampleSplits: RunSplit[] = [
@@ -102,6 +115,7 @@ export const sampleSplits: RunSplit[] = [
 export const sampleEnvelopes: EnvelopeCardModel[] = [
   {
     id: "e1",
+    exerciseId: "squat",
     title: "Squat top set",
     engine: "245 x 4 @ 8",
     coach: "240 x 4 @ 8",
@@ -112,8 +126,20 @@ export const sampleEnvelopes: EnvelopeCardModel[] = [
 ];
 
 export const sampleMemory: MemoryProposal[] = [
-  { id: "m1", text: "Left knee aches on deep squats past 240.", source: "check-in Sep 13", date: "Sep 13", accepted: null },
-  { id: "m2", text: "Sleeps 6 h on weeknights; worse readiness Fridays.", source: "coach", date: "Sep 12", accepted: null },
+  {
+    id: "m1",
+    text: "Left knee aches on deep squats past 240.",
+    source: "check-in Sep 13",
+    date: "Sep 13",
+    accepted: null,
+  },
+  {
+    id: "m2",
+    text: "Sleeps 6 h on weeknights; worse readiness Fridays.",
+    source: "coach",
+    date: "Sep 12",
+    accepted: null,
+  },
 ];
 
 export const defaultSettings: SettingsModel = {
@@ -121,18 +147,40 @@ export const defaultSettings: SettingsModel = {
   theme: "light",
   titleFont: "qalaTest",
   defaultBar: 45,
+  // Deliberately limited (owner's real inventory is still to enter, PLAN
+  // 6.8): a 45 lb bar with only two 45s means 315 lb can't be 45+45+45 per
+  // side, so the plate math has to actually reach for 45+45+35+10.
   plates: [
-    { weight: 45, pairs: 2 },
-    { weight: 35, pairs: 1 },
-    { weight: 25, pairs: 1 },
-    { weight: 10, pairs: 2 },
-    { weight: 5, pairs: 2 },
-    { weight: 2.5, pairs: 1 },
+    { weight: 45, pairs: 2, color: bumperColorFor(45, "lb") },
+    { weight: 35, pairs: 1, color: bumperColorFor(35, "lb") },
+    { weight: 25, pairs: 1, color: bumperColorFor(25, "lb") },
+    { weight: 10, pairs: 2, color: bumperColorFor(10, "lb") },
+    { weight: 5, pairs: 2, color: bumperColorFor(5, "lb") },
+    { weight: 2.5, pairs: 1, color: bumperColorFor(2.5, "lb") },
   ],
   collarWeight: 0,
-  equipment: { foamRoller: true, percussion: true, bike: true, rower: false, treadmill: false },
-  warmup: { enabled: true, softTissue: true, preferPercussion: true, minutes: 15 },
-  rest: { auto: true, learnFromTaps: true, showNextPlates: true, alert: "vibrate+sound" },
+  equipment: {
+    foamRoller: true,
+    percussion: true,
+    bike: true,
+    rower: false,
+    treadmill: false,
+  },
+  warmup: {
+    enabled: true,
+    softTissue: true,
+    preferPercussion: true,
+    minutes: 15,
+  },
+  rest: {
+    auto: true,
+    learnFromTaps: true,
+    showNextPlates: true,
+    alert: "vibrate+sound",
+  },
   run: { audioCues: true, autoPause: true, hrStrap: false, offlineMaps: true },
-  coach: { status: "Runs on callisto", limits: "weight -10% to +2.5%, sets -2 to +1" },
+  coach: {
+    status: "Runs on callisto",
+    limits: "weight -10% to +2.5%, sets -2 to +1",
+  },
 };

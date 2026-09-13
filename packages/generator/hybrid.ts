@@ -34,7 +34,8 @@ export const RULE_QUALITY_ON_LOWER = "QUALITY_ON_LOWER_DAY";
 export const RULE_GAP_6H = "GAP_6H_LIFT_THEN_RUN";
 export const RULE_GAP_24H_STRENGTH = "GAP_24H_WHEN_STRENGTH";
 export const RULE_EASY_ON_UPPER_REST = "EASY_ON_UPPER_OR_REST";
-export const RULE_NO_HARD_AFTER_HEAVY_LOWER = "NO_HARD_RUN_24H_AFTER_HEAVY_LOWER";
+export const RULE_NO_HARD_AFTER_HEAVY_LOWER =
+  "NO_HARD_RUN_24H_AFTER_HEAVY_LOWER";
 export const RULE_NO_HEAVY_LOWER_NEAR_RACE = "NO_HEAVY_LOWER_NEAR_LONG_RACE";
 
 export interface HybridInput {
@@ -60,9 +61,25 @@ export function scheduleHybrid(input: HybridInput): HybridWeek {
     const lift = liftByDow.get(run.dayOfWeek) ?? null;
     const notes: string[] = [];
     if (run.workout.hard) {
-      placeHardRun(run.dayOfWeek, lift, input, notes, traded, placements, run.workout);
+      placeHardRun(
+        run.dayOfWeek,
+        lift,
+        input,
+        notes,
+        traded,
+        placements,
+        run.workout,
+      );
     } else {
-      placeEasyRun(run.dayOfWeek, lift, input, notes, traded, placements, run.workout);
+      placeEasyRun(
+        run.dayOfWeek,
+        lift,
+        input,
+        notes,
+        traded,
+        placements,
+        run.workout,
+      );
     }
   }
 
@@ -75,7 +92,8 @@ export function scheduleHybrid(input: HybridInput): HybridWeek {
       if (lift.heavyLower) {
         traded.push({
           rule: RULE_NO_HEAVY_LOWER_NEAR_RACE,
-          why: `${lift.label} is heavy lower body within ${window} of a ${input.raceKmThisWeek} km race effort; priority wins`,
+          why:
+            `${lift.label} is heavy lower body within ${window} of a ${input.raceKmThisWeek} km race effort; priority wins`,
           winner: input.priority,
         });
       }
@@ -96,17 +114,24 @@ function placeHardRun(
   // No hard run in the 24 h after a heavy lower-body day (check yesterday).
   const yesterday = (dow + 6) % 7;
   void yesterday;
-  const heavyYesterday = [...heavyLowerDowSet(input)].some((h) => (h + 1) % 7 === dow);
+  const heavyYesterday = [...heavyLowerDowSet(input)].some((h) =>
+    (h + 1) % 7 === dow
+  );
   if (heavyYesterday) {
     if (input.priority === "running") {
       traded.push({
         rule: RULE_NO_HARD_AFTER_HEAVY_LOWER,
-        why: `hard run kept the day after heavy lower body; priority is running`,
+        why:
+          `hard run kept the day after heavy lower body; priority is running`,
         winner: "running",
       });
-      notes.push("hard run within 24 h of heavy lower body (traded: priority running)");
+      notes.push(
+        "hard run within 24 h of heavy lower body (traded: priority running)",
+      );
     } else {
-      notes.push("hard run softened to easy: heavy lower body yesterday (priority lifting)");
+      notes.push(
+        "hard run softened to easy: heavy lower body yesterday (priority lifting)",
+      );
       placements.push({
         dayOfWeek: dow,
         liftLabel: lift?.label ?? null,
@@ -125,12 +150,17 @@ function placeHardRun(
       // work is expected to move; report the trade.
       traded.push({
         rule: RULE_GAP_24H_STRENGTH,
-        why: `quality run on lower-body day ${lift.label}; strength priority wants 24 h separation`,
+        why:
+          `quality run on lower-body day ${lift.label}; strength priority wants 24 h separation`,
         winner: "lifting",
       });
-      notes.push("lift first, run at least 6 h after; 24 h separation preferred (strength)");
+      notes.push(
+        "lift first, run at least 6 h after; 24 h separation preferred (strength)",
+      );
     } else {
-      notes.push(`intervals/tempo on lower-body day, run at least 6 h after lifting`);
+      notes.push(
+        `intervals/tempo on lower-body day, run at least 6 h after lifting`,
+      );
     }
     placements.push({
       dayOfWeek: dow,
@@ -146,7 +176,8 @@ function placeHardRun(
   if (lift && !lift.lowerBody) {
     traded.push({
       rule: RULE_QUALITY_ON_LOWER,
-      why: `no lower-body day free for quality work; placed on ${lift.label} with 6 h gap`,
+      why:
+        `no lower-body day free for quality work; placed on ${lift.label} with 6 h gap`,
       winner: input.priority,
     });
     notes.push("quality run on upper-body day (traded: no lower day free)");
@@ -204,7 +235,9 @@ function placeEasyRun(
     });
     notes.push("easy run on lower-body day (traded: priority running)");
   } else {
-    notes.push(`easy run on lower-body day ${lift.label}, kept short and 6 h after lifting`);
+    notes.push(
+      `easy run on lower-body day ${lift.label}, kept short and 6 h after lifting`,
+    );
   }
   placements.push({
     dayOfWeek: dow,

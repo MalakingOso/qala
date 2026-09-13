@@ -1,9 +1,15 @@
 // PLAN 6.5 bullet 1: 3-week validation via logSession.
-import { logSession, calibrate } from "./mod.ts";
+import { calibrate, logSession } from "./mod.ts";
 import { initialState, type LiftWorkout } from "./state.ts";
 import { assert } from "./testutil.ts";
 
-function session(date: string, sets: number, load: number, rpe: number, srpe: number): LiftWorkout {
+function session(
+  date: string,
+  sets: number,
+  load: number,
+  rpe: number,
+  srpe: number,
+): LiftWorkout {
   return {
     kind: "lift",
     id: date,
@@ -13,7 +19,10 @@ function session(date: string, sets: number, load: number, rpe: number, srpe: nu
       targets: ["quads", "glutes"],
       synergists: ["hamstrings"],
       isMain: true,
-      sets: Array.from({ length: sets }, () => ({ w: load, r: 5, rpe, completed: true })),
+      sets: Array.from(
+        { length: sets },
+        () => ({ w: load, r: 5, rpe, completed: true }),
+      ),
     }],
     checkin: { prs: 7, soreness: { quads: 2 } },
     srpe,
@@ -38,7 +47,16 @@ Deno.test("3-week validation: fatigue spikes week 3, decays on rest, fitness mon
     const heavy = wk === 2;
     const days = heavy ? [0, 1, 2, 3, 4] : [0, 2, 4];
     for (const d of days) {
-      s = logSession(s, session(day(base, wk * 7 + d), heavy ? 14 : 8, 100, heavy ? 9.5 : 8, heavy ? 9 : 6));
+      s = logSession(
+        s,
+        session(
+          day(base, wk * 7 + d),
+          heavy ? 14 : 8,
+          100,
+          heavy ? 9.5 : 8,
+          heavy ? 9 : 6,
+        ),
+      );
     }
     fit.push(s.fitness["squat"]);
     gm.push(s.fatigueMuscle["quads"] ?? 0);
@@ -64,9 +82,39 @@ Deno.test("3-week validation: fatigue spikes week 3, decays on rest, fitness mon
       minutes: 0,
     });
   }
-  assert((s.fatigueMuscle["quads"] ?? 0) < spikeG, "per-muscle fatigue decays on rest");
+  assert(
+    (s.fatigueMuscle["quads"] ?? 0) < spikeG,
+    "per-muscle fatigue decays on rest",
+  );
   assert(s.fatigueSystemic < spikeS, "systemic fatigue decays on rest");
   assert(spikeS > 0 && spikeG > 0, "week 3 heavy load produced fatigue");
+});
+
+Deno.test("a tested 1RM writes referenceRm (CONTEXT.md: block boundary or new tested 1RM)", () => {
+  let s = initialState();
+  s.mainLifts = ["squat"];
+  const tested: LiftWorkout = {
+    kind: "lift",
+    id: "t1",
+    date: "2026-01-05T18:00:00Z",
+    entries: [{
+      exerciseId: "squat",
+      targets: ["quads", "glutes"],
+      isMain: true,
+      sets: [{ w: 315, r: 1, rpe: 10, completed: true, tested1rm: true }],
+    }],
+    srpe: 9,
+    minutes: 20,
+  };
+  s = logSession(s, tested);
+  assert(
+    s.referenceRm["squat"]?.weight === 315,
+    `referenceRm is set from the tested 1RM: ${JSON.stringify(s.referenceRm)}`,
+  );
+  assert(
+    s.referenceRm["squat"]?.source === "tested",
+    "source is recorded as tested, not kalman",
+  );
 });
 
 Deno.test("calibrate replays history in date order", () => {

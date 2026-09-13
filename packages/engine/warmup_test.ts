@@ -1,8 +1,16 @@
 // PLAN 6.7 tests: worked examples, extra step, run cover, cut order.
-import { planWarmup, rampSets, tierFor, intensityOf, planRunWarmup } from "./warmup.ts";
+import {
+  intensityOf,
+  planRunWarmup,
+  planWarmup,
+  rampSets,
+  tierFor,
+} from "./warmup.ts";
 import { assert, assertEqual } from "./testutil.ts";
 
-function loads(steps: { load: number | "bar"; reps: number }[]): (number | string)[] {
+function loads(
+  steps: { load: number | "bar"; reps: number }[],
+): (number | string)[] {
   return steps.map((s) => s.load);
 }
 
@@ -35,12 +43,23 @@ Deno.test("soreness 4 inserts the extra step", () => {
 Deno.test("12 min easy run 10 min before lifting removes block 1", () => {
   const now = "2026-01-07T08:00:00Z";
   const plan = planWarmup({
-    exercises: [{ exerciseId: "squat", cls: "main", muscles: ["quads"], w: 225, reference: 265 }],
+    exercises: [{
+      exerciseId: "squat",
+      cls: "main",
+      muscles: ["quads"],
+      w: 225,
+      reference: 265,
+    }],
     approach: "strength",
     soreness: {},
     prs: 7,
     equipment: { cardio: ["bike"], recovery: ["foamRoller"] },
-    recentRun: { endedAtIso: "2026-01-07T07:50:00Z", minutes: 12, distanceM: 2500, easy: true },
+    recentRun: {
+      endedAtIso: "2026-01-07T07:50:00Z",
+      minutes: 12,
+      distanceM: 2500,
+      easy: true,
+    },
     nowIso: now,
     topSetPctRef: 0.85,
   });
@@ -50,21 +69,41 @@ Deno.test("12 min easy run 10 min before lifting removes block 1", () => {
 
 Deno.test("hard run does not cover general", () => {
   const plan = planWarmup({
-    exercises: [{ exerciseId: "squat", cls: "main", muscles: ["quads"], w: 225, reference: 265 }],
+    exercises: [{
+      exerciseId: "squat",
+      cls: "main",
+      muscles: ["quads"],
+      w: 225,
+      reference: 265,
+    }],
     approach: "strength",
     soreness: {},
     prs: 7,
     equipment: { cardio: ["bike"] },
-    recentRun: { endedAtIso: "2026-01-07T07:50:00Z", minutes: 12, distanceM: 2500, easy: false },
+    recentRun: {
+      endedAtIso: "2026-01-07T07:50:00Z",
+      minutes: 12,
+      distanceM: 2500,
+      easy: false,
+    },
     nowIso: "2026-01-07T08:00:00Z",
     topSetPctRef: 0.85,
   });
-  assert(plan.blocks.find((b) => b.kind === "general")!.skipped !== true, "general kept");
+  assert(
+    plan.blocks.find((b) => b.kind === "general")!.skipped !== true,
+    "general kept",
+  );
 });
 
 Deno.test("cut order under T=5 min: tissue, mobility, general", () => {
   const plan = planWarmup({
-    exercises: [{ exerciseId: "squat", cls: "main", muscles: ["quads", "glutes"], w: 225, reference: 265 }],
+    exercises: [{
+      exerciseId: "squat",
+      cls: "main",
+      muscles: ["quads", "glutes"],
+      w: 225,
+      reference: 265,
+    }],
     approach: "strength",
     soreness: { quads: 3 },
     prs: 7,
@@ -85,7 +124,13 @@ Deno.test("cut order under T=5 min: tissue, mobility, general", () => {
 
 Deno.test("research example: squat day with bike+roller, quads sore 3", () => {
   const plan = planWarmup({
-    exercises: [{ exerciseId: "squat", cls: "main", muscles: ["quads", "glutes"], w: 225, reference: 265 }],
+    exercises: [{
+      exerciseId: "squat",
+      cls: "main",
+      muscles: ["quads", "glutes"],
+      w: 225,
+      reference: 265,
+    }],
     approach: "strength",
     soreness: { quads: 3 },
     prs: 6,
@@ -103,6 +148,10 @@ Deno.test("research example: squat day with bike+roller, quads sore 3", () => {
 });
 
 Deno.test("run warmups: easy needs none; quality gets easy+drills+strides", () => {
-  assertEqual(planRunWarmup("easy"), ["first 5 min slower than target"], "easy");
+  assertEqual(
+    planRunWarmup("easy"),
+    ["first 5 min slower than target"],
+    "easy",
+  );
   assert(planRunWarmup("intervals").length === 3, "quality 3 parts");
 });

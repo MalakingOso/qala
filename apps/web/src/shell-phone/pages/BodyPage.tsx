@@ -15,11 +15,28 @@ export function BodyPage() {
         <p className="group-label">Muscle map</p>
         <p className="kbd-hint">
           Front/back soreness grid draws over liftosaur's front-muscles.svg and
-          back-muscles.svg (PLAN 3). Tap a region to cycle 1-4.
+          back-muscles.svg (PLAN 3). Sample values below; check-in doesn't save
+          soreness anywhere this page can read yet, so it isn't interactive.
         </p>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-          {["quads 4", "glutes 2", "hamstrings 2", "calves 1", "chest 1", "lats 2"].map((m) => (
-            <div key={m} className="group-row" style={{ border: "var(--border-width) solid var(--border)", borderRadius: "var(--radius)" }}>
+        <div
+          style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}
+        >
+          {[
+            "quads 4",
+            "glutes 2",
+            "hamstrings 2",
+            "calves 1",
+            "chest 1",
+            "lats 2",
+          ].map((m) => (
+            <div
+              key={m}
+              className="group-row"
+              style={{
+                border: "var(--border-width) solid var(--border)",
+                borderRadius: "var(--radius)",
+              }}
+            >
               {m}
             </div>
           ))}

@@ -29,7 +29,13 @@ export function intensityZones(
   sets: { load: number; reps: number }[],
   referenceRm: number,
 ): ZoneCounts {
-  const byZone: Record<string, number> = { "<70": 0, "70-79.9": 0, "80-84.9": 0, "85-89.9": 0, "90+": 0 };
+  const byZone: Record<string, number> = {
+    "<70": 0,
+    "70-79.9": 0,
+    "80-84.9": 0,
+    "85-89.9": 0,
+    "90+": 0,
+  };
   let nl = 0;
   let tonnage = 0;
   let nl85 = 0;
@@ -49,12 +55,25 @@ export function intensityZones(
       t90 += s.load * s.reps;
     }
   }
-  return { nl, tonnage, nl85, t85, nl90, t90, ari: nl > 0 ? tonnage / nl / referenceRm : 0, byZone };
+  return {
+    nl,
+    tonnage,
+    nl85,
+    t85,
+    nl90,
+    t90,
+    ari: nl > 0 ? tonnage / nl / referenceRm : 0,
+    byZone,
+  };
 }
 
 /** Per-muscle volume load VL_m = sum(load x reps x w), w 1.0 target / 0.5 synergist. */
 export function volumeLoad(
-  sets: { load: number; reps: number; muscles: { muscle: string; w: number }[] }[],
+  sets: {
+    load: number;
+    reps: number;
+    muscles: { muscle: string; w: number }[];
+  }[],
 ): Record<string, number> {
   const out: Record<string, number> = {};
   for (const s of sets) {
@@ -75,7 +94,11 @@ export const BODYWEIGHT_FACTORS: Record<string, number> = {
   "push-up": 0.65,
 };
 
-export function bodyweightLoad(exerciseId: string, bodyweight: number, addedLoad: number): number {
+export function bodyweightLoad(
+  exerciseId: string,
+  bodyweight: number,
+  addedLoad: number,
+): number {
   const f = BODYWEIGHT_FACTORS[exerciseId.toLowerCase()] ?? 1.0;
   return bodyweight * f + addedLoad;
 }
@@ -102,16 +125,26 @@ export function updatePrs(
   date: string,
 ): PrEntry[] {
   const out = [...existing];
-  const atLoad = out.filter((p) => p.exerciseId === exerciseId && p.kind === "rep" && p.load === load);
-  const bestReps = atLoad.length ? Math.max(...atLoad.map((p) => p.reps ?? 0)) : 0;
+  const atLoad = out.filter((p) =>
+    p.exerciseId === exerciseId && p.kind === "rep" && p.load === load
+  );
+  const bestReps = atLoad.length
+    ? Math.max(...atLoad.map((p) => p.reps ?? 0))
+    : 0;
   if (reps > bestReps) out.push({ exerciseId, kind: "rep", reps, load, date });
-  const atReps = out.filter((p) => p.exerciseId === exerciseId && p.kind === "load" && p.reps === reps);
+  const atReps = out.filter((p) =>
+    p.exerciseId === exerciseId && p.kind === "load" && p.reps === reps
+  );
   const bestLoad = atReps.length ? Math.max(...atReps.map((p) => p.load)) : 0;
   if (load > bestLoad) out.push({ exerciseId, kind: "load", reps, load, date });
   if (e1rm !== null && reps <= 10) {
-    const e1s = out.filter((p) => p.exerciseId === exerciseId && p.kind === "e1rm");
+    const e1s = out.filter((p) =>
+      p.exerciseId === exerciseId && p.kind === "e1rm"
+    );
     const best = e1s.length ? Math.max(...e1s.map((p) => p.e1rm ?? 0)) : 0;
-    if (e1rm > best) out.push({ exerciseId, kind: "e1rm", load, reps, e1rm, date });
+    if (e1rm > best) {
+      out.push({ exerciseId, kind: "e1rm", load, reps, e1rm, date });
+    }
   }
   return out;
 }
@@ -138,6 +171,8 @@ export function oneRmProgression(
     dailyBest,
     kalman: k,
     tested,
-    pctChangeVsReference: anchor !== null && referenceRm ? (anchor - referenceRm) / referenceRm : null,
+    pctChangeVsReference: anchor !== null && referenceRm
+      ? (anchor - referenceRm) / referenceRm
+      : null,
   };
 }

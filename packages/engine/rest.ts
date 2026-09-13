@@ -30,7 +30,10 @@ const TABLE: Record<Approach, Record<ExerciseClass, RestTableCell>> = {
   },
 };
 
-export function restCell(approach: Approach, cls: ExerciseClass): RestTableCell {
+export function restCell(
+  approach: Approach,
+  cls: ExerciseClass,
+): RestTableCell {
   return TABLE[approach][cls];
 }
 
@@ -65,7 +68,10 @@ export function round15(s: number): number {
 }
 
 /** Effort adjustment: clamp(30*d, -30, +45); failure replaces it. */
-export function effortAdjust(rpeLogged: number | undefined, rpeTarget: number | undefined): number {
+export function effortAdjust(
+  rpeLogged: number | undefined,
+  rpeTarget: number | undefined,
+): number {
   if (rpeLogged === undefined || rpeTarget === undefined) return 0;
   return Math.min(45, Math.max(-30, 30 * (rpeLogged - rpeTarget)));
 }
@@ -79,7 +85,14 @@ export function computeRest(input: RestInput): RestResult {
 
   if (input.superset) {
     const secs = input.overTimeBudget ? 60 : 90; // Paz 2019
-    return { seconds: secs, base: B, m, adjustments: 0, reasons: [ReasonCode.REST_SUPERSET], warnBelowMinStrengthMain: false };
+    return {
+      seconds: secs,
+      base: B,
+      m,
+      adjustments: 0,
+      reasons: [ReasonCode.REST_SUPERSET],
+      warnBelowMinStrengthMain: false,
+    };
   }
 
   if (input.failed) {
@@ -100,7 +113,8 @@ export function computeRest(input: RestInput): RestResult {
     adj += 30;
     reasons.push(ReasonCode.REST_REPS_SHORT);
   }
-  const lateSet = input.approach === "strength" && input.cls === "main" && (input.setIndex ?? 0) >= 4;
+  const lateSet = input.approach === "strength" && input.cls === "main" &&
+    (input.setIndex ?? 0) >= 4;
   if (lateSet) {
     adj += 30;
     reasons.push(ReasonCode.REST_LATE_SET);
@@ -116,16 +130,29 @@ export function computeRest(input: RestInput): RestResult {
     reasons.push(ReasonCode.REST_LOW_READINESS);
   }
   const seconds = Math.min(cell.max, Math.max(cell.min, round15(B * m + adj)));
-  return { seconds, base: B, m, adjustments: adj, reasons, warnBelowMinStrengthMain: false };
+  return {
+    seconds,
+    base: B,
+    m,
+    adjustments: adj,
+    reasons,
+    warnBelowMinStrengthMain: false,
+  };
 }
 
 /** Rest after an antagonist pair: 120 s (Behenck 2022). */
 export const REST_AFTER_PAIR = 120;
 
 /** "Ready early" tap: may start below R; warning only below min on strength main. */
-export function earlyStartWarning(approach: Approach, cls: ExerciseClass, prescribed: number, actual: number): boolean {
+export function earlyStartWarning(
+  approach: Approach,
+  cls: ExerciseClass,
+  prescribed: number,
+  actual: number,
+): boolean {
   const cell = restCell(approach, cls);
-  return approach === "strength" && cls === "main" && actual < cell.min && actual < prescribed;
+  return approach === "strength" && cls === "main" && actual < cell.min &&
+    actual < prescribed;
 }
 
 export interface LearnInput {
@@ -153,7 +180,10 @@ export function learnRestMultiplier(
   input: LearnInput,
 ): LearnResult {
   if (input.warmup) return { ...cur, updated: false };
-  const mObs = Math.min(1.5, Math.max(0.75, (input.actual - input.adjustments) / input.B));
+  const mObs = Math.min(
+    1.5,
+    Math.max(0.75, (input.actual - input.adjustments) / input.B),
+  );
   if (input.hitTarget) {
     const m = cur.m + 0.1 * (mObs - cur.m);
     return { m, samples: cur.samples + 1, updated: true };
@@ -164,20 +194,36 @@ export function learnRestMultiplier(
 }
 
 /** Human reason line, e.g. "3:15 · base 3:00, your pace -15 s, last set RPE 9 vs 8 +30 s". */
-export function restReasonLine(res: RestResult, rpeLogged?: number, rpeTarget?: number): string {
-  const fmt = (s: number) => `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, "0")}`;
+export function restReasonLine(
+  res: RestResult,
+  rpeLogged?: number,
+  rpeTarget?: number,
+): string {
+  const fmt = (s: number) =>
+    `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, "0")}`;
   const parts = [`base ${fmt(res.base)}`];
   if (Math.abs(res.m - 1) > 1e-9) {
     const d = Math.round(res.base * res.m - res.base);
     parts.push(`your pace ${d > 0 ? "+" : "-"}${fmt(Math.abs(d))}`);
   }
-  if (res.reasons.includes(ReasonCode.REST_EFFORT_HIGH) && rpeLogged !== undefined && rpeTarget !== undefined) {
+  if (
+    res.reasons.includes(ReasonCode.REST_EFFORT_HIGH) &&
+    rpeLogged !== undefined && rpeTarget !== undefined
+  ) {
     parts.push(`last set RPE ${rpeLogged} vs ${rpeTarget} +30 s/point`);
   }
-  if (res.reasons.includes(ReasonCode.REST_FAILURE)) parts.push("failure +60 s");
-  if (res.reasons.includes(ReasonCode.REST_REPS_SHORT)) parts.push("reps short +30 s");
-  if (res.reasons.includes(ReasonCode.REST_LATE_SET)) parts.push("late set +30 s");
+  if (res.reasons.includes(ReasonCode.REST_FAILURE)) {
+    parts.push("failure +60 s");
+  }
+  if (res.reasons.includes(ReasonCode.REST_REPS_SHORT)) {
+    parts.push("reps short +30 s");
+  }
+  if (res.reasons.includes(ReasonCode.REST_LATE_SET)) {
+    parts.push("late set +30 s");
+  }
   if (res.reasons.includes(ReasonCode.REST_DRIFT)) parts.push("drift +30 s");
-  if (res.reasons.includes(ReasonCode.REST_LOW_READINESS)) parts.push("low readiness +30 s");
+  if (res.reasons.includes(ReasonCode.REST_LOW_READINESS)) {
+    parts.push("low readiness +30 s");
+  }
   return `${fmt(res.seconds)} · ${parts.join(", ")}`;
 }

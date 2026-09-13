@@ -24,12 +24,30 @@ const FILES: Array<[string, string]> = [
   ["src/liftoscriptEvaluator.ts", "src/liftoscriptEvaluator.ts"],
   ["src/liftoscriptFns.ts", "src/liftoscriptFns.ts"],
   ["src/parser.ts", "src/parser.ts"],
-  ["src/pages/planner/plannerExercise.grammar", "src/pages/planner/plannerExercise.grammar"],
-  ["src/pages/planner/plannerExerciseParser.ts", "src/pages/planner/plannerExerciseParser.ts"],
-  ["src/pages/planner/plannerExerciseEvaluator.ts", "src/pages/planner/plannerExerciseEvaluator.ts"],
-  ["src/pages/planner/plannerEvaluator.ts", "src/pages/planner/plannerEvaluator.ts"],
-  ["src/pages/planner/models/plannerStructure.ts", "src/pages/planner/models/plannerStructure.ts"],
-  ["src/pages/planner/models/plannerProgram.ts", "src/pages/planner/models/plannerProgram.ts"],
+  [
+    "src/pages/planner/plannerExercise.grammar",
+    "src/pages/planner/plannerExercise.grammar",
+  ],
+  [
+    "src/pages/planner/plannerExerciseParser.ts",
+    "src/pages/planner/plannerExerciseParser.ts",
+  ],
+  [
+    "src/pages/planner/plannerExerciseEvaluator.ts",
+    "src/pages/planner/plannerExerciseEvaluator.ts",
+  ],
+  [
+    "src/pages/planner/plannerEvaluator.ts",
+    "src/pages/planner/plannerEvaluator.ts",
+  ],
+  [
+    "src/pages/planner/models/plannerStructure.ts",
+    "src/pages/planner/models/plannerStructure.ts",
+  ],
+  [
+    "src/pages/planner/models/plannerProgram.ts",
+    "src/pages/planner/models/plannerProgram.ts",
+  ],
   ["src/models/programToPlanner.ts", "src/models/programToPlanner.ts"],
   ["src/models/weight.ts", "src/models/weight.ts"],
   ["src/models/set.ts", "src/models/set.ts"],
@@ -79,13 +97,17 @@ if (flag("check")) {
   } catch {
     missing.push(`${PROGRAMS_DIR}/ (*.md)`);
   }
-  if (programs < 60) missing.push(`${PROGRAMS_DIR}/ (only ${programs} programs, want 60)`);
+  if (programs < 60) {
+    missing.push(`${PROGRAMS_DIR}/ (only ${programs} programs, want 60)`);
+  }
   if (missing.length > 0) {
     console.error(`vendor check: missing ${missing.length} vendored file(s):`);
     for (const m of missing) console.error(`  ${m}`);
     Deno.exit(1);
   }
-  console.log(`vendor check: ${FILES.length} files + ${programs} programs present`);
+  console.log(
+    `vendor check: ${FILES.length} files + ${programs} programs present`,
+  );
   Deno.exit(0);
 }
 
@@ -95,7 +117,15 @@ if (!src) {
   src = await Deno.makeTempDir({ prefix: "liftosaur-vendor-" });
   console.log(`cloning liftosaur ${ref} into ${src}`);
   const cmd = new Deno.Command("git", {
-    args: ["clone", "--depth", "1", "--branch", ref, "https://github.com/astashov/liftosaur", src],
+    args: [
+      "clone",
+      "--depth",
+      "1",
+      "--branch",
+      ref,
+      "https://github.com/astashov/liftosaur",
+      src,
+    ],
     stdin: "null",
     stdout: "inherit",
     stderr: "inherit",
@@ -111,7 +141,9 @@ const missingUpstream = (await Promise.all(
   FILES.map(async ([up]) => (await exists(join(src!, up))) ? null : up),
 )).filter((x): x is string => x !== null);
 if (missingUpstream.length > 0) {
-  console.error(`upstream checkout lacks ${missingUpstream.length} file(s) (wrong ref?):`);
+  console.error(
+    `upstream checkout lacks ${missingUpstream.length} file(s) (wrong ref?):`,
+  );
   for (const m of missingUpstream) console.error(`  ${m}`);
   Deno.exit(1);
 }
@@ -125,10 +157,15 @@ let copiedPrograms = 0;
 await Deno.mkdir(join(REPO, PROGRAMS_DIR), { recursive: true });
 for await (const e of Deno.readDir(join(src, "programs", "builtin"))) {
   if (!e.isFile || !e.name.endsWith(".md")) continue;
-  await Deno.copyFile(join(src, "programs", "builtin", e.name), join(REPO, PROGRAMS_DIR, e.name));
+  await Deno.copyFile(
+    join(src, "programs", "builtin", e.name),
+    join(REPO, PROGRAMS_DIR, e.name),
+  );
   copiedPrograms++;
 }
-console.log(`copied ${FILES.length} files + ${copiedPrograms} programs from ${src}`);
+console.log(
+  `copied ${FILES.length} files + ${copiedPrograms} programs from ${src}`,
+);
 if (!flag("patched")) {
   console.log("reapply local patches, then rerun with --patched to confirm:");
   for (const p of PATCHES) console.log(`  - ${p}`);

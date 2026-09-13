@@ -4,14 +4,23 @@ export function assert(cond: unknown, msg: string): void {
   if (!cond) throw new Error(`assert failed: ${msg}`);
 }
 
-export function assertClose(actual: number, expected: number, tol: number, msg: string): void {
+export function assertClose(
+  actual: number,
+  expected: number,
+  tol: number,
+  msg: string,
+): void {
   if (!(Math.abs(actual - expected) <= tol)) {
-    throw new Error(`assertClose failed: ${msg}: actual=${actual} expected=${expected} tol=${tol}`);
+    throw new Error(
+      `assertClose failed: ${msg}: actual=${actual} expected=${expected} tol=${tol}`,
+    );
   }
 }
 
 export function assertEqual<T>(actual: T, expected: T, msg: string): void {
   const a = JSON.stringify(actual);
   const e = JSON.stringify(expected);
-  if (a !== e) throw new Error(`assertEqual failed: ${msg}: actual=${a} expected=${e}`);
+  if (a !== e) {
+    throw new Error(`assertEqual failed: ${msg}: actual=${a} expected=${e}`);
+  }
 }

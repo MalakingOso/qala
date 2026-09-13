@@ -7,7 +7,14 @@ export type MuscleId = string;
 export const DEFAULT_MAIN_LIFTS = ["squat", "bench", "deadlift", "ohp"];
 
 /** Lower-body lifts affected by the cross-modal run-before-lift rules. */
-export const LOWER_BODY_PATTERNS = ["squat", "deadlift", "lunge", "legpress", "leg-press", "leg_press"];
+export const LOWER_BODY_PATTERNS = [
+  "squat",
+  "deadlift",
+  "lunge",
+  "legpress",
+  "leg-press",
+  "leg_press",
+];
 
 export function isLowerBodyLift(exerciseId: string): boolean {
   const id = exerciseId.toLowerCase();
@@ -54,7 +61,8 @@ export interface LiftWorkout {
 export interface RunWorkout {
   kind: "run";
   id: string;
-  date: string; // ISO 8601
+  /** ISO 8601, the run's START. Compute the end as `date + movingSec`. */
+  date: string;
   distanceM: number;
   movingSec: number;
   elapsedSec: number;
@@ -103,11 +111,25 @@ export interface EngineState {
   bestEfforts: BestEffort[]; // for CS, last 90 d window applied at read time
   prsHistory: { date: string; value: number }[];
   dailyLoad: { date: string; load: number }[]; // sRPE-load per day (lifting + running)
-  liftSessions: { date: string; quadSetEq: number; heavyLower: boolean; srpe?: number }[];
+  liftSessions: {
+    date: string;
+    quadSetEq: number;
+    heavyLower: boolean;
+    srpe?: number;
+  }[];
   e1rmObs: Record<string, { date: string; value: number }[]>;
-  runs: { date: string; distanceM: number; movingSec: number; descentM: number; z: number }[];
+  runs: {
+    date: string;
+    distanceM: number;
+    movingSec: number;
+    descentM: number;
+    z: number;
+  }[];
   srpeRtssPairs: { srpeLoad: number; rTSS: number }[];
-  referenceRm: Record<string, { weight: number; date: string; source: "kalman" | "tested" }>;
+  referenceRm: Record<
+    string,
+    { weight: number; date: string; source: "kalman" | "tested" }
+  >;
   restProfile: {
     byClass: Record<string, { m: number; samples: number }>;
     byExercise: Record<string, { m: number; samples: number }>;
@@ -121,7 +143,9 @@ export interface EngineState {
   hybridPriority: "lifting" | "running";
 }
 
-export function initialState(mainLifts: string[] = DEFAULT_MAIN_LIFTS): EngineState {
+export function initialState(
+  mainLifts: string[] = DEFAULT_MAIN_LIFTS,
+): EngineState {
   return {
     updated: new Date(0).toISOString(),
     mainLifts: [...mainLifts],
@@ -131,7 +155,15 @@ export function initialState(mainLifts: string[] = DEFAULT_MAIN_LIFTS): EngineSt
     fatigueSystemic: 0,
     fitnessRun: 0,
     kalman: {},
-    kalmanRun: { p0: 40, k1: 1, k2: 2, thetaPrior: 2, P: [[1e4, 0, 0], [0, 1e3, 0], [0, 0, 1]], obs: 0, R: 1 },
+    kalmanRun: {
+      p0: 40,
+      k1: 1,
+      k2: 2,
+      thetaPrior: 2,
+      P: [[1e4, 0, 0], [0, 1e3, 0], [0, 0, 1]],
+      obs: 0,
+      R: 1,
+    },
     runFatigueMuscle: {},
     runFatigueDamage: {},
     bestEfforts: [],

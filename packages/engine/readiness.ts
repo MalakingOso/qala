@@ -21,12 +21,20 @@ function mean(xs: number[]): number {
 
 function sd(xs: number[], m: number): number {
   if (xs.length < 2) return 0;
-  return Math.sqrt(xs.reduce((a, b) => a + (b - m) * (b - m), 0) / (xs.length - 1));
+  return Math.sqrt(
+    xs.reduce((a, b) => a + (b - m) * (b - m), 0) / (xs.length - 1),
+  );
 }
 
-export function prsZScore(history: { date: string; value: number }[], nowIso: string, prs: number): number | null {
+export function prsZScore(
+  history: { date: string; value: number }[],
+  nowIso: string,
+  prs: number,
+): number | null {
   const cutoff = Date.parse(nowIso) - WINDOW_MS;
-  const vals = history.filter((h) => Date.parse(h.date) >= cutoff).map((h) => h.value);
+  const vals = history.filter((h) => Date.parse(h.date) >= cutoff).map((h) =>
+    h.value
+  );
   if (vals.length < 2) return null;
   const m = mean(vals);
   const s = sd(vals, m);
@@ -66,7 +74,11 @@ export function predictReadiness(
     reasons.push("sore-healing");
   }
   const gSession = sessionMuscles.length
-    ? sessionMuscles.reduce((a, m) => a + (state.fatigueMuscle[m] ?? 0) + (state.fatigueDamage[m] ?? 0), 0) /
+    ? sessionMuscles.reduce(
+      (a, m) =>
+        a + (state.fatigueMuscle[m] ?? 0) + (state.fatigueDamage[m] ?? 0),
+      0,
+    ) /
       sessionMuscles.length
     : 0;
   const localPenalty = Math.min(0.2, 0.2 * fatigueLocal(gSession));
@@ -74,10 +86,19 @@ export function predictReadiness(
     score -= localPenalty;
     reasons.push("local-fatigue");
   }
-  const sysPenalty = Math.min(0.15, 0.15 * Math.min(1, state.fatigueSystemic / 6));
+  const sysPenalty = Math.min(
+    0.15,
+    0.15 * Math.min(1, state.fatigueSystemic / 6),
+  );
   if (sysPenalty > 0.01) {
     score -= sysPenalty;
     reasons.push("systemic-fatigue");
   }
-  return { score: Math.min(1, Math.max(0, score)), prsZ, prsFlag, soreBlockedMuscles: soreBlocked, reasons };
+  return {
+    score: Math.min(1, Math.max(0, score)),
+    prsZ,
+    prsFlag,
+    soreBlockedMuscles: soreBlocked,
+    reasons,
+  };
 }

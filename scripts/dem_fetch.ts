@@ -28,7 +28,9 @@ const outDir = arg("out", "server/tiles/dem") ?? "server/tiles/dem";
 const base = (arg("base-url") ?? "").replace(/\/+$/, "");
 const dryRun = flag("dry-run");
 if (!bboxArg) {
-  console.error("usage: dem_fetch.ts --bbox minlon,minlat,maxlon,maxlat [--out server/tiles/dem] --base-url <mirror> [--dry-run]");
+  console.error(
+    "usage: dem_fetch.ts --bbox minlon,minlat,maxlon,maxlat [--out server/tiles/dem] --base-url <mirror> [--dry-run]",
+  );
   Deno.exit(1);
 }
 const bbox = (bboxArg as string).split(",").map(Number);
@@ -37,7 +39,9 @@ if (bbox.length !== 4 || bbox.some((v) => !Number.isFinite(v))) {
   Deno.exit(1);
 }
 if (!dryRun && !base) {
-  console.error("pass --base-url <mirror holding <name> files> (or --dry-run to list cells)");
+  console.error(
+    "pass --base-url <mirror holding <name> files> (or --dry-run to list cells)",
+  );
   Deno.exit(1);
 }
 const [minlon, minlat, maxlon, maxlat] = bbox;
@@ -85,4 +89,6 @@ for (const n of names) {
   await Deno.rename(dest + ".part", dest);
   fetched++;
 }
-console.log(`dem: ${fetched} fetched, ${skipped} already present, ${names.length} needed`);
+console.log(
+  `dem: ${fetched} fetched, ${skipped} already present, ${names.length} needed`,
+);

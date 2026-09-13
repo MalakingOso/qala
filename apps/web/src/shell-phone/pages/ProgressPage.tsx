@@ -2,7 +2,12 @@
  * target, sets per muscle, running fitness + miles, recent sessions. */
 
 import { Card, Group, GroupRow } from "../../shared/ui.tsx";
-import { BulletNl85, E1rmLine, RunSpark, SetsByMuscle } from "../../shared/charts/index.ts";
+import {
+  BulletNl85,
+  E1rmLine,
+  RunSpark,
+  SetsByMuscle,
+} from "../../shared/charts/index.ts";
 
 export function ProgressPage() {
   return (
@@ -40,7 +45,10 @@ export function ProgressPage() {
           { muscle: "back", earlier: 12, today: 0 },
         ]}
       />
-      <RunSpark points={[38.5, 39.1, 39.0, 39.8, 40.2]} label="VDOT rising across the block." />
+      <RunSpark
+        points={[38.5, 39.1, 39.0, 39.8, 40.2]}
+        label="VDOT rising across the block."
+      />
       <Group label="Recent sessions">
         <GroupRow>
           <span>Sun · Lower A · 20.4k lb</span>

@@ -8,5 +8,10 @@
     "@lezer/common": "npm:@lezer/common@1.5.2",
     "@lezer/lr": "npm:@lezer/lr@1.3.7",
     "@lezer/highlight": "npm:@lezer/highlight@1.1.6"
+  },
+  "lint": {
+    "rules": {
+      "exclude": ["no-slow-types"]
+    }
   }
 }

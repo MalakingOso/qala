@@ -5,10 +5,11 @@
 
 import { useState } from "react";
 import { useQala } from "../../store/qalaStore.tsx";
-import { Card, Chip } from "../../shared/ui.tsx";
+import { Card, Chip, MemoryProposalList } from "../../shared/ui.tsx";
 
 export function CoachPage() {
-  const { envelopes, decideEnvelope, memory, decideMemory, queueOp } = useQala();
+  const { envelopes, decideEnvelope, memory, decideMemory, queueOp } =
+    useQala();
   const [draft, setDraft] = useState("");
   const [thread, setThread] = useState<string[]>([
     "Coach: Squat holds at 245 today. Quads are still carrying Friday.",
@@ -19,7 +20,9 @@ export function CoachPage() {
         <h1 className="page-title title">Coach</h1>
         <span className="kbd-hint">Runs on callisto</span>
       </div>
-      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 8 }}>
+      <div
+        style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 8 }}
+      >
         <Chip>today: Lower A</Chip>
         <Chip>check-in: PRS 7, quads 4</Chip>
       </div>
@@ -42,48 +45,71 @@ export function CoachPage() {
             </div>
           </div>
           <p className="kbd-hint">{e.reason}</p>
-          {e.platesPerSide ? <p className="kbd-hint">plates per side: {e.platesPerSide}</p> : null}
-          <p className="kbd-hint">Limits: weight -10% to +2.5%, sets -2 to +1.</p>
-          {e.accepted === null ? (
-            <div className="row-btns">
-              <button type="button" className="btn-primary" style={{ width: "auto", flex: 1 }} onClick={() => decideEnvelope(e.id, true)}>
-                Use coach
-              </button>
-              <button type="button" className="btn-secondary" style={{ width: "auto", flex: 1 }} onClick={() => decideEnvelope(e.id, false)}>
-                Keep engine
-              </button>
-            </div>
-          ) : (
-            <p className="kbd-hint">{e.accepted ? "Coach values in use." : "Engine values kept."}</p>
-          )}
+          {e.platesPerSide
+            ? <p className="kbd-hint">plates per side: {e.platesPerSide}</p>
+            : null}
+          <p className="kbd-hint">
+            Limits: weight -10% to +2.5%, sets -2 to +1.
+          </p>
+          {e.accepted === null
+            ? (
+              <div className="row-btns">
+                <button
+                  type="button"
+                  className="btn-primary"
+                  style={{ width: "auto", flex: 1 }}
+                  onClick={() => decideEnvelope(e.id, true)}
+                >
+                  Use coach
+                </button>
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  style={{ width: "auto", flex: 1 }}
+                  onClick={() => decideEnvelope(e.id, false)}
+                >
+                  Keep engine
+                </button>
+              </div>
+            )
+            : (
+              <p className="kbd-hint">
+                {e.accepted ? "Coach values in use." : "Engine values kept."}
+              </p>
+            )}
         </div>
       ))}
       <Card>
         <p className="group-label">Remember this?</p>
-        {memory.map((m) => (
-          <div key={m.id} style={{ marginBottom: 8 }}>
-            <p style={{ margin: "4px 0" }}>{m.text}</p>
-            <p className="kbd-hint">{m.source} · {m.date}</p>
-            {m.accepted === null ? (
-              <div style={{ display: "flex", gap: 6 }}>
-                <button type="button" className="chip" onClick={() => decideMemory(m.id, true)}>Accept</button>
-                <button type="button" className="chip" onClick={() => decideMemory(m.id, false)}>Reject</button>
-              </div>
-            ) : (
-              <p className="kbd-hint">{m.accepted ? "Saved to memory." : "Discarded."}</p>
-            )}
-          </div>
-        ))}
+        <MemoryProposalList
+          memory={memory}
+          decideMemory={decideMemory}
+          acceptedLabel="Saved to memory."
+          rejectedLabel="Discarded."
+        />
       </Card>
       <form
         onSubmit={(e) => {
           e.preventDefault();
           if (!draft.trim()) return;
           queueOp("coach-ask", { draft });
-          setThread((t) => [...t, `You: ${draft}`, "Coach: Noted. Anything actionable will come back as a card above."]);
+          setThread((
+            t,
+          ) => [
+            ...t,
+            `You: ${draft}`,
+            "Coach: Noted. Anything actionable will come back as a card above.",
+          ]);
           setDraft("");
         }}
-        style={{ display: "flex", gap: 8, position: "sticky", bottom: 80, background: "var(--bg)", padding: "8px 0" }}
+        style={{
+          display: "flex",
+          gap: 8,
+          position: "sticky",
+          bottom: 80,
+          background: "var(--bg)",
+          padding: "8px 0",
+        }}
       >
         <input
           aria-label="Ask the coach"

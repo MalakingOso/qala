@@ -2,7 +2,27 @@
  * render these at 44px touch targets; desktop reuses them in wider grids. */
 
 import type { ReactNode } from "react";
-import { plateColor } from "../logic/plateShorthand.ts";
+import type { MemoryProposal } from "../store/types.ts";
+
+/** Plate color defaults (DESIGN 5.8 / PLAN 6.8). Editable in Settings. */
+function plateColor(weight: number): { bg: string; ink: string } {
+  switch (weight) {
+    case 55:
+      return { bg: "#d64541", ink: "#fff" };
+    case 45:
+      return { bg: "#2f6bd1", ink: "#fff" };
+    case 35:
+      return { bg: "#e9b824", ink: "#0f152a" };
+    case 25:
+      return { bg: "#2f9c5a", ink: "#fff" };
+    case 10:
+      return { bg: "#eef0f4", ink: "#0f152a" };
+    case 5:
+      return { bg: "#3b404c", ink: "#fff" };
+    default:
+      return { bg: "#b9bfca", ink: "#0f152a" };
+  }
+}
 
 export function Card({
   title,
@@ -96,20 +116,29 @@ export function SecondaryButton({
   );
 }
 
-export function Chip({ children, onRemove }: { children: ReactNode; onRemove?: () => void }) {
+export function Chip(
+  { children, onRemove }: { children: ReactNode; onRemove?: () => void },
+) {
   return (
     <span className={onRemove ? "chip chip-removable" : "chip"}>
       {children}
-      {onRemove ? (
-        <button
-          type="button"
-          onClick={onRemove}
-          aria-label="Remove"
-          style={{ background: "none", border: "none", cursor: "pointer", padding: 4 }}
-        >
-          ×
-        </button>
-      ) : null}
+      {onRemove
+        ? (
+          <button
+            type="button"
+            onClick={onRemove}
+            aria-label="Remove"
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              padding: 4,
+            }}
+          >
+            ×
+          </button>
+        )
+        : null}
     </span>
   );
 }
@@ -176,9 +205,11 @@ export function ProgressSegments({
       {Array.from({ length: total }, (_, i) => (
         <div
           key={i}
-          className={
-            i < done ? "seg-cell filled" : i === current ? "seg-cell current" : "seg-cell"
-          }
+          className={i < done
+            ? "seg-cell filled"
+            : i === current
+            ? "seg-cell current"
+            : "seg-cell"}
         />
       ))}
     </div>
@@ -258,7 +289,8 @@ export function PlateDrawing({
   label?: string;
 }) {
   const maxP = Math.max(45, ...perSide);
-  const heightOf = (p: number) => 24 + Math.round((64 * (p - 2.5)) / Math.max(1, maxP - 2.5));
+  const heightOf = (p: number) =>
+    24 + Math.round((64 * (p - 2.5)) / Math.max(1, maxP - 2.5));
   const widthOf = (p: number) => (p >= 25 ? 16 : 10);
   let x = 46;
   const plates = perSide.map((p) => {
@@ -271,7 +303,10 @@ export function PlateDrawing({
   const midY = 60;
   const totalW = x + 90;
   return (
-    <figure style={{ margin: "8px 0" }} aria-label={label ?? `Bar with ${perSide.join(", ")} per side`}>
+    <figure
+      style={{ margin: "8px 0" }}
+      aria-label={label ?? `Bar with ${perSide.join(", ")} per side`}
+    >
       <svg viewBox={`0 0 ${totalW} 120`} width="100%" role="img">
         {/* sleeve */}
         <rect x={4} y={midY - 5} width={44} height={10} fill="var(--bar)" />
@@ -295,7 +330,9 @@ export function PlateDrawing({
                 fontSize={10}
                 fill={tall ? c.ink : "var(--fg)"}
                 textAnchor={tall ? "middle" : "start"}
-                transform={tall ? `rotate(-90 ${pl.x + pl.w / 2} ${midY})` : undefined}
+                transform={tall
+                  ? `rotate(-90 ${pl.x + pl.w / 2} ${midY})`
+                  : undefined}
               >
                 {pl.p}
               </text>
@@ -303,7 +340,13 @@ export function PlateDrawing({
           );
         })}
         {/* collar + bar label */}
-        <rect x={x + 2} y={midY - 12} width={8} height={24} fill="var(--bar-collar)" />
+        <rect
+          x={x + 2}
+          y={midY - 12}
+          width={8}
+          height={24}
+          fill="var(--bar-collar)"
+        />
         <text x={x + 14} y={midY + 4} fontSize={11} fill="var(--fg)">
           {barWeight} bar
         </text>
@@ -336,7 +379,57 @@ export function EngineBanner({
   );
 }
 
-export function DataTable({ head, rows }: { head: string[]; rows: string[][] }) {
+/** Accept/reject list for coach memory proposals, shared by CoachPage and CoachMemoryPage. */
+export function MemoryProposalList({
+  memory,
+  decideMemory,
+  acceptedLabel = "Accepted.",
+  rejectedLabel = "Rejected.",
+}: {
+  memory: MemoryProposal[];
+  decideMemory: (id: string, accept: boolean) => void;
+  acceptedLabel?: string;
+  rejectedLabel?: string;
+}) {
+  return (
+    <>
+      {memory.map((m) => (
+        <div key={m.id} style={{ marginBottom: 10 }}>
+          <p style={{ margin: "4px 0" }}>{m.text}</p>
+          <p className="kbd-hint">{m.source} · {m.date}</p>
+          {m.accepted === null
+            ? (
+              <div style={{ display: "flex", gap: 6 }}>
+                <button
+                  type="button"
+                  className="chip"
+                  onClick={() => decideMemory(m.id, true)}
+                >
+                  Accept
+                </button>
+                <button
+                  type="button"
+                  className="chip"
+                  onClick={() => decideMemory(m.id, false)}
+                >
+                  Reject
+                </button>
+              </div>
+            )
+            : (
+              <p className="kbd-hint">
+                {m.accepted ? acceptedLabel : rejectedLabel}
+              </p>
+            )}
+        </div>
+      ))}
+    </>
+  );
+}
+
+export function DataTable(
+  { head, rows }: { head: string[]; rows: string[][] },
+) {
   return (
     <table className="data">
       <thead>
@@ -351,9 +444,7 @@ export function DataTable({ head, rows }: { head: string[]; rows: string[][] }) 
       <tbody>
         {rows.map((r, i) => (
           <tr key={i}>
-            {r.map((c, j) => (
-              <td key={j}>{c}</td>
-            ))}
+            {r.map((c, j) => <td key={j}>{c}</td>)}
           </tr>
         ))}
       </tbody>
@@ -361,10 +452,15 @@ export function DataTable({ head, rows }: { head: string[]; rows: string[][] }) 
   );
 }
 
-export function OfflineBadge({ online, pending }: { online: boolean; pending: number }) {
+export function OfflineBadge(
+  { online, pending }: { online: boolean; pending: number },
+) {
   return (
     <span className="kbd-hint" role="status">
-      <span className={online ? "offline-dot" : "offline-dot off"} aria-hidden="true" />
+      <span
+        className={online ? "offline-dot" : "offline-dot off"}
+        aria-hidden="true"
+      />
       {online ? "live" : "offline"}
       {pending > 0 ? ` · ${pending} queued` : ""}
     </span>

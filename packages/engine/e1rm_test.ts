@@ -1,6 +1,6 @@
 // e1RM 4 observation rules (PLAN 6.2 / B6) + RTS table provenance.
-import { observeSet, bestObservation } from "./e1rm.ts";
-import { rtsLookup, RTS_VERIFICATION_STATUS } from "./rtsTable.ts";
+import { bestObservation, observeSet } from "./e1rm.ts";
+import { RTS_VERIFICATION_STATUS, rtsLookup } from "./rtsTable.ts";
 import { assert, assertClose } from "./testutil.ts";
 
 Deno.test("rule 1: single at RPE>=9.5 is tested 1RM", () => {
@@ -9,7 +9,13 @@ Deno.test("rule 1: single at RPE>=9.5 is tested 1RM", () => {
 });
 
 Deno.test("rule 1: flagged test attempt at any RPE", () => {
-  const o = observeSet({ w: 190, r: 1, rpe: 8, completed: true, tested1rm: true });
+  const o = observeSet({
+    w: 190,
+    r: 1,
+    rpe: 8,
+    completed: true,
+    tested1rm: true,
+  });
   assert(o !== null && o.e1rm === 190 && o.tested, "flagged test");
 });
 
@@ -34,8 +40,14 @@ Deno.test("rule 3: no RPE, reps<=10 uses Epley with target-RPE RIR", () => {
 });
 
 Deno.test("rule 4: reps>10 gives no observation", () => {
-  assert(observeSet({ w: 60, r: 12, rpe: 9, completed: true }) === null, "12 @9 none");
-  assert(observeSet({ w: 60, r: 12, completed: true }) === null, "12 no-rpe none");
+  assert(
+    observeSet({ w: 60, r: 12, rpe: 9, completed: true }) === null,
+    "12 @9 none",
+  );
+  assert(
+    observeSet({ w: 60, r: 12, completed: true }) === null,
+    "12 no-rpe none",
+  );
 });
 
 Deno.test("bestObservation picks max, skips warmup and incomplete", () => {
@@ -49,7 +61,10 @@ Deno.test("bestObservation picks max, skips warmup and incomplete", () => {
 });
 
 Deno.test("RTS table marked unverified per PLAN 6.2", () => {
-  assert(RTS_VERIFICATION_STATUS === "unverified-third-party-reproduction", "status");
+  assert(
+    RTS_VERIFICATION_STATUS === "unverified-third-party-reproduction",
+    "status",
+  );
   assert(rtsLookup(5, 8).verified === false, "cells unverified");
   assert(rtsLookup(5, 8).useRule3Fallback === false, "unflagged usable");
   assert(rtsLookup(7, 8).pct === null, "reps>6 off-table");

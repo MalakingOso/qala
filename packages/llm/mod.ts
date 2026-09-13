@@ -9,8 +9,8 @@ export type {
   ComputedProfile,
   EngineOutput,
   FourWeekSummary,
-  PromptContext,
   JsonSchema,
+  PromptContext,
 } from "./prompts.ts";
 export {
   buildCheckinPrompt,
@@ -35,26 +35,22 @@ export {
 } from "./schemas.ts";
 export type { FeatureKind } from "./schemas.ts";
 export {
-  acceptProposal,
   acceptedMemories,
+  acceptProposal,
   deserializeProposals,
   pendingProposals,
   proposeMemories,
   rejectProposal,
   serializeProposals,
 } from "./memory.ts";
-export type {
-  MemoryProposal,
-  MemorySource,
-  ProposalStatus,
-} from "./memory.ts";
+export type { MemoryProposal, MemorySource, ProposalStatus } from "./memory.ts";
 export {
-  classifyCoachTopic,
   clampSets,
   clampWeightPct,
+  classifyCoachTopic,
   COACH_TOPICS,
-  declineResponse,
   DECLINE_TEXT,
+  declineResponse,
   DEFAULT_ENVELOPE,
   hashPrompt,
   isCoachTopic,

@@ -160,41 +160,62 @@ async function writeUserRecord(
  */
 export class UserSyncStore {
   #repos = new Map<string, Repo>();
+  /**
+   * Per-login serialization so two concurrent first-use connections can't
+   * both see no repo/record, both create one, and race on the write: each
+   * login's setup work is chained onto the previous one instead of running
+   * concurrently with it.
+   */
+  #locks = new Map<string, Promise<unknown>>();
 
   constructor(private dataRoot: string) {}
+
+  #withLock<T>(login: string, fn: () => Promise<T>): Promise<T> {
+    const prior = this.#locks.get(login) ?? Promise.resolve();
+    const next = prior.then(fn, fn);
+    this.#locks.set(login, next.then(() => undefined, () => undefined));
+    return next;
+  }
+
+  async #repoForUserLocked(login: string): Promise<Repo> {
+    const cached = this.#repos.get(login);
+    if (cached) return cached;
+    const storage = await createStorage(
+      `${userDir(this.dataRoot, login)}/chunks`,
+    );
+    const repo = new Repo({ storage });
+    this.#repos.set(login, repo);
+    return repo;
+  }
 
   repoForUser(login: string): Promise<Repo> {
     const cached = this.#repos.get(login);
     if (cached) return Promise.resolve(cached);
-    return createStorage(`${userDir(this.dataRoot, login)}/chunks`).then(
-      (storage) => {
-        const repo = new Repo({ storage });
-        this.#repos.set(login, repo);
-        return repo;
-      },
-    );
+    return this.#withLock(login, () => this.#repoForUserLocked(login));
   }
 
   /**
    * The user's one document, created on first use. The returned doc id is
    * stable: later calls read it back from the `<login>.json` record.
    */
-  async docForUser(login: string): Promise<{ docId: string; url: string }> {
-    const repo = await this.repoForUser(login);
-    const record = await readUserRecord(this.dataRoot, login);
-    if (record) {
-      repo.find(record.docId as DocumentId);
-      return { docId: record.docId, url: `automerge:${record.docId}` };
-    }
-    const handle = repo.create();
-    const docId = handle.documentId;
-    const url = handle.url;
-    await writeUserRecord(this.dataRoot, {
-      login,
-      docId,
-      createdAt: new Date().toISOString(),
+  docForUser(login: string): Promise<{ docId: string; url: string }> {
+    return this.#withLock(login, async () => {
+      const repo = await this.#repoForUserLocked(login);
+      const record = await readUserRecord(this.dataRoot, login);
+      if (record) {
+        repo.find(record.docId as DocumentId);
+        return { docId: record.docId, url: `automerge:${record.docId}` };
+      }
+      const handle = repo.create();
+      const docId = handle.documentId;
+      const url = handle.url;
+      await writeUserRecord(this.dataRoot, {
+        login,
+        docId,
+        createdAt: new Date().toISOString(),
+      });
+      return { docId, url };
     });
-    return { docId, url };
   }
 
   /** True when `docId` is the document recorded for `login`. */

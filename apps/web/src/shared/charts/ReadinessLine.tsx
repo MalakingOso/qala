@@ -26,7 +26,11 @@ export function ReadinessLine({
         range: [PAD.left, W - PAD.right],
         padding: 0.5,
       }),
-      y: scaleLinear<number>({ domain: [0, 100], range: [H - PAD.bottom, PAD.top], nice: true }),
+      y: scaleLinear<number>({
+        domain: [0, 100],
+        range: [H - PAD.bottom, PAD.top],
+        nice: true,
+      }),
     }),
     [values],
   );
@@ -60,15 +64,29 @@ export function ReadinessLine({
           strokeLinecap="round"
         />
         {values.map((v, i) => (
-          <Hit key={i} x={x(String(i)) ?? 0} y={y(v)} label={`day ${i + 1}: ${v}`}>
-            <circle r={5} fill="var(--bg-surface)" stroke="var(--viz-2)" strokeWidth={2} />
+          <Hit
+            key={i}
+            x={x(String(i)) ?? 0}
+            y={y(v)}
+            label={`day ${i + 1}: ${v}`}
+          >
+            <circle
+              r={5}
+              fill="var(--bg-surface)"
+              stroke="var(--viz-2)"
+              strokeWidth={2}
+            />
           </Hit>
         ))}
         <AxisBottom
           top={H - PAD.bottom}
           scale={x}
           tickFormat={(i) => `d${Number(i) + 1}`}
-          tickLabelProps={{ fontSize: 10, fill: "var(--fg-muted)", textAnchor: "middle" }}
+          tickLabelProps={{
+            fontSize: 10,
+            fill: "var(--fg-muted)",
+            textAnchor: "middle",
+          }}
           hideAxisLine
           hideTicks
         />
@@ -76,7 +94,11 @@ export function ReadinessLine({
           left={PAD.left}
           scale={y}
           numTicks={4}
-          tickLabelProps={{ fontSize: 10, fill: "var(--fg-muted)", textAnchor: "end" }}
+          tickLabelProps={{
+            fontSize: 10,
+            fill: "var(--fg-muted)",
+            textAnchor: "end",
+          }}
           hideAxisLine
           hideTicks
         />

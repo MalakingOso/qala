@@ -2,24 +2,31 @@
  * same data, tap/hover tooltips with a 24px hit area, and keyboard focus
  * that shows the same as hover. */
 
-import { useState, type ReactNode } from "react";
+import { type ReactNode, useState } from "react";
 
 export function ChartShell({
   title,
   head,
   rows,
   label,
+  flat,
   children,
 }: {
   title: string;
   head: string[];
   rows: string[][];
   label: string;
+  /** Skip the card chrome (border/shadow/padding) when the parent already
+   * supplies it, so charts don't nest inside a second card (DESIGN 6, 7.1). */
+  flat?: boolean;
   children: ReactNode;
 }) {
   const [table, setTable] = useState(false);
   return (
-    <section className="card flat-rest chart-wrap" aria-label={title}>
+    <section
+      className={flat ? "chart-wrap" : "card flat-rest chart-wrap"}
+      aria-label={title}
+    >
       <div className="page-head" style={{ marginBottom: 4 }}>
         <h3 className="card-title title" style={{ margin: 0 }}>
           {title}
@@ -33,32 +40,32 @@ export function ChartShell({
           {table ? "Chart" : "Table"}
         </button>
       </div>
-      {table ? (
-        <table className="data">
-          <thead>
-            <tr>
-              {head.map((h) => (
-                <th key={h} scope="col">
-                  {h}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((r, i) => (
-              <tr key={i}>
-                {r.map((c, j) => (
-                  <td key={j}>{c}</td>
+      {table
+        ? (
+          <table className="data">
+            <thead>
+              <tr>
+                {head.map((h) => (
+                  <th key={h} scope="col">
+                    {h}
+                  </th>
                 ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
-      ) : (
-        <div tabIndex={0} role="img" aria-label={label}>
-          {children}
-        </div>
-      )}
+            </thead>
+            <tbody>
+              {rows.map((r, i) => (
+                <tr key={i}>
+                  {r.map((c, j) => <td key={j}>{c}</td>)}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )
+        : (
+          <div tabIndex={0} role="img" aria-label={label}>
+            {children}
+          </div>
+        )}
     </section>
   );
 }
@@ -76,7 +83,12 @@ export function Hit({
   children: ReactNode;
 }) {
   return (
-    <g tabIndex={0} role="img" aria-label={label} transform={`translate(${x} ${y})`}>
+    <g
+      tabIndex={0}
+      role="img"
+      aria-label={label}
+      transform={`translate(${x} ${y})`}
+    >
       <title>{label}</title>
       <circle r={13} fill="transparent" />
       {children}

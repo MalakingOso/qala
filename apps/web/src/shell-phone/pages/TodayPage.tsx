@@ -6,9 +6,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useQala } from "../../store/qalaStore.tsx";
 import { sampleWeekLoad } from "../../store/sample.ts";
+import { isRestDay } from "../../store/types.ts";
 import type { DayStageId } from "../../store/types.ts";
 import { Card, PrimaryButton, SecondaryButton } from "../../shared/ui.tsx";
-import { WeeklyLoad, ReadinessRing } from "../../shared/charts/index.ts";
+import { ReadinessRing, WeeklyLoad } from "../../shared/charts/index.ts";
 import {
   Bed,
   CircleCheck,
@@ -46,7 +47,7 @@ export function TodayPage() {
     };
   }, [viewing, now.id]);
 
-  const restDay = stages.length === 3;
+  const restDay = isRestDay(stages);
   const viewed = stages.find((s) => s.id === viewing) ?? now;
   const ViewIcon = STAGE_ICON[viewed.id];
 
@@ -60,13 +61,26 @@ export function TodayPage() {
           {stages.map((s, i) => {
             const Icon = STAGE_ICON[s.id];
             return (
-              <div key={s.id} style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+              <div
+                key={s.id}
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                }}
+              >
                 <button
                   type="button"
                   role="tab"
                   aria-selected={s.id === viewing}
                   aria-label={`${s.label}, ${s.status}`}
-                  className={`rail-node ${s.status === "done" ? "done" : s.status === "now" ? "now" : ""}`}
+                  className={`rail-node ${
+                    s.status === "done"
+                      ? "done"
+                      : s.status === "now"
+                      ? "now"
+                      : ""
+                  }`}
                   onClick={() => setViewing(s.id)}
                 >
                   <Icon size={20} />
@@ -76,7 +90,9 @@ export function TodayPage() {
                   <br />
                   {s.time}
                 </span>
-                {i < stages.length - 1 ? <span className="rail-link" aria-hidden="true" /> : null}
+                {i < stages.length - 1
+                  ? <span className="rail-link" aria-hidden="true" />
+                  : null}
               </div>
             );
           })}
@@ -85,95 +101,160 @@ export function TodayPage() {
           <Card hero>
             <p className="group-label">
               Now · {viewed.label}
-              {viewed.id !== now.id ? ` (previewing, back to ${now.label} soon)` : ""}
+              {viewed.id !== now.id
+                ? ` (previewing, back to ${now.label} soon)`
+                : ""}
             </p>
-            {viewed.id === "lift" || viewed.id === "warmup" ? (
-              <>
-                <h2 className="title" style={{ margin: "0 0 4px", fontSize: 24 }}>
-                  Lower A · Squat day
-                </h2>
-                <p style={{ margin: "0 0 4px" }}>
-                  Top set 245 x 4. <span className="kbd-hint">A little under your average, so squat holds.</span>
-                </p>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                  <ReadinessRing readiness={0.72} avg={76} lowLine={64} checkins={20} prs={7} />
-                  <div>
-                    <p className="figure" style={{ fontSize: 22, margin: "8px 0 0" }}>
-                      10 + 15 min
-                    </p>
-                    <p className="kbd-hint">warm-up + lift window</p>
-                  </div>
-                </div>
-                <WeeklyLoad days={sampleWeekLoad} />
-                <PrimaryButton large href={viewed.id === "warmup" ? "#/phone/checkin" : "#/phone/warmup"}>
-                  <Flame size={22} /> Start warm-up
-                </PrimaryButton>
-                <p className="kbd-hint">Then: Easy run · 3.0 mi · 6 pm</p>
-              </>
-            ) : viewed.id === "recover" ? (
-              <>
-                <h2 className="title" style={{ margin: "0 0 4px", fontSize: 24 }}>
-                  Lift done
-                </h2>
-                <div className="stat-tiles">
-                  {[
-                    { v: "58", l: "min" },
-                    { v: "20.4k", l: "lb +6%" },
-                    { v: "20", l: "hard sets" },
-                    { v: "1", l: "PR" },
-                  ].map((s) => (
-                    <div className="stat-tile" key={s.l}>
-                      <div className="v figure">{s.v}</div>
-                      <div className="l">{s.l}</div>
+            {viewed.id === "lift" || viewed.id === "warmup"
+              ? (
+                <>
+                  <h2
+                    className="title"
+                    style={{ margin: "0 0 4px", fontSize: 24 }}
+                  >
+                    Lower A · Squat day
+                  </h2>
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "1fr 156px",
+                      gap: 8,
+                      alignItems: "start",
+                    }}
+                  >
+                    <div>
+                      <p style={{ margin: "0 0 4px" }}>Top set 245 x 4.</p>
+                      <p className="kbd-hint" style={{ margin: 0 }}>
+                        A little under your average, so squat holds.
+                      </p>
+                      <p
+                        className="figure"
+                        style={{ fontSize: 22, margin: "16px 0 0" }}
+                      >
+                        10 + 15 min
+                      </p>
+                      <p className="kbd-hint" style={{ margin: 0 }}>
+                        warm-up + lift window
+                      </p>
                     </div>
-                  ))}
-                </div>
-                <WeeklyLoad days={sampleWeekLoad} />
-                <p>Quads will be ready Wednesday. Easy run stays easy.</p>
-                <PrimaryButton href="#/phone/complete">See session</PrimaryButton>
-                <p style={{ marginTop: 8 }}>
-                  <SecondaryButton href="#/phone/run/start">Run earlier instead</SecondaryButton>
-                </p>
-                <p className="kbd-hint">Next · in 9 h 40 m · Easy run</p>
-              </>
-            ) : viewed.id === "run" ? (
-              <>
-                <h2 className="title" style={{ margin: "0 0 4px", fontSize: 24 }}>
-                  Easy run · 3.0 mi
-                </h2>
-                <p>Conversational pace. Audio cue every half mile.</p>
-                <PrimaryButton large href="#/phone/run/start">
-                  <SportShoe size={22} /> Start run
-                </PrimaryButton>
-              </>
-            ) : viewed.id === "winddown" ? (
-              <>
-                <h2 className="title" style={{ margin: "0 0 4px", fontSize: 24 }}>
-                  Day complete
-                </h2>
-                <p>Lift 58 min · run 3.0 mi · load 750. Tomorrow: Monday · rest day.</p>
-                <p>
-                  Sleep target <span className="figure">11:00p</span>
-                </p>
-                <PrimaryButton href="#/phone/complete">See day summary</PrimaryButton>
-              </>
-            ) : (
-              <>
-                <h2 className="title" style={{ margin: "0 0 4px", fontSize: 24 }}>
-                  How are you walking in?
-                </h2>
-                <p>{restDay ? "Rest day. Check in, then recover." : "Check in to set today's loads."}</p>
-                <PrimaryButton href="#/phone/checkin">
-                  <ViewIcon size={20} /> Check in
-                </PrimaryButton>
-              </>
-            )}
+                    <ReadinessRing
+                      readiness={0.72}
+                      avg={76}
+                      lowLine={64}
+                      checkins={20}
+                      prs={7}
+                      flat
+                    />
+                  </div>
+                  <WeeklyLoad days={sampleWeekLoad} flat />
+                  <PrimaryButton
+                    large
+                    href={viewed.id === "warmup"
+                      ? "#/phone/checkin"
+                      : "#/phone/warmup"}
+                  >
+                    <Flame size={22} /> Start warm-up
+                  </PrimaryButton>
+                  <p className="kbd-hint">Then: Easy run · 3.0 mi · 6 pm</p>
+                </>
+              )
+              : viewed.id === "recover"
+              ? (
+                <>
+                  <h2
+                    className="title"
+                    style={{ margin: "0 0 4px", fontSize: 24 }}
+                  >
+                    Lift done
+                  </h2>
+                  <div className="stat-tiles">
+                    {[
+                      { v: "58", l: "min" },
+                      { v: "20.4k", l: "lb +6%" },
+                      { v: "20", l: "hard sets" },
+                      { v: "1", l: "PR" },
+                    ].map((s) => (
+                      <div className="stat-tile" key={s.l}>
+                        <div className="v figure">{s.v}</div>
+                        <div className="l">{s.l}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <WeeklyLoad days={sampleWeekLoad} flat />
+                  <p>Quads will be ready Wednesday. Easy run stays easy.</p>
+                  <PrimaryButton href="#/phone/complete">
+                    See session
+                  </PrimaryButton>
+                  <p style={{ marginTop: 8 }}>
+                    <SecondaryButton href="#/phone/run/start">
+                      Run earlier instead
+                    </SecondaryButton>
+                  </p>
+                  <p className="kbd-hint">Next · in 9 h 40 m · Easy run</p>
+                </>
+              )
+              : viewed.id === "run"
+              ? (
+                <>
+                  <h2
+                    className="title"
+                    style={{ margin: "0 0 4px", fontSize: 24 }}
+                  >
+                    Easy run · 3.0 mi
+                  </h2>
+                  <p>Conversational pace. Audio cue every half mile.</p>
+                  <PrimaryButton large href="#/phone/run/start">
+                    <SportShoe size={22} /> Start run
+                  </PrimaryButton>
+                </>
+              )
+              : viewed.id === "winddown"
+              ? (
+                <>
+                  <h2
+                    className="title"
+                    style={{ margin: "0 0 4px", fontSize: 24 }}
+                  >
+                    Day complete
+                  </h2>
+                  <p>
+                    Lift 58 min · run 3.0 mi · load 750. Tomorrow: Monday · rest
+                    day.
+                  </p>
+                  <p>
+                    Sleep target <span className="figure">11:00p</span>
+                  </p>
+                  <PrimaryButton href="#/phone/complete">
+                    See day summary
+                  </PrimaryButton>
+                </>
+              )
+              : (
+                <>
+                  <h2
+                    className="title"
+                    style={{ margin: "0 0 4px", fontSize: 24 }}
+                  >
+                    How are you walking in?
+                  </h2>
+                  <p>
+                    {restDay
+                      ? "Rest day. Check in, then recover."
+                      : "Check in to set today's loads."}
+                  </p>
+                  <PrimaryButton href="#/phone/checkin">
+                    <ViewIcon size={20} /> Check in
+                  </PrimaryButton>
+                </>
+              )}
           </Card>
-          {now.id === "lift" && viewed.id === "lift" ? (
-            <SecondaryButton href="#/phone/run/start">
-              <Bed size={18} /> Skip to run
-            </SecondaryButton>
-          ) : null}
+          {now.id === "lift" && viewed.id === "lift"
+            ? (
+              <SecondaryButton href="#/phone/run/start">
+                <Bed size={18} /> Skip to run
+              </SecondaryButton>
+            )
+            : null}
           <p className="kbd-hint" style={{ marginTop: 8 }}>
             <button
               type="button"
@@ -181,6 +262,7 @@ export function TodayPage() {
               onClick={() => {
                 const idx = stages.findIndex((s) => s.id === now.id);
                 const next = stages[idx + 1];
+                setStageStatus(now.id, "done");
                 if (next) {
                   setStageStatus(next.id, "now");
                   setViewing(next.id);

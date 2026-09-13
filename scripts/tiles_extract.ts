@@ -92,7 +92,13 @@ function zoomBase(z: number): number {
   return base;
 }
 
-function rot(n: number, a: number, b: number, rx: number, ry: number): [number, number] {
+function rot(
+  n: number,
+  a: number,
+  b: number,
+  rx: number,
+  ry: number,
+): [number, number] {
   if (ry === 0) {
     if (rx === 1) {
       a = n - 1 - a;
@@ -142,15 +148,21 @@ function tileIdToZxy(id: number): [number, number, number] {
     [1, 1, 0, 4],
   ];
   for (const [z, x, y, id] of known) {
-    if (zxyToTileId(z, x, y) !== id) throw new Error(`hilbert self-check failed at ${z}/${x}/${y}`);
+    if (zxyToTileId(z, x, y) !== id) {
+      throw new Error(`hilbert self-check failed at ${z}/${x}/${y}`);
+    }
     const [rz, rx, ry] = tileIdToZxy(id);
-    if (rz !== z || rx !== x || ry !== y) throw new Error(`hilbert inverse self-check failed at ${id}`);
+    if (rz !== z || rx !== x || ry !== y) {
+      throw new Error(`hilbert inverse self-check failed at ${id}`);
+    }
   }
   for (let z = 0; z <= 4; z++) {
     for (let x = 0; x < (1 << z); x += 3) {
       for (let y = 0; y < (1 << z); y += 5) {
         const [rz, rx, ry] = tileIdToZxy(zxyToTileId(z, x, y));
-        if (rz !== z || rx !== x || ry !== y) throw new Error(`hilbert round-trip failed at ${z}/${x}/${y}`);
+        if (rz !== z || rx !== x || ry !== y) {
+          throw new Error(`hilbert round-trip failed at ${z}/${x}/${y}`);
+        }
       }
     }
   }
@@ -158,8 +170,12 @@ function tileIdToZxy(id: number): [number, number, number] {
 
 async function gunzipAsync(bytes: Uint8Array): Promise<Uint8Array> {
   const ds = new DecompressionStream("gzip");
-  const ab = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
-  const out = await new Response(new Blob([ab]).stream().pipeThrough(ds)).arrayBuffer();
+  const ab = bytes.buffer.slice(
+    bytes.byteOffset,
+    bytes.byteOffset + bytes.byteLength,
+  ) as ArrayBuffer;
+  const out = await new Response(new Blob([ab]).stream().pipeThrough(ds))
+    .arrayBuffer();
   return new Uint8Array(out);
 }
 
@@ -172,7 +188,9 @@ interface Archive {
 function openArchive(data: Uint8Array): Archive {
   const view = new DataView(data.buffer, data.byteOffset, data.byteLength);
   const magic = new TextDecoder().decode(data.subarray(0, 7));
-  if (magic !== "PMTiles" || view.getUint8(7) !== 3) throw new Error("not a PMTiles v3 archive");
+  if (magic !== "PMTiles" || view.getUint8(7) !== 3) {
+    throw new Error("not a PMTiles v3 archive");
+  }
   // Header layout: rootOffset u64 @8, rootLength u64 @16, ..., tileDataOffset u64 @72.
   const tileDataOffset = Number(view.getBigUint64(72, true));
   return { data, view, tileDataOffset };
@@ -215,7 +233,11 @@ async function getTile(
     const off = archive.tileDataOffset + rootHit.offset;
     return archive.data.subarray(off, off + rootHit.length);
   }
-  const leaf = await readDirEntries(archive, archive.tileDataOffset + rootHit.offset, rootHit.length);
+  const leaf = await readDirEntries(
+    archive,
+    archive.tileDataOffset + rootHit.offset,
+    rootHit.length,
+  );
   const hit = findEntry(leaf, tileId);
   if (!hit) return null;
   const off = archive.tileDataOffset + hit.offset;
@@ -228,7 +250,12 @@ function lonLatToTile(lon: number, lat: number, z: number): [number, number] {
   const latR = (Math.max(-85.0511, Math.min(85.0511, lat)) * Math.PI) / 180;
   const y = Math.min(
     n - 1,
-    Math.max(0, Math.floor(((1 - Math.log(Math.tan(latR) + 1 / Math.cos(latR)) / Math.PI) / 2) * n)),
+    Math.max(
+      0,
+      Math.floor(
+        ((1 - Math.log(Math.tan(latR) + 1 / Math.cos(latR)) / Math.PI) / 2) * n,
+      ),
+    ),
   );
   return [x, y];
 }
@@ -240,8 +267,12 @@ const bboxArg = arg("bbox");
 const outDir = arg("out", "server/tiles") ?? "server/tiles";
 const name = arg("name", "region") ?? "region";
 const maxzoom = Number(arg("maxzoom", "15") ?? "15");
-if (!src || !bboxArg || !Number.isInteger(maxzoom) || maxzoom < 0 || maxzoom > 15) {
-  console.error("usage: tiles_extract.ts --src <archive.pmtiles> --bbox minlon,minlat,maxlon,maxlat [--maxzoom 15] [--out server/tiles] [--name region]");
+if (
+  !src || !bboxArg || !Number.isInteger(maxzoom) || maxzoom < 0 || maxzoom > 15
+) {
+  console.error(
+    "usage: tiles_extract.ts --src <archive.pmtiles> --bbox minlon,minlat,maxlon,maxlat [--maxzoom 15] [--out server/tiles] [--name region]",
+  );
   Deno.exit(1);
 }
 const bbox = bboxArg.split(",").map(Number);
@@ -282,5 +313,9 @@ for (let z = 0; z <= maxzoom; z++) {
   }
 }
 await Deno.copyFile(src, join(outDir, `${name}.pmtiles`));
-console.log(`tiles: ${wrote} tiles (${(bytes / 1048576).toFixed(1)} MB unpacked) + ${name}.pmtiles`);
+console.log(
+  `tiles: ${wrote} tiles (${
+    (bytes / 1048576).toFixed(1)
+  } MB unpacked) + ${name}.pmtiles`,
+);
 console.log(`serve from ${outDir}`);

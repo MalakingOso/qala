@@ -3,6 +3,7 @@
 
 import type { Split } from "./types.ts";
 import type { StepSummary } from "./guided.ts";
+import { escXml } from "./xml.ts";
 
 export interface TcxLap {
   /** Epoch milliseconds of the lap start. */
@@ -22,19 +23,13 @@ export interface TcxOptions {
   sport?: string;
 }
 
-function esc(s: string): string {
-  return s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
-
 function lapXml(lap: TcxLap): string {
   const start = new Date(lap.startTimeMs).toISOString();
   return `    <Lap StartTime="${start}">` +
     `<TotalTimeSeconds>${lap.totalTimeSec.toFixed(1)}</TotalTimeSeconds>` +
     `<DistanceMeters>${lap.distanceM.toFixed(1)}</DistanceMeters>` +
+    // Required by the TCX v2 schema (ActivityLap_t); not estimated, so 0.
+    `<Calories>0</Calories>` +
     (lap.avgHr !== undefined
       ? `<AverageHeartRateBpm><Value>${
         Math.round(lap.avgHr)
@@ -47,7 +42,7 @@ function lapXml(lap: TcxLap): string {
       : "") +
     `<Intensity>${lap.intensity}</Intensity>` +
     `<TriggerMethod>Manual</TriggerMethod>` +
-    (lap.notes !== undefined ? `<Notes>${esc(lap.notes)}</Notes>` : "") +
+    (lap.notes !== undefined ? `<Notes>${escXml(lap.notes)}</Notes>` : "") +
     `</Lap>`;
 }
 
@@ -58,7 +53,7 @@ export function exportRunTcx(opts: TcxOptions): string {
   return `<?xml version="1.0" encoding="UTF-8"?>\n` +
     `<TrainingCenterDatabase xmlns="http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2">\n` +
     `  <Activities>\n` +
-    `    <Activity Sport="${esc(opts.sport ?? "Running")}">\n` +
+    `    <Activity Sport="${escXml(opts.sport ?? "Running")}">\n` +
     `      <Id>${id}</Id>\n${laps}\n` +
     `    </Activity>\n` +
     `  </Activities>\n` +

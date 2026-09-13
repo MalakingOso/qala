@@ -5,7 +5,7 @@ export { ReadinessLine } from "./ReadinessLine.tsx";
 export { TimeSplit } from "./TimeSplit.tsx";
 export { SetsByMuscle } from "./SetsByMuscle.tsx";
 export { E1rmLine } from "./E1rmLine.tsx";
-export { RepsIntensity, BulletNl85 } from "./RepsIntensity.tsx";
+export { BulletNl85, RepsIntensity } from "./RepsIntensity.tsx";
 export { FatigueByMuscle, RunSpark, SplitsTable } from "./MuscleRun.tsx";
 export { DenseSeries } from "./DenseSeries.tsx";
 export type { DenseSeriesInput } from "./DenseSeries.tsx";
