@@ -78,9 +78,9 @@ export function ProgramEditorPage() {
   return (
     <div>
       <div className="page-head">
-        <h2 className="title" style={{ margin: 0 }}>
+        <h1 className="page-title title">
           Strength B2 · Lower focus
-        </h2>
+        </h1>
         <button
           type="button"
           className="btn-secondary"

@@ -96,6 +96,62 @@ export interface RunSplit {
   sec: number;
 }
 
+/** Per-lift calibration and trend, the desktop stats' drill-down unit for a
+ * main lift (DESIGN 7.15's calibration table, joined with the e1RM graphs). */
+export interface LiftStat {
+  id: string;
+  name: string;
+  e1rm: number;
+  kalman: number;
+  weekDeltaPct: number;
+  recent: { label: string; e1rm: number; tested?: boolean }[];
+  fullHistory: { session: number; dailyBest: number; kalman: number }[];
+  nl85: { actual: number; target: number };
+  calibration: { p0: number; k1: number; theta: string; obs: number };
+  residuals: number[];
+}
+
+/** Per-muscle weekly volume and recovery, the drill-down unit from the sets-
+ * by-muscle chart and the Body page (PLAN 6.3's fractional-set band). */
+export interface MuscleStat {
+  muscle: string;
+  earlier: number;
+  today: number;
+  band: [number, number];
+  weeklyHistory: number[];
+  lifting: number;
+  running: number;
+  readyDay: string;
+}
+
+export interface RunDetail {
+  distanceMi: number;
+  splits: RunSplit[];
+  pace: number[];
+  hr: number[];
+  elev: number[];
+  rtss: number;
+  sRpeLoad: number;
+  hrStrap: boolean;
+}
+
+/** One logged session, lift or run, the unit History rows and Overview's
+ * recent list link into (SessionDetailPage). Notes and `flagged` are the
+ * desktop's editable surface on top of otherwise read-only stats. */
+export interface SessionSummary {
+  id: string;
+  date: string;
+  type: "lift" | "run";
+  label: string;
+  loadLb?: number;
+  sRPE: number;
+  prCount: number;
+  flagged?: string;
+  exercises?: { name: string; sets: string; note?: string }[];
+  run?: RunDetail;
+  notes: string;
+}
+
 export interface SettingsModel {
   units: { weight: "lb"; distance: "mi" };
   theme: "light" | "dark" | "system";

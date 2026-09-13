@@ -1,26 +1,17 @@
-/* Calibration view: per-lift p0/k1/theta, observation counts, residuals. */
+/* Calibration view: per-lift p0/k1/theta, observation counts, residuals.
+ * Reads the same `sampleLifts` the Lifts stats pages use, so this and
+ * LiftDetailPage's calibration card never drift apart. */
 
 import { Card, DataTable } from "../shared/ui.tsx";
 import { DenseSeries } from "../shared/charts/index.ts";
-
-const LIFTS = [
-  { lift: "squat", p0: "248.1", k1: "0.62", theta: "4.0 (prior)", obs: "34" },
-  { lift: "bench", p0: "211.4", k1: "0.55", theta: "4.0 (prior)", obs: "31" },
-  {
-    lift: "deadlift",
-    p0: "302.7",
-    k1: "0.71",
-    theta: "4.0 (prior)",
-    obs: "22",
-  },
-  { lift: "press", p0: "141.2", k1: "0.48", theta: "4.0 (prior)", obs: "18" },
-];
+import { sampleLifts } from "../store/sample.ts";
 
 export function CalibrationPage() {
+  const squat = sampleLifts.find((l) => l.id === "squat")!;
   return (
     <div>
       <div className="page-head">
-        <h2 className="title" style={{ margin: 0 }}>Calibration</h2>
+        <h1 className="page-title title">Calibration</h1>
       </div>
       <Card>
         <p className="kbd-hint">
@@ -29,26 +20,31 @@ export function CalibrationPage() {
         </p>
         <DataTable
           head={["Lift", "p0", "k1", "theta", "Obs"]}
-          rows={LIFTS.map((l) => [l.lift, l.p0, l.k1, l.theta, l.obs])}
+          rows={sampleLifts.map((l) => [
+            l.name,
+            String(l.calibration.p0),
+            String(l.calibration.k1),
+            l.calibration.theta,
+            String(l.calibration.obs),
+          ])}
+          rowHrefs={sampleLifts.map((l) => `#/desktop/lifts/${l.id}`)}
         />
       </Card>
       <DenseSeries
-        title="Squat residuals"
-        x={Array.from({ length: 34 }, (_, i) => i + 1)}
+        title={`${squat.name} residuals`}
+        x={squat.residuals.map((_, i) => i + 1)}
         xLabel="observation"
-        series={[
-          {
-            label: "residual",
-            color: "var(--viz-3)",
-            values: Array.from(
-              { length: 34 },
-              (_, i) => 4 * Math.sin(i / 3) * Math.exp(-i / 30),
-            ),
-          },
-        ]}
+        series={[{
+          label: "residual",
+          color: "var(--viz-3)",
+          values: squat.residuals,
+        }]}
         head={["Obs", "Residual"]}
-        rows={[["34", "0.2"]]}
-        label="Squat Kalman residuals."
+        rows={[[
+          String(squat.residuals.length),
+          squat.residuals[squat.residuals.length - 1].toFixed(2),
+        ]]}
+        label={`${squat.name} Kalman residuals.`}
       />
       <Card title="Run">
         <p>

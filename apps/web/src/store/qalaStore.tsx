@@ -20,6 +20,7 @@ import {
   sampleEnvelopes,
   sampleExercises,
   sampleMemory,
+  sampleSessions,
   sampleStages,
 } from "./sample.ts";
 import {
@@ -27,7 +28,11 @@ import {
   type QueuedOp,
   saveOutbox,
 } from "../logic/offlineQueue.ts";
-import type { EnvelopeCardModel, MemoryProposal } from "./types.ts";
+import type {
+  EnvelopeCardModel,
+  MemoryProposal,
+  SessionSummary,
+} from "./types.ts";
 
 export interface LiveRunSnapshot {
   running: boolean;
@@ -127,6 +132,9 @@ interface QalaStore {
   decideEnvelope: (id: string, accept: boolean) => void;
   memory: MemoryProposal[];
   decideMemory: (id: string, accept: boolean) => void;
+  sessions: SessionSummary[];
+  setSessionNotes: (id: string, notes: string) => void;
+  dismissSessionFlag: (id: string) => void;
   outbox: QueuedOp[];
   queueOp: (kind: string, payload: unknown) => void;
   online: boolean;
@@ -147,6 +155,7 @@ export function QalaProvider({ children }: { children: ReactNode }) {
     sampleEnvelopes,
   );
   const [memory, setMemory] = useState<MemoryProposal[]>(sampleMemory);
+  const [sessions, setSessions] = useState<SessionSummary[]>(sampleSessions);
   const [outbox, setOutbox] = useState<QueuedOp[]>(() => loadOutbox());
   const [online, setOnline] = useState<boolean>(() =>
     typeof navigator === "undefined" ? true : navigator.onLine
@@ -194,6 +203,16 @@ export function QalaProvider({ children }: { children: ReactNode }) {
       },
     ]);
   }, []);
+  const setSessionNotes = useCallback((id: string, notes: string) => {
+    setSessions((ss) => ss.map((s) => (s.id === id ? { ...s, notes } : s)));
+    queueOp("session-notes", { id, notes });
+  }, [queueOp]);
+  const dismissSessionFlag = useCallback((id: string) => {
+    setSessions((ss) =>
+      ss.map((s) => (s.id === id ? { ...s, flagged: undefined } : s))
+    );
+    queueOp("session-flag-dismiss", { id });
+  }, [queueOp]);
   const logSet = useCallback(
     (
       exerciseId: string,
@@ -228,6 +247,9 @@ export function QalaProvider({ children }: { children: ReactNode }) {
       decideEnvelope,
       memory,
       decideMemory,
+      sessions,
+      setSessionNotes,
+      dismissSessionFlag,
       outbox,
       queueOp,
       online,
@@ -238,6 +260,9 @@ export function QalaProvider({ children }: { children: ReactNode }) {
       updateSettings,
       stages,
       setStageStatus,
+      sessions,
+      setSessionNotes,
+      dismissSessionFlag,
       exercises,
       logSet,
       envelopes,

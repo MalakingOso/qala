@@ -278,7 +278,7 @@ Start (map, GPS status, the planned run, Start run), Live (time, miles largest, 
 
 ### 7.15 Desktop: program editor
 
-Sidebar (Today, Plan, Programs, Run plans, Exercises, Body, Progress, Coach, Settings), a header with the block and Generate next block, the liftoscript editor with inline errors, and the evaluated week preview with week totals.
+Sidebar groups into Stats (Overview, Lifts, Running, Body, History) and Author (Programs, Exercises, Coach memory, Calibration), with Settings and the phone-shell link pinned below both (DECISIONS U11; supersedes the earlier Today/Plan/Programs/Run plans/Exercises/Body/Progress/Coach/Settings list, which the shipped v1 build had already diverged from). The Programs page itself is unchanged: a header with the block and Generate next block, the liftoscript editor with inline errors, and the evaluated week preview with week totals.
 
 ### 7.16 Desktop: coach memory
 

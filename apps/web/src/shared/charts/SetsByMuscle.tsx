@@ -13,9 +13,12 @@ const PAD = { top: 8, right: 12, bottom: 8, left: 96 };
 export function SetsByMuscle({
   title = "Sets by muscle",
   muscles,
+  onSelectMuscle,
 }: {
   title?: string;
   muscles: { muscle: string; earlier: number; today: number }[];
+  /** When given, each row becomes a button into that muscle's detail. */
+  onSelectMuscle?: (muscle: string) => void;
 }) {
   const H = muscles.length * ROW_H + PAD.top + PAD.bottom;
   const { x, y } = useMemo(() => {
@@ -62,13 +65,30 @@ export function SetsByMuscle({
           const e1 = x(m.earlier);
           const t1 = x(m.earlier + m.today);
           return (
-            <g key={m.muscle}>
+            <g
+              key={m.muscle}
+              role={onSelectMuscle ? "button" : undefined}
+              tabIndex={onSelectMuscle ? 0 : undefined}
+              style={onSelectMuscle ? { cursor: "pointer" } : undefined}
+              onClick={onSelectMuscle
+                ? () => onSelectMuscle(m.muscle)
+                : undefined}
+              onKeyDown={onSelectMuscle
+                ? (e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    onSelectMuscle(m.muscle);
+                  }
+                }
+                : undefined}
+            >
               <text
                 x={PAD.left - 8}
                 y={yy + bh / 2 + 4}
                 fontSize={11}
                 textAnchor="end"
-                fill="var(--fg)"
+                fill={onSelectMuscle ? "var(--accent)" : "var(--fg)"}
+                textDecoration={onSelectMuscle ? "underline" : undefined}
               >
                 {m.muscle}
               </text>
