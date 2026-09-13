@@ -1,0 +1,260 @@
+// Vendored from liftosaur (AGPL-3.0) `src/parser.ts`.
+// Qala adaptation: `rollbar` and `utils/dialog` imports stubbed to console
+// (PLAN section 5); `micro-memoize` replaced by `./utils/memoize`.
+/* eslint-disable @typescript-eslint/unified-signatures */
+import { LiftoscriptEvaluator, NodeName, LiftoscriptSyntaxError } from "./liftoscriptEvaluator.ts";
+import { parser as LiftoscriptParser } from "./liftoscript.ts";
+import {
+  type IScriptBindings,
+  type IScriptFnContext,
+  Progress_createEmptyScriptBindings,
+  Progress_createScriptFunctions,
+} from "./models/progress.ts";
+import type { IScriptFunctions } from "./liftoscriptFns.ts";
+import { Weight_build } from "./models/weight.ts";
+import type { IUnit, IWeight, IProgramState, IPercentage, IDayData, IExerciseType, ISettings } from "./types.ts";
+import type { Tree } from "@lezer/common";
+import type { IProgramMode } from "./models/program.ts";
+import type { ILiftoscriptEvaluatorUpdate } from "./liftoscriptEvaluator.ts";
+import memoize from "./utils/memoize.ts";
+
+const lastAlertDisplayedTs: Partial<Record<string, number>> = {};
+
+// Parsing a Liftoscript expression with Lezer is expensive, and the same progress/update
+// scripts are scanned repeatedly (e.g. the same exercise instance in every week/day, and on
+// every tour/render pass). Cache by (script, name) since the result is pure.
+const hasKeywordMemoized = memoize(
+  (script: string, name: string): boolean => {
+    const expr = LiftoscriptParser.parse(script);
+    const cursor = expr.cursor();
+    do {
+      if (cursor.node.type.name === NodeName.Keyword) {
+        if (LiftoscriptEvaluator.getValue(script, cursor.node) === name) {
+          return true;
+        }
+      }
+    } while (cursor.next());
+    return false;
+  },
+  { maxSize: 200 }
+);
+
+export class ScriptRunner {
+  private readonly script: string;
+  private readonly state: IProgramState;
+  private readonly otherStates: Record<number, IProgramState>;
+  private readonly bindings: IScriptBindings;
+  private readonly fns: IScriptFunctions;
+  private readonly units: IUnit;
+  private readonly context: IScriptFnContext;
+  private readonly mode: IProgramMode;
+  private updates: ILiftoscriptEvaluatorUpdate[] = [];
+
+  constructor(
+    script: string,
+    state: IProgramState,
+    otherStates: Record<number, IProgramState>,
+    bindings: IScriptBindings,
+    fns: IScriptFunctions,
+    units: IUnit,
+    context: IScriptFnContext,
+    mode: IProgramMode
+  ) {
+    this.script = script;
+    this.state = state;
+    this.otherStates = otherStates;
+    this.bindings = bindings;
+    this.fns = fns;
+    this.units = units;
+    this.context = context;
+    this.mode = mode;
+  }
+
+  public static isValid(
+    script: string,
+    state: IProgramState,
+    dayData: IDayData,
+    settings: ISettings,
+    exerciseType?: IExerciseType
+  ): LiftoscriptSyntaxError | undefined {
+    const liftoscriptEvaluator = new ScriptRunner(
+      script,
+      state,
+      {},
+      Progress_createEmptyScriptBindings(dayData, settings),
+      Progress_createScriptFunctions(settings),
+      settings.units,
+      { exerciseType: exerciseType, unit: settings.units, prints: [] },
+      "planner"
+    );
+    try {
+      liftoscriptEvaluator.parse();
+    } catch (e) {
+      if (e instanceof LiftoscriptSyntaxError) {
+        return e;
+      } else {
+        throw e;
+      }
+    }
+    return undefined;
+  }
+
+  public parse(): [LiftoscriptEvaluator, Tree] {
+    const liftoscriptTree = LiftoscriptParser.parse(this.script);
+    const liftoscriptEvaluator = new LiftoscriptEvaluator(
+      this.script,
+      this.state,
+      this.otherStates,
+      this.bindings,
+      this.fns,
+      this.context,
+      this.units,
+      this.mode
+    );
+    liftoscriptEvaluator.parse(liftoscriptTree.topNode);
+    return [liftoscriptEvaluator, liftoscriptTree];
+  }
+
+  public switchWeightsToUnit(toUnit: IUnit): string {
+    const liftoscriptTree = LiftoscriptParser.parse(this.script);
+    const liftoscriptEvaluator = new LiftoscriptEvaluator(
+      this.script,
+      this.state,
+      this.otherStates,
+      this.bindings,
+      this.fns,
+      this.context,
+      this.units,
+      this.mode
+    );
+    return liftoscriptEvaluator.switchWeightsToUnit(liftoscriptTree.topNode, toUnit);
+  }
+
+  public getStateVariableKeys(): Set<string> {
+    const liftoscriptTree = LiftoscriptParser.parse(this.script);
+    const liftoscriptEvaluator = new LiftoscriptEvaluator(
+      this.script,
+      this.state,
+      this.otherStates,
+      this.bindings,
+      this.fns,
+      this.context,
+      this.units,
+      this.mode
+    );
+    return liftoscriptEvaluator.getStateVariableKeys(liftoscriptTree.topNode);
+  }
+
+  public static hasStateVariable(script: string, name: string): boolean {
+    const expr = LiftoscriptParser.parse(script);
+    const cursor = expr.cursor();
+    do {
+      if (cursor.node.type.name === NodeName.StateVariable) {
+        const keywordNode = cursor.node.getChild(NodeName.Keyword);
+        if (keywordNode != null) {
+          const value = LiftoscriptEvaluator.getValue(script, keywordNode);
+          if (value === name) {
+            return true;
+          }
+        }
+      }
+    } while (cursor.next());
+    return false;
+  }
+
+  public static hasKeyword(script: string, name: string): boolean {
+    return hasKeywordMemoized(script, name);
+  }
+
+  public static safe<T>(cb: () => T, errorMsg: (e: Error) => string, defaultValue: T, disabled?: boolean): T {
+    let value: T;
+    try {
+      value = cb();
+    } catch (e) {
+      if (!disabled && e instanceof LiftoscriptSyntaxError) {
+        const lastAlertTs = lastAlertDisplayedTs[e.message];
+        console.error(e);
+        if (lastAlertTs == null || lastAlertTs < Date.now() - 1000 * 60 * 1) {
+          console.error(errorMsg(e));
+          this.reportError("Error during Liftoscript execution", e);
+          lastAlertDisplayedTs[e.message] = Date.now();
+        }
+        value = defaultValue;
+      } else {
+        throw e;
+      }
+    }
+    return value;
+  }
+
+  public execute(type: "reps"): number;
+  public execute(type: "rpe"): number;
+  public execute(type: "weight"): IWeight | IPercentage;
+  public execute(type: "timer"): number;
+  public execute(type?: undefined): number | IWeight | boolean;
+  public execute(type?: "reps" | "weight" | "timer" | "rpe"): number | IWeight | IPercentage | boolean {
+    const [liftoscriptEvaluator, liftoscriptTree] = this.parse();
+    const rawResult = liftoscriptEvaluator.evaluate(liftoscriptTree.topNode);
+    let result = Array.isArray(rawResult) ? rawResult[0] : rawResult;
+    if (result == null) {
+      result = 0;
+    }
+    const output = this.convertResult(type, result);
+    this.updates = liftoscriptEvaluator.updates;
+
+    return output;
+  }
+
+  public getUpdates(): ILiftoscriptEvaluatorUpdate[] {
+    return this.updates;
+  }
+
+  private convertResult(
+    type: "reps" | "weight" | "timer" | "rpe" | undefined,
+    result: number | IWeight | IPercentage | boolean
+  ): number | IWeight | IPercentage | boolean {
+    if (type === "reps" || type === "timer") {
+      if (typeof result !== "number") {
+        throw new LiftoscriptSyntaxError("Expected to get number as a result", 0, 0, 0, 0, {
+          type: "wrongResultType",
+          data: { expected: "number" },
+        });
+      } else if (result < 0) {
+        return 0;
+      } else {
+        return result;
+      }
+    } else if (type === "rpe") {
+      if (typeof result !== "number") {
+        throw new LiftoscriptSyntaxError("Expected to get number as a result", 0, 0, 0, 0, {
+          type: "wrongResultType",
+          data: { expected: "number" },
+        });
+      } else {
+        return Math.round(Math.min(10, Math.max(0, result)) / 0.5) * 0.5;
+      }
+    } else if (type === "weight") {
+      if (typeof result === "boolean") {
+        throw new LiftoscriptSyntaxError("Expected to get number, percentage or weight as a result", 0, 0, 0, 0, {
+          type: "wrongResultType",
+          data: { expected: "numberOrPercentageOrWeight" },
+        });
+      } else if (typeof result === "number") {
+        return Weight_build(result, this.units);
+      } else {
+        if (result.value < 0) {
+          return Weight_build(0, this.units);
+        } else {
+          return result;
+        }
+      }
+    } else {
+      return result;
+    }
+  }
+
+  private static reportError(msg: string, error?: Error): void {
+    // Qala: no Rollbar in this package; errors surface through console + return values.
+    console.error(msg, error ? { message: error.message, name: error.name, stack: error.stack } : undefined);
+  }
+}
