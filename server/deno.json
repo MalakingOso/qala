@@ -1,0 +1,16 @@
+{
+  "name": "@qala/server",
+  "version": "0.1.0",
+  "exports": "./mod.ts",
+  "imports": {
+    "@automerge/automerge": "npm:@automerge/automerge@3.4.1",
+    "@automerge/automerge-repo": "npm:@automerge/automerge-repo@2.5.6",
+    "@automerge/automerge-repo-network-websocket": "npm:@automerge/automerge-repo-network-websocket@2.5.6",
+    "@automerge/automerge-repo-storage-nodefs": "npm:@automerge/automerge-repo-storage-nodefs@2.5.6",
+    "@std/assert": "jsr:@std/assert@1.0.19"
+  },
+  "tasks": {
+    "start": "deno run --allow-all mod.ts",
+    "test": "deno test --allow-all ."
+  }
+}
