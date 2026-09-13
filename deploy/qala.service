@@ -1,0 +1,12 @@
+[Unit]
+Description=Qala workout server
+After=network.target
+
+[Service]
+ExecStart=/home/berkley/.deno/bin/deno serve --allow-all /home/berkley/Programming/qala/server/main.ts
+Environment=PORT=8500
+Environment=HOST=127.0.0.1
+Restart=on-failure
+
+[Install]
+WantedBy=default.target

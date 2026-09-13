@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.deno/
+coverage/
+*.log
+.env
+.env.local
+apps/phone/android/
+apps/phone/ios/
+server/data/
+*.pmtile
+*.tif
+*.tiff
+.DS_Store

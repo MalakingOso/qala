@@ -1,0 +1,13 @@
+{
+  "workspace": ["packages/*", "apps/web", "server"],
+  "tasks": {
+    "dev": "deno run --watch --allow-all server/mod.ts",
+    "build": "npm --prefix apps/web run build",
+    "test": "deno test --allow-all packages/ server/ apps/web/src/logic/",
+    "serve": "deno run --allow-all server/mod.ts",
+    "vendor": "deno run --allow-all scripts/vendor_liftosaur.ts",
+    "build:android": "deno task build && npm --prefix apps/phone run sync && test -f apps/phone/android/gradlew || (echo 'apps/phone/android/gradlew is not vendored: open apps/phone/android in Android Studio (or run gradle wrapper) with the Android SDK installed, then rerun' >&2 && exit 1) && apps/phone/android/gradlew assembleRelease -p apps/phone/android",
+    "tiles:extract": "deno run --allow-all scripts/tiles_extract.ts",
+    "dem:fetch": "deno run --allow-all scripts/dem_fetch.ts"
+  }
+}

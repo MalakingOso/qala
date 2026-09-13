@@ -1,0 +1,35 @@
+# Third-party notices
+
+Qala is licensed under the GNU Affero General Public License v3.0 or later.
+See LICENSE. This file credits the projects and fonts Qala builds on.
+
+## liftosaur
+
+Qala vendors liftosaur's liftoscript grammars, evaluator, exercise database
+seed, built-in programs, and muscle diagrams.
+
+- Project: https://github.com/astashov/liftosaur
+- License: GNU Affero General Public License v3.0 (AGPL-3.0)
+- Copyright: the liftosaur contributors (see the liftosaur repository)
+
+## Fonts (all SIL Open Font License 1.1)
+
+- Qala Test (titles and big numbers): an OFL fork of Faustina with narrowed
+  lowercase and unified serif wedges. License text:
+  apps/web/public/fonts/QalaTest-OFL.txt
+- Faustina (fallback and alternate title face, google/fonts, variable wght
+  300-800, Latin subset): apps/web/public/fonts/Faustina-OFL.txt
+- DM Mono (body text, copied from the owner's Beamer app, google/fonts):
+  apps/web/public/fonts/DMMono-OFL.txt
+
+## Icons
+
+- Lucide (lucide-react, ISC license). License text to be added under
+  apps/web/public/licenses/ when the package is vendored.
+
+## Charts
+
+- visx (@visx/*, MIT license). License text to be added under
+  apps/web/public/licenses/ when the package is vendored.
+- uPlot (MIT license). License text to be added under
+  apps/web/public/licenses/ when the package is vendored.
