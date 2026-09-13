@@ -1,0 +1,323 @@
+{
+  "pages": [
+    {
+      "id": "phone",
+      "name": "Phone"
+    },
+    {
+      "id": "today",
+      "name": "Today (your pick)"
+    },
+    {
+      "id": "today-options",
+      "name": "Today options (round 3)"
+    },
+    {
+      "id": "desktop",
+      "name": "Desktop and web"
+    },
+    {
+      "id": "foundations",
+      "name": "Foundations"
+    }
+  ],
+  "artboards": [
+    {
+      "file": "TodayRound2.dc.html",
+      "x": 1410,
+      "y": 0,
+      "w": 390,
+      "h": 1080,
+      "title": "Today (round 2 layout)",
+      "page": "today-options"
+    },
+    {
+      "file": "Plan.dc.html",
+      "x": 470,
+      "y": 0,
+      "w": 390,
+      "h": 1080,
+      "title": "Plan (week and day)",
+      "page": "phone"
+    },
+    {
+      "file": "CheckIn.dc.html",
+      "x": 940,
+      "y": 0,
+      "w": 390,
+      "h": 1110,
+      "title": "Check-in",
+      "page": "phone"
+    },
+    {
+      "file": "WarmUp.dc.html",
+      "x": 1410,
+      "y": 0,
+      "w": 390,
+      "h": 1340,
+      "title": "Warm-up (plates per step)",
+      "page": "phone"
+    },
+    {
+      "file": "Workout.dc.html",
+      "x": 1880,
+      "y": 0,
+      "w": 390,
+      "h": 900,
+      "title": "Workout: one exercise (note, plates)",
+      "page": "phone"
+    },
+    {
+      "file": "WorkoutRest.dc.html",
+      "x": 2350,
+      "y": 0,
+      "w": 390,
+      "h": 1000,
+      "title": "Workout: rest with plates",
+      "page": "phone"
+    },
+    {
+      "file": "WorkoutAll.dc.html",
+      "x": 2820,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "Workout: zoomed out",
+      "page": "phone"
+    },
+    {
+      "file": "SessionEnd.dc.html",
+      "x": 3290,
+      "y": 0,
+      "w": 390,
+      "h": 1870,
+      "title": "Session complete (charts)",
+      "page": "phone"
+    },
+    {
+      "file": "Body.dc.html",
+      "x": 0,
+      "y": 2020,
+      "w": 390,
+      "h": 1260,
+      "title": "Body (recovery)",
+      "page": "phone"
+    },
+    {
+      "file": "Progress.dc.html",
+      "x": 470,
+      "y": 2020,
+      "w": 390,
+      "h": 1200,
+      "title": "Progress",
+      "page": "phone"
+    },
+    {
+      "file": "Coach.dc.html",
+      "x": 940,
+      "y": 2020,
+      "w": 390,
+      "h": 1000,
+      "title": "Coach (Gemma)",
+      "page": "phone"
+    },
+    {
+      "file": "PlateCalc.dc.html",
+      "x": 1410,
+      "y": 2020,
+      "w": 390,
+      "h": 960,
+      "title": "Plate calculator",
+      "page": "phone"
+    },
+    {
+      "file": "Settings.dc.html",
+      "x": 1880,
+      "y": 2020,
+      "w": 390,
+      "h": 2300,
+      "title": "Settings",
+      "page": "phone"
+    },
+    {
+      "file": "RunStart.dc.html",
+      "x": 0,
+      "y": 4520,
+      "w": 390,
+      "h": 844,
+      "title": "Run: start",
+      "page": "phone"
+    },
+    {
+      "file": "LiveRun.dc.html",
+      "x": 470,
+      "y": 4520,
+      "w": 390,
+      "h": 844,
+      "title": "Run: live",
+      "page": "phone"
+    },
+    {
+      "file": "GuidedRun.dc.html",
+      "x": 940,
+      "y": 4520,
+      "w": 390,
+      "h": 844,
+      "title": "Run: guided surges",
+      "page": "phone"
+    },
+    {
+      "file": "RunSummary.dc.html",
+      "x": 1410,
+      "y": 4520,
+      "w": 390,
+      "h": 960,
+      "title": "Run: summary",
+      "page": "phone"
+    },
+    {
+      "file": "Main.dc.html",
+      "x": 0,
+      "y": 0,
+      "w": 390,
+      "h": 1000,
+      "title": "Today · morning",
+      "page": "today"
+    },
+    {
+      "file": "TodayAfterLift.dc.html",
+      "x": 470,
+      "y": 0,
+      "w": 390,
+      "h": 1000,
+      "title": "Today · after the lift",
+      "page": "today"
+    },
+    {
+      "file": "TodayEvening.dc.html",
+      "x": 940,
+      "y": 0,
+      "w": 390,
+      "h": 1000,
+      "title": "Today · evening",
+      "page": "today"
+    },
+    {
+      "file": "TodayA.dc.html",
+      "x": 0,
+      "y": 0,
+      "w": 390,
+      "h": 1000,
+      "title": "Today A · Hero session",
+      "page": "today-options"
+    },
+    {
+      "file": "TodayB.dc.html",
+      "x": 470,
+      "y": 0,
+      "w": 390,
+      "h": 1000,
+      "title": "Today B · Day timeline",
+      "page": "today-options"
+    },
+    {
+      "file": "TodayC.dc.html",
+      "x": 940,
+      "y": 0,
+      "w": 390,
+      "h": 1000,
+      "title": "Today C · Body and week",
+      "page": "today-options"
+    },
+    {
+      "file": "DesktopEditor.dc.html",
+      "x": 1560,
+      "y": 0,
+      "w": 1440,
+      "h": 900,
+      "title": "Desktop: program editor",
+      "page": "desktop"
+    },
+    {
+      "file": "DesktopCoach.dc.html",
+      "x": 1560,
+      "y": 1040,
+      "w": 1440,
+      "h": 900,
+      "title": "Desktop: coach memory",
+      "page": "desktop"
+    },
+    {
+      "file": "Landing.dc.html",
+      "x": 0,
+      "y": 0,
+      "w": 1440,
+      "h": 2170,
+      "title": "Landing page",
+      "page": "desktop"
+    },
+    {
+      "file": "Foundations.dc.html",
+      "x": 0,
+      "y": 0,
+      "w": 1320,
+      "h": 910,
+      "title": "Type, plates, charts, color",
+      "page": "foundations"
+    }
+  ],
+  "annotations": [
+    {
+      "id": "overview",
+      "page": "phone",
+      "x": -330,
+      "y": -40,
+      "w": 260,
+      "text": "Round 3: your Qala Test font for titles and big numbers (switch to Faustina above any screen), DM Mono everywhere else, plate calculator, graphical session summary.\n\nAll numbers are sample data."
+    },
+    {
+      "id": "lift-flow",
+      "page": "phone",
+      "x": -330,
+      "y": 400,
+      "w": 260,
+      "text": "Lifting: Plan > Check-in > Warm-up (plates per ramp step) > one exercise (plate shorthand under the weight) > rest (full plate drawing for the next set) > all exercises > session complete (charts)."
+    },
+    {
+      "id": "row-b",
+      "page": "phone",
+      "x": -330,
+      "y": 2020,
+      "w": 260,
+      "text": "Body, Progress, Coach, the standalone plate calculator, Settings (bars and plates, equipment, warm-up, rest timer)."
+    },
+    {
+      "id": "run-flow",
+      "page": "phone",
+      "x": -330,
+      "y": 4520,
+      "w": 260,
+      "text": "Running starts from Today or a Plan day."
+    },
+    {
+      "id": "today-pick",
+      "page": "today",
+      "x": 0,
+      "y": -210,
+      "w": 1330,
+      "text": "Today, built from your pick: the hero card now shows this week's load with today outlined and named, a readiness ring out of 100 with your average (dark tick) and the low line (red tick and tinted zone), and a bigger Start button.\n\nThe rail on the left is the day's timeline. Flick it up or down to move between stages; the card follows the day. Three states shown: morning, after the lift, evening."
+    },
+    {
+      "id": "today-note",
+      "page": "today-options",
+      "x": 0,
+      "y": -170,
+      "w": 1330,
+      "text": "Round 3, kept for reference. Three directions for Today. A: one hero card for the day's main lift with the loaded bar, readiness and one Start button (my pick). B: the day as a timeline with a now marker. C: recovery and the week first, today's session at the bottom. Pick one or mix parts."
+    }
+  ],
+  "launch": {
+    "view": "canvas",
+    "page": "today"
+  }
+}
