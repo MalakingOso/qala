@@ -63,7 +63,9 @@ function webStorage(): OutboxStorage | null {
   }
 }
 
-export function loadOutbox(storage: OutboxStorage | null = webStorage()): QueuedOp[] {
+export function loadOutbox(
+  storage: OutboxStorage | null = webStorage(),
+): QueuedOp[] {
   return deserialize(storage?.read() ?? null);
 }
 

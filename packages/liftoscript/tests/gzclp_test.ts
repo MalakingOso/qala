@@ -8,12 +8,15 @@ import { assert, assertEquals } from "@std/assert";
 import type { IHistoryEntry, ISettings } from "../src/types.ts";
 import type { IEvaluatedProgram } from "../src/models/program.ts";
 import type { IPlannerProgramExerciseWithType } from "../src/pages/planner/models/types.ts";
+import type { LiftEntry, LiftSession } from "../../core/mod.ts";
 import {
   createEngineBindings,
   Exercise_toKey,
   forceEvaluateText,
   Program_nextHistoryEntry,
   ProgramSet_getEvaluatedWeight,
+  qalaLiftEntryToHistoryEntry,
+  qalaLiftSessionToHistoryRecord,
   qalaSettingsToLiftoscript,
   runAllFinishDayScripts,
   runFinishDayScript,
@@ -329,6 +332,106 @@ Deno.test("gzclp: T3 AMRAP of 25+ adds 5lb", () => {
   assertEquals(
     setWeight(result.evaluatedProgram, 1, "t3", settings),
     before.map((w) => w + 5),
+  );
+});
+
+Deno.test("qalaLiftEntryToHistoryEntry: label-free fallback key carries equipment but misses a labeled program exercise", () => {
+  // GZCLP labels its lifts ("T1"/"T2"/"T3"): the real program-exercise key
+  // is label-prefixed ("t1-squat_barbell"), which qalaLiftEntryToHistoryEntry
+  // cannot derive from a bare core exercise id alone. Its fallback key still
+  // carries the equipment suffix (the original bug), but without the day's
+  // real exercise key from the caller, it won't match a labeled program.
+  const settings = settingsWithRm1();
+  const prog = evaluateGzclp(settings);
+  const squatEx = usedExercises(prog, 1).find((e) => e.key.startsWith("t1"))!;
+  assertEquals(squatEx.key, "t1-squat_barbell", "day 1 T1 is label-prefixed");
+  const liftEntry: LiftEntry = {
+    exerciseId: "squat",
+    sets: [{ w: { value: 150, unit: "lb" as const }, r: 3, completed: true }],
+  };
+  const historyEntry = qalaLiftEntryToHistoryEntry(liftEntry, 0);
+  assertEquals(
+    historyEntry.programExerciseId,
+    "squat_barbell",
+    "fallback key: equipment-suffixed, but not label-prefixed",
+  );
+  const result = runAllFinishDayScripts(
+    prog,
+    1,
+    [historyEntry],
+    settings,
+    Stats_getEmpty(),
+  );
+  assert(
+    result.errors.some((e) => e.includes("squat_barbell")),
+    "the mismatch is reported, not silently swallowed",
+  );
+});
+
+Deno.test("qalaLiftSessionToHistoryRecord: given the program, resolves the real (label-prefixed) key and the finish-day script runs", () => {
+  const settings = settingsWithRm1();
+  const prog = evaluateGzclp(settings);
+  const targetWeight = setWeight(prog, 1, "t1", settings);
+  const targetReps = currentReps(prog, 1, "t1");
+  const session: LiftSession = {
+    id: "s1",
+    kind: "lift",
+    date: new Date(0).toISOString(),
+    programId: "gzclp",
+    day: "Day 1",
+    entries: [{
+      exerciseId: "squat",
+      sets: targetReps.map((r) => ({
+        w: { value: targetWeight[0], unit: "lb" as const },
+        r,
+        completed: true,
+      })),
+    }],
+    checkin: { prs: 0, soreness: {}, text: "" },
+    perf: {},
+    srpe: 0,
+    minutes: 0,
+  };
+  const record = qalaLiftSessionToHistoryRecord(session, 1, "GZCLP", prog);
+  assertEquals(
+    record.entries[0].programExerciseId,
+    "t1-squat_barbell",
+    "resolved from the evaluated day's own exercise key",
+  );
+  const result = runAllFinishDayScripts(
+    prog,
+    1,
+    record.entries,
+    settings,
+    Stats_getEmpty(),
+  );
+  assertEquals(result.errors, [], "no lookup-miss error");
+  assertEquals(
+    setWeight(result.evaluatedProgram, 1, "t1", settings),
+    targetWeight.map((w) => w + 10),
+    "T1 squat progresses through the session bridge",
+  );
+});
+
+Deno.test("runAllFinishDayScripts on an invalid day reports an error and keeps the program text, never wipes it", () => {
+  const settings = settingsWithRm1();
+  const prog = evaluateGzclp(settings);
+  const result = runAllFinishDayScripts(
+    prog,
+    99,
+    [],
+    settings,
+    Stats_getEmpty(),
+  );
+  assert(result.errors.length > 0, "an invalid day reports an error");
+  assert(
+    result.plannerText.length > 0,
+    "plannerText is the program's real text, not empty",
+  );
+  assertEquals(
+    result.evaluatedProgram,
+    prog,
+    "the evaluated program is returned unchanged",
   );
 });
 

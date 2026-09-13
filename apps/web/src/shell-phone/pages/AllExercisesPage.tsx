@@ -13,11 +13,13 @@ export function AllExercisesPage() {
         <h1 className="page-title title">All exercises</h1>
       </div>
       <Card>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+        <div
+          style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}
+        >
           {exercises.map((e, i) => (
             <a
               key={e.id}
-              href="#/phone/workout"
+              href={`#/phone/workout?idx=${i}`}
               style={{
                 textDecoration: "none",
                 color: "inherit",
@@ -26,7 +28,9 @@ export function AllExercisesPage() {
                 padding: 10,
                 outline: i === current ? "2px solid var(--accent)" : "none",
               }}
-              aria-label={`${e.name}, ${e.sets.filter((s) => s.done).length} of ${e.sets.length} sets`}
+              aria-label={`${e.name}, ${
+                e.sets.filter((s) => s.done).length
+              } of ${e.sets.length} sets`}
             >
               <strong>{e.name}</strong>
               <div style={{ display: "flex", gap: 4, marginTop: 6 }}>
@@ -37,7 +41,9 @@ export function AllExercisesPage() {
                       width: 12,
                       height: 12,
                       borderRadius: "50%",
-                      background: s.done ? "var(--progress-fill)" : "var(--bg-active)",
+                      background: s.done
+                        ? "var(--progress-fill)"
+                        : "var(--bg-active)",
                       border: "1px solid var(--border-strong)",
                     }}
                   />
@@ -46,7 +52,9 @@ export function AllExercisesPage() {
             </a>
           ))}
         </div>
-        <p className="kbd-hint">Warm-up done. Tap to jump; order is yours to choose.</p>
+        <p className="kbd-hint">
+          Warm-up done. Tap to jump; order is yours to choose.
+        </p>
       </Card>
     </div>
   );

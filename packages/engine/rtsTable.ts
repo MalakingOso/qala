@@ -7,7 +7,8 @@
 // e1RM rule 3 (Epley fallback) for any cell that disagrees by more than
 // 1 point. Until then EVERY cell below is UNVERIFIED.
 
-export const RTS_VERIFICATION_STATUS = "unverified-third-party-reproduction" as const;
+export const RTS_VERIFICATION_STATUS =
+  "unverified-third-party-reproduction" as const;
 
 /** Cells that failed the 1-point spot-check and must use rule 3 instead.
  *  Empty until the pre-ship check is done; rtsPct() consults it. */
@@ -46,10 +47,14 @@ export interface RtsLookup {
 }
 
 export function rtsLookup(reps: number, rpe: number): RtsLookup {
-  if (!Number.isInteger(reps) || reps < 1 || reps > 6) return { pct: null, verified: false, useRule3Fallback: true };
+  if (!Number.isInteger(reps) || reps < 1 || reps > 6) {
+    return { pct: null, verified: false, useRule3Fallback: true };
+  }
   const row = ROWS.find((r) => Math.abs(r.rpe - rpe) < 1e-9);
   if (!row) return { pct: null, verified: false, useRule3Fallback: true };
   const pct = row.pct[reps - 1];
-  if (isRtsCellFlagged(rpe, reps)) return { pct, verified: false, useRule3Fallback: true };
+  if (isRtsCellFlagged(rpe, reps)) {
+    return { pct, verified: false, useRule3Fallback: true };
+  }
   return { pct, verified: false, useRule3Fallback: false };
 }

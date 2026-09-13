@@ -5,7 +5,8 @@
 export function minettiCost(grade: number): number {
   const i = grade;
   return (
-    155.4 * i ** 5 - 30.4 * i ** 4 - 43.3 * i ** 3 + 46.3 * i ** 2 + 19.5 * i + 3.6
+    155.4 * i ** 5 - 30.4 * i ** 4 - 43.3 * i ** 3 + 46.3 * i ** 2 + 19.5 * i +
+    3.6
   );
 }
 
@@ -29,14 +30,19 @@ export function ngp(speedMps: number, grade: number): number {
 }
 
 /** Mean GAP factor over a grade profile. */
-export function meanGapFactor(profile: { grade: number; meters: number }[] | undefined): number {
+export function meanGapFactor(
+  profile: { grade: number; meters: number }[] | undefined,
+): number {
   if (!profile || profile.length === 0) return 1;
   const total = profile.reduce((a, s) => a + s.meters, 0);
   if (total <= 0) return 1;
   return profile.reduce((a, s) => a + gapFactor(s.grade) * s.meters, 0) / total;
 }
 
-export function intensityFactor(ngpMps: number, thresholdPaceMps: number): number {
+export function intensityFactor(
+  ngpMps: number,
+  thresholdPaceMps: number,
+): number {
   return ngpMps / thresholdPaceMps;
 }
 
@@ -50,7 +56,8 @@ export function vdotFromEffort(distanceM: number, seconds: number): number {
   const tMin = seconds / 60;
   const v = distanceM / tMin; // m/min
   const vo2 = -4.6 + 0.182258 * v + 0.000104 * v * v;
-  const frac = 0.8 + 0.1894393 * Math.exp(-0.012778 * tMin) + 0.2989558 * Math.exp(-0.1932605 * tMin);
+  const frac = 0.8 + 0.1894393 * Math.exp(-0.012778 * tMin) +
+    0.2989558 * Math.exp(-0.1932605 * tMin);
   return vo2 / frac;
 }
 
@@ -69,12 +76,17 @@ export interface Effort {
  * grade-adjusted 400, 800 and 5000 m efforts in the last 90 d (Smyth 2020).
  * Least-squares slope; null when fewer than 3 qualifying efforts exist.
  */
-export function criticalSpeed(efforts: (Effort & { date: string })[], nowIso: string): number | null {
+export function criticalSpeed(
+  efforts: (Effort & { date: string })[],
+  nowIso: string,
+): number | null {
   const cutoff = Date.parse(nowIso) - 90 * 86400000;
   const targets = [400, 800, 5000];
   const pts: { t: number; d: number }[] = [];
   for (const target of targets) {
-    const cands = efforts.filter((e) => e.distanceM === target && Date.parse(e.date) >= cutoff);
+    const cands = efforts.filter((e) =>
+      e.distanceM === target && Date.parse(e.date) >= cutoff
+    );
     if (!cands.length) continue;
     const best = cands.reduce((a, b) => (a.seconds < b.seconds ? a : b));
     pts.push({ t: best.seconds, d: best.distanceM });
@@ -125,7 +137,10 @@ export function rbeFactor(n: number): number {
 }
 
 /** Eccentric damage per 100 m descended on grades < -5%: quads 0.4, calves 0.25. */
-export function descentDamage(descentM: number, rbe: number): { quads: number; calves: number } {
+export function descentDamage(
+  descentM: number,
+  rbe: number,
+): { quads: number; calves: number } {
   const units = descentM / 100;
   return { quads: 0.4 * units * rbe, calves: 0.25 * units * rbe };
 }
@@ -134,7 +149,9 @@ export function descentDamage(descentM: number, rbe: number): { quads: number; c
 export const SRPE_PER_100_RTSS_PRIOR = 3.6;
 
 /** Per-user fitted ratio after 10 paired runs, else the prior. */
-export function srpeLoadRatio(pairs: { srpeLoad: number; rTSS: number }[]): number {
+export function srpeLoadRatio(
+  pairs: { srpeLoad: number; rTSS: number }[],
+): number {
   if (pairs.length >= 10) {
     const num = pairs.reduce((a, p) => a + p.srpeLoad, 0);
     const den = pairs.reduce((a, p) => a + p.rTSS, 0);
@@ -167,17 +184,30 @@ export function checkRunBeforeLift(
   exerciseIds: string[],
 ): CrossModalHit | null {
   if (run.minutes < 30) return null;
-  const gapH = (Date.parse(sessionAtIso) - Date.parse(run.endedAtIso)) / 3600000;
+  const gapH = (Date.parse(sessionAtIso) - Date.parse(run.endedAtIso)) /
+    3600000;
   if (!(gapH >= 0 && gapH < 8)) return null;
   if (!exerciseIds.some(isLowerBodyLift)) return null;
-  return { code: ReasonCode.RUN_BEFORE_LIFT, detail: `run ${run.minutes}min ${gapH.toFixed(1)}h before lift: -1 rep/set, noise x2` };
+  return {
+    code: ReasonCode.RUN_BEFORE_LIFT,
+    detail: `run ${run.minutes}min ${
+      gapH.toFixed(1)
+    }h before lift: -1 rep/set, noise x2`,
+  };
 }
 
 /** Row 2: >= 8 quad set-eq lifted in prior 24 h + planned hard/long run -> easy. */
-export function checkLiftBeforeHardRun(quadSetEq24h: number, plannedZ: RunZone, plannedMin: number): CrossModalHit | null {
+export function checkLiftBeforeHardRun(
+  quadSetEq24h: number,
+  plannedZ: RunZone,
+  plannedMin: number,
+): CrossModalHit | null {
   if (quadSetEq24h < 8) return null;
   if (!(plannedZ === 1.5 || plannedMin > 90)) return null;
-  return { code: ReasonCode.LIFT_BEFORE_HARD_RUN, detail: "planned hard run becomes easy" };
+  return {
+    code: ReasonCode.LIFT_BEFORE_HARD_RUN,
+    detail: "planned hard run becomes easy",
+  };
 }
 
 /** Row 3: run and lift same day -> lift first; warn gap < 6 h (< 24 h strength). */
@@ -192,7 +222,12 @@ export function checkSameDayOrder(
   const liftFirst = Date.parse(liftAtIso) <= Date.parse(runAtIso);
   const limit = strengthPriority ? 24 : 6;
   if (!liftFirst || gapH < limit) {
-    return { code: ReasonCode.SAME_DAY_ORDER, detail: liftFirst ? `gap ${gapH.toFixed(1)}h < ${limit}h` : "run before lift: lift first" };
+    return {
+      code: ReasonCode.SAME_DAY_ORDER,
+      detail: liftFirst
+        ? `gap ${gapH.toFixed(1)}h < ${limit}h`
+        : "run before lift: lift first",
+    };
   }
   return null;
 }
@@ -203,37 +238,71 @@ export function checkRunFatigueHold(
   runCalfFatigue: number,
   typicalSessionInput = 8,
 ): CrossModalHit | null {
-  if (runQuadFatigue > typicalSessionInput || runCalfFatigue > typicalSessionInput) {
-    return { code: ReasonCode.RUN_FATIGUE_HOLD, detail: "no load increase on lower-body lifts" };
+  if (
+    runQuadFatigue > typicalSessionInput || runCalfFatigue > typicalSessionInput
+  ) {
+    return {
+      code: ReasonCode.RUN_FATIGUE_HOLD,
+      detail: "no load increase on lower-body lifts",
+    };
   }
   return null;
 }
 
 /** Rows 5-6: post-race holds. */
-export function checkPostRace(distanceM: number, z: RunZone): CrossModalHit | null {
-  if (distanceM >= 42000) return { code: ReasonCode.POST_RACE_5D, detail: "no heavy lower body 5d, then 50% sets" };
-  if (distanceM >= 21000 && z >= 1) return { code: ReasonCode.POST_RACE_48H, detail: "no heavy lower body 48h" };
+export function checkPostRace(
+  distanceM: number,
+  z: RunZone,
+): CrossModalHit | null {
+  if (distanceM >= 42000) {
+    return {
+      code: ReasonCode.POST_RACE_5D,
+      detail: "no heavy lower body 5d, then 50% sets",
+    };
+  }
+  if (distanceM >= 21000 && z >= 1) {
+    return {
+      code: ReasonCode.POST_RACE_48H,
+      detail: "no heavy lower body 48h",
+    };
+  }
   return null;
 }
 
 /** Row 7: heavy lower-body session in prior 24 h -> next hard run easy. */
-export function checkHeavyLiftBeforeRun(heavyLower24h: boolean): CrossModalHit | null {
+export function checkHeavyLiftBeforeRun(
+  heavyLower24h: boolean,
+): CrossModalHit | null {
   if (!heavyLower24h) return null;
-  return { code: ReasonCode.HEAVY_LIFT_BEFORE_RUN, detail: "next planned hard run suggested as easy" };
+  return {
+    code: ReasonCode.HEAVY_LIFT_BEFORE_RUN,
+    detail: "next planned hard run suggested as easy",
+  };
 }
 
 // ---- Running flags (rule-based, never diagnostic; NO ACWR anywhere) ----
 
 /** Single run > 1.10x longest run of previous 30 d (HRR 1.64). */
-export function checkRunSpike(distanceM: number, longest30dM: number): CrossModalHit | null {
+export function checkRunSpike(
+  distanceM: number,
+  longest30dM: number,
+): CrossModalHit | null {
   if (longest30dM > 0 && distanceM > 1.1 * longest30dM) {
-    return { code: ReasonCode.RUN_SPIKE, detail: `run ${(distanceM / 1000).toFixed(1)}km > 1.10x longest-30d ${(longest30dM / 1000).toFixed(1)}km` };
+    return {
+      code: ReasonCode.RUN_SPIKE,
+      detail: `run ${(distanceM / 1000).toFixed(1)}km > 1.10x longest-30d ${
+        (longest30dM / 1000).toFixed(1)
+      }km`,
+    };
   }
   return null;
 }
 
 /** Weekly distance up > 30% across two weeks (HR 1.59, CI crosses 1). */
-export function checkMileageJump(last2wkM: number, prev2wkM: number): CrossModalHit | null {
+export function checkMileageJump(
+  last2wkM: number,
+  prev2wkM: number,
+): CrossModalHit | null {
   if (prev2wkM > 0 && (last2wkM - prev2wkM) / prev2wkM > 0.3) {
     return { code: ReasonCode.MILEAGE_JUMP, detail: "2-week distance up >30%" };
   }
@@ -245,7 +314,13 @@ export function checkMileageJump(last2wkM: number, prev2wkM: number): CrossModal
  * F_run-only prediction against F_run with the fatigue term; keep the simpler
  * model if it predicts as well. Returns the model to use.
  */
-export function heldOutRunModelChoice(vdotObs: number, errWithFatigue: number | null, errFitnessOnly: number | null): "fitness-only" | "with-fatigue" {
-  if (vdotObs < 20 || errWithFatigue === null || errFitnessOnly === null) return "fitness-only";
+export function heldOutRunModelChoice(
+  vdotObs: number,
+  errWithFatigue: number | null,
+  errFitnessOnly: number | null,
+): "fitness-only" | "with-fatigue" {
+  if (vdotObs < 20 || errWithFatigue === null || errFitnessOnly === null) {
+    return "fitness-only";
+  }
   return errWithFatigue < errFitnessOnly ? "with-fatigue" : "fitness-only";
 }

@@ -8,7 +8,13 @@ import {
 } from "./offlineQueue.ts";
 
 function op(id: string): QueuedOp {
-  return { id, kind: "log-set", at: "2026-09-13T17:00:00Z", payload: {}, attempts: 0 };
+  return {
+    id,
+    kind: "log-set",
+    at: "2026-09-13T17:00:00Z",
+    payload: {},
+    attempts: 0,
+  };
 }
 
 Deno.test("outbox keeps FIFO order and acknowledges by id", () => {

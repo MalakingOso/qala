@@ -45,7 +45,11 @@ export function DesktopShell({ route }: { route: string }) {
             const Icon = n.icon;
             const active = part === n.id;
             return (
-              <a key={n.id} href={`#/desktop/${n.id}`} aria-current={active ? "page" : undefined}>
+              <a
+                key={n.id}
+                href={`#/desktop/${n.id}`}
+                aria-current={active ? "page" : undefined}
+              >
                 <Icon size={18} /> {n.label}
               </a>
             );
@@ -53,25 +57,26 @@ export function DesktopShell({ route }: { route: string }) {
           <a href="#/phone/today">← Phone shell</a>
         </nav>
         <div>
-          {part === "exercises" ? (
-            <ExerciseDbPage />
-          ) : part === "memory" ? (
-            <CoachMemoryPage />
-          ) : part === "history" ? (
-            <DesktopHistoryPage />
-          ) : part === "graphs" ? (
-            <GraphsPage />
-          ) : part === "calibration" ? (
-            <CalibrationPage />
-          ) : part === "runs" ? (
-            <RunDetailPage />
-          ) : part === "settings" ? (
-            <p>
-              Settings live on the phone shell for now. <a href="#/phone/settings">Open Settings</a>
-            </p>
-          ) : (
-            <ProgramEditorPage />
-          )}
+          {part === "exercises"
+            ? <ExerciseDbPage />
+            : part === "memory"
+            ? <CoachMemoryPage />
+            : part === "history"
+            ? <DesktopHistoryPage />
+            : part === "graphs"
+            ? <GraphsPage />
+            : part === "calibration"
+            ? <CalibrationPage />
+            : part === "runs"
+            ? <RunDetailPage />
+            : part === "settings"
+            ? (
+              <p>
+                Settings live on the phone shell for now.{" "}
+                <a href="#/phone/settings">Open Settings</a>
+              </p>
+            )
+            : <ProgramEditorPage />}
         </div>
       </div>
     </div>

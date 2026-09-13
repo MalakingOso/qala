@@ -73,7 +73,10 @@ export const EXERCISE_CATALOG: CatalogExercise[] = [
     id: "squat",
     name: "Squat",
     equipment: ["barbell", "rack"],
-    muscles: { target: ["quads"], synergist: ["glutes", "hamstrings", "calves"] },
+    muscles: {
+      target: ["quads"],
+      synergist: ["glutes", "hamstrings", "calves"],
+    },
     klass: "main",
     compound: true,
     mainLift: true,
@@ -92,7 +95,10 @@ export const EXERCISE_CATALOG: CatalogExercise[] = [
     id: "deadlift",
     name: "Deadlift",
     equipment: ["barbell"],
-    muscles: { target: ["glutes"], synergist: ["hamstrings", "back", "quads", "forearms"] },
+    muscles: {
+      target: ["glutes"],
+      synergist: ["hamstrings", "back", "quads", "forearms"],
+    },
     klass: "main",
     compound: true,
     mainLift: true,

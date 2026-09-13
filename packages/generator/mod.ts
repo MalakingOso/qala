@@ -21,8 +21,8 @@ import { catalogById, VOLUME_CAPPED_BY_MRV } from "./types.ts";
 import {
   availableExercises,
   chooseSplit,
-  slotsForDay,
   type DayTemplate,
+  slotsForDay,
 } from "./splits.ts";
 import {
   countWeekSets,
@@ -64,7 +64,10 @@ const VARIATION_FACTOR: Record<string, number> = {
   rdl: 0.55,
 };
 
-function refFor(exerciseId: string, refs: Record<string, number>): number | undefined {
+function refFor(
+  exerciseId: string,
+  refs: Record<string, number>,
+): number | undefined {
   if (refs[exerciseId] !== undefined) return refs[exerciseId];
   const ex = catalogById(exerciseId);
   if (ex.variationsOf && refs[ex.variationsOf] !== undefined) {
@@ -106,7 +109,10 @@ interface SlotAssignment {
   slot: SlotKind;
 }
 
-function dupRole(exposureIdx: number, exposures: number): "hypertrophy" | "power" | "strength" {
+function dupRole(
+  exposureIdx: number,
+  exposures: number,
+): "hypertrophy" | "power" | "strength" {
   if (exposures === 1) return "strength";
   if (exposures === 2) return exposureIdx === 0 ? "hypertrophy" : "strength";
   return (["hypertrophy", "power", "strength"] as const)[exposureIdx % 3];
@@ -154,7 +160,10 @@ function buildMainLift(
       progression,
     };
   };
-  if (periodization === "dup" || (periodization === "block" && input.goal !== "meetPrep")) {
+  if (
+    periodization === "dup" ||
+    (periodization === "block" && input.goal !== "meetPrep")
+  ) {
     if (dupScheme === "5-3-1") {
       const days = altDupWeek(Math.min(week, 4));
       const d = days[exposureIdx % days.length];
@@ -164,7 +173,13 @@ function buildMainLift(
     const role = dupRole(exposureIdx, exposures);
     const d = row[role];
     const rpe = role === "power" ? 6.5 : role === "hypertrophy" ? 7.5 : 8.5;
-    return finish(d.sets, d.reps, d.pct, rpe, role === "strength" ? "rpeAuto" : "percent");
+    return finish(
+      d.sets,
+      d.reps,
+      d.pct,
+      rpe,
+      role === "strength" ? "rpeAuto" : "percent",
+    );
   }
   // Linear (also used inside meet-prep accumulation via block weeks below).
   if (exerciseId === "deadlift") {
@@ -173,7 +188,13 @@ function buildMainLift(
   }
   const row = LINEAR_TABLE[Math.min(weekIdx, LINEAR_TABLE.length - 1)];
   void LINEAR_WEEK5_OPENER_PCT;
-  return finish(row.sets, row.reps, row.pct, week >= 5 ? 8.5 : week >= 2 ? 8 : 7.5, "percent");
+  return finish(
+    row.sets,
+    row.reps,
+    row.pct,
+    week >= 5 ? 8.5 : week >= 2 ? 8 : 7.5,
+    "percent",
+  );
 }
 
 function buildAccessory(
@@ -224,7 +245,8 @@ function buildAccessory(
     };
   }
   // Hypertrophy: RIR ramp from the template; compounds 8-12, isolation 12-15.
-  const row = HYPERTROPHY_TABLE[Math.min(weekIdx, HYPERTROPHY_TABLE.length - 1)];
+  const row =
+    HYPERTROPHY_TABLE[Math.min(weekIdx, HYPERTROPHY_TABLE.length - 1)];
   const compound = ex.compound;
   const rir = compound
     ? (row.rirCompound[0] + row.rirCompound[1]) / 2
@@ -267,12 +289,19 @@ function fitAccessoryVolume(
     }
   }
   for (const muscle of [...muscles].sort()) {
-    const counts = countWeekSets(days, refs).get(muscle) ?? { direct: 0, frac: 0 };
+    const counts = countWeekSets(days, refs).get(muscle) ??
+      { direct: 0, frac: 0 };
     const indirectCredit = Math.max(0, counts.frac - counts.direct);
     const priority = priorityOf(input, muscle);
     const t = kind === "strength"
       ? strengthFracTarget(muscle, priority, indirectCredit)
-      : weeklyFracTarget(muscle, priority, weekIdx, indirectCredit, "hypertrophy");
+      : weeklyFracTarget(
+        muscle,
+        priority,
+        weekIdx,
+        indirectCredit,
+        "hypertrophy",
+      );
     if (t.capped && t.reason) reasonCodes.add(t.reason);
     const targeting = (reverse: boolean) => {
       const list: PlannedExercise[] = [];
@@ -288,7 +317,8 @@ function fitAccessoryVolume(
     if (priority !== "maintain") {
       let guard = 40;
       while (guard-- > 0) {
-        const c = countWeekSets(days, refs).get(muscle) ?? { direct: 0, frac: 0 };
+        const c = countWeekSets(days, refs).get(muscle) ??
+          { direct: 0, frac: 0 };
         if (c.frac >= t.fracTarget - 0.01 || c.direct >= t.directMax) break;
         const cand = targeting(false)
           .filter((e) => e.sets < 5)
@@ -346,10 +376,9 @@ function buildMainAsCompound(
   const ex = catalogById(exerciseId);
   const ref = refFor(exerciseId, input.referenceRm);
   const compound = approach === "hypertrophy";
-  const row = HYPERTROPHY_TABLE[Math.min(weekIdx, HYPERTROPHY_TABLE.length - 1)];
-  const rir = compound
-    ? (row.rirCompound[0] + row.rirCompound[1]) / 2
-    : 2;
+  const row =
+    HYPERTROPHY_TABLE[Math.min(weekIdx, HYPERTROPHY_TABLE.length - 1)];
+  const rir = compound ? (row.rirCompound[0] + row.rirCompound[1]) / 2 : 2;
   const repsMid = compound ? 10 : 8;
   const pct = Math.round(pctForRepsRir(repsMid, rir) * 10) / 10;
   return {
@@ -406,7 +435,12 @@ function buildTrainingWeek(
   // (row then pull-up across the upper days, leg press then lunge, ...).
   const usedAccessories = new Set<string>();
   const days: DayPlan[] = split.days.map((t) => {
-    const slots: SlotAssignment[] = slotsForDay(t, input.goal, available, usedAccessories);
+    const slots: SlotAssignment[] = slotsForDay(
+      t,
+      input.goal,
+      available,
+      usedAccessories,
+    );
     const exercises: PlannedExercise[] = [];
     for (const s of slots) {
       if (!MAIN_LIFT_IDS.has(s.exerciseId)) usedAccessories.add(s.exerciseId);
@@ -416,13 +450,25 @@ function buildTrainingWeek(
           const idx = seen.get(s.exerciseId) ?? 0;
           seen.set(s.exerciseId, idx + 1);
           exercises.push(
-            buildMainLift(s.exerciseId, weekIdx, idx, total, input, periodization, dupScheme),
+            buildMainLift(
+              s.exerciseId,
+              weekIdx,
+              idx,
+              total,
+              input,
+              periodization,
+              dupScheme,
+            ),
           );
         } else {
-          exercises.push(buildMainAsCompound(s.exerciseId, weekIdx, approach, input));
+          exercises.push(
+            buildMainAsCompound(s.exerciseId, weekIdx, approach, input),
+          );
         }
       } else {
-        exercises.push(buildAccessory(s.exerciseId, s.slot, weekIdx, approach, input));
+        exercises.push(
+          buildAccessory(s.exerciseId, s.slot, weekIdx, approach, input),
+        );
       }
     }
     const lowerBody = t.lowerBody;
@@ -439,7 +485,12 @@ function buildTrainingWeek(
   // never cut. Afterwards floors are re-checked: a floor broken by trimming
   // is restored while the day stays within 10% of the budget.
   for (let i = 0; i < days.length; i++) {
-    const fitted = fitToTimeBudget(days[i], approach, input.referenceRm, input.sessionMinutes);
+    const fitted = fitToTimeBudget(
+      days[i],
+      approach,
+      input.referenceRm,
+      input.sessionMinutes,
+    );
     days[i] = fitted.day;
   }
   reenforceFloors(days, input);
@@ -454,15 +505,25 @@ function reenforceFloors(days: DayPlan[], input: GeneratorInput): void {
   for (let round = 0; round < 20; round++) {
     let fixed = true;
     const counts = countWeekSets(days, refs);
-    for (const [muscle, c] of [...counts].sort(([a], [b]) => a.localeCompare(b))) {
+    for (
+      const [muscle, c] of [...counts].sort(([a], [b]) => a.localeCompare(b))
+    ) {
       const t = approach === "strength"
         ? strengthFracTarget(muscle, priorityOf(input, muscle), 0)
-        : weeklyFracTarget(muscle, priorityOf(input, muscle), 0, 0, "hypertrophy");
+        : weeklyFracTarget(
+          muscle,
+          priorityOf(input, muscle),
+          0,
+          0,
+          "hypertrophy",
+        );
       if (c.direct === 0 || c.direct >= t.directMin) continue;
       const cands: PlannedExercise[] = [];
       for (const day of days) {
         for (const ex of day.exercises) {
-          if (!ex.mainLift && ex.muscles.target.includes(muscle) && ex.sets < 6) cands.push(ex);
+          if (
+            !ex.mainLift && ex.muscles.target.includes(muscle) && ex.sets < 6
+          ) cands.push(ex);
         }
       }
       cands.sort((a, b) => a.sets - b.sets);
@@ -470,7 +531,9 @@ function reenforceFloors(days: DayPlan[], input: GeneratorInput): void {
       if (!cand) continue;
       cand.sets += 1;
       const day = days.find((d) => d.exercises.includes(cand))!;
-      if (estimateSessionMinutes(day, approach, refs) > input.sessionMinutes * 1.1) {
+      if (
+        estimateSessionMinutes(day, approach, refs) > input.sessionMinutes * 1.1
+      ) {
         cand.sets -= 1;
         continue;
       }
@@ -521,7 +584,9 @@ function buildTaperWeek(meetDate: string, input: GeneratorInput): DayPlan[] {
       progression: "percent",
     };
     return {
-      label: `${s.lift} ${s.kind === "lastHeavy" ? "opener" : "final"} - ${s.dateISO} (${s.daysOut}d out)`,
+      label: `${s.lift} ${
+        s.kind === "lastHeavy" ? "opener" : "final"
+      } - ${s.dateISO} (${s.daysOut}d out)`,
       focus: "taper",
       lowerBody: s.lift !== "bench",
       heavyLower: s.kind === "lastHeavy" && s.lift !== "bench",
@@ -568,10 +633,16 @@ export function generateBlock(input: GeneratorInput): BlockDef {
     throw new Error("meetPrep requires meetDate");
   }
   const approach = approachFor(input.goal);
-  const periodization = periodizationFor(input.goal, input.experience, input.periodization);
+  const periodization = periodizationFor(
+    input.goal,
+    input.experience,
+    input.periodization,
+  );
   const reasonCodes = new Set<string>();
   const weeks: BlockWeek[] = [];
-  const trainingWeeks = input.goal === "meetPrep" ? input.blockWeeks - 1 : input.blockWeeks;
+  const trainingWeeks = input.goal === "meetPrep"
+    ? input.blockWeeks - 1
+    : input.blockWeeks;
   for (let w = 0; w < trainingWeeks; w++) {
     const deload = input.goal !== "meetPrep" && w === input.blockWeeks - 1;
     const days = buildTrainingWeek(w, input, periodization, reasonCodes);
@@ -587,7 +658,9 @@ export function generateBlock(input: GeneratorInput): BlockDef {
   }
   const names: Record<GeneratorInput["goal"], string> = {
     hypertrophy: "Hypertrophy block",
-    strength: periodization === "dup" ? "Strength block (DUP)" : "Strength block (linear)",
+    strength: periodization === "dup"
+      ? "Strength block (DUP)"
+      : "Strength block (linear)",
     meetPrep: "Meet prep (taper to date)",
     athleticMaintenance: "In-season maintenance",
   };

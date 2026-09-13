@@ -35,8 +35,9 @@ export function DenseSeries({
   label: string;
 }) {
   const host = useRef<HTMLDivElement>(null);
-  const theme =
-    typeof document !== "undefined" ? document.documentElement.dataset.theme : "light";
+  const theme = typeof document !== "undefined"
+    ? document.documentElement.dataset.theme
+    : "light";
 
   useEffect(() => {
     const el = host.current;
@@ -51,8 +52,16 @@ export function DenseSeries({
       legend: { show: true },
       scales: { x: { time: false } },
       axes: [
-        { stroke: ink, grid: { stroke: grid, width: 1 }, font: "10px DM Mono, monospace" },
-        { stroke: ink, grid: { stroke: grid, width: 1 }, font: "10px DM Mono, monospace" },
+        {
+          stroke: ink,
+          grid: { stroke: grid, width: 1 },
+          font: "10px DM Mono, monospace",
+        },
+        {
+          stroke: ink,
+          grid: { stroke: grid, width: 1 },
+          font: "10px DM Mono, monospace",
+        },
       ],
       series: [
         { label: xLabel },
@@ -71,7 +80,13 @@ export function DenseSeries({
     const plot = new uPlot(opts, data, el);
     return () => plot.destroy();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [theme, title, height, JSON.stringify(x), JSON.stringify(series.map((s) => s.values))]);
+  }, [
+    theme,
+    title,
+    height,
+    JSON.stringify(x),
+    JSON.stringify(series.map((s) => s.values)),
+  ]);
 
   return (
     <ChartShell title={title} head={head} rows={rows} label={label}>

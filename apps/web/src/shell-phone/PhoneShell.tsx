@@ -4,6 +4,7 @@
 
 import type { ReactNode } from "react";
 import { useQala } from "../store/qalaStore.tsx";
+import { isRestDay } from "../store/types.ts";
 import { OfflineBadge } from "../shared/ui.tsx";
 import {
   Activity,
@@ -28,7 +29,12 @@ import { CoachPage } from "./pages/CoachPage.tsx";
 import { PlateCalcPage } from "./pages/PlateCalcPage.tsx";
 import { SettingsPage } from "./pages/SettingsPage.tsx";
 import { HistoryPage } from "./pages/HistoryPage.tsx";
-import { StartRunPage, LiveRunPage, GuidedRunPage, RunSummaryPage } from "./run/RunPages.tsx";
+import {
+  GuidedRunPage,
+  LiveRunPage,
+  RunSummaryPage,
+  StartRunPage,
+} from "./run/RunPages.tsx";
 
 const TABS = [
   { id: "today", label: "Today", icon: Sun },
@@ -38,16 +44,29 @@ const TABS = [
   { id: "coach", label: "Coach", icon: MessageSquareText },
 ] as const;
 
-function pageFor(route: string): { tab: string; node: ReactNode } {
+function pageFor(
+  rawRoute: string,
+  restDay: boolean,
+): { tab: string; node: ReactNode } {
+  const qIdx = rawRoute.indexOf("?");
+  const route = qIdx === -1 ? rawRoute : rawRoute.slice(0, qIdx);
+  const params = new URLSearchParams(
+    qIdx === -1 ? "" : rawRoute.slice(qIdx + 1),
+  );
   switch (route) {
     case "/phone/plan":
       return { tab: "plan", node: <PlanPage /> };
     case "/phone/checkin":
-      return { tab: "today", node: <CheckinPage /> };
+      return { tab: "today", node: <CheckinPage restDay={restDay} /> };
     case "/phone/warmup":
       return { tab: "today", node: <WarmupPage /> };
-    case "/phone/workout":
-      return { tab: "today", node: <WorkoutPage /> };
+    case "/phone/workout": {
+      const idx = Number(params.get("idx"));
+      return {
+        tab: "today",
+        node: <WorkoutPage initialIdx={Number.isFinite(idx) ? idx : 0} />,
+      };
+    }
     case "/phone/allex":
       return { tab: "today", node: <AllExercisesPage /> };
     case "/phone/rest":
@@ -81,21 +100,31 @@ function pageFor(route: string): { tab: string; node: ReactNode } {
 }
 
 export function PhoneShell({ route }: { route: string }) {
-  const { tab, node } = pageFor(route);
-  const { online, outbox } = useQala();
+  const { online, outbox, stages } = useQala();
+  const { tab, node } = pageFor(route, isRestDay(stages));
   return (
     <div>
       <div className="page">
         <div
           className="page-head"
-          style={{ position: "sticky", top: 0, background: "var(--bg)", zIndex: 5, padding: "8px 0" }}
+          style={{
+            position: "sticky",
+            top: 0,
+            background: "var(--bg)",
+            zIndex: 5,
+            padding: "8px 0",
+          }}
         >
           <OfflineBadge online={online} pending={outbox.length} />
           <span style={{ display: "flex", gap: 8 }}>
             <a className="icon-btn" href="#/phone/history" aria-label="History">
               <History size={20} />
             </a>
-            <a className="icon-btn" href="#/phone/settings" aria-label="Settings">
+            <a
+              className="icon-btn"
+              href="#/phone/settings"
+              aria-label="Settings"
+            >
               <Settings size={20} />
             </a>
           </span>
@@ -107,7 +136,11 @@ export function PhoneShell({ route }: { route: string }) {
           const Icon = t.icon;
           const active = tab === t.id;
           return (
-            <a key={t.id} href={`#/phone/${t.id}`} aria-current={active ? "page" : undefined}>
+            <a
+              key={t.id}
+              href={`#/phone/${t.id}`}
+              aria-current={active ? "page" : undefined}
+            >
               <Icon size={22} />
               <span>{t.label}</span>
             </a>

@@ -3,8 +3,6 @@
 // qualify as text, so large-figure 3.0 needs no separate allowance).
 // --fg-faint is decorative-only by design and is excluded by name.
 
-import { assert } from "@std/assert";
-
 const CSS_URL = new URL("../theme/tokens.css", import.meta.url);
 
 function blockVars(css: string, selector: string): Map<string, string> {
@@ -33,7 +31,9 @@ function luminance([r, g, b]: [number, number, number]): number {
 }
 
 function ratio(a: string, b: string): number {
-  const [l1, l2] = [luminance(hexRgb(a)), luminance(hexRgb(b))].sort((x, y) => y - x);
+  const [l1, l2] = [luminance(hexRgb(a)), luminance(hexRgb(b))].sort((x, y) =>
+    y - x
+  );
   return (l1 + 0.05) / (l2 + 0.05);
 }
 
@@ -79,15 +79,25 @@ Deno.test("theme text/background pairs meet WCAG 4.5", async () => {
     const t = vars.get(text);
     const b = vars.get(bgName);
     if (!t || !b) {
-      failures.push(`${theme}: --${text} or --${bgName} missing from tokens.css`);
+      failures.push(
+        `${theme}: --${text} or --${bgName} missing from tokens.css`,
+      );
       continue;
     }
     if (!HEX.test(t) || !HEX.test(b)) {
-      failures.push(`${theme}: --${text}=${t} / --${bgName}=${b} not opaque hex, add an opaque check`);
+      failures.push(
+        `${theme}: --${text}=${t} / --${bgName}=${b} not opaque hex, add an opaque check`,
+      );
       continue;
     }
     const r = ratio(t, b);
-    if (r < 4.5) failures.push(`${theme}: --${text} on --${bgName} = ${r.toFixed(2)} (< 4.5)`);
+    if (r < 4.5) {
+      failures.push(
+        `${theme}: --${text} on --${bgName} = ${r.toFixed(2)} (< 4.5)`,
+      );
+    }
   }
-  if (failures.length > 0) throw new Error(`contrast failures:\n${failures.join("\n")}`);
+  if (failures.length > 0) {
+    throw new Error(`contrast failures:\n${failures.join("\n")}`);
+  }
 });

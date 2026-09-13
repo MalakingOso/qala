@@ -281,7 +281,11 @@ function addDays(dateISO: string, delta: number): string {
 // last sessions is not needed; midpoint keeps every date inside its range).
 export function taperSchedule(meetDateISO: string): TaperSession[] {
   const mid = (r: [number, number]) => Math.round((r[0] + r[1]) / 2);
-  const lifts: Array<"deadlift" | "squat" | "bench"> = ["deadlift", "squat", "bench"];
+  const lifts: Array<"deadlift" | "squat" | "bench"> = [
+    "deadlift",
+    "squat",
+    "bench",
+  ];
   const out: TaperSession[] = [];
   for (const lift of lifts) {
     const heavy = mid(TAPER[lift].lastHeavyDaysOut);
@@ -308,6 +312,10 @@ export function roundToPlates(weight: number, step = 5): number {
   return Math.round(weight / step) * step;
 }
 
-export function weightForPct(referenceRm: number, pct: number, step = 5): number {
+export function weightForPct(
+  referenceRm: number,
+  pct: number,
+  step = 5,
+): number {
   return roundToPlates((referenceRm * pct) / 100, step);
 }

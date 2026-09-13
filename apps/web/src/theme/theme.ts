@@ -6,7 +6,9 @@ export type TitleFont = "qalaTest" | "faustina";
 
 export function effectiveTheme(theme: Theme): "light" | "dark" {
   if (theme === "light" || theme === "dark") return theme;
-  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  return window.matchMedia("(prefers-color-scheme: dark)").matches
+    ? "dark"
+    : "light";
 }
 
 export function applyTheme(theme: Theme): void {

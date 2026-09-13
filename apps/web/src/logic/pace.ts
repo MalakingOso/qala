@@ -25,7 +25,9 @@ export function formatElapsed(totalSec: number): string {
   const h = Math.floor(s / 3600);
   const m = Math.floor((s % 3600) / 60);
   const r = s % 60;
-  if (h > 0) return `${h}:${String(m).padStart(2, "0")}:${String(r).padStart(2, "0")}`;
+  if (h > 0) {
+    return `${h}:${String(m).padStart(2, "0")}:${String(r).padStart(2, "0")}`;
+  }
   return `${m}:${String(r).padStart(2, "0")}`;
 }
 
@@ -36,6 +38,12 @@ export function avgPace(distanceM: number, movingSec: number): number {
 }
 
 /** Audio-cue label: "Mile 2, 9:04 pace, 18:12 total". */
-export function cueLabel(mile: number, pace: number, elapsedSec: number): string {
-  return `Mile ${mile}, ${formatPace(pace)} pace, ${formatElapsed(elapsedSec)} total`;
+export function cueLabel(
+  mile: number,
+  pace: number,
+  elapsedSec: number,
+): string {
+  return `Mile ${mile}, ${formatPace(pace)} pace, ${
+    formatElapsed(elapsedSec)
+  } total`;
 }

@@ -1,5 +1,11 @@
 // PLAN 6.5 bullet 3: running inputs.
-import { gapFactor, intensityFactor, rtss, vdotFromEffort, minettiRatio } from "./running.ts";
+import {
+  gapFactor,
+  intensityFactor,
+  minettiRatio,
+  rtss,
+  vdotFromEffort,
+} from "./running.ts";
 import { assert, assertClose } from "./testutil.ts";
 
 Deno.test("rTSS equals 100 for one hour at threshold on flat", () => {

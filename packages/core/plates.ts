@@ -5,7 +5,7 @@
  * then heavier plates. Greedy is wrong once pair counts are limited.
  */
 
-import { PLATE_MATH_GRANULARITY } from "./units.ts";
+import { LB_PER_KG, PLATE_MATH_GRANULARITY } from "./units.ts";
 
 export type PlateUnit = "lb" | "kg";
 export type ColorScheme = "bumper" | "iron" | "custom";
@@ -469,7 +469,7 @@ export function plateHeightClass(
   weight: number,
   unit: PlateUnit,
 ): "full" | "small" {
-  const kg = unit === "kg" ? weight : weight / 2.2046226218;
+  const kg = unit === "kg" ? weight : weight / LB_PER_KG;
   if (unit === "lb") return weight >= 25 ? "full" : "small";
   return kg >= 10 ? "full" : "small";
 }

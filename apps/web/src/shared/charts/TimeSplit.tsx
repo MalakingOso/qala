@@ -26,7 +26,9 @@ export function TimeSplit({
       title="Where the time went"
       head={["Block", "Minutes"]}
       rows={rows}
-      label={`${total} minutes: ${parts.map((p) => `${p.label} ${p.minutes}`).join(", ")}.`}
+      label={`${total} minutes: ${
+        parts.map((p) => `${p.label} ${p.minutes}`).join(", ")
+      }.`}
     >
       <svg viewBox={`0 0 ${W} ${H}`} width="100%" role="presentation">
         {parts.map((p, i) => {
@@ -34,9 +36,21 @@ export function TimeSplit({
           const x1 = x(acc + p.minutes) - 2; // 2px surface gap
           acc += p.minutes;
           return (
-            <g key={p.label} tabIndex={0} role="img" aria-label={`${p.label}: ${p.minutes} minutes`}>
+            <g
+              key={p.label}
+              tabIndex={0}
+              role="img"
+              aria-label={`${p.label}: ${p.minutes} minutes`}
+            >
               <title>{`${p.label}: ${p.minutes} min`}</title>
-              <rect x={x0} y={18} width={Math.max(0, x1 - x0)} height={24} fill={CATEGORICAL[i % 3]} rx={0} />
+              <rect
+                x={x0}
+                y={18}
+                width={Math.max(0, x1 - x0)}
+                height={24}
+                fill={CATEGORICAL[i % 3]}
+                rx={0}
+              />
               <text x={x0 + 4} y={58} fontSize={11} fill="var(--fg)">
                 {p.label}
               </text>

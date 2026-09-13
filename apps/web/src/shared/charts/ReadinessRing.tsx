@@ -11,7 +11,12 @@ const R = 84;
 const TRACK = 14;
 const ARC_W = 9;
 
-function polar(cx: number, cy: number, r: number, frac: number): [number, number] {
+function polar(
+  cx: number,
+  cy: number,
+  r: number,
+  frac: number,
+): [number, number] {
   const a = -Math.PI / 2 + frac * Math.PI * 2;
   return [cx + r * Math.cos(a), cy + r * Math.sin(a)];
 }
@@ -45,11 +50,19 @@ export function ReadinessRing({
         ["average", m.legendAvg],
         ["low line", m.legendLow],
       ]}
-      label={`Readiness ${m.value} of 100${m.low ? ", low" : ""}. ${m.legendAvg}. ${m.legendLow}.`}
+      label={`Readiness ${m.value} of 100${
+        m.low ? ", low" : ""
+      }. ${m.legendAvg}. ${m.legendLow}.`}
     >
       <svg viewBox={`0 0 ${S} ${S + 34}`} width="100%" role="presentation">
         <Group>
-          <Arc innerRadius={R - TRACK / 2} outerRadius={R + TRACK / 2} startAngle={0} endAngle={full} fill="var(--bg-active)" />
+          <Arc
+            innerRadius={R - TRACK / 2}
+            outerRadius={R + TRACK / 2}
+            startAngle={0}
+            endAngle={full}
+            fill="var(--bg-active)"
+          />
           <Arc
             innerRadius={R - TRACK / 2}
             outerRadius={R + TRACK / 2}
@@ -65,18 +78,41 @@ export function ReadinessRing({
             fill={valueColor}
             cornerRadius={ARC_W / 2}
           />
-          {m.avgFrac !== null ? <circle cx={ax} cy={ay} r={4} fill="var(--fg)" /> : null}
+          {m.avgFrac !== null
+            ? <circle cx={ax} cy={ay} r={4} fill="var(--fg)" />
+            : null}
           <circle cx={lx} cy={ly} r={4} fill="var(--danger)" />
-          <text x={cx} y={cy + 12} textAnchor="middle" fontSize={40} fill="var(--fg)" className="figure">
+          <text
+            x={cx}
+            y={cy + 12}
+            textAnchor="middle"
+            fontSize={40}
+            fill="var(--fg)"
+            className="figure"
+          >
             {m.value}
           </text>
-          {m.low ? (
-            <text x={cx} y={cy + 32} textAnchor="middle" fontSize={12} fill="var(--danger)">
-              low
-            </text>
-          ) : null}
+          {m.low
+            ? (
+              <text
+                x={cx}
+                y={cy + 32}
+                textAnchor="middle"
+                fontSize={12}
+                fill="var(--danger)"
+              >
+                low
+              </text>
+            )
+            : null}
         </Group>
-        <text x={cx} y={S + 14} textAnchor="middle" fontSize={11} fill="var(--fg)">
+        <text
+          x={cx}
+          y={S + 14}
+          textAnchor="middle"
+          fontSize={11}
+          fill="var(--fg)"
+        >
           {m.legendAvg} · {m.legendLow}
         </text>
       </svg>

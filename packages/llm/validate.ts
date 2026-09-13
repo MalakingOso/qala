@@ -70,7 +70,10 @@ export function hashPrompt(text: string): string {
   return ("0000000" + (h >>> 0).toString(16)).slice(-8);
 }
 
-export function clampWeightPct(v: number, env: Envelope = DEFAULT_ENVELOPE): number {
+export function clampWeightPct(
+  v: number,
+  env: Envelope = DEFAULT_ENVELOPE,
+): number {
   return Math.min(env.weightPctMax, Math.max(env.weightPctMin, v));
 }
 
@@ -308,14 +311,44 @@ export interface TopicVerdict {
   topics: string[];
 }
 
-/** Keyword classifier for the coach persona boundary. */
+/**
+ * These are short enough to turn up embedded in unrelated words under a
+ * plain substring check ("pr"/"rep" inside "prepare", "set" inside "upset",
+ * "rest" inside "restaurant", "run" inside "brunch") — require a real word
+ * boundary, with an optional trailing "s" for the plural ("reps", "sets").
+ */
+const AMBIGUOUS_SHORT_KEYWORDS = new Set([
+  "pr",
+  "rep",
+  "set",
+  "run",
+  "rest",
+  "rpe",
+  "rir",
+  "1rm",
+]);
+
+function inScopeHit(lower: string): boolean {
+  return IN_SCOPE_KEYWORDS.some((k) =>
+    AMBIGUOUS_SHORT_KEYWORDS.has(k)
+      ? new RegExp(`\\b${k}s?\\b`, "i").test(lower)
+      : lower.includes(k)
+  );
+}
+
+/**
+ * Keyword classifier for the coach persona boundary. Default is decline:
+ * scope requires a genuine in-scope hit, and any out-of-scope hit declines
+ * even alongside one (a message that mixes topics still isn't clearly
+ * in-scope).
+ */
 export function classifyCoachTopic(text: string): TopicVerdict {
   const lower = text.toLowerCase();
+  const inHit = inScopeHit(lower);
   const outHit = OUT_OF_SCOPE_PHRASES.some((p) => lower.includes(p));
+  if (!inHit || outHit) return { inScope: false, topics: [] };
   const topics = COACH_TOPICS.filter((t) => lower.includes(t));
-  const inHit = IN_SCOPE_KEYWORDS.some((k) => lower.includes(k));
-  if (outHit && !inHit) return { inScope: false, topics: [] };
-  return { inScope: true, topics: inHit ? (topics.length > 0 ? topics : ["training"]) : [] };
+  return { inScope: true, topics: topics.length > 0 ? topics : ["training"] };
 }
 
 export function isCoachTopic(text: string): boolean {

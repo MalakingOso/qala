@@ -106,7 +106,9 @@ function renderMemory(memory: CoachMemoryEntry[]): string {
   const accepted = memory.filter((m) => m.accepted);
   if (accepted.length === 0) return "Coach memory: none yet.";
   const lines = accepted.map((m) => `- [${m.date}] (${m.source}) ${m.text}`);
-  return `Coach memory (visible, editable per-user facts):\n${lines.join("\n")}`;
+  return `Coach memory (visible, editable per-user facts):\n${
+    lines.join("\n")
+  }`;
 }
 
 function renderProfile(p: ComputedProfile): string {
@@ -167,18 +169,30 @@ const COACH_SYSTEM =
   "topics. You never diagnose injuries. Numbers you suggest must stay " +
   "inside the given envelope. Reply with JSON only, matching the schema.";
 
-function build(systemExtra: string, ctx: PromptContext, task: string): ChatMessage[] {
+function build(
+  systemExtra: string,
+  ctx: PromptContext,
+  task: string,
+): ChatMessage[] {
   return [
-    { role: "system", content: `${COACH_SYSTEM}\n\n${systemExtra}\n\n${renderContextBlock(ctx)}` },
+    {
+      role: "system",
+      content: `${COACH_SYSTEM}\n\n${systemExtra}\n\n${
+        renderContextBlock(ctx)
+      }`,
+    },
     { role: "user", content: task },
   ];
 }
 
 /** Feature 1: check-in free text -> structured JSON. */
-export function buildCheckinPrompt(ctx: PromptContext, freeText: string): ChatMessage[] {
+export function buildCheckinPrompt(
+  ctx: PromptContext,
+  freeText: string,
+): ChatMessage[] {
   return build(
     "Parse the athlete's free-text check-in line into sleep hours, " +
-    "stress, injury flags, time limits and notes. Only use what the text says.",
+      "stress, injury flags, time limits and notes. Only use what the text says.",
     ctx,
     `Check-in text: ${JSON.stringify(freeText)}`,
   );
@@ -191,8 +205,8 @@ export function buildEnvelopeAdjustPrompt(
 ): ChatMessage[] {
   return build(
     "Suggest a bounded adjustment to the engine recommendation as " +
-    "{weightPct, sets, reason} with a one-sentence reason. " +
-    "Both values must stay inside the envelope.",
+      "{weightPct, sets, reason} with a one-sentence reason. " +
+      "Both values must stay inside the envelope.",
     ctx,
     `Engine recommendation to adjust: ${engineRecommendation}`,
   );
@@ -205,8 +219,8 @@ export function buildExplanationPrompt(
 ): ChatMessage[] {
   return build(
     "Explain today's session or run workout in plain words from the " +
-    "reason codes, including cross-modal ones such as why a planned " +
-    "interval run became easy. Use the computed numbers only.",
+      "reason codes, including cross-modal ones such as why a planned " +
+      "interval run became easy. Use the computed numbers only.",
     ctx,
     `Session to explain: ${sessionDescription}`,
   );
@@ -219,8 +233,8 @@ export function buildRecoveryPrompt(
 ): ChatMessage[] {
   return build(
     "Phrase the engine recovery/injury flag codes as a short coach " +
-    "message. Flag, never diagnose. Suggest a deload or rest when the " +
-    "codes call for one.",
+      "message. Flag, never diagnose. Suggest a deload or rest when the " +
+      "codes call for one.",
     ctx,
     `Flag codes: ${flagCodes.join(", ") || "none"}`,
   );
@@ -230,8 +244,8 @@ export function buildRecoveryPrompt(
 export function buildWeeklyNarrativePrompt(ctx: PromptContext): ChatMessage[] {
   return build(
     "Write the weekly summary narrative from the computed numbers only: " +
-    "sessions, runs, distance, TRIMP with the lift/run split, " +
-    "performance percent change, VDOT trend.",
+      "sessions, runs, distance, TRIMP with the lift/run split, " +
+      "performance percent change, VDOT trend.",
     ctx,
     "Write this week's summary narrative.",
   );
@@ -244,9 +258,9 @@ export function buildGoalParamsPrompt(
 ): ChatMessage[] {
   return build(
     "Map the athlete's free-text goal to generator parameters JSON, for " +
-    "lifting (goal, days, priorities) and running (race distance and " +
-    "date, runs per week, hybrid priority). Ask for nothing; use defaults " +
-    "for anything unstated.",
+      "lifting (goal, days, priorities) and running (race distance and " +
+      "date, runs per week, hybrid priority). Ask for nothing; use defaults " +
+      "for anything unstated.",
     ctx,
     `Goal text: ${JSON.stringify(goalText)}`,
   );
@@ -259,9 +273,11 @@ export function buildMemoryProposalPrompt(
 ): ChatMessage[] {
   return build(
     "Propose dated, sourced coach-memory facts from the recent " +
-    "check-ins. Each proposal is shown for accept/reject before saving, " +
-    "so keep them atomic and cite the source check-in.",
+      "check-ins. Each proposal is shown for accept/reject before saving, " +
+      "so keep them atomic and cite the source check-in.",
     ctx,
-    `Recent check-ins:\n${recentCheckins.map((c) => `- ${c}`).join("\n") || "- none"}`,
+    `Recent check-ins:\n${
+      recentCheckins.map((c) => `- ${c}`).join("\n") || "- none"
+    }`,
   );
 }

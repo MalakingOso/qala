@@ -4,7 +4,12 @@
 
 import type { KalmanState } from "./state.ts";
 
-export function initKalman(p0: number, k1: number, thetaPrior: number, R = 4): KalmanState {
+export function initKalman(
+  p0: number,
+  k1: number,
+  thetaPrior: number,
+  R = 4,
+): KalmanState {
   // Honest prior variances: p0 within ~2 sd of R, gains within ~50%.
   // Oversized P0 makes early innovations (dominated by prior error, not
   // noise) whipsaw the gains and freeze wrong values once P collapses.
@@ -14,7 +19,11 @@ export function initKalman(p0: number, k1: number, thetaPrior: number, R = 4): K
     k1,
     k2,
     thetaPrior,
-    P: [[4 * R, 0, 0], [0, 0.25 * k1 * k1 + 1e-6, 0], [0, 0, 0.25 * k2 * k2 + 1e-6]],
+    P: [[4 * R, 0, 0], [0, 0.25 * k1 * k1 + 1e-6, 0], [
+      0,
+      0,
+      0.25 * k2 * k2 + 1e-6,
+    ]],
     obs: 0,
     R,
   };
@@ -50,7 +59,15 @@ export function kalmanUpdate(
   // into p0 where the honest P0 lets later excited data correct it gradually.
   if (k.obs === 0) {
     const p0 = y - k.k1 * fitness + k.k2 * fatigue;
-    return { p0, k1: k.k1, k2: k.k2, thetaPrior: k.thetaPrior, P: k.P, obs: 1, R: k.R };
+    return {
+      p0,
+      k1: k.k1,
+      k2: k.k2,
+      thetaPrior: k.thetaPrior,
+      P: k.P,
+      obs: 1,
+      R: k.R,
+    };
   }
   const H: V3 = [1, fitness, -fatigue];
   const x: V3 = [k.p0, k.k1, k.k2];
@@ -64,7 +81,11 @@ export function kalmanUpdate(
   const locked = k.obs < 20;
   if (locked) K = [K[0], K[1], 0]; // theta fixed until 20 observations
   const innov = y - Hx;
-  const xn: V3 = [x[0] + K[0] * innov, x[1] + K[1] * innov, x[2] + K[2] * innov];
+  const xn: V3 = [
+    x[0] + K[0] * innov,
+    x[1] + K[1] * innov,
+    x[2] + K[2] * innov,
+  ];
   // Joseph form P = (I-KH) P (I-KH)' + R K K' keeps P symmetric positive
   // definite in finite precision where (I-KH)P would drift and blow up.
   const IKH = [
@@ -88,10 +109,22 @@ export function kalmanUpdate(
   const Ps = Pn.map((row, i) => row.map((v, j) => (v + Pn[j][i]) / 2));
   let k2 = xn[2];
   if (locked) k2 = k.thetaPrior * xn[1]; // hold theta exactly at prior
-  return { p0: xn[0], k1: xn[1], k2, thetaPrior: k.thetaPrior, P: Ps, obs: k.obs + 1, R: k.R };
+  return {
+    p0: xn[0],
+    k1: xn[1],
+    k2,
+    thetaPrior: k.thetaPrior,
+    P: Ps,
+    obs: k.obs + 1,
+    R: k.R,
+  };
 }
 
 /** Model prediction p0 + k1*F - k2*(Gw + Gs) (weekly composite uses this). */
-export function kalmanPredict(k: KalmanState, fitness: number, fatigue: number): number {
+export function kalmanPredict(
+  k: KalmanState,
+  fitness: number,
+  fatigue: number,
+): number {
   return k.p0 + k.k1 * fitness - k.k2 * fatigue;
 }

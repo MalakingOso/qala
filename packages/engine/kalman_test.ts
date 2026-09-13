@@ -36,10 +36,14 @@ Deno.test("filter recovers p0,k1 within 10% after 30 obs; theta locked to 20", (
 });
 
 Deno.test("tested 1RM uses quarter noise (adapts faster)", () => {
-  const seed = (ns: number) => kalmanUpdate(initKalman(150, 15, 4, 4), 1, 1, 200, ns);
+  const seed = (ns: number) =>
+    kalmanUpdate(initKalman(150, 15, 4, 4), 1, 1, 200, ns);
   const base1 = seed(1);
   const base2 = seed(1);
   const a = kalmanUpdate(base1, 1, 1, 250, 1);
   const b = kalmanUpdate(base2, 1, 1, 250, 0.25);
-  assert(Math.abs(b.p0 - base2.p0) > Math.abs(a.p0 - base1.p0), "quarter noise adapts faster");
+  assert(
+    Math.abs(b.p0 - base2.p0) > Math.abs(a.p0 - base1.p0),
+    "quarter noise adapts faster",
+  );
 });

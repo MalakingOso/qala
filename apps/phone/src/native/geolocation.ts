@@ -5,7 +5,10 @@
  * the run. Permission order: foreground + notifications at first run start,
  * background location only when recording starts. */
 
-import { BackgroundGeolocation, type BgFix } from "@capgo/background-geolocation";
+import {
+  BackgroundGeolocation,
+  type BgFix,
+} from "@capgo/background-geolocation";
 
 export interface RawFix {
   t: number;
@@ -29,11 +32,20 @@ export async function startRunRecording(onFix: FixHandler): Promise<void> {
   if (!ok) throw new Error("location permission denied");
   await BackgroundGeolocation.start();
   const seen = new Set<number>();
-  const watcher = await BackgroundGeolocation.addWatcher({}, (fix: BgFix | null) => {
-    if (!fix || seen.has(fix.time)) return; // jara bug 1: same fix twice counts once
-    seen.add(fix.time);
-    onFix({ t: fix.time, lat: fix.latitude, lon: fix.longitude, acc: fix.accuracy, speed: fix.speed });
-  });
+  const watcher = await BackgroundGeolocation.addWatcher(
+    {},
+    (fix: BgFix | null) => {
+      if (!fix || seen.has(fix.time)) return; // jara bug 1: same fix twice counts once
+      seen.add(fix.time);
+      onFix({
+        t: fix.time,
+        lat: fix.latitude,
+        lon: fix.longitude,
+        acc: fix.accuracy,
+        speed: fix.speed,
+      });
+    },
+  );
   watcherId = watcher.watcherId;
 }
 

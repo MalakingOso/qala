@@ -2,6 +2,7 @@
 // No FIT: Garmin's SDK licence forbids source-disclosure licences (PLAN 8a).
 
 import type { FilteredPoint } from "./types.ts";
+import { escXml } from "./xml.ts";
 
 export interface GpxOptions {
   name?: string;
@@ -10,29 +11,30 @@ export interface GpxOptions {
   points: FilteredPoint[];
 }
 
-function esc(s: string): string {
-  return s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
-
 function fmtCoord(v: number): string {
   return v.toFixed(7);
 }
 
 /** Serialise a run to a GPX 1.1 string. */
 export function exportRunGpx(opts: GpxOptions): string {
-  const name = esc(opts.name ?? "Qala run");
+  const name = escXml(opts.name ?? "Qala run");
   const startIso = new Date(opts.startTimeMs).toISOString();
   const lines: string[] = [
     `<?xml version="1.0" encoding="UTF-8"?>`,
     `<gpx version="1.1" creator="Qala" xmlns="http://www.topografix.com/GPX/1/1" xmlns:gpxtpx="http://www.garmin.com/xmlschemas/TrackPointExtension/v1">`,
     `  <metadata><name>${name}</name><time>${startIso}</time></metadata>`,
-    `  <trk><name>${name}</name><type>running</type><trkseg>`,
+    `  <trk><name>${name}</name><type>running</type>`,
   ];
+  // A `gap: true` point is a re-anchor after a GPS jump that wasn't counted
+  // as movement (packages/run/filter.ts); start a new segment there instead
+  // of drawing a straight line across the jump.
+  let segOpen = false;
   for (const p of opts.points) {
+    if (p.gap || !segOpen) {
+      if (segOpen) lines.push(`  </trkseg>`);
+      lines.push(`  <trkseg>`);
+      segOpen = true;
+    }
     const time = new Date(opts.startTimeMs + p.t * 1000).toISOString();
     lines.push(
       `    <trkpt lat="${fmtCoord(p.lat)}" lon="${fmtCoord(p.lon)}">` +
@@ -51,6 +53,7 @@ export function exportRunGpx(opts: GpxOptions): string {
         `</trkpt>`,
     );
   }
-  lines.push(`  </trkseg></trk>`, `</gpx>`);
+  if (segOpen) lines.push(`  </trkseg>`);
+  lines.push(`  </trk>`, `</gpx>`);
   return lines.join("\n");
 }

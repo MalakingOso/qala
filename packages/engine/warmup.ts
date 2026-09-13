@@ -11,13 +11,29 @@ export interface RampStep {
   restSec: number;
 }
 
-const TIERS: { tier: WarmupTier; min: number; steps: { pct: number; reps: number; restSec: number }[] }[] = [
+const TIERS: {
+  tier: WarmupTier;
+  min: number;
+  steps: { pct: number; reps: number; restSec: number }[];
+}[] = [
   { tier: "T0", min: 0, steps: [{ pct: 50, reps: 10, restSec: 45 }] },
-  { tier: "T1", min: 0.6, steps: [{ pct: 50, reps: 8, restSec: 45 }, { pct: 80, reps: 4, restSec: 90 }] },
+  {
+    tier: "T1",
+    min: 0.6,
+    steps: [{ pct: 50, reps: 8, restSec: 45 }, {
+      pct: 80,
+      reps: 4,
+      restSec: 90,
+    }],
+  },
   {
     tier: "T2",
     min: 0.75,
-    steps: [{ pct: 45, reps: 6, restSec: 45 }, { pct: 65, reps: 4, restSec: 60 }, { pct: 85, reps: 2, restSec: 90 }],
+    steps: [{ pct: 45, reps: 6, restSec: 45 }, {
+      pct: 65,
+      reps: 4,
+      restSec: 60,
+    }, { pct: 85, reps: 2, restSec: 90 }],
   },
   {
     tier: "T3",
@@ -58,7 +74,9 @@ export function tierFor(intensity: number, isolation: boolean): WarmupTier {
   return "T4";
 }
 
-export function intensityOf(args: { w: number; reference?: number; reps?: number; rir?: number }): number {
+export function intensityOf(
+  args: { w: number; reference?: number; reps?: number; rir?: number },
+): number {
   if (args.reference && args.reference > 0) return args.w / args.reference;
   const reps = args.reps ?? 5;
   const rir = args.rir ?? 0;
@@ -89,12 +107,16 @@ export function rampSets(input: RampInput): RampStep[] {
   for (const s of def) {
     const raw = (input.w * s.pct) / 100;
     if (raw < BAR_WEIGHT) {
-      if (!steps.some((x) => x.load === "bar")) steps.push({ load: "bar", reps: 8, restSec: 45 });
+      if (!steps.some((x) => x.load === "bar")) {
+        steps.push({ load: "bar", reps: 8, restSec: 45 });
+      }
       continue; // under-bar steps become one merged "bar x 8"
     }
     const load = round5(raw);
     const prev = steps[steps.length - 1];
-    const prevLoad = prev ? (prev.load === "bar" ? BAR_WEIGHT : prev.load) : null;
+    const prevLoad = prev
+      ? (prev.load === "bar" ? BAR_WEIGHT : prev.load)
+      : null;
     if (prevLoad === load) continue; // drop step equal to previous
     if (load >= round5(input.w)) continue; // drop step equal to W
     steps.push({ load, reps: s.reps, restSec: s.restSec });
@@ -127,7 +149,12 @@ export interface WarmupInput {
   soreness: Record<string, number>;
   prs: number;
   equipment: { recovery?: string[]; cardio?: string[] };
-  recentRun?: { endedAtIso: string; minutes: number; distanceM: number; easy: boolean };
+  recentRun?: {
+    endedAtIso: string;
+    minutes: number;
+    distanceM: number;
+    easy: boolean;
+  };
   nowIso: string;
   timeBudgetMin?: number; // T for blocks 1-3, default 8 (15 when block 1 is 10)
   preferPercussion?: boolean;
@@ -136,7 +163,13 @@ export interface WarmupInput {
 
 export interface WarmupBlock {
   kind: "general" | "softTissue" | "mobility";
-  items: { name: string; tool?: string; muscle?: string; seconds?: number; reps?: number }[];
+  items: {
+    name: string;
+    tool?: string;
+    muscle?: string;
+    seconds?: number;
+    reps?: number;
+  }[];
   minutes: number;
   skipped?: boolean;
   skipReason?: string;
@@ -147,15 +180,40 @@ export interface WarmupPlan {
   ramps: { exerciseId: string; steps: RampStep[] }[];
 }
 
-const ROLLER_BAD_MUSCLES = new Set(["chest", "frontdelts", "front-delts", "uppertraps", "forearms", "pecs"]);
+const ROLLER_BAD_MUSCLES = new Set([
+  "chest",
+  "frontdelts",
+  "front-delts",
+  "uppertraps",
+  "forearms",
+  "pecs",
+]);
 
 const MOBILITY: { match: string[]; drills: string[] }[] = [
-  { match: ["quads", "glutes"], drills: ["bodyweight squats", "walking lunges", "front-to-back leg swings"] },
-  { match: ["hamstrings", "lowerback", "lower-back"], drills: ["bodyweight good mornings", "glute bridges", "straight-leg kicks"] },
-  { match: ["calves", "ankles"], drills: ["knee-to-wall ankle rocks", "calf raises", "low pogo hops"] },
-  { match: ["chest", "frontdelts", "triceps"], drills: ["incline push-ups", "scapular push-ups", "band pass-throughs"] },
-  { match: ["lats", "upperback", "biceps", "reardelts"], drills: ["band pull-aparts", "scapular pulls", "thoracic open-books"] },
-  { match: ["shoulders", "overhead"], drills: ["wall slides", "band pass-throughs", "prone Y-T-W"] },
+  {
+    match: ["quads", "glutes"],
+    drills: ["bodyweight squats", "walking lunges", "front-to-back leg swings"],
+  },
+  {
+    match: ["hamstrings", "lowerback", "lower-back"],
+    drills: ["bodyweight good mornings", "glute bridges", "straight-leg kicks"],
+  },
+  {
+    match: ["calves", "ankles"],
+    drills: ["knee-to-wall ankle rocks", "calf raises", "low pogo hops"],
+  },
+  {
+    match: ["chest", "frontdelts", "triceps"],
+    drills: ["incline push-ups", "scapular push-ups", "band pass-throughs"],
+  },
+  {
+    match: ["lats", "upperback", "biceps", "reardelts"],
+    drills: ["band pull-aparts", "scapular pulls", "thoracic open-books"],
+  },
+  {
+    match: ["shoulders", "overhead"],
+    drills: ["wall slides", "band pass-throughs", "prone Y-T-W"],
+  },
   { match: ["abs", "trunk", "core"], drills: ["dead bugs", "bird dogs"] },
 ];
 
@@ -166,7 +224,9 @@ function mobilityRows(muscles: string[]): string[][] {
   const picked: string[][] = [];
   for (const m of norm) {
     if (picked.length >= 3) break;
-    const row = MOBILITY.find((r) => r.match.some((k) => m.includes(k.replace("-", ""))));
+    const row = MOBILITY.find((r) =>
+      r.match.some((k) => m.includes(k.replace("-", "")))
+    );
     if (row && !picked.some((p) => p === row.drills)) picked.push(row.drills);
   }
   if (!picked.length) return [["bodyweight squats", "walking lunges"]];
@@ -175,7 +235,9 @@ function mobilityRows(muscles: string[]): string[][] {
 
 /** Easy run <= 15 min or <= 3 km ended within 15 min counts as general (2.7). */
 export function runCoversGeneral(
-  run: { endedAtIso: string; minutes: number; distanceM: number; easy: boolean } | undefined,
+  run:
+    | { endedAtIso: string; minutes: number; distanceM: number; easy: boolean }
+    | undefined,
   nowIso: string,
 ): boolean {
   if (!run || !run.easy) return false;
@@ -185,18 +247,26 @@ export function runCoversGeneral(
 }
 
 export function planWarmup(input: WarmupInput): WarmupPlan {
-  const T = input.timeBudgetMin ?? (input.topSetPctRef !== undefined && input.topSetPctRef >= 0.85 ? 15 : 8);
+  const T = input.timeBudgetMin ??
+    (input.topSetPctRef !== undefined && input.topSetPctRef >= 0.85 ? 15 : 8);
   const blocks: WarmupBlock[] = [];
   const heavy = (input.topSetPctRef ?? 0) >= 0.85;
 
   // Block 1: general.
   const covered = runCoversGeneral(input.recentRun, input.nowIso);
   if (covered) {
-    blocks.push({ kind: "general", items: [], minutes: 0, skipped: true, skipReason: "recent easy run covers general" });
+    blocks.push({
+      kind: "general",
+      items: [],
+      minutes: 0,
+      skipped: true,
+      skipReason: "recent easy run covers general",
+    });
   } else {
     const mins = heavy ? 10 : 5;
     const cardio = input.equipment.cardio ?? [];
-    const mode = cardio.includes("bike") || cardio.includes("rower") || cardio.includes("treadmill")
+    const mode = cardio.includes("bike") || cardio.includes("rower") ||
+        cardio.includes("treadmill")
       ? cardio.find((c) => c === "bike" || c === "rower" || c === "treadmill")!
       : "brisk walking + bodyweight squats";
     blocks.push({
@@ -208,34 +278,57 @@ export function planWarmup(input: WarmupInput): WarmupPlan {
 
   // Block 2: soft tissue (optional; tool owned and T >= 8).
   const recovery = input.equipment.recovery ?? [];
-  const hasTool = recovery.includes("foamRoller") || recovery.includes("percussionMassager");
+  const hasTool = recovery.includes("foamRoller") ||
+    recovery.includes("percussionMassager");
   const trainedToday = new Set(input.exercises.flatMap((e) => e.muscles));
-  const firstTwo = new Set(input.exercises.slice(0, 2).flatMap((e) => e.muscles));
-  const soreOnes = [...trainedToday].filter((m) => (input.soreness[m] ?? 0) >= 3);
+  const firstTwo = new Set(
+    input.exercises.slice(0, 2).flatMap((e) => e.muscles),
+  );
+  const soreOnes = [...trainedToday].filter((m) =>
+    (input.soreness[m] ?? 0) >= 3
+  );
   const targets = [...new Set([...firstTwo, ...soreOnes])].slice(0, 4);
   if (hasTool && T >= 8 && targets.length > 0) {
     const items: WarmupBlock["items"] = [];
     for (const m of targets) {
       const sore = (input.soreness[m] ?? 0) >= 3;
-      const rollerBad = ROLLER_BAD_MUSCLES.has(m.toLowerCase().replace(/[_\s]/g, ""));
+      const rollerBad = ROLLER_BAD_MUSCLES.has(
+        m.toLowerCase().replace(/[_\s]/g, ""),
+      );
       const primeHeavy = heavy && firstTwo.has(m);
       let tool: string;
       if (sore) tool = "foamRoller"; // never percussion on sore muscles
       else if (primeHeavy && !rollerBad) tool = "foamRoller"; // neutral strength effect
-      else if (rollerBad && recovery.includes("percussionMassager")) tool = "percussionMassager";
-      else if (input.preferPercussion && recovery.includes("percussionMassager") && !primeHeavy) tool = "percussionMassager";
+      else if (rollerBad && recovery.includes("percussionMassager")) {
+        tool = "percussionMassager";
+      } else if (
+        input.preferPercussion && recovery.includes("percussionMassager") &&
+        !primeHeavy
+      ) tool = "percussionMassager";
       else if (recovery.includes("foamRoller")) tool = "foamRoller";
       else tool = "percussionMassager";
-      if (tool === "percussionMassager") items.push({ name: `percussion ${m}`, tool, muscle: m, seconds: 60 });
-      else items.push({ name: `foam roll ${m}`, tool, muscle: m, seconds: sore ? 120 : 90 });
+      if (tool === "percussionMassager") {
+        items.push({ name: `percussion ${m}`, tool, muscle: m, seconds: 60 });
+      } else {items.push({
+          name: `foam roll ${m}`,
+          tool,
+          muscle: m,
+          seconds: sore ? 120 : 90,
+        });}
     }
-    blocks.push({ kind: "softTissue", items, minutes: items.reduce((a, i) => a + (i.seconds ?? 0), 0) / 60 });
+    blocks.push({
+      kind: "softTissue",
+      items,
+      minutes: items.reduce((a, i) => a + (i.seconds ?? 0), 0) / 60,
+    });
   }
 
   // Block 3: dynamic mobility, 2 drills x 8-10 for up to 3 groups (~1 min each).
   const groups = [...new Set(input.exercises.flatMap((e) => e.muscles))];
   const rows = mobilityRows(groups);
-  const mobItems = rows.flatMap((drills) => drills.map((d) => ({ name: d, reps: 10 })));
+  const mobItems = rows.flatMap((drills) =>
+    drills.map((d) => ({ name: d, reps: 10 }))
+  );
   blocks.push({ kind: "mobility", items: mobItems, minutes: rows.length });
 
   // Cut order when over budget: soft tissue, mobility to 1 drill, general to 3.
@@ -268,19 +361,37 @@ export function planWarmup(input: WarmupInput): WarmupPlan {
   const trained = new Set<string>();
   const ramps = input.exercises.map((e, idx) => {
     const isolation = e.cls === "isolation";
-    const intensity = intensityOf({ w: e.w, reference: e.reference, reps: e.reps, rir: e.rir });
+    const intensity = intensityOf({
+      w: e.w,
+      reference: e.reference,
+      reps: e.reps,
+      rir: e.rir,
+    });
     const alreadyTrained = idx > 0 && e.secondaryCompound === true &&
       e.muscles.every((m) => trained.has(m));
-    const extraStep = e.muscles.some((m) => (input.soreness[m] ?? 0) === 4) || input.prs <= 4;
+    const extraStep = e.muscles.some((m) => (input.soreness[m] ?? 0) === 4) ||
+      input.prs <= 4;
     const firstForMuscle = e.muscles.some((m) => !trained.has(m));
     e.muscles.forEach((m) => trained.add(m));
-    return { exerciseId: e.exerciseId, steps: rampSets({ w: e.w, intensity, isolation, firstForMuscle, alreadyTrainedSecondary: alreadyTrained, extraStep }) };
+    return {
+      exerciseId: e.exerciseId,
+      steps: rampSets({
+        w: e.w,
+        intensity,
+        isolation,
+        firstForMuscle,
+        alreadyTrainedSecondary: alreadyTrained,
+        extraStep,
+      }),
+    };
   });
   return { blocks, ramps };
 }
 
 /** Warm-up before runs: easy -> slower first 5 min; quality -> 10-15 easy + drills + strides. */
-export function planRunWarmup(type: "easy" | "tempo" | "intervals" | "race"): string[] {
+export function planRunWarmup(
+  type: "easy" | "tempo" | "intervals" | "race",
+): string[] {
   if (type === "easy") return ["first 5 min slower than target"];
   return ["10-15 min easy", "3 min dynamic drills", "strides"];
 }

@@ -80,14 +80,28 @@ export interface BandTarget {
 export function bandTarget(muscle: string, priority: Priority): BandTarget {
   const rp = rpRow(muscle);
   if (priority === "maintain") {
-    return { fracMin: null, fracMax: 20, directMin: rp.mv[1], directMax: rp.mev[1] };
+    return {
+      fracMin: null,
+      fracMax: 20,
+      directMin: rp.mv[1],
+      directMax: rp.mev[1],
+    };
   }
   const lo = priority === "emphasise" ? 14 : 10;
-  return { fracMin: lo, fracMax: 20, directMin: rp.mev[0], directMax: rp.mrv[0] };
+  return {
+    fracMin: lo,
+    fracMax: 20,
+    directMin: rp.mev[0],
+    directMax: rp.mrv[0],
+  };
 }
 
 /** Block-start fracSets = max(band lo, MEV hi + indirect credit) (PLAN 6.3). */
-export function blockStartFrac(muscle: string, priority: Priority, indirectCredit: number): number {
+export function blockStartFrac(
+  muscle: string,
+  priority: Priority,
+  indirectCredit: number,
+): number {
   const band = bandTarget(muscle, priority);
   const rp = rpRow(muscle);
   const start = rp.mev[1] + indirectCredit;
@@ -95,7 +109,11 @@ export function blockStartFrac(muscle: string, priority: Priority, indirectCredi
 }
 
 /** Weekly ramp +2, capped (PLAN 6.3). Back starts at 14 via MEV. */
-export function rampWeek(blockStart: number, weekIndex1: number, cap = 20): number {
+export function rampWeek(
+  blockStart: number,
+  weekIndex1: number,
+  cap = 20,
+): number {
   return Math.min(cap, blockStart + 2 * (weekIndex1 - 1));
 }
 
@@ -128,7 +146,9 @@ export function isWorkSet(args: {
 export function mondayKey(dateIso: string): string {
   const d = new Date(Date.parse(dateIso));
   const day = (d.getUTCDay() + 6) % 7; // Mon=0
-  const mon = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() - day));
+  const mon = new Date(
+    Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() - day),
+  );
   return mon.toISOString().slice(0, 10);
 }
 
@@ -139,7 +159,9 @@ export function isHardSet(rpe?: number, targetRpe?: number): boolean {
   return false;
 }
 
-export function countSets(sets: CountedSet[]): { direct: number; frac: number } {
+export function countSets(
+  sets: CountedSet[],
+): { direct: number; frac: number } {
   let direct = 0;
   let frac = 0;
   for (const s of sets) {
@@ -170,8 +192,12 @@ export function rpProgression(
     // Per-muscle reactive deload: 50% sets, +2 RIR, one session.
     return { sets: 0, code: ReasonCode.MUSCLE_DELOAD, deload: true };
   }
-  if (soreness === 1 && performance === 1) return { sets: 2, code: ReasonCode.RP_ADD_2 };
-  if (soreness <= 2 && performance <= 2) return { sets: 1, code: ReasonCode.RP_ADD_1 };
+  if (soreness === 1 && performance === 1) {
+    return { sets: 2, code: ReasonCode.RP_ADD_2 };
+  }
+  if (soreness <= 2 && performance <= 2) {
+    return { sets: 1, code: ReasonCode.RP_ADD_1 };
+  }
   return { sets: 0, code: ReasonCode.RP_HOLD };
 }
 
@@ -194,9 +220,13 @@ export function wholeBodyDeload(
   for (const lift of Object.keys(recentObs)) {
     const last2 = recentObs[lift];
     const med = medians[lift];
-    if (last2.length >= 2 && med !== undefined && last2[0] < med && last2[1] < med) below += 1;
+    if (
+      last2.length >= 2 && med !== undefined && last2[0] < med && last2[1] < med
+    ) below += 1;
   }
-  if (below >= 2) return { deload: true, setsFactor: 0.6, loadFactor: 0.9, days: 7 };
+  if (below >= 2) {
+    return { deload: true, setsFactor: 0.6, loadFactor: 0.9, days: 7 };
+  }
   return { deload: false, setsFactor: 1, loadFactor: 1, days: 0 };
 }
 
@@ -222,7 +252,11 @@ export function doubleProgression(
   step = 5,
 ): DoubleProgression {
   if (!(hitTopAtOrBelowTarget[0] && hitTopAtOrBelowTarget[1])) {
-    return { increase: false, nextWeight: roundWeight(weight, step), factor: 1 };
+    return {
+      increase: false,
+      nextWeight: roundWeight(weight, step),
+      factor: 1,
+    };
   }
   const factor = lowerBody ? 1.05 : 1.025;
   const raw = weight * factor;
@@ -264,7 +298,10 @@ export function computeFlags(args: {
   const loads = args.dailyLoads;
   if (loads.length >= 2) {
     const m = loads.reduce((a, b) => a + b, 0) / loads.length;
-    const sd = Math.sqrt(loads.reduce((a, b) => a + (b - m) * (b - m), 0) / (loads.length - 1 || 1));
+    const sd = Math.sqrt(
+      loads.reduce((a, b) => a + (b - m) * (b - m), 0) /
+        (loads.length - 1 || 1),
+    );
     const monotony = sd > 1e-9 ? m / sd : 0;
     if (monotony > 2.0) {
       recoveryNudge = true;
@@ -272,9 +309,11 @@ export function computeFlags(args: {
     }
     const strain = loads.reduce((a, b) => a + b, 0) * monotony;
     if (args.baselineStrains.length >= 2) {
-      const bm = args.baselineStrains.reduce((a, b) => a + b, 0) / args.baselineStrains.length;
+      const bm = args.baselineStrains.reduce((a, b) => a + b, 0) /
+        args.baselineStrains.length;
       const bsd = Math.sqrt(
-        args.baselineStrains.reduce((a, b) => a + (b - bm) * (b - bm), 0) / (args.baselineStrains.length - 1),
+        args.baselineStrains.reduce((a, b) => a + (b - bm) * (b - bm), 0) /
+          (args.baselineStrains.length - 1),
       );
       if (bsd > 1e-9 && (strain - bm) / bsd > 1.5) {
         recoveryNudge = true;

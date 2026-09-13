@@ -92,19 +92,6 @@ export async function serveTileFile(
   const size = stat.size;
   const type = filePath.endsWith(".pmtiles") ? PMTILES_TYPE : MVT_TYPE;
   const baseHeaders = { "content-type": type, "accept-ranges": "bytes" };
-  const send = (
-    bytes: Uint8Array,
-    init: ResponseInit,
-  ): Response => {
-    const body = bytes.buffer.slice(
-      bytes.byteOffset,
-      bytes.byteOffset + bytes.byteLength,
-    ) as ArrayBuffer;
-    const head: ResponseInit = { status: init.status, headers: init.headers };
-    return req.method === "HEAD"
-      ? new Response(null, head)
-      : new Response(body, init);
-  };
 
   const range = parseRange(req.headers.get("range"), size);
   if (req.headers.get("range") !== null && range === null) {
@@ -118,11 +105,20 @@ export async function serveTileFile(
       ...baseHeaders,
       "content-length": String(size),
     });
-    return await send(await Deno.readFile(filePath), { headers });
+    if (req.method === "HEAD") return new Response(null, { headers });
+    return new Response(await Deno.readFile(filePath), { headers });
+  }
+  const len = range.end - range.start + 1;
+  const headers = new Headers({
+    ...baseHeaders,
+    "content-length": String(len),
+    "content-range": `bytes ${range.start}-${range.end}/${size}`,
+  });
+  if (req.method === "HEAD") {
+    return new Response(null, { status: 206, headers });
   }
   const file = await Deno.open(filePath, { read: true });
   try {
-    const len = range.end - range.start + 1;
     const buf = new Uint8Array(len);
     await file.seek(range.start, Deno.SeekMode.Start);
     let filled = 0;
@@ -131,12 +127,8 @@ export async function serveTileFile(
       if (n === null) break;
       filled += n;
     }
-    const headers = new Headers({
-      ...baseHeaders,
-      "content-length": String(len),
-      "content-range": `bytes ${range.start}-${range.end}/${size}`,
-    });
-    return await send(buf.subarray(0, filled), { status: 206, headers });
+    const body = buf.subarray(0, filled).buffer.slice(0, filled) as ArrayBuffer;
+    return new Response(body, { status: 206, headers });
   } finally {
     file.close();
   }

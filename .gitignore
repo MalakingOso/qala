@@ -12,3 +12,4 @@ server/data/
 *.tif
 *.tiff
 .DS_Store
+.claude/

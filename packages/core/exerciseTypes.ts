@@ -156,10 +156,20 @@ export const INTENSITY_ZONE_BOUNDARIES = [0.7, 0.8, 0.85, 0.9] as const;
 
 export type IntensityZone = "<70" | "70-79.9" | "80-84.9" | "85-89.9" | "90+";
 
+const INTENSITY_ZONES: readonly IntensityZone[] = [
+  "<70",
+  "70-79.9",
+  "80-84.9",
+  "85-89.9",
+  "90+",
+];
+
 export function intensityZone(loadDivRef: number): IntensityZone {
-  if (loadDivRef >= 0.9) return "90+";
-  if (loadDivRef >= 0.85) return "85-89.9";
-  if (loadDivRef >= 0.8) return "80-84.9";
-  if (loadDivRef >= 0.7) return "70-79.9";
-  return "<70";
+  let zone = INTENSITY_ZONES[0];
+  for (let i = 0; i < INTENSITY_ZONE_BOUNDARIES.length; i++) {
+    if (loadDivRef >= INTENSITY_ZONE_BOUNDARIES[i]) {
+      zone = INTENSITY_ZONES[i + 1];
+    }
+  }
+  return zone;
 }

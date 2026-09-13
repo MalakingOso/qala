@@ -44,7 +44,9 @@ const FAMILY_CREDIT: Record<string, string> = {
 function variationFamily(liftId: string): string[] {
   return [
     liftId,
-    ...EXERCISE_CATALOG.filter((e) => e.variationsOf === liftId).map((e) => e.id),
+    ...EXERCISE_CATALOG.filter((e) => e.variationsOf === liftId).map((e) =>
+      e.id
+    ),
   ];
 }
 
@@ -97,7 +99,10 @@ export function chooseSplit(
   _experience: Experience = "intermediate",
 ): SplitDef {
   if (daysPerWeek <= 3) {
-    const days = (daysPerWeek === 2 ? FULL_BODY_2 : FULL_BODY_3).slice(0, daysPerWeek);
+    const days = (daysPerWeek === 2 ? FULL_BODY_2 : FULL_BODY_3).slice(
+      0,
+      daysPerWeek,
+    );
     return { name: "fullBody", label: "Full body", days };
   }
   if (daysPerWeek === 4) {
@@ -182,7 +187,9 @@ export function chooseSplit(
       muscleSlots: ["glutes", "calves"],
     },
   ];
-  if (daysPerWeek >= 6) return { name: "ppl", label: "Push / pull / legs", days: ppl };
+  if (daysPerWeek >= 6) {
+    return { name: "ppl", label: "Push / pull / legs", days: ppl };
+  }
   return {
     name: "ppl",
     label: "Push / pull / legs plus upper / lower",
@@ -288,7 +295,9 @@ export function checkFrequency(
   for (const lift of MAIN_LIFTS) {
     const n = freq[lift];
     if (n < band.lo || n > band.hi) {
-      problems.push(`${lift} trained ${n}x/week, band is ${band.lo}-${band.hi}x`);
+      problems.push(
+        `${lift} trained ${n}x/week, band is ${band.lo}-${band.hi}x`,
+      );
     }
   }
   return problems;
@@ -315,7 +324,8 @@ export function slotsForDay(
   for (const lift of day.movementSlots) {
     for (const e of EXERCISE_CATALOG) {
       if (
-        e.variationsOf === lift && have.has(e.id) && out.length < 4 && !avoid.has(e.id)
+        e.variationsOf === lift && have.has(e.id) && out.length < 4 &&
+        !avoid.has(e.id)
       ) {
         if (!out.some((o) => o.exerciseId === e.id)) {
           out.push({ exerciseId: e.id, slot: "accessoryLow" });
@@ -340,8 +350,12 @@ export function slotsForDay(
     // Prefer an exercise not already used this week so back gets row and
     // pull-up across the two upper days instead of the same lift twice.
     const pick = ids.find((id) =>
-      have.has(id) && !out.some((o) => o.exerciseId === id) && !avoid.has(id)
-    ) ?? ids.find((id) => have.has(id) && !out.some((o) => o.exerciseId === id));
+      have.has(id) && !out.some((o) =>
+        o.exerciseId === id
+      ) && !avoid.has(id)
+    ) ?? ids.find((id) =>
+      have.has(id) && !out.some((o) => o.exerciseId === id)
+    );
     if (pick) {
       const e = catalogById(pick);
       out.push({

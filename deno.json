@@ -1,5 +1,35 @@
 {
   "workspace": ["packages/*", "apps/web", "server"],
+  "fmt": {
+    "include": [
+      "apps/web/src",
+      "apps/phone/src",
+      "packages/core",
+      "packages/engine",
+      "packages/generator",
+      "packages/llm",
+      "packages/run",
+      "packages/liftoscript/mod.ts",
+      "packages/liftoscript/src/runtime.ts",
+      "server",
+      "scripts"
+    ]
+  },
+  "lint": {
+    "include": [
+      "apps/web/src",
+      "apps/phone/src",
+      "packages/core",
+      "packages/engine",
+      "packages/generator",
+      "packages/llm",
+      "packages/run",
+      "packages/liftoscript/mod.ts",
+      "packages/liftoscript/src/runtime.ts",
+      "server",
+      "scripts"
+    ]
+  },
   "tasks": {
     "dev": "deno run --watch --allow-all server/mod.ts",
     "build": "npm --prefix apps/web run build",

@@ -2,7 +2,7 @@
  * same data, tap/hover tooltips with a 24px hit area, and keyboard focus
  * that shows the same as hover. */
 
-import { useState, type ReactNode } from "react";
+import { type ReactNode, useState } from "react";
 
 export function ChartShell({
   title,
@@ -33,32 +33,32 @@ export function ChartShell({
           {table ? "Chart" : "Table"}
         </button>
       </div>
-      {table ? (
-        <table className="data">
-          <thead>
-            <tr>
-              {head.map((h) => (
-                <th key={h} scope="col">
-                  {h}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((r, i) => (
-              <tr key={i}>
-                {r.map((c, j) => (
-                  <td key={j}>{c}</td>
+      {table
+        ? (
+          <table className="data">
+            <thead>
+              <tr>
+                {head.map((h) => (
+                  <th key={h} scope="col">
+                    {h}
+                  </th>
                 ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
-      ) : (
-        <div tabIndex={0} role="img" aria-label={label}>
-          {children}
-        </div>
-      )}
+            </thead>
+            <tbody>
+              {rows.map((r, i) => (
+                <tr key={i}>
+                  {r.map((c, j) => <td key={j}>{c}</td>)}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )
+        : (
+          <div tabIndex={0} role="img" aria-label={label}>
+            {children}
+          </div>
+        )}
     </section>
   );
 }
@@ -76,7 +76,12 @@ export function Hit({
   children: ReactNode;
 }) {
   return (
-    <g tabIndex={0} role="img" aria-label={label} transform={`translate(${x} ${y})`}>
+    <g
+      tabIndex={0}
+      role="img"
+      aria-label={label}
+      transform={`translate(${x} ${y})`}
+    >
       <title>{label}</title>
       <circle r={13} fill="transparent" />
       {children}

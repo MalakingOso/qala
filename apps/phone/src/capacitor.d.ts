@@ -43,7 +43,9 @@ declare module "@capgo/background-geolocation" {
 
 declare module "@capacitor-community/text-to-speech" {
   export interface TextToSpeechPlugin {
-    speak(options: { text: string; rate?: number; pitch?: number }): Promise<void>;
+    speak(
+      options: { text: string; rate?: number; pitch?: number },
+    ): Promise<void>;
     stop(): Promise<void>;
   }
   export const TextToSpeech: TextToSpeechPlugin;
@@ -52,7 +54,9 @@ declare module "@capacitor-community/text-to-speech" {
 declare module "@capacitor-community/bluetooth-le" {
   export interface BlePlugin {
     requestPermissions(): Promise<void>;
-    requestDevice(options: { services: string[] }): Promise<{ deviceId: string }>;
+    requestDevice(
+      options: { services: string[] },
+    ): Promise<{ deviceId: string }>;
     connect(options: { deviceId: string }): Promise<void>;
     startNotifications(options: {
       deviceId: string;

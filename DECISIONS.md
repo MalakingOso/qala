@@ -4,7 +4,7 @@ Every choice berkley (the owner) made while planning Qala on 2026-09-13, in one 
 
 Status: **decided** means the owner said so. **Recommended** means Claude proposed it and the owner accepted it or didn't push back; confirm before building if in doubt. **Assumption** means it was chosen without asking and is cheap to change. **Open** means the owner still has to answer.
 
-Nothing is being built yet. The owner reviews plans and mockups first and says when to start.
+Planning and mockups are done; the owner said to start building, and there is now a working v1 build (README "Status"). P5 below records the original plan-first decision for history; it no longer describes the current phase.
 
 ## 1. Product and scope
 
@@ -14,7 +14,7 @@ Nothing is being built yet. The owner reviews plans and mockups first and says w
 | P2 | Built around liftosaur's liftoscript: programs are text, vendored as a new TypeScript codebase, not a fork of their app. | decided | Forking liftosaur. | PLAN 3, 5 |
 | P3 | Adaptive engine (fitness and fatigue, per-muscle soreness check-ins, evidence-based volume and deload rules), a local Gemma coach that can only nudge inside fixed limits, and a goal-driven generator like Evolve's. | decided | An LLM that writes programs freely. | PLAN 6, 11, 12 |
 | P4 | Self-hosted on `callisto`, reached over Tailscale; several users, some on iOS, later. AGPL-3.0, public repo, liftosaur credited. | decided | Cloud hosting, accounts. | PLAN 2, 3 |
-| P5 | Plan, research and mockups first; no code until the owner says build. | decided | Starting the scaffold now. | this file |
+| P5 | Plan, research and mockups first; no code until the owner says build. | superseded (owner said to start building; see README "Status") | Starting the scaffold now. | this file |
 | P6 | No watch app. | decided | | PLAN 16 |
 
 ## 2. Training

@@ -3,7 +3,12 @@
 // with the priority that won.
 
 import { generateBlock, generateRunPlan, scheduleHybrid } from "./mod.ts";
-import type { DayPlan, GeneratorInput, RunPlanWeek, RunWorkout } from "./mod.ts";
+import type {
+  DayPlan,
+  GeneratorInput,
+  RunPlanWeek,
+  RunWorkout,
+} from "./mod.ts";
 
 function assert(cond: boolean, msg: string): void {
   if (!cond) throw new Error(`assert failed: ${msg}`);
@@ -37,8 +42,18 @@ function runWeek(): RunPlanWeek {
   }).weeks[0];
 }
 
-function mkDay(label: string, lowerBody: boolean, heavyLower: boolean): DayPlan {
-  return { label, focus: lowerBody ? "lower" : "upper", lowerBody, heavyLower, exercises: [] };
+function mkDay(
+  label: string,
+  lowerBody: boolean,
+  heavyLower: boolean,
+): DayPlan {
+  return {
+    label,
+    focus: lowerBody ? "lower" : "upper",
+    lowerBody,
+    heavyLower,
+    exercises: [],
+  };
 }
 
 function mkWorkout(type: "easy" | "tempo" | "long", hard: boolean): RunWorkout {
@@ -52,14 +67,25 @@ function mkWorkout(type: "easy" | "tempo" | "long", hard: boolean): RunWorkout {
 }
 
 Deno.test("every run is placed with a note, trades carry rule and winner", () => {
-  const hybrid = scheduleHybrid({ liftDays: liftDays(), runWeek: runWeek(), priority: "lifting", approach: "strength" });
+  const hybrid = scheduleHybrid({
+    liftDays: liftDays(),
+    runWeek: runWeek(),
+    priority: "lifting",
+    approach: "strength",
+  });
   assert(hybrid.placements.length === 4, "all four runs placed");
   for (const p of hybrid.placements) {
     assert(p.notes.length > 0, `placement on day ${p.dayOfWeek} says why`);
   }
   for (const t of hybrid.traded) {
-    assert(t.rule.length > 0 && t.why.length > 0, "trade names its rule and reason");
-    assert(t.winner === "lifting" || t.winner === "running", "trade names the winning priority");
+    assert(
+      t.rule.length > 0 && t.why.length > 0,
+      "trade names its rule and reason",
+    );
+    assert(
+      t.winner === "lifting" || t.winner === "running",
+      "trade names the winning priority",
+    );
   }
 });
 
@@ -95,7 +121,9 @@ Deno.test("strength priority reports the 24 h separation trade", () => {
     approach: "strength",
   });
   assert(
-    hybrid.traded.some((t) => t.rule === "GAP_24H_WHEN_STRENGTH" && t.winner === "lifting"),
+    hybrid.traded.some((t) =>
+      t.rule === "GAP_24H_WHEN_STRENGTH" && t.winner === "lifting"
+    ),
     "24 h rule traded with lifting winning",
   );
 });
@@ -116,7 +144,10 @@ Deno.test("hard run after heavy lower body softens when lifting wins", () => {
     approach: "hypertrophy",
   });
   const placed = hybrid.placements.find((p) => p.dayOfWeek === 3)!;
-  assert(placed.workout.hard === false, "hard run softened to easy after heavy lower body");
+  assert(
+    placed.workout.hard === false,
+    "hard run softened to easy after heavy lower body",
+  );
   assert(placed.workout.type === "easy", "softened run is typed easy");
 });
 
@@ -136,7 +167,9 @@ Deno.test("hard run after heavy lower body stands when running wins", () => {
   const placed = hybrid.placements.find((p) => p.dayOfWeek === 3)!;
   assert(placed.workout.hard === true, "hard run kept with running priority");
   assert(
-    hybrid.traded.some((t) => t.rule === "NO_HARD_RUN_24H_AFTER_HEAVY_LOWER" && t.winner === "running"),
+    hybrid.traded.some((t) =>
+      t.rule === "NO_HARD_RUN_24H_AFTER_HEAVY_LOWER" && t.winner === "running"
+    ),
     "trade reported with running winning",
   );
 });

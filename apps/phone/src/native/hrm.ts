@@ -16,7 +16,10 @@ function parseHr(value: DataView | undefined): number | null {
   return wide ? value.getUint16(1, true) : value.getUint8(1);
 }
 
-export async function connectHrStrap(deviceId: string, onHr: HrHandler): Promise<() => Promise<void>> {
+export async function connectHrStrap(
+  deviceId: string,
+  onHr: HrHandler,
+): Promise<() => Promise<void>> {
   await BleClient.requestPermissions();
   await BleClient.connect({ deviceId });
   await BleClient.startNotifications({
@@ -24,10 +27,13 @@ export async function connectHrStrap(deviceId: string, onHr: HrHandler): Promise
     service: HR_SERVICE,
     characteristic: HR_MEASUREMENT,
   });
-  const sub = await BleClient.addListener("onCharacteristicChanged", (event) => {
-    const bpm = parseHr(event.value);
-    if (bpm !== null) onHr(bpm, Date.now());
-  });
+  const sub = await BleClient.addListener(
+    "onCharacteristicChanged",
+    (event) => {
+      const bpm = parseHr(event.value);
+      if (bpm !== null) onHr(bpm, Date.now());
+    },
+  );
   return () => sub.remove();
 }
 

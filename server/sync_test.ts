@@ -101,3 +101,21 @@ Deno.test("one stable document per user under data/users/", async () => {
     await Deno.remove(dataRoot, { recursive: true });
   }
 });
+
+Deno.test("concurrent first-use for a brand-new user doesn't race into two documents", async () => {
+  const dataRoot = await Deno.makeTempDir({ prefix: "qala-data-race-" });
+  try {
+    const store = new UserSyncStore(dataRoot);
+    const [a, b, c] = await Promise.all([
+      store.docForUser("newdevice"),
+      store.docForUser("newdevice"),
+      store.docForUser("newdevice"),
+    ]);
+    assertEquals(b.docId, a.docId);
+    assertEquals(c.docId, a.docId);
+    const record = await readUserRecord(dataRoot, "newdevice");
+    assertEquals(record?.docId, a.docId);
+  } finally {
+    await Deno.remove(dataRoot, { recursive: true });
+  }
+});

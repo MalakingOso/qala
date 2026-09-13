@@ -11,7 +11,7 @@ import { LandingPage } from "./shell-phone/pages/LandingPage.tsx";
 
 export function useHashRoute(): string {
   const [hash, setHash] = useState(() =>
-    typeof window === "undefined" ? "#/" : window.location.hash || "#/",
+    typeof window === "undefined" ? "#/" : window.location.hash || "#/"
   );
   useEffect(() => {
     const onChange = () => setHash(window.location.hash || "#/");

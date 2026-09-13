@@ -4,12 +4,22 @@
 import { useEffect, useState } from "react";
 import { useQala } from "../../store/qalaStore.tsx";
 import { sampleRest } from "../../store/sample.ts";
-import { Card, PlateDrawing, PrimaryButton, SecondaryButton } from "../../shared/ui.tsx";
+import {
+  Card,
+  PlateDrawing,
+  PrimaryButton,
+  SecondaryButton,
+} from "../../shared/ui.tsx";
 import { formatClock, formatRestWhy } from "../../logic/restFormat.ts";
+import { describeChange } from "../../../../../packages/core/plates.ts";
 
 export function RestPage() {
   const { queueOp } = useQala();
   const [left, setLeft] = useState(sampleRest.seconds);
+  const changeText = describeChange(
+    sampleRest.platesNow,
+    sampleRest.platesNext,
+  );
   useEffect(() => {
     const t = setInterval(() => setLeft((s) => Math.max(0, s - 1)), 1000);
     return () => clearInterval(t);
@@ -21,7 +31,9 @@ export function RestPage() {
   return (
     <div>
       <div className="page-head">
-        <span className="kbd-hint">Lower A · <span className="ticking">24:10</span></span>
+        <span className="kbd-hint">
+          Lower A · <span className="ticking">24:10</span>
+        </span>
         <a className="link-btn" href="#/phone/complete">
           Finish
         </a>
@@ -32,11 +44,17 @@ export function RestPage() {
           {formatClock(left)}
         </div>
         <p className="ticking">of {formatClock(sampleRest.seconds)}</p>
-        <div style={{ height: 8, background: "var(--bg-active)", margin: "8px 0" }}>
+        <div
+          style={{ height: 8, background: "var(--bg-active)", margin: "8px 0" }}
+        >
           <div
             style={{
               height: "100%",
-              width: `${Math.round((100 * (sampleRest.seconds - left)) / sampleRest.seconds)}%`,
+              width: `${
+                Math.round(
+                  (100 * (sampleRest.seconds - left)) / sampleRest.seconds,
+                )
+              }%`,
               background: "var(--progress-fill)",
             }}
           />
@@ -50,10 +68,12 @@ export function RestPage() {
           >
             Ready early
           </SecondaryButton>
-          <SecondaryButton onClick={() => setLeft((s) => s + 30)}>+30 s</SecondaryButton>
+          <SecondaryButton onClick={() => setLeft((s) => s + 30)}>
+            +30 s
+          </SecondaryButton>
         </div>
         <p className="group-label" style={{ marginTop: 12 }}>
-          Next: 245 · {sampleRest.changeText}
+          Next: 245 · {changeText}
         </p>
         <PlateDrawing perSide={sampleRest.platesNext} label="Next set plates" />
         <p className="kbd-hint">Why {formatClock(sampleRest.seconds)}: {why}</p>
