@@ -9,7 +9,7 @@ export function CoachMemoryPage() {
   return (
     <div>
       <div className="page-head">
-        <h2 className="title" style={{ margin: 0 }}>Coach memory</h2>
+        <h1 className="page-title title">Coach memory</h1>
       </div>
       <Card title="Pending proposals">
         <MemoryProposalList memory={memory} decideMemory={decideMemory} />

@@ -23,8 +23,11 @@ export function FatigueByMuscle({
   const H = muscles.length * 40 + 30;
   const { x, y } = useMemo(() => {
     const max = Math.max(1, ...muscles.map((m) => m.lifting + m.running));
+    // Leave room right of the longest bar for the "ready" label (W-12); the
+    // longest bar's total always equals `max`, so without this gap its bar
+    // and label collide.
     return {
-      x: scaleLinear<number>({ domain: [0, max], range: [120, W - 12] }),
+      x: scaleLinear<number>({ domain: [0, max], range: [120, W - 56] }),
       y: scaleBand<string>({
         domain: muscles.map((m) => m.muscle),
         range: [8, H - 22],

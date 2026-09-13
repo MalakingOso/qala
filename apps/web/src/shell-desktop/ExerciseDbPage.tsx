@@ -61,9 +61,9 @@ export function ExerciseDbPage() {
   return (
     <div>
       <div className="page-head">
-        <h2 className="title" style={{ margin: 0 }}>
+        <h1 className="page-title title">
           Exercises · 422 seed + yours
-        </h2>
+        </h1>
       </div>
       <Card>
         <DataTable

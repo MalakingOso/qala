@@ -428,7 +428,12 @@ export function MemoryProposalList({
 }
 
 export function DataTable(
-  { head, rows }: { head: string[]; rows: string[][] },
+  { head, rows, rowHrefs }: {
+    head: string[];
+    rows: string[][];
+    /** Optional per-row link target; a row without one renders plain. */
+    rowHrefs?: (string | undefined)[];
+  },
 ) {
   return (
     <table className="data">
@@ -442,11 +447,22 @@ export function DataTable(
         </tr>
       </thead>
       <tbody>
-        {rows.map((r, i) => (
-          <tr key={i}>
-            {r.map((c, j) => <td key={j}>{c}</td>)}
-          </tr>
-        ))}
+        {rows.map((r, i) => {
+          const href = rowHrefs?.[i];
+          return (
+            <tr key={i} className={href ? "row-link" : undefined}>
+              {r.map((c, j) =>
+                href && j === 0
+                  ? (
+                    <td key={j}>
+                      <a href={href}>{c}</a>
+                    </td>
+                  )
+                  : <td key={j}>{c}</td>
+              )}
+            </tr>
+          );
+        })}
       </tbody>
     </table>
   );

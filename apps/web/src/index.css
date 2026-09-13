@@ -418,6 +418,19 @@ table.data th {
   letter-spacing: 0.09em;
   text-transform: uppercase;
 }
+table.data tr.row-link:hover,
+table.data tr.row-link:focus-within {
+  background: var(--bg-hover);
+}
+table.data tr.row-link a {
+  color: var(--fg);
+  font-weight: 500;
+  text-decoration: none;
+}
+table.data tr.row-link a:hover,
+table.data tr.row-link a:focus-visible {
+  text-decoration: underline;
+}
 
 .banner {
   border: var(--border-width) solid var(--border);
@@ -489,6 +502,90 @@ table.data th {
   background: var(--bg-active);
   color: var(--fg);
   font-weight: 500;
+}
+.sidebar-group + .sidebar-group {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: var(--border-width) solid var(--border);
+}
+.sidebar-group-label {
+  display: block;
+  padding: 4px 10px;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--fg-muted);
+}
+.sidebar-foot {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: var(--border-width) solid var(--border);
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--fg-muted);
+  margin: 0 0 4px;
+}
+.breadcrumb a {
+  color: var(--fg-muted);
+}
+.breadcrumb a:hover {
+  color: var(--accent);
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+.card-grid.cols-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+.card-grid > .span-2 {
+  grid-column: span 2;
+}
+/* A ring chart is tall and narrow (viewBox ~200x234); paired at 1fr next to
+ * a wide chart (~560x220) it would stretch to match the column width and
+ * tower over its neighbor. Give it a narrow, capped track instead. */
+.card-grid.ring-row {
+  grid-template-columns: minmax(240px, 320px) 1fr;
+}
+@media (max-width: 900px) {
+  .card-grid,
+  .card-grid.cols-3,
+  .card-grid.ring-row {
+    grid-template-columns: 1fr;
+  }
+  .card-grid > .span-2 {
+    grid-column: span 1;
+  }
+}
+
+.band-bar {
+  position: relative;
+  height: 10px;
+  background: var(--bg-active);
+  border-radius: var(--radius);
+  margin: 6px 0;
+}
+.band-bar .fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: var(--accent);
+  border-radius: var(--radius);
+}
+.band-bar .band {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  border-left: 2px dashed var(--border-strong);
+  border-right: 2px dashed var(--border-strong);
 }
 
 .chart-wrap svg text {
