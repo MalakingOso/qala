@@ -38,7 +38,7 @@ export function BodyMap({ view, muscles, contour, label, onSelect, asGroup }: {
               fill={fill}
               opacity={opacity}
               stroke={s?.stroke}
-              strokeWidth={s?.stroke ? 1.2 : undefined}
+              strokeWidth={s?.stroke ? 0.4 : undefined}
               strokeLinejoin="round"
               style={hit ? { cursor: "pointer" } : undefined}
               onClick={hit ? () => onSelect(p.id) : undefined}

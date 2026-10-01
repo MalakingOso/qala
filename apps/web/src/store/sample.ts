@@ -456,3 +456,19 @@ export const defaultSettings: SettingsModel = {
     limits: "weight -10% to +2.5%, sets -2 to +1",
   },
 };
+
+// Hours until ready, per liftosaur screen muscle. Samples until the engine
+// snapshot feeds this (PLAN 6).
+export const sampleRecovery = [
+  { id: "quadriceps", hours: 40 },
+  { id: "glutes", hours: 22 },
+  { id: "hamstrings", hours: 20 },
+  { id: "back", hours: 12 },
+  { id: "calves", hours: 0 },
+  { id: "chest", hours: 0 },
+  { id: "shoulders", hours: 0 },
+  { id: "abs", hours: 0 },
+  { id: "triceps", hours: 14 },
+  { id: "biceps", hours: 0 },
+  { id: "forearms", hours: 0 },
+];

@@ -94,7 +94,9 @@ export function FatigueByMuscle({ muscles }: {
                 />
               </div>
               <span className="kbd-hint">
-                {ok ? "Barely worked" : `Worked hard ${cause(m.lifting, m.running)}`}
+                {ok
+                  ? "Barely worked"
+                  : `Worked hard ${cause(m.lifting, m.running)}`}
               </span>
             </div>
           );
@@ -118,6 +120,8 @@ export function RunSpark(
         points={points.map((p, i) => ({ label: `W${i + 1}`, value: p }))}
         height={160}
         color="var(--run)"
+        axisLabel={"V\u0307"}
+        axisHint="V-dot (VDOT): Daniels' running fitness score, the VO2max that a race or hard effort implies. Higher is fitter; 40 is about a 24 minute 5K."
       />
     </ChartShell>
   );

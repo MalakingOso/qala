@@ -1,14 +1,15 @@
 /* Desktop Body: readiness, sets by muscle (click a muscle for its trend and
- * recovery detail), and the fatigue split lifting carries versus running.
+ * recovery detail), with the recovery map the phone shows.
  * The wider desktop counterpart to the phone's Body page (DESIGN 7.9). */
 
 import { Group, GroupRow } from "../shared/ui.tsx";
+import { ReadinessLine, SetsByMuscle } from "../shared/charts/index.ts";
+import { RecoveryMap } from "../shared/bodymap/RecoveryMap.tsx";
 import {
-  FatigueByMuscle,
-  ReadinessLine,
-  SetsByMuscle,
-} from "../shared/charts/index.ts";
-import { sampleMuscles, sampleReadiness } from "../store/sample.ts";
+  sampleMuscles,
+  sampleReadiness,
+  sampleRecovery,
+} from "../store/sample.ts";
 
 export function DesktopBodyPage() {
   return (
@@ -16,6 +17,7 @@ export function DesktopBodyPage() {
       <div className="page-head">
         <h1 className="page-title title">Body</h1>
       </div>
+      <RecoveryMap muscles={sampleRecovery} />
       <div className="card-grid">
         <ReadinessLine
           values={sampleReadiness.values}
@@ -30,14 +32,6 @@ export function DesktopBodyPage() {
           }}
         />
       </div>
-      <FatigueByMuscle
-        muscles={sampleMuscles.map((m) => ({
-          muscle: m.muscle,
-          lifting: m.lifting,
-          running: m.running,
-          ready: m.readyDay,
-        }))}
-      />
       <Group label="Deload status">
         <GroupRow>
           <span>No deload due. Next planned: week 6.</span>

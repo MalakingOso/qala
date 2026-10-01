@@ -999,7 +999,8 @@ table.data tr.row-link a:focus-visible {
  * a wide chart (~560x220) it would stretch to match the column width and
  * tower over its neighbor. Give it a narrow, capped track instead. */
 .card-grid.ring-row {
-  grid-template-columns: minmax(220px, .7fr) minmax(0, 1.3fr);
+  grid-template-columns: minmax(240px, 320px) minmax(0, 440px);
+  justify-content: start;
 }
 @media (max-width: 900px) {
   .card-grid,
@@ -1139,6 +1140,7 @@ table.data tr.row-link a:focus-visible {
  * height = the day's load, fill = the part already done. States echo the
  * timeline rail: done teal, today ember, later outlined, rest a dash. */
 .week-strip {
+  max-width: 360px;
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 4px;

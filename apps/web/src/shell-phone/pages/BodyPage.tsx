@@ -6,22 +6,7 @@
 import { Group, GroupRow, SecondaryButton } from "../../shared/ui.tsx";
 import { ReadinessLine } from "../../shared/charts/index.ts";
 import { RecoveryMap } from "../../shared/bodymap/RecoveryMap.tsx";
-
-// Hours until ready, per liftosaur screen muscle. Samples until the engine
-// snapshot feeds this (PLAN 6).
-const RECOVERY = [
-  { id: "quadriceps", hours: 40 },
-  { id: "glutes", hours: 22 },
-  { id: "hamstrings", hours: 20 },
-  { id: "back", hours: 12 },
-  { id: "calves", hours: 0 },
-  { id: "chest", hours: 0 },
-  { id: "shoulders", hours: 0 },
-  { id: "abs", hours: 0 },
-  { id: "triceps", hours: 14 },
-  { id: "biceps", hours: 0 },
-  { id: "forearms", hours: 0 },
-];
+import { sampleRecovery } from "../../store/sample.ts";
 
 const SORENESS: { muscle: string; level: number }[] = [
   { muscle: "quads", level: 4 },
@@ -43,7 +28,7 @@ export function BodyPage() {
           <h1 className="page-title title">Legs are still recovering</h1>
         </div>
       </div>
-      <RecoveryMap muscles={RECOVERY} />
+      <RecoveryMap muscles={sampleRecovery} />
       <ReadinessLine
         values={[78, 74, 80, 76, 71, 69, 72]}
         days={["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Today"]}
