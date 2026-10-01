@@ -37,7 +37,7 @@ One pipeline, two front ends. A small model never writes program text.
 ```
 PDF  -> MinerU (layout, tables, scans) -> markdown chunks \
                                                             -> callisto agent, json_schema -> edit list
-voice -> whisper.cpp -> transcript                          /
+voice -> Gemma 4 E4B audio -> transcript                    /
 edit list -> exercise matching (fuzzy, confirm ambiguous) -> emitter (LS++ text) -> parser + lint
           -> diff shown to the owner -> confirm -> applied
 ```
@@ -54,12 +54,14 @@ edit list -> exercise matching (fuzzy, confirm ambiguous) -> emitter (LS++ text)
 | Job | Pick | Why | Alternatives |
 |---|---|---|---|
 | PDF to text and tables | MinerU (Sonoro) | One path for text PDFs, tables and scans; already served | `pdftotext` as the degraded path; Gemma 4 E4B vision for a photo of a page |
-| Speech to text | whisper.cpp on callisto, a small or turbo model | Self-hosted, accurate on short clips, bias it with an initial prompt of exercise names | Gemma 4 E4B audio (needs the mmproj file, 30 s cap, no new service); Voxtral Mini 4B Realtime (Apache 2.0, needs vLLM, which callisto has) |
+| Speech to text | Gemma 4 E4B with its mmproj (standalone llama-server, :8083) | One model covers dictation, page photos and edit-list extraction. Got every number right on the gym-phrase test with no biasing, at about 0.85 s per clip. 30 s audio cap, which suits dictation | whisper.cpp large-v3-turbo as the fallback (faster, adds punctuation, but needs an initial prompt of example weights to stop reading "three fifteen" as "3:15"); Voxtral Mini 4B Realtime (Apache 2.0, needs vLLM, which callisto has) |
 | Edit list extraction | Gemma 4 E4B on callisto, json_schema | Already the Qala agent | none needed |
 
-Voxtral: Beamer's `voxtral_test.rs` uses Mistral's hosted API, which sends audio off the machine. Only the open-weight Voxtral Mini 4B Realtime would be self-hosted. whisper.cpp first; try Voxtral only if live captions while speaking matter.
+Voxtral: Beamer's `voxtral_test.rs` uses Mistral's hosted API, which sends audio off the machine. Only the open-weight Voxtral Mini 4B Realtime would be self-hosted. E4B first; try Voxtral only if live captions while speaking matter.
 
-Gemma 4 E4B accepts image and audio through its mmproj file in llama-server, but the callisto router currently loads the model without it. Adding the mmproj would let one model cover short dictation and page photos. Worth a benchmark against whisper.cpp on 20 gym phrases before choosing. Both are running for that (2026-10-01): whisper.cpp large-v3-turbo-q5_0 on the B570 at :8082 (`scripts/whisper-serve.sh`, `-dev 0`), E4B plus BF16 mmproj on the B60 at :8083 (standalone llama-server, alias `gemma-4-E4B-mm`, mmproj in `~/models/beamer-mm/`). Both transcribed jfk.wav correctly in about 0.4 s warm; whisper adds punctuation, E4B does not.
+Gemma 4 E4B accepts image and audio through its mmproj file in llama-server, but the callisto router loads the model without it, and Beamer's router ini is not ours to edit, so the mmproj build runs as its own llama-server on the B60 at :8083 (alias `gemma-4-E4B-mm`, mmproj in `~/models/beamer-mm/`, launched with the oneAPI 2026 environment). One model covers short dictation and page photos, which is the reason it wins ties.
+
+Benchmark (2026-10-01): 10 gym phrases in two Kokoro voices, 20 clips, clean synthetic audio. A clip counts as right only if every number in it is right. E4B 20/20 with a plain "transcribe verbatim, numbers as digits" instruction, about 0.85 s median. whisper.cpp 15/20 with no prompt (spoken weights came out as "3:15", "1:35", "1.55"; it also heard "wait" for "weight"), 20/20 once given an initial prompt of example weights, about 0.4 s median. whisper adds punctuation, E4B does not. Not yet tested: the owner's own voice and gym noise. Recheck on real clips before relying on either. whisper.cpp stays available on :8082 (`scripts/whisper-serve.sh`, B570) as the fallback.
 
 ## 6. Build order
 
@@ -67,6 +69,6 @@ Gemma 4 E4B accepts image and audio through its mmproj file in llama-server, but
 2. Parser error positions, then `fmt`, then lint, then dry run, then `unresolved_sets`. Done in Rust (branch `worktree-agent-a61e26ced232126f4`, `c6bb488` to `e247e55`, not merged). Open: FFI exports plus Kotlin regen, suggestions for evaluation-time errors, fmt for standalone scripts, wasm build never run.
 3. Edit-list schema, emitter and validator in `packages/llm`, tested without any model. Done in TS (branch `worktree-agent-a1a5843dba2873ba1`, `8f5bd5c`, not merged).
 4. `POST /api/import/text` against the agent (done on that branch; the confirm step is the same endpoint with `resolutions`), then wire PDF via MinerU (open).
-5. whisper.cpp service and `POST /api/transcribe`; mic capture on the phone and desktop shells.
+5. `POST /api/transcribe` against E4B-mm (base64 `input_audio` to `/v1/chat/completions`, wav in, fall back to whisper.cpp when it is down); mic capture on the phone and desktop shells.
 
 Run Rust tests only through `scripts/cargo-test-safe.sh`.
