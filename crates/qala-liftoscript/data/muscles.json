@@ -1,0 +1,242 @@
+{
+ "screenMuscles": [
+  "shoulders",
+  "triceps",
+  "back",
+  "abs",
+  "glutes",
+  "hamstrings",
+  "quadriceps",
+  "chest",
+  "biceps",
+  "calves",
+  "forearms"
+ ],
+ "availableMuscles": [
+  "Adductor Brevis",
+  "Adductor Longus",
+  "Adductor Magnus",
+  "Biceps Brachii",
+  "Brachialis",
+  "Brachioradialis",
+  "Deltoid Anterior",
+  "Deltoid Lateral",
+  "Deltoid Posterior",
+  "Erector Spinae",
+  "Gastrocnemius",
+  "Gluteus Maximus",
+  "Gluteus Medius",
+  "Hamstrings",
+  "Iliopsoas",
+  "Infraspinatus",
+  "Latissimus Dorsi",
+  "Levator Scapulae",
+  "Obliques",
+  "Pectineous",
+  "Pectoralis Major Clavicular Head",
+  "Pectoralis Major Sternal Head",
+  "Quadriceps",
+  "Rectus Abdominis",
+  "Sartorius",
+  "Serratus Anterior",
+  "Soleus",
+  "Splenius",
+  "Sternocleidomastoid",
+  "Tensor Fasciae Latae",
+  "Teres Major",
+  "Teres Minor",
+  "Tibialis Anterior",
+  "Trapezius Lower Fibers",
+  "Trapezius Middle Fibers",
+  "Trapezius Upper Fibers",
+  "Triceps Brachii",
+  "Wrist Extensors",
+  "Wrist Flexors"
+ ],
+ "screenMuscleToMuscles": {
+  "shoulders": [
+   "Deltoid Anterior",
+   "Deltoid Lateral",
+   "Deltoid Posterior",
+   "Infraspinatus",
+   "Teres Major",
+   "Teres Minor"
+  ],
+  "triceps": [
+   "Triceps Brachii"
+  ],
+  "back": [
+   "Erector Spinae",
+   "Latissimus Dorsi",
+   "Levator Scapulae",
+   "Trapezius Lower Fibers",
+   "Trapezius Middle Fibers",
+   "Trapezius Upper Fibers",
+   "Sternocleidomastoid",
+   "Splenius"
+  ],
+  "abs": [
+   "Obliques",
+   "Rectus Abdominis",
+   "Iliopsoas"
+  ],
+  "glutes": [
+   "Gluteus Maximus",
+   "Gluteus Medius",
+   "Tensor Fasciae Latae"
+  ],
+  "hamstrings": [
+   "Adductor Magnus",
+   "Adductor Brevis",
+   "Adductor Longus",
+   "Hamstrings"
+  ],
+  "quadriceps": [
+   "Adductor Brevis",
+   "Adductor Longus",
+   "Pectineous",
+   "Quadriceps",
+   "Sartorius"
+  ],
+  "chest": [
+   "Pectoralis Major Clavicular Head",
+   "Pectoralis Major Sternal Head",
+   "Serratus Anterior"
+  ],
+  "biceps": [
+   "Biceps Brachii",
+   "Brachialis"
+  ],
+  "calves": [
+   "Gastrocnemius",
+   "Soleus",
+   "Tibialis Anterior"
+  ],
+  "forearms": [
+   "Brachioradialis",
+   "Wrist Extensors",
+   "Wrist Flexors"
+  ]
+ },
+ "muscleToScreenMuscles": {
+  "Adductor Brevis": [
+   "hamstrings",
+   "quadriceps"
+  ],
+  "Adductor Longus": [
+   "hamstrings",
+   "quadriceps"
+  ],
+  "Adductor Magnus": [
+   "hamstrings"
+  ],
+  "Biceps Brachii": [
+   "biceps"
+  ],
+  "Brachialis": [
+   "biceps"
+  ],
+  "Brachioradialis": [
+   "forearms"
+  ],
+  "Deltoid Anterior": [
+   "shoulders"
+  ],
+  "Deltoid Lateral": [
+   "shoulders"
+  ],
+  "Deltoid Posterior": [
+   "shoulders"
+  ],
+  "Erector Spinae": [
+   "back"
+  ],
+  "Gastrocnemius": [
+   "calves"
+  ],
+  "Gluteus Maximus": [
+   "glutes"
+  ],
+  "Gluteus Medius": [
+   "glutes"
+  ],
+  "Hamstrings": [
+   "hamstrings"
+  ],
+  "Iliopsoas": [
+   "abs"
+  ],
+  "Infraspinatus": [
+   "shoulders"
+  ],
+  "Latissimus Dorsi": [
+   "back"
+  ],
+  "Levator Scapulae": [
+   "back"
+  ],
+  "Obliques": [
+   "abs"
+  ],
+  "Pectineous": [
+   "quadriceps"
+  ],
+  "Pectoralis Major Clavicular Head": [
+   "chest"
+  ],
+  "Pectoralis Major Sternal Head": [
+   "chest"
+  ],
+  "Quadriceps": [
+   "quadriceps"
+  ],
+  "Rectus Abdominis": [
+   "abs"
+  ],
+  "Sartorius": [
+   "quadriceps"
+  ],
+  "Serratus Anterior": [
+   "chest"
+  ],
+  "Soleus": [
+   "calves"
+  ],
+  "Splenius": [
+   "back"
+  ],
+  "Sternocleidomastoid": [
+   "back"
+  ],
+  "Tensor Fasciae Latae": [
+   "glutes"
+  ],
+  "Teres Major": [
+   "shoulders"
+  ],
+  "Teres Minor": [
+   "shoulders"
+  ],
+  "Tibialis Anterior": [
+   "calves"
+  ],
+  "Trapezius Lower Fibers": [
+   "back"
+  ],
+  "Trapezius Middle Fibers": [
+   "back"
+  ],
+  "Trapezius Upper Fibers": [
+   "back"
+  ],
+  "Triceps Brachii": [
+   "triceps"
+  ],
+  "Wrist Extensors": [
+   "forearms"
+  ],
+  "Wrist Flexors": [
+   "forearms"
+  ]
+ }
+}

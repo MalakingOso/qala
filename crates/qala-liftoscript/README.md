@@ -1,0 +1,20 @@
+# qala-liftoscript
+
+The liftoscript evaluation path in Rust (DECISIONS S12). The TypeScript package `packages/liftoscript` is the oracle. Plan and status: `docs/rust-core.md`.
+
+## Tests
+
+Run tests only through the capped runner. A runaway test once used 58 GB and took the terminal down.
+
+```sh
+scripts/cargo-test-safe.sh -p qala-liftoscript            # whole suite, about 25 s, under 4 GB
+scripts/cargo-test-safe.sh -p qala-liftoscript --lib planner_parse -- --test-threads=1
+```
+
+About 80 MB of the test data is generated and gitignored. On a fresh clone, regenerate it first, or the tests will not compile (they `include_str!` the unit cases) or will skip:
+
+```sh
+deno task gen:liftoscript      # runs every generator against the TS oracle, deterministic
+```
+
+Checked in: `testdata/golden/liftoscript/{builtins,builtins_kg}/`, the finish-day, next-history-entry, bindings and exercise goldens, and `data/`.

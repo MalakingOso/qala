@@ -38,6 +38,11 @@
     "vendor": "deno run --allow-all scripts/vendor_liftosaur.ts",
     "build:android": "deno task build && npm --prefix apps/phone run sync && test -f apps/phone/android/gradlew || (echo 'apps/phone/android/gradlew is not vendored: open apps/phone/android in Android Studio (or run gradle wrapper) with the Android SDK installed, then rerun' >&2 && exit 1) && apps/phone/android/gradlew assembleRelease -p apps/phone/android",
     "tiles:extract": "deno run --allow-all scripts/tiles_extract.ts",
-    "dem:fetch": "deno run --allow-all scripts/dem_fetch.ts"
+    "dem:fetch": "deno run --allow-all scripts/dem_fetch.ts",
+    "golden:liftoscript": "deno run -A scripts/golden_liftoscript.ts",
+    "gen:liftoscript": "scripts/gen_liftoscript_testdata.sh",
+    "fuzz:liftoscript": "deno run -A scripts/gen_program_fuzz.ts",
+    "build:wasm": "scripts/build_wasm.sh",
+    "smoke:wasm": "deno run -A scripts/wasm_smoke.ts"
   }
 }

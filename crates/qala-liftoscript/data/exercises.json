@@ -1,0 +1,6156 @@
+{
+ "equipments": [
+  "barbell",
+  "cable",
+  "dumbbell",
+  "smith",
+  "band",
+  "kettlebell",
+  "bodyweight",
+  "leverageMachine",
+  "medicineball",
+  "ezbar",
+  "trapbar"
+ ],
+ "equipmentNames": {
+  "barbell": "Barbell",
+  "cable": "Cable",
+  "dumbbell": "Dumbbell",
+  "smith": "Smith Machine",
+  "band": "Band",
+  "kettlebell": "Kettlebell",
+  "bodyweight": "Bodyweight",
+  "leverageMachine": "Leverage Machine",
+  "medicineball": "Medicine Ball",
+  "ezbar": "EZ Bar",
+  "trapbar": "Trap Bar"
+ },
+ "exerciseKinds": [
+  "core",
+  "pull",
+  "push",
+  "legs",
+  "upper",
+  "lower"
+ ],
+ "exercises": [
+  {
+   "id": "abWheel",
+   "name": "Ab Wheel",
+   "defaultWarmup": 10,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "core"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Iliopsoas"
+   ],
+   "synergistMuscles": [
+    "Adductor Brevis",
+    "Adductor Longus",
+    "Deltoid Posterior",
+    "Latissimus Dorsi",
+    "Pectineous",
+    "Pectoralis Major Sternal Head",
+    "Sartorius",
+    "Serratus Anterior",
+    "Tensor Fasciae Latae",
+    "Teres Major"
+   ],
+   "bodyParts": [
+    "Back"
+   ],
+   "sortedEquipment": [
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "arnoldPress",
+   "name": "Arnold Press",
+   "defaultWarmup": 10,
+   "defaultEquipment": "dumbbell",
+   "types": [
+    "upper",
+    "push"
+   ],
+   "startingWeightKg": 7.5,
+   "startingWeightLb": 20,
+   "targetMuscles": [
+    "Deltoid Anterior"
+   ],
+   "synergistMuscles": [
+    "Deltoid Lateral",
+    "Serratus Anterior",
+    "Trapezius Lower Fibers",
+    "Trapezius Middle Fibers",
+    "Triceps Brachii"
+   ],
+   "bodyParts": [
+    "Shoulders"
+   ],
+   "sortedEquipment": [
+    "dumbbell",
+    "kettlebell"
+   ]
+  },
+  {
+   "id": "aroundTheWorld",
+   "name": "Around The World",
+   "defaultWarmup": 10,
+   "defaultEquipment": "dumbbell",
+   "types": [
+    "core"
+   ],
+   "startingWeightKg": 5,
+   "startingWeightLb": 15,
+   "targetMuscles": [
+    "Deltoid Anterior",
+    "Pectoralis Major Clavicular Head",
+    "Pectoralis Major Sternal Head"
+   ],
+   "synergistMuscles": [
+    "Deltoid Lateral",
+    "Deltoid Posterior",
+    "Latissimus Dorsi",
+    "Serratus Anterior"
+   ],
+   "bodyParts": [
+    "Chest",
+    "Shoulders"
+   ],
+   "sortedEquipment": [
+    "dumbbell"
+   ]
+  },
+  {
+   "id": "backExtension",
+   "name": "Back Extension",
+   "defaultWarmup": 10,
+   "defaultEquipment": "leverageMachine",
+   "types": [
+    "lower",
+    "core"
+   ],
+   "startingWeightKg": 22.5,
+   "startingWeightLb": 50,
+   "targetMuscles": [
+    "Erector Spinae"
+   ],
+   "synergistMuscles": [
+    "Adductor Magnus",
+    "Gluteus Maximus",
+    "Hamstrings"
+   ],
+   "bodyParts": [
+    "Hips"
+   ],
+   "sortedEquipment": [
+    "bodyweight",
+    "leverageMachine"
+   ]
+  },
+  {
+   "id": "ballSlams",
+   "name": "Ball Slams",
+   "defaultEquipment": "medicineball",
+   "types": [
+    "core",
+    "upper"
+   ],
+   "startingWeightKg": 4.5,
+   "startingWeightLb": 10,
+   "targetMuscles": [
+    "Infraspinatus",
+    "Latissimus Dorsi",
+    "Teres Major",
+    "Teres Minor",
+    "Trapezius Lower Fibers",
+    "Trapezius Middle Fibers"
+   ],
+   "synergistMuscles": [
+    "Deltoid Anterior",
+    "Pectoralis Major Clavicular Head",
+    "Rectus Abdominis"
+   ],
+   "bodyParts": [
+    "Back"
+   ],
+   "sortedEquipment": [
+    "medicineball"
+   ]
+  },
+  {
+   "id": "battleRopes",
+   "name": "Battle Ropes",
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "upper",
+    "core"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Deltoid Posterior"
+   ],
+   "synergistMuscles": [
+    "Brachialis",
+    "Brachioradialis",
+    "Deltoid Lateral",
+    "Infraspinatus",
+    "Teres Minor",
+    "Trapezius Lower Fibers",
+    "Trapezius Middle Fibers"
+   ],
+   "bodyParts": [
+    "Shoulders"
+   ],
+   "sortedEquipment": [
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "behindTheNeckPress",
+   "name": "Behind The Neck Press",
+   "defaultEquipment": "barbell",
+   "types": [
+    "upper",
+    "push"
+   ],
+   "startingWeightKg": 27.5,
+   "startingWeightLb": 65,
+   "targetMuscles": [
+    "Deltoid Anterior"
+   ],
+   "synergistMuscles": [
+    "Deltoid Lateral",
+    "Serratus Anterior",
+    "Trapezius Lower Fibers",
+    "Trapezius Middle Fibers",
+    "Triceps Brachii"
+   ],
+   "bodyParts": [
+    "Shoulders"
+   ],
+   "sortedEquipment": [
+    "barbell"
+   ]
+  },
+  {
+   "id": "benchDip",
+   "name": "Bench Dip",
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "upper",
+    "push"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Triceps Brachii"
+   ],
+   "synergistMuscles": [
+    "Deltoid Anterior",
+    "Latissimus Dorsi",
+    "Levator Scapulae",
+    "Pectoralis Major Clavicular Head",
+    "Pectoralis Major Sternal Head",
+    "Serratus Anterior",
+    "Trapezius Middle Fibers"
+   ],
+   "bodyParts": [
+    "Upper Arms"
+   ],
+   "sortedEquipment": [
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "benchPress",
+   "name": "Bench Press",
+   "defaultWarmup": 45,
+   "defaultEquipment": "barbell",
+   "types": [
+    "upper",
+    "push"
+   ],
+   "startingWeightKg": 60,
+   "startingWeightLb": 135,
+   "targetMuscles": [
+    "Pectoralis Major Sternal Head"
+   ],
+   "synergistMuscles": [
+    "Deltoid Anterior",
+    "Pectoralis Major Clavicular Head",
+    "Triceps Brachii"
+   ],
+   "bodyParts": [
+    "Chest"
+   ],
+   "sortedEquipment": [
+    "barbell",
+    "cable",
+    "dumbbell",
+    "smith",
+    "band",
+    "kettlebell"
+   ]
+  },
+  {
+   "id": "benchPressCloseGrip",
+   "name": "Bench Press Close Grip",
+   "defaultWarmup": 45,
+   "defaultEquipment": "barbell",
+   "types": [
+    "upper",
+    "push"
+   ],
+   "startingWeightKg": 50,
+   "startingWeightLb": 115,
+   "targetMuscles": [
+    "Triceps Brachii"
+   ],
+   "synergistMuscles": [
+    "Deltoid Anterior",
+    "Pectoralis Major Clavicular Head",
+    "Pectoralis Major Sternal Head"
+   ],
+   "bodyParts": [
+    "Upper Arms"
+   ],
+   "sortedEquipment": [
+    "barbell",
+    "ezbar",
+    "smith"
+   ]
+  },
+  {
+   "id": "benchPressWideGrip",
+   "name": "Bench Press Wide Grip",
+   "defaultWarmup": 45,
+   "defaultEquipment": "barbell",
+   "types": [
+    "upper",
+    "push"
+   ],
+   "startingWeightKg": 60,
+   "startingWeightLb": 135,
+   "targetMuscles": [
+    "Pectoralis Major Sternal Head"
+   ],
+   "synergistMuscles": [
+    "Deltoid Anterior",
+    "Pectoralis Major Clavicular Head",
+    "Triceps Brachii"
+   ],
+   "bodyParts": [
+    "Chest"
+   ],
+   "sortedEquipment": [
+    "barbell",
+    "smith"
+   ]
+  },
+  {
+   "id": "bentOverOneArmRow",
+   "name": "Bent Over One Arm Row",
+   "defaultWarmup": 10,
+   "defaultEquipment": "dumbbell",
+   "types": [
+    "upper",
+    "pull"
+   ],
+   "startingWeightKg": 12.5,
+   "startingWeightLb": 30,
+   "targetMuscles": [
+    "Latissimus Dorsi",
+    "Trapezius Lower Fibers",
+    "Trapezius Middle Fibers"
+   ],
+   "synergistMuscles": [
+    "Infraspinatus",
+    "Teres Major",
+    "Teres Minor",
+    "Brachialis",
+    "Brachioradialis",
+    "Deltoid Posterior",
+    "Pectoralis Major Sternal Head"
+   ],
+   "bodyParts": [
+    "Back"
+   ],
+   "sortedEquipment": [
+    "dumbbell"
+   ]
+  },
+  {
+   "id": "bentOverRow",
+   "name": "Bent Over Row",
+   "defaultWarmup": 95,
+   "defaultEquipment": "barbell",
+   "types": [
+    "upper",
+    "pull"
+   ],
+   "startingWeightKg": 42.5,
+   "startingWeightLb": 95,
+   "targetMuscles": [
+    "Latissimus Dorsi",
+    "Trapezius Lower Fibers",
+    "Trapezius Middle Fibers"
+   ],
+   "synergistMuscles": [
+    "Brachialis",
+    "Brachioradialis",
+    "Deltoid Posterior",
+    "Infraspinatus",
+    "Pectoralis Major Sternal Head",
+    "Teres Major",
+    "Teres Minor"
+   ],
+   "bodyParts": [
+    "Back"
+   ],
+   "sortedEquipment": [
+    "barbell",
+    "cable",
+    "dumbbell",
+    "band",
+    "leverageMachine",
+    "smith"
+   ]
+  },
+  {
+   "id": "bicepCurl",
+   "name": "Bicep Curl",
+   "defaultWarmup": 10,
+   "defaultEquipment": "dumbbell",
+   "types": [
+    "upper",
+    "pull"
+   ],
+   "startingWeightKg": 7.5,
+   "startingWeightLb": 20,
+   "targetMuscles": [
+    "Biceps Brachii"
+   ],
+   "synergistMuscles": [
+    "Brachialis",
+    "Brachioradialis"
+   ],
+   "bodyParts": [
+    "Upper Arms"
+   ],
+   "sortedEquipment": [
+    "barbell",
+    "dumbbell",
+    "band",
+    "leverageMachine",
+    "cable",
+    "ezbar"
+   ]
+  },
+  {
+   "id": "bicycleCrunch",
+   "name": "Bicycle Crunch",
+   "defaultWarmup": 10,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "core"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Obliques",
+    "Rectus Abdominis"
+   ],
+   "synergistMuscles": [
+    "Gluteus Maximus",
+    "Iliopsoas",
+    "Quadriceps"
+   ],
+   "bodyParts": [
+    "Waist"
+   ],
+   "sortedEquipment": [
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "boxJump",
+   "name": "Box Jump",
+   "defaultWarmup": 10,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "lower",
+    "legs"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Quadriceps",
+    "Gluteus Maximus",
+    "Gastrocnemius",
+    "Soleus"
+   ],
+   "synergistMuscles": [
+    "Hamstrings",
+    "Adductor Magnus",
+    "Erector Spinae",
+    "Rectus Abdominis"
+   ],
+   "bodyParts": [
+    "Waist"
+   ],
+   "sortedEquipment": [
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "boxSquat",
+   "name": "Box Squat",
+   "defaultWarmup": 45,
+   "defaultEquipment": "barbell",
+   "types": [
+    "lower",
+    "legs"
+   ],
+   "startingWeightKg": 70,
+   "startingWeightLb": 155,
+   "targetMuscles": [
+    "Gluteus Maximus"
+   ],
+   "synergistMuscles": [
+    "Adductor Magnus",
+    "Quadriceps",
+    "Soleus"
+   ],
+   "bodyParts": [
+    "Thighs"
+   ],
+   "sortedEquipment": [
+    "barbell",
+    "dumbbell"
+   ]
+  },
+  {
+   "id": "bulgarianSplitSquat",
+   "name": "Bulgarian Split Squat",
+   "defaultWarmup": 10,
+   "defaultEquipment": "dumbbell",
+   "types": [
+    "lower",
+    "legs"
+   ],
+   "startingWeightKg": 10,
+   "startingWeightLb": 25,
+   "targetMuscles": [
+    "Quadriceps"
+   ],
+   "synergistMuscles": [
+    "Adductor Magnus",
+    "Gluteus Maximus",
+    "Soleus"
+   ],
+   "bodyParts": [
+    "Hips",
+    "Thighs"
+   ],
+   "sortedEquipment": [
+    "dumbbell"
+   ]
+  },
+  {
+   "id": "burpee",
+   "name": "Burpee",
+   "defaultWarmup": 10,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "upper",
+    "lower",
+    "core"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Quadriceps",
+    "Gluteus Maximus",
+    "Pectoralis Major Clavicular Head",
+    "Pectoralis Major Sternal Head",
+    "Triceps Brachii",
+    "Deltoid Anterior",
+    "Deltoid Lateral",
+    "Deltoid Posterior",
+    "Rectus Abdominis"
+   ],
+   "synergistMuscles": [
+    "Hamstrings",
+    "Biceps Brachii",
+    "Brachialis",
+    "Latissimus Dorsi",
+    "Obliques",
+    "Erector Spinae",
+    "Obliques",
+    "Soleus",
+    "Gastrocnemius",
+    "Tibialis Anterior"
+   ],
+   "bodyParts": [
+    "Chest",
+    "Shoulders",
+    "Upper Arms",
+    "Waist",
+    "Thighs"
+   ],
+   "sortedEquipment": [
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "cableCrossover",
+   "name": "Cable Crossover",
+   "defaultWarmup": 10,
+   "defaultEquipment": "cable",
+   "types": [
+    "upper",
+    "pull"
+   ],
+   "startingWeightKg": 7.5,
+   "startingWeightLb": 20,
+   "targetMuscles": [
+    "Pectoralis Major Sternal Head"
+   ],
+   "synergistMuscles": [
+    "Deltoid Anterior",
+    "Latissimus Dorsi",
+    "Levator Scapulae",
+    "Pectoralis Major Clavicular Head"
+   ],
+   "bodyParts": [
+    "Chest"
+   ],
+   "sortedEquipment": [
+    "cable"
+   ]
+  },
+  {
+   "id": "cableCrunch",
+   "name": "Cable Crunch",
+   "defaultWarmup": 10,
+   "defaultEquipment": "cable",
+   "types": [
+    "core"
+   ],
+   "startingWeightKg": 22.5,
+   "startingWeightLb": 50,
+   "targetMuscles": [
+    "Rectus Abdominis"
+   ],
+   "synergistMuscles": [
+    "Obliques"
+   ],
+   "bodyParts": [
+    "Waist"
+   ],
+   "sortedEquipment": [
+    "cable"
+   ]
+  },
+  {
+   "id": "cableKickback",
+   "name": "Cable Kickback",
+   "defaultWarmup": 10,
+   "defaultEquipment": "cable",
+   "types": [
+    "upper",
+    "push"
+   ],
+   "startingWeightKg": 7.5,
+   "startingWeightLb": 20,
+   "targetMuscles": [
+    "Triceps Brachii"
+   ],
+   "synergistMuscles": [],
+   "bodyParts": [
+    "Upper Arms"
+   ],
+   "sortedEquipment": [
+    "cable"
+   ]
+  },
+  {
+   "id": "cablePullThrough",
+   "name": "Cable Pull Through",
+   "defaultWarmup": 10,
+   "defaultEquipment": "cable",
+   "types": [
+    "lower",
+    "pull"
+   ],
+   "startingWeightKg": 30,
+   "startingWeightLb": 70,
+   "targetMuscles": [
+    "Gluteus Maximus"
+   ],
+   "synergistMuscles": [
+    "Adductor Magnus",
+    "Hamstrings"
+   ],
+   "bodyParts": [
+    "Hips"
+   ],
+   "sortedEquipment": [
+    "cable"
+   ]
+  },
+  {
+   "id": "cableTwist",
+   "name": "Cable Twist",
+   "defaultWarmup": 10,
+   "defaultEquipment": "cable",
+   "types": [
+    "core"
+   ],
+   "startingWeightKg": 12.5,
+   "startingWeightLb": 30,
+   "targetMuscles": [
+    "Obliques"
+   ],
+   "synergistMuscles": [
+    "Adductor Brevis",
+    "Adductor Longus",
+    "Adductor Magnus",
+    "Erector Spinae",
+    "Gluteus Medius",
+    "Iliopsoas",
+    "Tensor Fasciae Latae"
+   ],
+   "bodyParts": [
+    "Waist"
+   ],
+   "sortedEquipment": [
+    "barbell",
+    "bodyweight",
+    "cable",
+    "leverageMachine",
+    "band"
+   ]
+  },
+  {
+   "id": "calfPressOnLegPress",
+   "name": "Calf Press on Leg Press",
+   "defaultWarmup": 10,
+   "defaultEquipment": "leverageMachine",
+   "types": [
+    "lower",
+    "legs"
+   ],
+   "startingWeightKg": 67.5,
+   "startingWeightLb": 150,
+   "targetMuscles": [
+    "Gastrocnemius"
+   ],
+   "synergistMuscles": [
+    "Soleus"
+   ],
+   "bodyParts": [
+    "Calves"
+   ],
+   "sortedEquipment": [
+    "leverageMachine"
+   ]
+  },
+  {
+   "id": "calfPressOnSeatedLegPress",
+   "name": "Calf Press on Seated Leg Press",
+   "defaultWarmup": 10,
+   "defaultEquipment": "leverageMachine",
+   "types": [
+    "lower",
+    "legs"
+   ],
+   "startingWeightKg": 53.75,
+   "startingWeightLb": 120,
+   "targetMuscles": [
+    "Gastrocnemius"
+   ],
+   "synergistMuscles": [
+    "Soleus"
+   ],
+   "bodyParts": [
+    "Calves"
+   ],
+   "sortedEquipment": [
+    "leverageMachine"
+   ]
+  },
+  {
+   "id": "chestDip",
+   "name": "Chest Dip",
+   "defaultWarmup": 10,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "upper",
+    "push"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Pectoralis Major Sternal Head"
+   ],
+   "synergistMuscles": [
+    "Deltoid Anterior",
+    "Latissimus Dorsi",
+    "Levator Scapulae",
+    "Pectoralis Major Clavicular Head",
+    "Serratus Anterior",
+    "Teres Major",
+    "Trapezius Middle Fibers",
+    "Triceps Brachii"
+   ],
+   "bodyParts": [
+    "Chest"
+   ],
+   "sortedEquipment": [
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "chestFly",
+   "name": "Chest Fly",
+   "defaultWarmup": 10,
+   "defaultEquipment": "dumbbell",
+   "types": [
+    "upper",
+    "push"
+   ],
+   "startingWeightKg": 7.5,
+   "startingWeightLb": 20,
+   "targetMuscles": [
+    "Pectoralis Major Sternal Head"
+   ],
+   "synergistMuscles": [
+    "Biceps Brachii",
+    "Deltoid Anterior",
+    "Pectoralis Major Clavicular Head"
+   ],
+   "bodyParts": [
+    "Chest"
+   ],
+   "sortedEquipment": [
+    "barbell",
+    "cable",
+    "dumbbell",
+    "leverageMachine"
+   ]
+  },
+  {
+   "id": "chestPress",
+   "name": "Chest Press",
+   "defaultWarmup": 10,
+   "defaultEquipment": "dumbbell",
+   "types": [
+    "upper",
+    "push"
+   ],
+   "startingWeightKg": 12.5,
+   "startingWeightLb": 30,
+   "targetMuscles": [
+    "Pectoralis Major Sternal Head"
+   ],
+   "synergistMuscles": [
+    "Deltoid Anterior",
+    "Pectoralis Major Clavicular Head",
+    "Triceps Brachii"
+   ],
+   "bodyParts": [
+    "Chest"
+   ],
+   "sortedEquipment": [
+    "leverageMachine",
+    "band"
+   ]
+  },
+  {
+   "id": "chestSupportedRow",
+   "name": "Chest-Supported Row",
+   "defaultWarmup": 10,
+   "defaultEquipment": "barbell",
+   "types": [
+    "upper",
+    "pull"
+   ],
+   "startingWeightKg": 37.5,
+   "startingWeightLb": 85,
+   "targetMuscles": [
+    "Trapezius Lower Fibers",
+    "Trapezius Middle Fibers"
+   ],
+   "synergistMuscles": [
+    "Brachialis",
+    "Brachioradialis",
+    "Deltoid Posterior",
+    "Infraspinatus",
+    "Latissimus Dorsi",
+    "Pectoralis Major Sternal Head",
+    "Teres Major",
+    "Teres Minor"
+   ],
+   "bodyParts": [
+    "Back"
+   ],
+   "sortedEquipment": [
+    "barbell",
+    "dumbbell"
+   ]
+  },
+  {
+   "id": "chinUp",
+   "name": "Chin Up",
+   "defaultWarmup": 10,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "upper",
+    "pull"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Latissimus Dorsi"
+   ],
+   "synergistMuscles": [
+    "Brachialis",
+    "Brachioradialis",
+    "Deltoid Posterior",
+    "Levator Scapulae",
+    "Pectoralis Major Sternal Head",
+    "Teres Major",
+    "Trapezius Lower Fibers",
+    "Trapezius Middle Fibers"
+   ],
+   "bodyParts": [
+    "Back"
+   ],
+   "sortedEquipment": [
+    "leverageMachine",
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "clean",
+   "name": "Clean",
+   "defaultWarmup": 45,
+   "defaultEquipment": "barbell",
+   "types": [
+    "upper",
+    "lower",
+    "push"
+   ],
+   "startingWeightKg": 42.5,
+   "startingWeightLb": 95,
+   "targetMuscles": [
+    "Gluteus Maximus",
+    "Hamstrings",
+    "Quadriceps",
+    "Latissimus Dorsi",
+    "Trapezius Lower Fibers",
+    "Deltoid Anterior",
+    "Deltoid Lateral"
+   ],
+   "synergistMuscles": [
+    "Adductor Magnus",
+    "Gastrocnemius",
+    "Soleus",
+    "Erector Spinae",
+    "Biceps Brachii",
+    "Pectoralis Major Clavicular Head",
+    "Pectoralis Major Sternal Head",
+    "Wrist Flexors"
+   ],
+   "bodyParts": [
+    "Hips",
+    "Thighs",
+    "Back",
+    "Shoulders"
+   ],
+   "sortedEquipment": [
+    "barbell"
+   ]
+  },
+  {
+   "id": "cleanandJerk",
+   "name": "Clean and Jerk",
+   "defaultWarmup": 45,
+   "defaultEquipment": "barbell",
+   "types": [
+    "upper",
+    "lower",
+    "push"
+   ],
+   "startingWeightKg": 42.5,
+   "startingWeightLb": 95,
+   "targetMuscles": [
+    "Gluteus Maximus",
+    "Hamstrings",
+    "Quadriceps",
+    "Latissimus Dorsi",
+    "Trapezius Lower Fibers",
+    "Deltoid Anterior",
+    "Deltoid Lateral"
+   ],
+   "synergistMuscles": [
+    "Adductor Magnus",
+    "Gastrocnemius",
+    "Soleus",
+    "Erector Spinae",
+    "Biceps Brachii",
+    "Pectoralis Major Clavicular Head",
+    "Pectoralis Major Sternal Head",
+    "Wrist Flexors"
+   ],
+   "bodyParts": [
+    "Hips",
+    "Thighs",
+    "Back",
+    "Shoulders"
+   ],
+   "sortedEquipment": [
+    "barbell"
+   ]
+  },
+  {
+   "id": "concentrationCurl",
+   "name": "Concentration Curl",
+   "defaultWarmup": 10,
+   "defaultEquipment": "dumbbell",
+   "types": [
+    "upper",
+    "pull"
+   ],
+   "startingWeightKg": 7.5,
+   "startingWeightLb": 20,
+   "targetMuscles": [
+    "Brachialis"
+   ],
+   "synergistMuscles": [
+    "Biceps Brachii",
+    "Brachioradialis"
+   ],
+   "bodyParts": [
+    "Upper Arms"
+   ],
+   "sortedEquipment": [
+    "barbell",
+    "dumbbell",
+    "band",
+    "cable"
+   ]
+  },
+  {
+   "id": "crossBodyCrunch",
+   "name": "Cross Body Crunch",
+   "defaultWarmup": 10,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "core"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Obliques"
+   ],
+   "synergistMuscles": [
+    "Iliopsoas",
+    "Rectus Abdominis"
+   ],
+   "bodyParts": [
+    "Waist"
+   ],
+   "sortedEquipment": [
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "crunch",
+   "name": "Crunch",
+   "defaultWarmup": 10,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "core"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Rectus Abdominis"
+   ],
+   "synergistMuscles": [
+    "Obliques"
+   ],
+   "bodyParts": [
+    "Waist"
+   ],
+   "sortedEquipment": [
+    "cable",
+    "bodyweight",
+    "leverageMachine"
+   ]
+  },
+  {
+   "id": "cycling",
+   "name": "Cycling",
+   "defaultWarmup": 10,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "lower",
+    "legs"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Quadriceps",
+    "Hamstrings",
+    "Gluteus Maximus",
+    "Gastrocnemius",
+    "Soleus",
+    "Tibialis Anterior"
+   ],
+   "synergistMuscles": [
+    "Adductor Magnus",
+    "Adductor Longus",
+    "Adductor Brevis",
+    "Iliopsoas",
+    "Erector Spinae",
+    "Rectus Abdominis",
+    "Obliques"
+   ],
+   "bodyParts": [
+    "Hips",
+    "Thighs",
+    "Calves",
+    "Shins",
+    "Back",
+    "Waist"
+   ],
+   "sortedEquipment": [
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "deadlift",
+   "name": "Deadlift",
+   "defaultWarmup": 95,
+   "defaultEquipment": "barbell",
+   "types": [
+    "lower",
+    "pull"
+   ],
+   "startingWeightKg": 82.5,
+   "startingWeightLb": 185,
+   "targetMuscles": [
+    "Gluteus Maximus"
+   ],
+   "synergistMuscles": [
+    "Adductor Magnus",
+    "Hamstrings",
+    "Quadriceps",
+    "Soleus"
+   ],
+   "bodyParts": [
+    "Hips"
+   ],
+   "sortedEquipment": [
+    "barbell",
+    "cable",
+    "dumbbell",
+    "leverageMachine",
+    "smith",
+    "band",
+    "kettlebell",
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "deadliftHighPull",
+   "name": "Deadlift High Pull",
+   "defaultWarmup": 95,
+   "defaultEquipment": "barbell",
+   "types": [
+    "upper",
+    "lower",
+    "pull"
+   ],
+   "startingWeightKg": 32.5,
+   "startingWeightLb": 75,
+   "targetMuscles": [
+    "Deltoid Lateral",
+    "Gluteus Maximus",
+    "Quadriceps"
+   ],
+   "synergistMuscles": [
+    "Adductor Magnus",
+    "Biceps Brachii",
+    "Brachialis",
+    "Brachioradialis",
+    "Deltoid Anterior",
+    "Gastrocnemius",
+    "Infraspinatus",
+    "Soleus",
+    "Teres Minor",
+    "Trapezius Lower Fibers",
+    "Trapezius Middle Fibers"
+   ],
+   "bodyParts": [
+    "Shoulders"
+   ],
+   "sortedEquipment": [
+    "barbell"
+   ]
+  },
+  {
+   "id": "declineBenchPress",
+   "name": "Decline Bench Press",
+   "defaultWarmup": 45,
+   "defaultEquipment": "barbell",
+   "types": [
+    "upper",
+    "push"
+   ],
+   "startingWeightKg": 55,
+   "startingWeightLb": 125,
+   "targetMuscles": [
+    "Pectoralis Major Sternal Head"
+   ],
+   "synergistMuscles": [
+    "Deltoid Anterior",
+    "Pectoralis Major Clavicular Head",
+    "Triceps Brachii"
+   ],
+   "bodyParts": [
+    "Chest"
+   ],
+   "sortedEquipment": [
+    "dumbbell",
+    "smith"
+   ]
+  },
+  {
+   "id": "declineCrunch",
+   "name": "Decline Crunch",
+   "defaultWarmup": 10,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "core"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Rectus Abdominis"
+   ],
+   "synergistMuscles": [
+    "Obliques"
+   ],
+   "bodyParts": [
+    "Waist"
+   ],
+   "sortedEquipment": [
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "deficitDeadlift",
+   "name": "Deficit Deadlift",
+   "defaultWarmup": 95,
+   "defaultEquipment": "barbell",
+   "types": [
+    "lower",
+    "pull"
+   ],
+   "startingWeightKg": 75,
+   "startingWeightLb": 165,
+   "targetMuscles": [
+    "Gluteus Maximus"
+   ],
+   "synergistMuscles": [
+    "Adductor Magnus",
+    "Erector Spinae",
+    "Hamstrings",
+    "Quadriceps",
+    "Soleus"
+   ],
+   "bodyParts": [
+    "Hips"
+   ],
+   "sortedEquipment": [
+    "barbell",
+    "trapbar"
+   ]
+  },
+  {
+   "id": "ellipticalMachine",
+   "name": "Elliptical Machine",
+   "defaultWarmup": 10,
+   "defaultEquipment": "leverageMachine",
+   "types": [
+    "lower",
+    "legs"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [],
+   "synergistMuscles": [
+    "Biceps Brachii",
+    "Brachialis",
+    "Brachioradialis",
+    "Deltoid Anterior",
+    "Deltoid Lateral",
+    "Deltoid Posterior",
+    "Gluteus Maximus",
+    "Hamstrings",
+    "Latissimus Dorsi",
+    "Levator Scapulae",
+    "Pectoralis Major Clavicular Head",
+    "Pectoralis Major Sternal Head",
+    "Quadriceps",
+    "Serratus Anterior"
+   ],
+   "bodyParts": [
+    "Hips",
+    "Thighs",
+    "Back",
+    "Shoulders"
+   ],
+   "sortedEquipment": [
+    "leverageMachine"
+   ]
+  },
+  {
+   "id": "facePull",
+   "name": "Face Pull",
+   "defaultWarmup": 10,
+   "defaultEquipment": "band",
+   "types": [
+    "upper",
+    "pull"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Deltoid Posterior"
+   ],
+   "synergistMuscles": [
+    "Brachialis",
+    "Brachioradialis",
+    "Deltoid Lateral",
+    "Infraspinatus",
+    "Teres Minor",
+    "Trapezius Lower Fibers",
+    "Trapezius Middle Fibers"
+   ],
+   "bodyParts": [
+    "Shoulders"
+   ],
+   "sortedEquipment": [
+    "band"
+   ]
+  },
+  {
+   "id": "flatKneeRaise",
+   "name": "Flat Knee Raise",
+   "defaultWarmup": 10,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "core"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Iliopsoas"
+   ],
+   "synergistMuscles": [
+    "Adductor Brevis",
+    "Adductor Longus",
+    "Pectineous",
+    "Sartorius",
+    "Tensor Fasciae Latae"
+   ],
+   "bodyParts": [
+    "Hips"
+   ],
+   "sortedEquipment": [
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "flatLegRaise",
+   "name": "Flat Leg Raise",
+   "defaultWarmup": 10,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "core"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Iliopsoas"
+   ],
+   "synergistMuscles": [
+    "Adductor Brevis",
+    "Adductor Longus",
+    "Pectineous",
+    "Quadriceps",
+    "Sartorius",
+    "Tensor Fasciae Latae"
+   ],
+   "bodyParts": [
+    "Hips",
+    "Waist"
+   ],
+   "sortedEquipment": [
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "frontRaise",
+   "name": "Front Raise",
+   "defaultWarmup": 10,
+   "defaultEquipment": "dumbbell",
+   "types": [
+    "upper",
+    "push"
+   ],
+   "startingWeightKg": 5,
+   "startingWeightLb": 15,
+   "targetMuscles": [
+    "Deltoid Anterior"
+   ],
+   "synergistMuscles": [
+    "Deltoid Lateral",
+    "Pectoralis Major Clavicular Head",
+    "Serratus Anterior",
+    "Trapezius Lower Fibers",
+    "Trapezius Middle Fibers"
+   ],
+   "bodyParts": [
+    "Shoulders"
+   ],
+   "sortedEquipment": [
+    "barbell",
+    "cable",
+    "dumbbell",
+    "bodyweight",
+    "band"
+   ]
+  },
+  {
+   "id": "frontSquat",
+   "name": "Front Squat",
+   "defaultWarmup": 45,
+   "defaultEquipment": "barbell",
+   "types": [
+    "lower",
+    "legs"
+   ],
+   "startingWeightKg": 42.5,
+   "startingWeightLb": 95,
+   "targetMuscles": [
+    "Quadriceps"
+   ],
+   "synergistMuscles": [
+    "Adductor Magnus",
+    "Gluteus Maximus",
+    "Soleus"
+   ],
+   "bodyParts": [
+    "Hips"
+   ],
+   "sortedEquipment": [
+    "barbell",
+    "kettlebell",
+    "dumbbell",
+    "cable",
+    "smith"
+   ]
+  },
+  {
+   "id": "gobletSquat",
+   "name": "Goblet Squat",
+   "defaultWarmup": 10,
+   "defaultEquipment": "dumbbell",
+   "types": [
+    "lower",
+    "legs"
+   ],
+   "startingWeightKg": 15,
+   "startingWeightLb": 35,
+   "targetMuscles": [
+    "Gluteus Maximus"
+   ],
+   "synergistMuscles": [
+    "Adductor Magnus",
+    "Quadriceps",
+    "Soleus"
+   ],
+   "bodyParts": [
+    "Thighs"
+   ],
+   "sortedEquipment": [
+    "kettlebell",
+    "dumbbell"
+   ]
+  },
+  {
+   "id": "goodMorning",
+   "name": "Good Morning",
+   "defaultWarmup": 45,
+   "defaultEquipment": "barbell",
+   "types": [
+    "lower",
+    "legs"
+   ],
+   "startingWeightKg": 27.5,
+   "startingWeightLb": 65,
+   "targetMuscles": [
+    "Hamstrings"
+   ],
+   "synergistMuscles": [
+    "Adductor Magnus",
+    "Gluteus Maximus"
+   ],
+   "bodyParts": [
+    "Thighs"
+   ],
+   "sortedEquipment": [
+    "barbell",
+    "smith",
+    "leverageMachine"
+   ]
+  },
+  {
+   "id": "gluteBridge",
+   "name": "Glute Bridge",
+   "defaultWarmup": 45,
+   "defaultEquipment": "dumbbell",
+   "types": [
+    "lower",
+    "legs"
+   ],
+   "startingWeightKg": 15,
+   "startingWeightLb": 35,
+   "targetMuscles": [
+    "Gluteus Maximus"
+   ],
+   "synergistMuscles": [
+    "Quadriceps"
+   ],
+   "bodyParts": [
+    "Hips"
+   ],
+   "sortedEquipment": [
+    "band",
+    "barbell",
+    "dumbbell"
+   ]
+  },
+  {
+   "id": "gluteBridgeMarch",
+   "name": "Glute Bridge March",
+   "defaultWarmup": 45,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "lower",
+    "legs"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Gluteus Maximus",
+    "Rectus Abdominis"
+   ],
+   "synergistMuscles": [
+    "Hamstrings",
+    "Quadriceps",
+    "Sartorius"
+   ],
+   "bodyParts": [
+    "Hips"
+   ],
+   "sortedEquipment": [
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "gluteKickback",
+   "name": "Glute Kickback",
+   "defaultWarmup": 45,
+   "defaultEquipment": "cable",
+   "types": [
+    "lower",
+    "legs"
+   ],
+   "startingWeightKg": 15,
+   "startingWeightLb": 35,
+   "targetMuscles": [
+    "Gluteus Maximus"
+   ],
+   "synergistMuscles": [
+    "Adductor Magnus"
+   ],
+   "bodyParts": [
+    "Glute"
+   ],
+   "sortedEquipment": [
+    "leverageMachine",
+    "bodyweight",
+    "cable",
+    "band"
+   ]
+  },
+  {
+   "id": "hackSquat",
+   "name": "Hack Squat",
+   "defaultWarmup": 45,
+   "defaultEquipment": "barbell",
+   "types": [
+    "lower",
+    "legs"
+   ],
+   "startingWeightKg": 50,
+   "startingWeightLb": 115,
+   "targetMuscles": [
+    "Quadriceps"
+   ],
+   "synergistMuscles": [
+    "Adductor Magnus",
+    "Gluteus Maximus",
+    "Soleus"
+   ],
+   "bodyParts": [
+    "Hips"
+   ],
+   "sortedEquipment": [
+    "barbell",
+    "smith"
+   ]
+  },
+  {
+   "id": "hammerCurl",
+   "name": "Hammer Curl",
+   "defaultWarmup": 10,
+   "defaultEquipment": "dumbbell",
+   "types": [
+    "upper",
+    "pull"
+   ],
+   "startingWeightKg": 10,
+   "startingWeightLb": 25,
+   "targetMuscles": [
+    "Brachioradialis"
+   ],
+   "synergistMuscles": [
+    "Biceps Brachii",
+    "Brachialis"
+   ],
+   "bodyParts": [
+    "Forearms"
+   ],
+   "sortedEquipment": [
+    "cable",
+    "dumbbell",
+    "band"
+   ]
+  },
+  {
+   "id": "handstandPushUp",
+   "name": "Handstand Push Up",
+   "defaultWarmup": 10,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "upper",
+    "push"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Deltoid Anterior"
+   ],
+   "synergistMuscles": [
+    "Deltoid Lateral",
+    "Pectoralis Major Clavicular Head",
+    "Serratus Anterior",
+    "Trapezius Lower Fibers",
+    "Trapezius Middle Fibers",
+    "Triceps Brachii"
+   ],
+   "bodyParts": [
+    "Shoulders"
+   ],
+   "sortedEquipment": [
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "hangClean",
+   "name": "Hang Clean",
+   "defaultWarmup": 45,
+   "defaultEquipment": "barbell",
+   "types": [
+    "upper",
+    "lower",
+    "pull"
+   ],
+   "startingWeightKg": 37.5,
+   "startingWeightLb": 85,
+   "targetMuscles": [
+    "Biceps Brachii",
+    "Brachialis",
+    "Brachioradialis"
+   ],
+   "synergistMuscles": [
+    "Deltoid Anterior",
+    "Pectoralis Major Clavicular Head"
+   ],
+   "bodyParts": [
+    "Forearms"
+   ],
+   "sortedEquipment": [
+    "kettlebell"
+   ]
+  },
+  {
+   "id": "hangSnatch",
+   "name": "Hang Snatch",
+   "defaultWarmup": 45,
+   "defaultEquipment": "barbell",
+   "types": [
+    "upper",
+    "lower",
+    "pull"
+   ],
+   "startingWeightKg": 27.5,
+   "startingWeightLb": 65,
+   "targetMuscles": [
+    "Trapezius Lower Fibers",
+    "Trapezius Middle Fibers",
+    "Trapezius Upper Fibers",
+    "Quadriceps",
+    "Gluteus Maximus"
+   ],
+   "synergistMuscles": [
+    "Hamstrings",
+    "Erector Spinae",
+    "Deltoid Anterior",
+    "Deltoid Lateral",
+    "Deltoid Posterior",
+    "Latissimus Dorsi",
+    "Biceps Brachii",
+    "Brachialis",
+    "Brachioradialis",
+    "Gastrocnemius",
+    "Soleus",
+    "Obliques",
+    "Rectus Abdominis"
+   ],
+   "bodyParts": [
+    "Thighs",
+    "Back",
+    "Shoulders"
+   ],
+   "sortedEquipment": [
+    "barbell"
+   ]
+  },
+  {
+   "id": "hangingLegRaise",
+   "name": "Hanging Leg Raise",
+   "defaultWarmup": 10,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "core"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Iliopsoas"
+   ],
+   "synergistMuscles": [
+    "Adductor Brevis",
+    "Adductor Longus",
+    "Pectineous",
+    "Sartorius",
+    "Tensor Fasciae Latae"
+   ],
+   "bodyParts": [
+    "Waist"
+   ],
+   "sortedEquipment": [
+    "bodyweight",
+    "cable"
+   ]
+  },
+  {
+   "id": "highKneeSkips",
+   "name": "High Knee Skips",
+   "defaultWarmup": 10,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "lower",
+    "legs"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Quadriceps",
+    "Hamstrings",
+    "Gluteus Maximus"
+   ],
+   "synergistMuscles": [
+    "Iliopsoas",
+    "Gastrocnemius",
+    "Soleus",
+    "Tibialis Anterior",
+    "Rectus Abdominis",
+    "Obliques",
+    "Adductor Magnus",
+    "Adductor Brevis",
+    "Adductor Longus"
+   ],
+   "bodyParts": [
+    "Thighs",
+    "Hips"
+   ],
+   "sortedEquipment": [
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "highRow",
+   "name": "High Row",
+   "defaultWarmup": 45,
+   "defaultEquipment": "leverageMachine",
+   "types": [
+    "upper",
+    "pull"
+   ],
+   "startingWeightKg": 27.5,
+   "startingWeightLb": 65,
+   "targetMuscles": [
+    "Latissimus Dorsi",
+    "Trapezius Lower Fibers",
+    "Trapezius Middle Fibers"
+   ],
+   "synergistMuscles": [
+    "Brachialis",
+    "Brachioradialis",
+    "Deltoid Posterior",
+    "Erector Spinae",
+    "Infraspinatus",
+    "Pectoralis Major Sternal Head",
+    "Teres Major",
+    "Teres Minor"
+   ],
+   "bodyParts": [
+    "Back"
+   ],
+   "sortedEquipment": [
+    "leverageMachine"
+   ]
+  },
+  {
+   "id": "hipAbductor",
+   "name": "Hip Abductor",
+   "defaultWarmup": 10,
+   "defaultEquipment": "leverageMachine",
+   "types": [
+    "lower",
+    "legs"
+   ],
+   "startingWeightKg": 26.25,
+   "startingWeightLb": 60,
+   "targetMuscles": [
+    "Gluteus Maximus",
+    "Gluteus Medius"
+   ],
+   "synergistMuscles": [
+    "Tensor Fasciae Latae"
+   ],
+   "bodyParts": [
+    "Hips"
+   ],
+   "sortedEquipment": [
+    "leverageMachine",
+    "bodyweight",
+    "cable",
+    "band"
+   ]
+  },
+  {
+   "id": "hipAdductor",
+   "name": "Hip Adductor",
+   "defaultWarmup": 10,
+   "defaultEquipment": "leverageMachine",
+   "types": [
+    "lower",
+    "legs"
+   ],
+   "startingWeightKg": 26.25,
+   "startingWeightLb": 60,
+   "targetMuscles": [
+    "Adductor Brevis",
+    "Adductor Longus",
+    "Adductor Magnus"
+   ],
+   "synergistMuscles": [
+    "Pectineous"
+   ],
+   "bodyParts": [
+    "Hips"
+   ],
+   "sortedEquipment": [
+    "leverageMachine",
+    "cable",
+    "band",
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "hipThrust",
+   "name": "Hip Thrust",
+   "defaultWarmup": 45,
+   "defaultEquipment": "barbell",
+   "types": [
+    "lower",
+    "legs"
+   ],
+   "startingWeightKg": 42.5,
+   "startingWeightLb": 95,
+   "targetMuscles": [
+    "Gluteus Maximus"
+   ],
+   "synergistMuscles": [
+    "Quadriceps"
+   ],
+   "bodyParts": [
+    "Hips"
+   ],
+   "sortedEquipment": [
+    "barbell",
+    "leverageMachine",
+    "band",
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "inclineBenchPress",
+   "name": "Incline Bench Press",
+   "defaultWarmup": 45,
+   "defaultEquipment": "barbell",
+   "types": [
+    "upper",
+    "push"
+   ],
+   "startingWeightKg": 50,
+   "startingWeightLb": 115,
+   "targetMuscles": [
+    "Pectoralis Major Clavicular Head"
+   ],
+   "synergistMuscles": [
+    "Deltoid Anterior",
+    "Pectoralis Major Sternal Head",
+    "Triceps Brachii"
+   ],
+   "bodyParts": [
+    "Chest"
+   ],
+   "sortedEquipment": [
+    "barbell",
+    "cable",
+    "dumbbell",
+    "smith"
+   ]
+  },
+  {
+   "id": "inclineBenchPressWideGrip",
+   "name": "Incline Bench Press Wide Grip",
+   "defaultWarmup": 45,
+   "defaultEquipment": "barbell",
+   "types": [
+    "upper",
+    "push"
+   ],
+   "startingWeightKg": 50,
+   "startingWeightLb": 110,
+   "targetMuscles": [
+    "Pectoralis Major Clavicular Head"
+   ],
+   "synergistMuscles": [
+    "Deltoid Anterior",
+    "Pectoralis Major Sternal Head",
+    "Triceps Brachii"
+   ],
+   "bodyParts": [
+    "Chest"
+   ],
+   "sortedEquipment": [
+    "barbell"
+   ]
+  },
+  {
+   "id": "inclineChestFly",
+   "name": "Incline Chest Fly",
+   "defaultWarmup": 10,
+   "defaultEquipment": "dumbbell",
+   "types": [
+    "upper",
+    "push"
+   ],
+   "startingWeightKg": 7.5,
+   "startingWeightLb": 20,
+   "targetMuscles": [
+    "Pectoralis Major Clavicular Head"
+   ],
+   "synergistMuscles": [
+    "Biceps Brachii",
+    "Deltoid Anterior",
+    "Pectoralis Major Sternal Head"
+   ],
+   "bodyParts": [
+    "Chest"
+   ],
+   "sortedEquipment": [
+    "cable",
+    "dumbbell"
+   ]
+  },
+  {
+   "id": "inclineChestPress",
+   "name": "Incline Chest Press",
+   "defaultWarmup": 10,
+   "defaultEquipment": "dumbbell",
+   "types": [
+    "upper",
+    "push"
+   ],
+   "startingWeightKg": 10,
+   "startingWeightLb": 25,
+   "targetMuscles": [
+    "Pectoralis Major Clavicular Head"
+   ],
+   "synergistMuscles": [
+    "Deltoid Anterior",
+    "Pectoralis Major Sternal Head",
+    "Triceps Brachii"
+   ],
+   "bodyParts": [
+    "Chest"
+   ],
+   "sortedEquipment": [
+    "leverageMachine",
+    "band",
+    "dumbbell"
+   ]
+  },
+  {
+   "id": "inclineCurl",
+   "name": "Incline Curl",
+   "defaultWarmup": 10,
+   "defaultEquipment": "dumbbell",
+   "types": [
+    "upper",
+    "pull"
+   ],
+   "startingWeightKg": 7.5,
+   "startingWeightLb": 20,
+   "targetMuscles": [
+    "Biceps Brachii"
+   ],
+   "synergistMuscles": [
+    "Brachialis",
+    "Brachioradialis"
+   ],
+   "bodyParts": [
+    "Upper Arms"
+   ],
+   "sortedEquipment": [
+    "dumbbell"
+   ]
+  },
+  {
+   "id": "inclineRow",
+   "name": "Incline Row",
+   "defaultWarmup": 10,
+   "defaultEquipment": "dumbbell",
+   "types": [
+    "upper",
+    "pull"
+   ],
+   "startingWeightKg": 12.5,
+   "startingWeightLb": 30,
+   "targetMuscles": [
+    "Latissimus Dorsi",
+    "Trapezius Lower Fibers",
+    "Trapezius Middle Fibers"
+   ],
+   "synergistMuscles": [
+    "Brachialis",
+    "Brachioradialis",
+    "Deltoid Posterior",
+    "Infraspinatus",
+    "Pectoralis Major Sternal Head",
+    "Teres Major",
+    "Teres Minor"
+   ],
+   "bodyParts": [
+    "Back"
+   ],
+   "sortedEquipment": [
+    "barbell",
+    "dumbbell"
+   ]
+  },
+  {
+   "id": "invertedRow",
+   "name": "Inverted Row",
+   "defaultWarmup": 10,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "upper",
+    "pull"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Latissimus Dorsi",
+    "Trapezius Lower Fibers",
+    "Trapezius Middle Fibers"
+   ],
+   "synergistMuscles": [
+    "Infraspinatus",
+    "Teres Major",
+    "Teres Minor",
+    "Brachialis",
+    "Brachioradialis",
+    "Deltoid Posterior",
+    "Pectoralis Major Sternal Head"
+   ],
+   "bodyParts": [
+    "Back"
+   ],
+   "sortedEquipment": [
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "isoLateralChestPress",
+   "name": "Iso-Lateral Chest Press",
+   "defaultWarmup": 10,
+   "defaultEquipment": "dumbbell",
+   "types": [
+    "upper",
+    "push"
+   ],
+   "startingWeightKg": 12.5,
+   "startingWeightLb": 30,
+   "targetMuscles": [
+    "Pectoralis Major Sternal Head"
+   ],
+   "synergistMuscles": [
+    "Deltoid Anterior",
+    "Pectoralis Major Clavicular Head",
+    "Triceps Brachii"
+   ],
+   "bodyParts": [
+    "Chest"
+   ],
+   "sortedEquipment": [
+    "dumbbell"
+   ]
+  },
+  {
+   "id": "isoLateralRow",
+   "name": "Iso-Lateral Row",
+   "defaultWarmup": 10,
+   "defaultEquipment": "dumbbell",
+   "types": [
+    "upper",
+    "pull"
+   ],
+   "startingWeightKg": 12.5,
+   "startingWeightLb": 30,
+   "targetMuscles": [
+    "Latissimus Dorsi",
+    "Trapezius Lower Fibers",
+    "Trapezius Middle Fibers"
+   ],
+   "synergistMuscles": [
+    "Brachialis",
+    "Brachioradialis",
+    "Deltoid Posterior",
+    "Infraspinatus",
+    "Pectoralis Major Sternal Head",
+    "Teres Major",
+    "Teres Minor"
+   ],
+   "bodyParts": [
+    "Back"
+   ],
+   "sortedEquipment": [
+    "dumbbell"
+   ]
+  },
+  {
+   "id": "jackknifeSitUp",
+   "name": "Jackknife Sit Up",
+   "defaultWarmup": 10,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "core"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Rectus Abdominis"
+   ],
+   "synergistMuscles": [
+    "Iliopsoas",
+    "Obliques",
+    "Quadriceps",
+    "Sartorius",
+    "Tensor Fasciae Latae"
+   ],
+   "bodyParts": [
+    "Waist"
+   ],
+   "sortedEquipment": [
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "jumpRope",
+   "name": "Jump Rope",
+   "defaultWarmup": 10,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "lower",
+    "legs"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Soleus",
+    "Gastrocnemius",
+    "Quadriceps",
+    "Hamstrings"
+   ],
+   "synergistMuscles": [
+    "Gluteus Maximus",
+    "Rectus Abdominis",
+    "Obliques",
+    "Tibialis Anterior"
+   ],
+   "bodyParts": [
+    "Thighs",
+    "Calves"
+   ],
+   "sortedEquipment": [
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "jumpSquat",
+   "name": "Jump Squat",
+   "defaultWarmup": 10,
+   "defaultEquipment": "barbell",
+   "types": [
+    "lower",
+    "legs"
+   ],
+   "startingWeightKg": 27.5,
+   "startingWeightLb": 65,
+   "targetMuscles": [
+    "Gluteus Maximus",
+    "Quadriceps"
+   ],
+   "synergistMuscles": [
+    "Adductor Magnus",
+    "Gastrocnemius",
+    "Soleus"
+   ],
+   "bodyParts": [
+    "Thighs"
+   ],
+   "sortedEquipment": [
+    "barbell",
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "jumpingJack",
+   "name": "Jumping Jack",
+   "defaultWarmup": 10,
+   "types": [
+    "upper",
+    "lower"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Gluteus Maximus",
+    "Quadriceps",
+    "Adductor Brevis",
+    "Adductor Longus",
+    "Adductor Magnus",
+    "Deltoid Anterior",
+    "Deltoid Lateral",
+    "Deltoid Posterior"
+   ],
+   "synergistMuscles": [
+    "Gastrocnemius",
+    "Soleus",
+    "Hamstrings",
+    "Rectus Abdominis",
+    "Obliques",
+    "Trapezius Upper Fibers",
+    "Serratus Anterior"
+   ],
+   "bodyParts": [
+    "Thighs"
+   ],
+   "sortedEquipment": [
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "kettlebellSwing",
+   "name": "Kettlebell Swing",
+   "defaultWarmup": 10,
+   "defaultEquipment": "kettlebell",
+   "types": [
+    "upper",
+    "lower",
+    "core"
+   ],
+   "startingWeightKg": 16,
+   "startingWeightLb": 35,
+   "targetMuscles": [
+    "Deltoid Anterior",
+    "Gluteus Maximus"
+   ],
+   "synergistMuscles": [
+    "Adductor Magnus",
+    "Hamstrings",
+    "Pectoralis Major Clavicular Head",
+    "Serratus Anterior",
+    "Soleus"
+   ],
+   "bodyParts": [
+    "Hips",
+    "Shoulders"
+   ],
+   "sortedEquipment": [
+    "dumbbell",
+    "kettlebell"
+   ]
+  },
+  {
+   "id": "kettlebellTurkishGetUp",
+   "name": "Kettlebell Turkish Get Up",
+   "defaultWarmup": 10,
+   "defaultEquipment": "kettlebell",
+   "types": [
+    "upper",
+    "lower",
+    "core"
+   ],
+   "startingWeightKg": 8,
+   "startingWeightLb": 25,
+   "targetMuscles": [
+    "Deltoid Anterior",
+    "Deltoid Lateral",
+    "Deltoid Posterior",
+    "Quadriceps",
+    "Gluteus Maximus"
+   ],
+   "synergistMuscles": [
+    "Obliques",
+    "Rectus Abdominis",
+    "Latissimus Dorsi",
+    "Hamstrings",
+    "Adductor Brevis",
+    "Adductor Longus",
+    "Adductor Magnus",
+    "Triceps Brachii",
+    "Erector Spinae",
+    "Serratus Anterior"
+   ],
+   "bodyParts": [
+    "Hips",
+    "Shoulders"
+   ],
+   "sortedEquipment": [
+    "kettlebell"
+   ]
+  },
+  {
+   "id": "kippingPullUp",
+   "name": "Kipping Pull Up",
+   "defaultWarmup": 10,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "upper",
+    "pull"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Latissimus Dorsi",
+    "Brachialis",
+    "Biceps Brachii",
+    "Trapezius Lower Fibers",
+    "Trapezius Middle Fibers"
+   ],
+   "synergistMuscles": [
+    "Deltoid Posterior",
+    "Brachioradialis",
+    "Pectoralis Major Sternal Head",
+    "Rectus Abdominis",
+    "Obliques",
+    "Iliopsoas",
+    "Tensor Fasciae Latae",
+    "Adductor Longus",
+    "Adductor Brevis",
+    "Erector Spinae"
+   ],
+   "bodyParts": [
+    "Back"
+   ],
+   "sortedEquipment": [
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "kneeRaise",
+   "name": "Knee Raise",
+   "defaultWarmup": 10,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "core"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Iliopsoas"
+   ],
+   "synergistMuscles": [
+    "Adductor Brevis",
+    "Adductor Longus",
+    "Pectineous",
+    "Sartorius",
+    "Tensor Fasciae Latae"
+   ],
+   "bodyParts": [
+    "Waist"
+   ],
+   "sortedEquipment": [
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "kneelingPulldown",
+   "name": "Kneeling Pulldown",
+   "defaultWarmup": 10,
+   "defaultEquipment": "band",
+   "types": [
+    "upper",
+    "pull"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Latissimus Dorsi"
+   ],
+   "synergistMuscles": [
+    "Biceps Brachii",
+    "Brachialis",
+    "Brachioradialis",
+    "Deltoid Posterior",
+    "Levator Scapulae",
+    "Pectoralis Major Sternal Head",
+    "Serratus Anterior",
+    "Teres Major",
+    "Trapezius Middle Fibers",
+    "Triceps Brachii"
+   ],
+   "bodyParts": [
+    "Back"
+   ],
+   "sortedEquipment": [
+    "band"
+   ]
+  },
+  {
+   "id": "kneestoElbows",
+   "name": "Knees to Elbows",
+   "defaultWarmup": 10,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "core"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Rectus Abdominis"
+   ],
+   "synergistMuscles": [
+    "Adductor Brevis",
+    "Adductor Longus",
+    "Iliopsoas",
+    "Obliques",
+    "Pectineous",
+    "Sartorius",
+    "Tensor Fasciae Latae"
+   ],
+   "bodyParts": [
+    "Waist"
+   ],
+   "sortedEquipment": [
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "latPulldown",
+   "name": "Lat Pulldown",
+   "defaultWarmup": 10,
+   "defaultEquipment": "cable",
+   "types": [
+    "upper",
+    "pull"
+   ],
+   "startingWeightKg": 30,
+   "startingWeightLb": 70,
+   "targetMuscles": [
+    "Latissimus Dorsi"
+   ],
+   "synergistMuscles": [
+    "Biceps Brachii",
+    "Brachialis",
+    "Brachioradialis",
+    "Deltoid Posterior",
+    "Infraspinatus",
+    "Levator Scapulae",
+    "Teres Major",
+    "Teres Minor",
+    "Trapezius Lower Fibers",
+    "Trapezius Middle Fibers"
+   ],
+   "bodyParts": [
+    "Back"
+   ],
+   "sortedEquipment": [
+    "cable"
+   ]
+  },
+  {
+   "id": "lateralBoxJump",
+   "name": "Lateral Box Jump",
+   "defaultWarmup": 10,
+   "types": [
+    "lower",
+    "legs"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Gluteus Maximus",
+    "Quadriceps",
+    "Hamstrings"
+   ],
+   "synergistMuscles": [
+    "Adductor Brevis",
+    "Adductor Longus",
+    "Adductor Magnus",
+    "Gluteus Medius",
+    "Tensor Fasciae Latae",
+    "Rectus Abdominis",
+    "Obliques",
+    "Deltoid Anterior",
+    "Deltoid Posterior",
+    "Deltoid Lateral"
+   ],
+   "bodyParts": [
+    "Thighs"
+   ],
+   "sortedEquipment": [
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "lateralRaise",
+   "name": "Lateral Raise",
+   "defaultWarmup": 10,
+   "defaultEquipment": "dumbbell",
+   "types": [
+    "upper",
+    "push"
+   ],
+   "startingWeightKg": 5,
+   "startingWeightLb": 15,
+   "targetMuscles": [
+    "Deltoid Lateral"
+   ],
+   "synergistMuscles": [
+    "Deltoid Anterior",
+    "Serratus Anterior",
+    "Trapezius Lower Fibers",
+    "Trapezius Middle Fibers"
+   ],
+   "bodyParts": [
+    "Shoulders"
+   ],
+   "sortedEquipment": [
+    "cable",
+    "dumbbell",
+    "leverageMachine",
+    "band",
+    "kettlebell"
+   ]
+  },
+  {
+   "id": "legsUpBenchPress",
+   "name": "Legs Up Bench Press",
+   "defaultWarmup": 45,
+   "defaultEquipment": "barbell",
+   "types": [
+    "upper",
+    "push"
+   ],
+   "startingWeightKg": 60,
+   "startingWeightLb": 135,
+   "targetMuscles": [
+    "Pectoralis Major Sternal Head"
+   ],
+   "synergistMuscles": [
+    "Deltoid Anterior",
+    "Pectoralis Major Clavicular Head",
+    "Triceps Brachii"
+   ],
+   "bodyParts": [
+    "Chest"
+   ],
+   "sortedEquipment": [
+    "barbell"
+   ]
+  },
+  {
+   "id": "legCurl",
+   "name": "Leg Curl",
+   "defaultWarmup": 10,
+   "defaultEquipment": "leverageMachine",
+   "types": [
+    "lower",
+    "legs"
+   ],
+   "startingWeightKg": 26.25,
+   "startingWeightLb": 60,
+   "targetMuscles": [
+    "Hamstrings"
+   ],
+   "synergistMuscles": [
+    "Gastrocnemius",
+    "Sartorius"
+   ],
+   "bodyParts": [
+    "Thighs"
+   ],
+   "sortedEquipment": [
+    "leverageMachine"
+   ]
+  },
+  {
+   "id": "legExtension",
+   "name": "Leg Extension",
+   "defaultWarmup": 10,
+   "defaultEquipment": "leverageMachine",
+   "types": [
+    "lower",
+    "legs"
+   ],
+   "startingWeightKg": 26.25,
+   "startingWeightLb": 60,
+   "targetMuscles": [
+    "Quadriceps"
+   ],
+   "synergistMuscles": [],
+   "bodyParts": [
+    "Thighs"
+   ],
+   "sortedEquipment": [
+    "leverageMachine",
+    "band"
+   ]
+  },
+  {
+   "id": "legPress",
+   "name": "Leg Press",
+   "defaultWarmup": 10,
+   "defaultEquipment": "leverageMachine",
+   "types": [
+    "lower",
+    "legs"
+   ],
+   "startingWeightKg": 112.5,
+   "startingWeightLb": 250,
+   "targetMuscles": [
+    "Quadriceps"
+   ],
+   "synergistMuscles": [
+    "Adductor Magnus",
+    "Gluteus Maximus",
+    "Soleus"
+   ],
+   "bodyParts": [
+    "Thighs"
+   ],
+   "sortedEquipment": [
+    "smith",
+    "leverageMachine"
+   ]
+  },
+  {
+   "id": "lunge",
+   "name": "Lunge",
+   "defaultWarmup": 45,
+   "defaultEquipment": "barbell",
+   "types": [
+    "lower",
+    "legs"
+   ],
+   "startingWeightKg": 32.5,
+   "startingWeightLb": 75,
+   "targetMuscles": [
+    "Quadriceps"
+   ],
+   "synergistMuscles": [
+    "Adductor Magnus",
+    "Gluteus Maximus",
+    "Soleus"
+   ],
+   "bodyParts": [
+    "Thighs"
+   ],
+   "sortedEquipment": [
+    "barbell",
+    "dumbbell",
+    "bodyweight",
+    "cable"
+   ]
+  },
+  {
+   "id": "lyingBicepCurl",
+   "name": "Lying Bicep Curl",
+   "defaultWarmup": 10,
+   "defaultEquipment": "dumbbell",
+   "types": [
+    "upper",
+    "pull"
+   ],
+   "startingWeightKg": 5,
+   "startingWeightLb": 15,
+   "targetMuscles": [
+    "Biceps Brachii"
+   ],
+   "synergistMuscles": [
+    "Brachialis",
+    "Brachioradialis"
+   ],
+   "bodyParts": [
+    "Upper Arms"
+   ],
+   "sortedEquipment": [
+    "barbell",
+    "dumbbell",
+    "band",
+    "leverageMachine",
+    "cable",
+    "ezbar"
+   ]
+  },
+  {
+   "id": "lyingLegCurl",
+   "name": "Lying Leg Curl",
+   "defaultWarmup": 10,
+   "defaultEquipment": "leverageMachine",
+   "types": [
+    "lower",
+    "legs"
+   ],
+   "startingWeightKg": 26.25,
+   "startingWeightLb": 60,
+   "targetMuscles": [
+    "Hamstrings"
+   ],
+   "synergistMuscles": [
+    "Gastrocnemius",
+    "Sartorius"
+   ],
+   "bodyParts": [
+    "Thighs"
+   ],
+   "sortedEquipment": [
+    "leverageMachine",
+    "band"
+   ]
+  },
+  {
+   "id": "mountainClimber",
+   "name": "Mountain Climber",
+   "defaultWarmup": 10,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "core",
+    "lower"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Iliopsoas"
+   ],
+   "synergistMuscles": [
+    "Adductor Brevis",
+    "Adductor Longus",
+    "Pectineous",
+    "Sartorius",
+    "Tensor Fasciae Latae"
+   ],
+   "bodyParts": [
+    "Waist"
+   ],
+   "sortedEquipment": [
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "muscleUp",
+   "name": "Muscle Up",
+   "defaultWarmup": 10,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "upper",
+    "pull"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Biceps Brachii",
+    "Brachialis",
+    "Brachioradialis",
+    "Deltoid Posterior",
+    "Infraspinatus",
+    "Latissimus Dorsi",
+    "Pectoralis Major Sternal Head",
+    "Teres Major",
+    "Trapezius Lower Fibers",
+    "Trapezius Middle Fibers",
+    "Triceps Brachii"
+   ],
+   "synergistMuscles": [],
+   "bodyParts": [
+    "Back"
+   ],
+   "sortedEquipment": [
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "obliqueCrunch",
+   "name": "Oblique Crunch",
+   "defaultWarmup": 10,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "core"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Obliques"
+   ],
+   "synergistMuscles": [
+    "Rectus Abdominis"
+   ],
+   "bodyParts": [
+    "Waist"
+   ],
+   "sortedEquipment": [
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "overheadPress",
+   "name": "Overhead Press",
+   "defaultWarmup": 45,
+   "defaultEquipment": "barbell",
+   "types": [
+    "upper",
+    "push"
+   ],
+   "startingWeightKg": 32.5,
+   "startingWeightLb": 75,
+   "targetMuscles": [
+    "Deltoid Anterior"
+   ],
+   "synergistMuscles": [
+    "Deltoid Lateral",
+    "Pectoralis Major Clavicular Head",
+    "Serratus Anterior",
+    "Trapezius Lower Fibers",
+    "Trapezius Middle Fibers",
+    "Triceps Brachii"
+   ],
+   "bodyParts": [
+    "Shoulders"
+   ],
+   "sortedEquipment": [
+    "barbell",
+    "dumbbell",
+    "ezbar"
+   ]
+  },
+  {
+   "id": "overheadSquat",
+   "name": "Overhead Squat",
+   "defaultWarmup": 45,
+   "defaultEquipment": "barbell",
+   "types": [
+    "lower",
+    "legs"
+   ],
+   "startingWeightKg": 25,
+   "startingWeightLb": 55,
+   "targetMuscles": [
+    "Quadriceps"
+   ],
+   "synergistMuscles": [
+    "Adductor Magnus",
+    "Gluteus Maximus",
+    "Soleus"
+   ],
+   "bodyParts": [
+    "Thighs"
+   ],
+   "sortedEquipment": [
+    "barbell",
+    "dumbbell"
+   ]
+  },
+  {
+   "id": "pecDeck",
+   "name": "Pec Deck",
+   "defaultWarmup": 10,
+   "defaultEquipment": "leverageMachine",
+   "types": [
+    "upper",
+    "push"
+   ],
+   "startingWeightKg": 22.5,
+   "startingWeightLb": 50,
+   "targetMuscles": [
+    "Pectoralis Major Sternal Head"
+   ],
+   "synergistMuscles": [
+    "Pectoralis Major Clavicular Head",
+    "Serratus Anterior"
+   ],
+   "bodyParts": [
+    "Chest"
+   ],
+   "sortedEquipment": [
+    "leverageMachine"
+   ]
+  },
+  {
+   "id": "pendlayRow",
+   "name": "Pendlay Row",
+   "defaultWarmup": 10,
+   "defaultEquipment": "barbell",
+   "types": [
+    "upper",
+    "pull"
+   ],
+   "startingWeightKg": 42.5,
+   "startingWeightLb": 95,
+   "targetMuscles": [
+    "Deltoid Posterior",
+    "Infraspinatus",
+    "Latissimus Dorsi",
+    "Teres Major",
+    "Teres Minor",
+    "Trapezius Lower Fibers",
+    "Trapezius Middle Fibers"
+   ],
+   "synergistMuscles": [
+    "Brachialis",
+    "Brachioradialis",
+    "Pectoralis Major Sternal Head"
+   ],
+   "bodyParts": [
+    "Back"
+   ],
+   "sortedEquipment": [
+    "barbell"
+   ]
+  },
+  {
+   "id": "pistolSquat",
+   "name": "Pistol Squat",
+   "defaultWarmup": 10,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "lower",
+    "legs"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Gluteus Maximus"
+   ],
+   "synergistMuscles": [
+    "Adductor Magnus",
+    "Quadriceps",
+    "Soleus"
+   ],
+   "bodyParts": [
+    "Thighs"
+   ],
+   "sortedEquipment": [
+    "kettlebell",
+    "leverageMachine",
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "plank",
+   "name": "Plank",
+   "defaultWarmup": 10,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "core"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Rectus Abdominis"
+   ],
+   "synergistMuscles": [],
+   "bodyParts": [
+    "Waist"
+   ],
+   "sortedEquipment": [
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "powerClean",
+   "name": "Power Clean",
+   "defaultWarmup": 45,
+   "defaultEquipment": "barbell",
+   "types": [
+    "upper",
+    "lower",
+    "pull"
+   ],
+   "startingWeightKg": 42.5,
+   "startingWeightLb": 95,
+   "targetMuscles": [
+    "Quadriceps",
+    "Gluteus Maximus",
+    "Deltoid Anterior"
+   ],
+   "synergistMuscles": [
+    "Hamstrings",
+    "Gastrocnemius",
+    "Soleus",
+    "Trapezius Lower Fibers",
+    "Trapezius Middle Fibers",
+    "Trapezius Upper Fibers",
+    "Latissimus Dorsi",
+    "Erector Spinae",
+    "Biceps Brachii",
+    "Wrist Flexors",
+    "Rectus Abdominis",
+    "Obliques"
+   ],
+   "bodyParts": [
+    "Thighs"
+   ],
+   "sortedEquipment": [
+    "barbell"
+   ]
+  },
+  {
+   "id": "powerSnatch",
+   "name": "Power Snatch",
+   "defaultWarmup": 45,
+   "defaultEquipment": "barbell",
+   "types": [
+    "upper",
+    "lower",
+    "pull"
+   ],
+   "startingWeightKg": 27.5,
+   "startingWeightLb": 65,
+   "targetMuscles": [
+    "Quadriceps",
+    "Gluteus Maximus",
+    "Deltoid Anterior",
+    "Deltoid Lateral",
+    "Deltoid Posterior"
+   ],
+   "synergistMuscles": [
+    "Hamstrings",
+    "Gastrocnemius",
+    "Soleus",
+    "Trapezius Lower Fibers",
+    "Trapezius Middle Fibers",
+    "Trapezius Upper Fibers",
+    "Latissimus Dorsi",
+    "Erector Spinae",
+    "Biceps Brachii",
+    "Wrist Flexors",
+    "Rectus Abdominis",
+    "Obliques"
+   ],
+   "bodyParts": [
+    "Thighs"
+   ],
+   "sortedEquipment": [
+    "barbell"
+   ]
+  },
+  {
+   "id": "preacherCurl",
+   "name": "Preacher Curl",
+   "defaultWarmup": 10,
+   "defaultEquipment": "dumbbell",
+   "types": [
+    "upper",
+    "pull"
+   ],
+   "startingWeightKg": 7.5,
+   "startingWeightLb": 20,
+   "targetMuscles": [
+    "Brachialis"
+   ],
+   "synergistMuscles": [
+    "Biceps Brachii",
+    "Brachioradialis"
+   ],
+   "bodyParts": [
+    "Upper Arms"
+   ],
+   "sortedEquipment": [
+    "barbell",
+    "dumbbell",
+    "ezbar",
+    "leverageMachine"
+   ]
+  },
+  {
+   "id": "pressUnder",
+   "name": "Press Under",
+   "defaultWarmup": 45,
+   "defaultEquipment": "barbell",
+   "types": [
+    "upper",
+    "push"
+   ],
+   "startingWeightKg": 27.5,
+   "startingWeightLb": 65,
+   "targetMuscles": [
+    "Quadriceps",
+    "Deltoid Anterior",
+    "Deltoid Lateral",
+    "Deltoid Posterior"
+   ],
+   "synergistMuscles": [
+    "Gluteus Maximus",
+    "Hamstrings",
+    "Erector Spinae",
+    "Rectus Abdominis",
+    "Obliques",
+    "Triceps Brachii",
+    "Biceps Brachii"
+   ],
+   "bodyParts": [
+    "Thighs"
+   ],
+   "sortedEquipment": [
+    "barbell"
+   ]
+  },
+  {
+   "id": "pullUp",
+   "name": "Pull Up",
+   "defaultWarmup": 10,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "upper",
+    "pull"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Latissimus Dorsi"
+   ],
+   "synergistMuscles": [
+    "Biceps Brachii",
+    "Brachialis",
+    "Brachioradialis",
+    "Deltoid Posterior",
+    "Infraspinatus",
+    "Levator Scapulae",
+    "Teres Major",
+    "Teres Minor",
+    "Trapezius Lower Fibers",
+    "Trapezius Middle Fibers"
+   ],
+   "bodyParts": [
+    "Back"
+   ],
+   "sortedEquipment": [
+    "leverageMachine",
+    "bodyweight",
+    "band"
+   ]
+  },
+  {
+   "id": "pullover",
+   "name": "Pullover",
+   "defaultWarmup": 10,
+   "defaultEquipment": "dumbbell",
+   "types": [
+    "upper",
+    "pull"
+   ],
+   "startingWeightKg": 10,
+   "startingWeightLb": 25,
+   "targetMuscles": [
+    "Latissimus Dorsi"
+   ],
+   "synergistMuscles": [
+    "Deltoid Posterior",
+    "Levator Scapulae",
+    "Pectoralis Major Sternal Head",
+    "Serratus Anterior",
+    "Teres Major",
+    "Trapezius Middle Fibers",
+    "Triceps Brachii"
+   ],
+   "bodyParts": [
+    "Back"
+   ],
+   "sortedEquipment": [
+    "barbell",
+    "dumbbell"
+   ]
+  },
+  {
+   "id": "pushPress",
+   "name": "Push Press",
+   "defaultWarmup": 45,
+   "defaultEquipment": "kettlebell",
+   "types": [
+    "upper",
+    "push"
+   ],
+   "startingWeightKg": 16,
+   "startingWeightLb": 35,
+   "targetMuscles": [
+    "Deltoid Anterior"
+   ],
+   "synergistMuscles": [
+    "Biceps Brachii",
+    "Brachialis",
+    "Deltoid Lateral",
+    "Pectoralis Major Clavicular Head",
+    "Serratus Anterior"
+   ],
+   "bodyParts": [
+    "Shoulders"
+   ],
+   "sortedEquipment": [
+    "bodyweight",
+    "kettlebell"
+   ]
+  },
+  {
+   "id": "pushUp",
+   "name": "Push Up",
+   "defaultWarmup": 10,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "upper",
+    "push"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Pectoralis Major Sternal Head"
+   ],
+   "synergistMuscles": [
+    "Deltoid Anterior",
+    "Pectoralis Major Clavicular Head",
+    "Triceps Brachii"
+   ],
+   "bodyParts": [
+    "Chest"
+   ],
+   "sortedEquipment": [
+    "bodyweight",
+    "band"
+   ]
+  },
+  {
+   "id": "reverseCrunch",
+   "name": "Reverse Crunch",
+   "defaultWarmup": 10,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "core"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Rectus Abdominis"
+   ],
+   "synergistMuscles": [
+    "Iliopsoas",
+    "Obliques"
+   ],
+   "bodyParts": [
+    "Waist"
+   ],
+   "sortedEquipment": [
+    "bodyweight",
+    "cable"
+   ]
+  },
+  {
+   "id": "reverseCurl",
+   "name": "Reverse Curl",
+   "defaultWarmup": 10,
+   "defaultEquipment": "dumbbell",
+   "types": [
+    "upper",
+    "pull"
+   ],
+   "startingWeightKg": 5,
+   "startingWeightLb": 15,
+   "targetMuscles": [
+    "Brachioradialis"
+   ],
+   "synergistMuscles": [
+    "Biceps Brachii",
+    "Brachialis"
+   ],
+   "bodyParts": [
+    "Forearms"
+   ],
+   "sortedEquipment": [
+    "barbell",
+    "cable",
+    "dumbbell",
+    "band"
+   ]
+  },
+  {
+   "id": "reverseFly",
+   "name": "Reverse Fly",
+   "defaultWarmup": 10,
+   "defaultEquipment": "dumbbell",
+   "types": [
+    "upper",
+    "pull"
+   ],
+   "startingWeightKg": 5,
+   "startingWeightLb": 15,
+   "targetMuscles": [
+    "Deltoid Posterior"
+   ],
+   "synergistMuscles": [
+    "Deltoid Lateral",
+    "Infraspinatus",
+    "Teres Minor",
+    "Trapezius Lower Fibers",
+    "Trapezius Middle Fibers"
+   ],
+   "bodyParts": [
+    "Shoulders"
+   ],
+   "sortedEquipment": [
+    "dumbbell",
+    "leverageMachine",
+    "band"
+   ]
+  },
+  {
+   "id": "reverseGripConcentrationCurl",
+   "name": "Reverse Grip Concentration Curl",
+   "defaultWarmup": 10,
+   "defaultEquipment": "dumbbell",
+   "types": [
+    "upper",
+    "pull"
+   ],
+   "startingWeightKg": 7.5,
+   "startingWeightLb": 20,
+   "targetMuscles": [
+    "Brachialis",
+    "Brachioradialis"
+   ],
+   "synergistMuscles": [
+    "Biceps Brachii",
+    "Wrist Flexors"
+   ],
+   "bodyParts": [
+    "Upper Arms"
+   ],
+   "sortedEquipment": [
+    "dumbbell"
+   ]
+  },
+  {
+   "id": "reversePlank",
+   "name": "Reverse Plank",
+   "defaultWarmup": 10,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "core"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Gluteus Maximus",
+    "Rectus Abdominis",
+    "Erector Spinae"
+   ],
+   "synergistMuscles": [
+    "Hamstrings",
+    "Quadriceps",
+    "Deltoid Anterior",
+    "Deltoid Lateral",
+    "Deltoid Posterior",
+    "Triceps Brachii",
+    "Latissimus Dorsi",
+    "Trapezius Middle Fibers"
+   ],
+   "bodyParts": [
+    "Waist"
+   ],
+   "sortedEquipment": [
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "reverseLatPulldown",
+   "name": "Reverse Lat Pulldown",
+   "defaultWarmup": 10,
+   "defaultEquipment": "cable",
+   "types": [
+    "upper",
+    "pull"
+   ],
+   "startingWeightKg": 30,
+   "startingWeightLb": 70,
+   "targetMuscles": [
+    "Latissimus Dorsi"
+   ],
+   "synergistMuscles": [
+    "Biceps Brachii",
+    "Brachialis",
+    "Brachioradialis",
+    "Deltoid Posterior",
+    "Levator Scapulae",
+    "Pectoralis Major Sternal Head",
+    "Teres Major",
+    "Trapezius Lower Fibers",
+    "Trapezius Middle Fibers"
+   ],
+   "bodyParts": [
+    "Back"
+   ],
+   "sortedEquipment": [
+    "cable"
+   ]
+  },
+  {
+   "id": "reverseLunge",
+   "name": "Reverse Lunge",
+   "defaultWarmup": 10,
+   "defaultEquipment": "dumbbell",
+   "types": [
+    "lower",
+    "legs"
+   ],
+   "startingWeightKg": 10,
+   "startingWeightLb": 25,
+   "targetMuscles": [
+    "Quadriceps"
+   ],
+   "synergistMuscles": [
+    "Adductor Magnus",
+    "Soleus",
+    "Gluteus Maximus"
+   ],
+   "bodyParts": [
+    "Thighs"
+   ],
+   "sortedEquipment": [
+    "barbell",
+    "dumbbell",
+    "bodyweight",
+    "cable"
+   ]
+  },
+  {
+   "id": "reverseWristCurl",
+   "name": "Reverse Wrist Curl",
+   "defaultWarmup": 10,
+   "defaultEquipment": "barbell",
+   "types": [
+    "upper",
+    "pull"
+   ],
+   "startingWeightKg": 10,
+   "startingWeightLb": 25,
+   "targetMuscles": [
+    "Wrist Extensors"
+   ],
+   "synergistMuscles": [],
+   "bodyParts": [
+    "Forearms"
+   ],
+   "sortedEquipment": [
+    "barbell"
+   ]
+  },
+  {
+   "id": "romanianDeadlift",
+   "name": "Romanian Deadlift",
+   "defaultWarmup": 10,
+   "defaultEquipment": "dumbbell",
+   "types": [
+    "lower",
+    "legs"
+   ],
+   "startingWeightKg": 17.5,
+   "startingWeightLb": 40,
+   "targetMuscles": [
+    "Gluteus Maximus"
+   ],
+   "synergistMuscles": [
+    "Adductor Magnus",
+    "Erector Spinae",
+    "Hamstrings"
+   ],
+   "bodyParts": [
+    "Hips"
+   ],
+   "sortedEquipment": [
+    "barbell",
+    "dumbbell"
+   ]
+  },
+  {
+   "id": "reverseHyperextension",
+   "name": "Reverse Hyperextension",
+   "defaultWarmup": 45,
+   "defaultEquipment": "band",
+   "types": [
+    "core",
+    "lower"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Gluteus Maximus"
+   ],
+   "synergistMuscles": [
+    "Hamstrings"
+   ],
+   "bodyParts": [
+    "Hips"
+   ],
+   "sortedEquipment": [
+    "band",
+    "leverageMachine"
+   ]
+  },
+  {
+   "id": "rowing",
+   "name": "Rowing",
+   "defaultWarmup": 10,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "upper",
+    "pull"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Quadriceps",
+    "Latissimus Dorsi",
+    "Erector Spinae"
+   ],
+   "synergistMuscles": [
+    "Hamstrings",
+    "Gluteus Maximus",
+    "Biceps Brachii",
+    "Deltoid Anterior",
+    "Deltoid Lateral",
+    "Deltoid Posterior",
+    "Wrist Flexors",
+    "Rectus Abdominis",
+    "Obliques",
+    "Trapezius Middle Fibers"
+   ],
+   "bodyParts": [
+    "Thighs"
+   ],
+   "sortedEquipment": [
+    "cable"
+   ]
+  },
+  {
+   "id": "russianTwist",
+   "name": "Russian Twist",
+   "defaultWarmup": 10,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "core"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Obliques"
+   ],
+   "synergistMuscles": [
+    "Erector Spinae",
+    "Iliopsoas"
+   ],
+   "bodyParts": [
+    "Waist"
+   ],
+   "sortedEquipment": [
+    "bodyweight",
+    "dumbbell",
+    "cable"
+   ]
+  },
+  {
+   "id": "safetySquatBarSquat",
+   "name": "Safety Squat Bar Squat",
+   "defaultWarmup": 45,
+   "defaultEquipment": "barbell",
+   "types": [
+    "lower",
+    "legs"
+   ],
+   "startingWeightKg": 65,
+   "startingWeightLb": 145,
+   "targetMuscles": [
+    "Gluteus Maximus"
+   ],
+   "synergistMuscles": [
+    "Adductor Magnus",
+    "Quadriceps",
+    "Soleus"
+   ],
+   "bodyParts": [
+    "Hips"
+   ],
+   "sortedEquipment": [
+    "barbell"
+   ]
+  },
+  {
+   "id": "seatedCalfRaise",
+   "name": "Seated Calf Raise",
+   "defaultWarmup": 10,
+   "defaultEquipment": "barbell",
+   "types": [
+    "lower",
+    "legs"
+   ],
+   "startingWeightKg": 40,
+   "startingWeightLb": 90,
+   "targetMuscles": [
+    "Soleus"
+   ],
+   "synergistMuscles": [
+    "Gastrocnemius"
+   ],
+   "bodyParts": [
+    "Calves"
+   ],
+   "sortedEquipment": [
+    "barbell",
+    "dumbbell",
+    "leverageMachine"
+   ]
+  },
+  {
+   "id": "seatedFrontRaise",
+   "name": "Seated Front Raise",
+   "defaultWarmup": 10,
+   "defaultEquipment": "dumbbell",
+   "types": [
+    "upper",
+    "push"
+   ],
+   "startingWeightKg": 5,
+   "startingWeightLb": 15,
+   "targetMuscles": [
+    "Deltoid Anterior"
+   ],
+   "synergistMuscles": [
+    "Deltoid Lateral",
+    "Pectoralis Major Clavicular Head",
+    "Serratus Anterior",
+    "Trapezius Lower Fibers",
+    "Trapezius Middle Fibers"
+   ],
+   "bodyParts": [
+    "Shoulders"
+   ],
+   "sortedEquipment": [
+    "barbell",
+    "dumbbell"
+   ]
+  },
+  {
+   "id": "seatedLegCurl",
+   "name": "Seated Leg Curl",
+   "defaultWarmup": 10,
+   "defaultEquipment": "leverageMachine",
+   "types": [
+    "lower",
+    "legs"
+   ],
+   "startingWeightKg": 26.25,
+   "startingWeightLb": 60,
+   "targetMuscles": [
+    "Hamstrings"
+   ],
+   "synergistMuscles": [
+    "Gastrocnemius",
+    "Sartorius"
+   ],
+   "bodyParts": [
+    "Thighs"
+   ],
+   "sortedEquipment": [
+    "leverageMachine"
+   ]
+  },
+  {
+   "id": "seatedLegPress",
+   "name": "Seated Leg Press",
+   "defaultWarmup": 10,
+   "defaultEquipment": "leverageMachine",
+   "types": [
+    "lower",
+    "legs"
+   ],
+   "startingWeightKg": 90,
+   "startingWeightLb": 200,
+   "targetMuscles": [
+    "Gluteus Maximus",
+    "Quadriceps"
+   ],
+   "synergistMuscles": [
+    "Adductor Magnus",
+    "Soleus"
+   ],
+   "bodyParts": [
+    "Hips",
+    "Thighs"
+   ],
+   "sortedEquipment": [
+    "leverageMachine"
+   ]
+  },
+  {
+   "id": "seatedOverheadPress",
+   "name": "Seated Overhead Press",
+   "defaultWarmup": 45,
+   "defaultEquipment": "barbell",
+   "types": [
+    "upper",
+    "push"
+   ],
+   "startingWeightKg": 32.5,
+   "startingWeightLb": 75,
+   "targetMuscles": [
+    "Deltoid Anterior"
+   ],
+   "synergistMuscles": [
+    "Deltoid Lateral",
+    "Pectoralis Major Clavicular Head",
+    "Serratus Anterior",
+    "Trapezius Lower Fibers",
+    "Trapezius Middle Fibers",
+    "Triceps Brachii"
+   ],
+   "bodyParts": [
+    "Shoulders"
+   ],
+   "sortedEquipment": [
+    "barbell"
+   ]
+  },
+  {
+   "id": "seatedPalmsUpWristCurl",
+   "name": "Seated Palms Up Wrist Curl",
+   "defaultWarmup": 10,
+   "defaultEquipment": "dumbbell",
+   "types": [
+    "upper",
+    "pull"
+   ],
+   "startingWeightKg": 5,
+   "startingWeightLb": 15,
+   "targetMuscles": [
+    "Wrist Flexors"
+   ],
+   "synergistMuscles": [],
+   "bodyParts": [
+    "Forearms"
+   ],
+   "sortedEquipment": [
+    "dumbbell"
+   ]
+  },
+  {
+   "id": "seatedRow",
+   "name": "Seated Row",
+   "defaultWarmup": 10,
+   "defaultEquipment": "cable",
+   "types": [
+    "upper",
+    "pull"
+   ],
+   "startingWeightKg": 30,
+   "startingWeightLb": 70,
+   "targetMuscles": [
+    "Latissimus Dorsi",
+    "Trapezius Lower Fibers",
+    "Trapezius Middle Fibers"
+   ],
+   "synergistMuscles": [
+    "Brachialis",
+    "Brachioradialis",
+    "Deltoid Posterior",
+    "Erector Spinae",
+    "Infraspinatus",
+    "Pectoralis Major Sternal Head",
+    "Teres Major",
+    "Teres Minor"
+   ],
+   "bodyParts": [
+    "Back"
+   ],
+   "sortedEquipment": [
+    "cable",
+    "band",
+    "leverageMachine"
+   ]
+  },
+  {
+   "id": "seatedWideGripRow",
+   "name": "Seated Wide Grip Row",
+   "defaultWarmup": 10,
+   "defaultEquipment": "cable",
+   "types": [
+    "upper",
+    "pull"
+   ],
+   "startingWeightKg": 27.5,
+   "startingWeightLb": 65,
+   "targetMuscles": [
+    "Latissimus Dorsi",
+    "Trapezius Lower Fibers",
+    "Trapezius Middle Fibers"
+   ],
+   "synergistMuscles": [
+    "Brachialis",
+    "Brachioradialis",
+    "Deltoid Posterior",
+    "Erector Spinae",
+    "Infraspinatus",
+    "Pectoralis Major Sternal Head",
+    "Teres Major",
+    "Teres Minor"
+   ],
+   "bodyParts": [
+    "Back"
+   ],
+   "sortedEquipment": [
+    "cable"
+   ]
+  },
+  {
+   "id": "shoulderPress",
+   "name": "Shoulder Press",
+   "defaultWarmup": 10,
+   "defaultEquipment": "dumbbell",
+   "types": [
+    "upper",
+    "push"
+   ],
+   "startingWeightKg": 10,
+   "startingWeightLb": 25,
+   "targetMuscles": [
+    "Deltoid Anterior"
+   ],
+   "synergistMuscles": [
+    "Deltoid Lateral",
+    "Pectoralis Major Clavicular Head",
+    "Serratus Anterior",
+    "Trapezius Lower Fibers",
+    "Trapezius Middle Fibers",
+    "Triceps Brachii"
+   ],
+   "bodyParts": [
+    "Shoulders"
+   ],
+   "sortedEquipment": [
+    "cable",
+    "dumbbell",
+    "leverageMachine",
+    "band",
+    "smith"
+   ]
+  },
+  {
+   "id": "shoulderPressParallelGrip",
+   "name": "Shoulder Press Parallel Grip",
+   "defaultWarmup": 10,
+   "defaultEquipment": "dumbbell",
+   "types": [
+    "upper",
+    "push"
+   ],
+   "startingWeightKg": 10,
+   "startingWeightLb": 25,
+   "targetMuscles": [
+    "Deltoid Anterior"
+   ],
+   "synergistMuscles": [
+    "Deltoid Lateral",
+    "Pectoralis Major Clavicular Head",
+    "Serratus Anterior",
+    "Trapezius Lower Fibers",
+    "Trapezius Middle Fibers",
+    "Triceps Brachii"
+   ],
+   "bodyParts": [
+    "Shoulders"
+   ],
+   "sortedEquipment": [
+    "dumbbell"
+   ]
+  },
+  {
+   "id": "shrug",
+   "name": "Shrug",
+   "defaultWarmup": 10,
+   "defaultEquipment": "dumbbell",
+   "types": [
+    "upper",
+    "pull"
+   ],
+   "startingWeightKg": 20,
+   "startingWeightLb": 45,
+   "targetMuscles": [
+    "Trapezius Upper Fibers"
+   ],
+   "synergistMuscles": [
+    "Levator Scapulae",
+    "Trapezius Middle Fibers"
+   ],
+   "bodyParts": [
+    "Back"
+   ],
+   "sortedEquipment": [
+    "barbell",
+    "cable",
+    "dumbbell",
+    "leverageMachine",
+    "band",
+    "smith"
+   ]
+  },
+  {
+   "id": "sideBend",
+   "name": "Side Bend",
+   "defaultWarmup": 10,
+   "defaultEquipment": "dumbbell",
+   "types": [
+    "core"
+   ],
+   "startingWeightKg": 12.5,
+   "startingWeightLb": 30,
+   "targetMuscles": [
+    "Obliques"
+   ],
+   "synergistMuscles": [
+    "Erector Spinae",
+    "Iliopsoas"
+   ],
+   "bodyParts": [
+    "Waist"
+   ],
+   "sortedEquipment": [
+    "cable",
+    "dumbbell",
+    "band"
+   ]
+  },
+  {
+   "id": "sideCrunch",
+   "name": "Side Crunch",
+   "defaultWarmup": 45,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "core"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Obliques"
+   ],
+   "synergistMuscles": [
+    "Rectus Abdominis"
+   ],
+   "bodyParts": [
+    "Waist"
+   ],
+   "sortedEquipment": [
+    "bodyweight",
+    "band",
+    "cable"
+   ]
+  },
+  {
+   "id": "sideHipAbductor",
+   "name": "Side Hip Abductor",
+   "defaultWarmup": 45,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "lower",
+    "legs"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Gluteus Medius",
+    "Tensor Fasciae Latae"
+   ],
+   "synergistMuscles": [],
+   "bodyParts": [
+    "Hips"
+   ],
+   "sortedEquipment": [
+    "bodyweight",
+    "barbell",
+    "leverageMachine"
+   ]
+  },
+  {
+   "id": "sideLyingClam",
+   "name": "Side Lying Clam",
+   "defaultWarmup": 45,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "lower",
+    "legs"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Gluteus Medius"
+   ],
+   "synergistMuscles": [
+    "Tensor Fasciae Latae"
+   ],
+   "bodyParts": [
+    "Hips"
+   ],
+   "sortedEquipment": [
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "sidePlank",
+   "name": "Side Plank",
+   "defaultWarmup": 10,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "core"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Obliques"
+   ],
+   "synergistMuscles": [],
+   "bodyParts": [
+    "Waist"
+   ],
+   "sortedEquipment": [
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "singleLegBridge",
+   "name": "Single Leg Bridge",
+   "defaultWarmup": 10,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "lower",
+    "legs"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Gluteus Maximus"
+   ],
+   "synergistMuscles": [
+    "Hamstrings"
+   ],
+   "bodyParts": [
+    "Hips"
+   ],
+   "sortedEquipment": [
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "singleLegCalfRaise",
+   "name": "Single Leg Calf Raise",
+   "defaultWarmup": 10,
+   "defaultEquipment": "barbell",
+   "types": [
+    "lower",
+    "legs"
+   ],
+   "startingWeightKg": 37.5,
+   "startingWeightLb": 85,
+   "targetMuscles": [
+    "Gastrocnemius"
+   ],
+   "synergistMuscles": [
+    "Soleus"
+   ],
+   "bodyParts": [
+    "Calves"
+   ],
+   "sortedEquipment": [
+    "barbell",
+    "dumbbell",
+    "leverageMachine",
+    "bodyweight",
+    "cable"
+   ]
+  },
+  {
+   "id": "singleLegDeadlift",
+   "name": "Single Leg Deadlift",
+   "defaultWarmup": 10,
+   "defaultEquipment": "dumbbell",
+   "types": [
+    "lower",
+    "legs"
+   ],
+   "startingWeightKg": 12.5,
+   "startingWeightLb": 30,
+   "targetMuscles": [
+    "Gluteus Maximus"
+   ],
+   "synergistMuscles": [
+    "Adductor Magnus",
+    "Hamstrings"
+   ],
+   "bodyParts": [
+    "Hips"
+   ],
+   "sortedEquipment": [
+    "dumbbell",
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "singleLegGluteBridgeBench",
+   "name": "Single Leg Glute Bridge On Bench",
+   "defaultWarmup": 45,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "lower",
+    "legs"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Gluteus Maximus"
+   ],
+   "synergistMuscles": [],
+   "bodyParts": [
+    "Hips"
+   ],
+   "sortedEquipment": [
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "singleLegGluteBridgeStraight",
+   "name": "Single Leg Glute Bridge Straight Leg",
+   "defaultWarmup": 45,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "lower",
+    "legs"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Gluteus Maximus"
+   ],
+   "synergistMuscles": [],
+   "bodyParts": [
+    "Hips"
+   ],
+   "sortedEquipment": [
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "singleLegGluteBridgeBentKnee",
+   "name": "Single Leg Glute Bridge Bent Knee",
+   "defaultWarmup": 45,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "lower",
+    "legs"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Gluteus Maximus"
+   ],
+   "synergistMuscles": [],
+   "bodyParts": [
+    "Hips"
+   ],
+   "sortedEquipment": [
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "singleLegHipThrust",
+   "name": "Single Leg Hip Thrust",
+   "defaultWarmup": 45,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "lower",
+    "legs"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Gluteus Maximus"
+   ],
+   "synergistMuscles": [
+    "Quadriceps"
+   ],
+   "bodyParts": [
+    "Hips"
+   ],
+   "sortedEquipment": [
+    "barbell",
+    "bodyweight",
+    "leverageMachine"
+   ]
+  },
+  {
+   "id": "sissySquat",
+   "name": "Sissy Squat",
+   "defaultWarmup": 45,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "lower",
+    "legs"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Quadriceps"
+   ],
+   "synergistMuscles": [
+    "Adductor Magnus"
+   ],
+   "bodyParts": [
+    "Thighs"
+   ],
+   "sortedEquipment": [
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "sitUp",
+   "name": "Sit Up",
+   "defaultWarmup": 10,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "core"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Rectus Abdominis"
+   ],
+   "synergistMuscles": [
+    "Iliopsoas",
+    "Obliques",
+    "Quadriceps",
+    "Sartorius",
+    "Tensor Fasciae Latae"
+   ],
+   "bodyParts": [
+    "Waist"
+   ],
+   "sortedEquipment": [
+    "bodyweight",
+    "kettlebell"
+   ]
+  },
+  {
+   "id": "skullcrusher",
+   "name": "Skullcrusher",
+   "defaultWarmup": 10,
+   "defaultEquipment": "ezbar",
+   "types": [
+    "upper",
+    "push"
+   ],
+   "startingWeightKg": 20,
+   "startingWeightLb": 45,
+   "targetMuscles": [
+    "Triceps Brachii"
+   ],
+   "synergistMuscles": [],
+   "bodyParts": [
+    "Upper Arms"
+   ],
+   "sortedEquipment": [
+    "barbell",
+    "cable",
+    "dumbbell",
+    "ezbar"
+   ]
+  },
+  {
+   "id": "slingShotBenchPress",
+   "name": "Sling Shot Bench Press",
+   "defaultWarmup": 45,
+   "defaultEquipment": "barbell",
+   "types": [
+    "upper",
+    "push"
+   ],
+   "startingWeightKg": 62.5,
+   "startingWeightLb": 140,
+   "targetMuscles": [
+    "Pectoralis Major Sternal Head"
+   ],
+   "synergistMuscles": [
+    "Deltoid Anterior",
+    "Pectoralis Major Clavicular Head",
+    "Triceps Brachii"
+   ],
+   "bodyParts": [
+    "Chest"
+   ],
+   "sortedEquipment": [
+    "barbell"
+   ]
+  },
+  {
+   "id": "snatch",
+   "name": "Snatch",
+   "defaultWarmup": 45,
+   "defaultEquipment": "dumbbell",
+   "types": [
+    "upper",
+    "lower",
+    "pull"
+   ],
+   "startingWeightKg": 10,
+   "startingWeightLb": 25,
+   "targetMuscles": [
+    "Deltoid Anterior",
+    "Erector Spinae",
+    "Gluteus Maximus",
+    "Quadriceps"
+   ],
+   "synergistMuscles": [
+    "Adductor Magnus",
+    "Deltoid Lateral",
+    "Gastrocnemius",
+    "Serratus Anterior",
+    "Soleus",
+    "Triceps Brachii"
+   ],
+   "bodyParts": [
+    "Hips",
+    "Shoulders",
+    "Thighs"
+   ],
+   "sortedEquipment": [
+    "dumbbell"
+   ]
+  },
+  {
+   "id": "snatchPull",
+   "name": "Snatch Pull",
+   "defaultWarmup": 45,
+   "defaultEquipment": "barbell",
+   "types": [
+    "upper",
+    "pull"
+   ],
+   "startingWeightKg": 37.5,
+   "startingWeightLb": 85,
+   "targetMuscles": [
+    "Erector Spinae",
+    "Gluteus Maximus",
+    "Hamstrings",
+    "Quadriceps",
+    "Latissimus Dorsi",
+    "Trapezius Lower Fibers",
+    "Trapezius Middle Fibers",
+    "Trapezius Upper Fibers"
+   ],
+   "synergistMuscles": [
+    "Adductor Magnus",
+    "Deltoid Anterior",
+    "Deltoid Posterior",
+    "Deltoid Lateral",
+    "Biceps Brachii",
+    "Brachialis",
+    "Brachioradialis",
+    "Triceps Brachii",
+    "Wrist Flexors",
+    "Wrist Extensors"
+   ],
+   "bodyParts": [
+    "Back",
+    "Hips",
+    "Thighs"
+   ],
+   "sortedEquipment": [
+    "barbell"
+   ]
+  },
+  {
+   "id": "splitSquat",
+   "name": "Split Squat",
+   "defaultWarmup": 10,
+   "defaultEquipment": "dumbbell",
+   "types": [
+    "lower",
+    "legs"
+   ],
+   "startingWeightKg": 10,
+   "startingWeightLb": 25,
+   "targetMuscles": [
+    "Quadriceps"
+   ],
+   "synergistMuscles": [
+    "Adductor Magnus",
+    "Gluteus Maximus",
+    "Soleus"
+   ],
+   "bodyParts": [
+    "Hips",
+    "Thighs"
+   ],
+   "sortedEquipment": [
+    "dumbbell"
+   ]
+  },
+  {
+   "id": "splitJerk",
+   "name": "Split Jerk",
+   "defaultWarmup": 45,
+   "defaultEquipment": "barbell",
+   "types": [
+    "upper",
+    "lower",
+    "push"
+   ],
+   "startingWeightKg": 42.5,
+   "startingWeightLb": 95,
+   "targetMuscles": [
+    "Deltoid Anterior",
+    "Deltoid Posterior",
+    "Deltoid Lateral",
+    "Triceps Brachii",
+    "Quadriceps",
+    "Gluteus Maximus",
+    "Erector Spinae"
+   ],
+   "synergistMuscles": [
+    "Pectoralis Major Sternal Head",
+    "Pectoralis Major Clavicular Head",
+    "Latissimus Dorsi",
+    "Hamstrings",
+    "Obliques",
+    "Rectus Abdominis",
+    "Trapezius Lower Fibers",
+    "Trapezius Middle Fibers",
+    "Trapezius Upper Fibers",
+    "Adductor Magnus",
+    "Tensor Fasciae Latae",
+    "Wrist Extensors",
+    "Wrist Flexors"
+   ],
+   "bodyParts": [
+    "Hips",
+    "Shoulders",
+    "Thighs"
+   ],
+   "sortedEquipment": [
+    "barbell"
+   ]
+  },
+  {
+   "id": "squat",
+   "name": "Squat",
+   "defaultWarmup": 45,
+   "defaultEquipment": "barbell",
+   "types": [
+    "lower",
+    "legs"
+   ],
+   "startingWeightKg": 60,
+   "startingWeightLb": 135,
+   "targetMuscles": [
+    "Quadriceps"
+   ],
+   "synergistMuscles": [
+    "Adductor Magnus",
+    "Gluteus Maximus",
+    "Soleus"
+   ],
+   "bodyParts": [
+    "Thighs"
+   ],
+   "sortedEquipment": [
+    "barbell",
+    "dumbbell",
+    "bodyweight",
+    "smith",
+    "leverageMachine"
+   ]
+  },
+  {
+   "id": "squatRow",
+   "name": "Squat Row",
+   "defaultWarmup": 10,
+   "defaultEquipment": "band",
+   "types": [
+    "upper",
+    "lower",
+    "pull"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Gluteus Maximus",
+    "Latissimus Dorsi",
+    "Trapezius Lower Fibers",
+    "Trapezius Middle Fibers"
+   ],
+   "synergistMuscles": [
+    "Infraspinatus",
+    "Teres Major",
+    "Teres Minor",
+    "Adductor Magnus",
+    "Deltoid Posterior",
+    "Pectoralis Major Sternal Head",
+    "Quadriceps",
+    "Soleus"
+   ],
+   "bodyParts": [
+    "Back"
+   ],
+   "sortedEquipment": [
+    "band"
+   ]
+  },
+  {
+   "id": "standingCalfRaise",
+   "name": "Standing Calf Raise",
+   "defaultWarmup": 10,
+   "defaultEquipment": "dumbbell",
+   "types": [
+    "lower",
+    "legs"
+   ],
+   "startingWeightKg": 15,
+   "startingWeightLb": 35,
+   "targetMuscles": [
+    "Gastrocnemius"
+   ],
+   "synergistMuscles": [
+    "Soleus"
+   ],
+   "bodyParts": [
+    "Calves"
+   ],
+   "sortedEquipment": [
+    "barbell",
+    "dumbbell",
+    "leverageMachine",
+    "bodyweight",
+    "cable"
+   ]
+  },
+  {
+   "id": "standingRow",
+   "name": "Standing Row",
+   "defaultWarmup": 10,
+   "defaultEquipment": "cable",
+   "types": [
+    "upper",
+    "pull"
+   ],
+   "startingWeightKg": 30,
+   "startingWeightLb": 70,
+   "targetMuscles": [
+    "Latissimus Dorsi",
+    "Trapezius Lower Fibers",
+    "Trapezius Middle Fibers"
+   ],
+   "synergistMuscles": [
+    "Brachialis",
+    "Brachioradialis",
+    "Deltoid Posterior",
+    "Infraspinatus",
+    "Pectoralis Major Sternal Head",
+    "Teres Major",
+    "Teres Minor"
+   ],
+   "bodyParts": [
+    "Back"
+   ],
+   "sortedEquipment": [
+    "cable"
+   ]
+  },
+  {
+   "id": "standingRowCloseGrip",
+   "name": "Standing Row Close Grip",
+   "defaultWarmup": 10,
+   "defaultEquipment": "cable",
+   "types": [
+    "upper",
+    "pull"
+   ],
+   "startingWeightKg": 27.5,
+   "startingWeightLb": 65,
+   "targetMuscles": [
+    "Latissimus Dorsi",
+    "Trapezius Upper Fibers",
+    "Trapezius Middle Fibers"
+   ],
+   "synergistMuscles": [
+    "Infraspinatus",
+    "Teres Major",
+    "Teres Minor",
+    "Brachialis",
+    "Brachioradialis",
+    "Deltoid Posterior"
+   ],
+   "bodyParts": [
+    "Back"
+   ],
+   "sortedEquipment": [
+    "cable"
+   ]
+  },
+  {
+   "id": "standingRowRearDeltWithRope",
+   "name": "Standing Row Rear Delt With Rope",
+   "defaultWarmup": 10,
+   "defaultEquipment": "cable",
+   "types": [
+    "upper",
+    "pull"
+   ],
+   "startingWeightKg": 12.5,
+   "startingWeightLb": 30,
+   "targetMuscles": [
+    "Deltoid Posterior"
+   ],
+   "synergistMuscles": [
+    "Brachialis",
+    "Brachioradialis",
+    "Deltoid Lateral",
+    "Infraspinatus",
+    "Teres Minor",
+    "Trapezius Lower Fibers",
+    "Trapezius Middle Fibers"
+   ],
+   "bodyParts": [
+    "Shoulders"
+   ],
+   "sortedEquipment": [
+    "cable"
+   ]
+  },
+  {
+   "id": "standingRowRearHorizontalDeltWithRope",
+   "name": "Standing Row Rear Delt, Horizontal, With Rope",
+   "defaultWarmup": 10,
+   "defaultEquipment": "cable",
+   "types": [
+    "upper",
+    "pull"
+   ],
+   "startingWeightKg": 12.5,
+   "startingWeightLb": 30,
+   "targetMuscles": [
+    "Deltoid Posterior"
+   ],
+   "synergistMuscles": [
+    "Infraspinatus",
+    "Teres Minor",
+    "Trapezius Lower Fibers",
+    "Trapezius Middle Fibers"
+   ],
+   "bodyParts": [
+    "Shoulders"
+   ],
+   "sortedEquipment": [
+    "cable"
+   ]
+  },
+  {
+   "id": "standingRowVBar",
+   "name": "Standing Row V-Bar",
+   "defaultWarmup": 10,
+   "defaultEquipment": "cable",
+   "types": [
+    "upper",
+    "pull"
+   ],
+   "startingWeightKg": 30,
+   "startingWeightLb": 70,
+   "targetMuscles": [
+    "Latissimus Dorsi",
+    "Trapezius Lower Fibers",
+    "Trapezius Middle Fibers"
+   ],
+   "synergistMuscles": [
+    "Infraspinatus",
+    "Teres Major",
+    "Teres Minor",
+    "Brachialis",
+    "Brachioradialis",
+    "Deltoid Posterior",
+    "Pectoralis Major Sternal Head"
+   ],
+   "bodyParts": [
+    "Back"
+   ],
+   "sortedEquipment": [
+    "cable"
+   ]
+  },
+  {
+   "id": "stepUp",
+   "name": "Step up",
+   "defaultWarmup": 10,
+   "defaultEquipment": "dumbbell",
+   "types": [
+    "lower",
+    "legs"
+   ],
+   "startingWeightKg": 10,
+   "startingWeightLb": 25,
+   "targetMuscles": [
+    "Quadriceps"
+   ],
+   "synergistMuscles": [
+    "Adductor Magnus",
+    "Gluteus Maximus",
+    "Soleus"
+   ],
+   "bodyParts": [
+    "Thighs"
+   ],
+   "sortedEquipment": [
+    "barbell",
+    "dumbbell",
+    "bodyweight",
+    "band"
+   ]
+  },
+  {
+   "id": "stiffLegDeadlift",
+   "name": "Stiff Leg Deadlift",
+   "defaultWarmup": 95,
+   "defaultEquipment": "barbell",
+   "types": [
+    "lower",
+    "legs"
+   ],
+   "startingWeightKg": 50,
+   "startingWeightLb": 115,
+   "targetMuscles": [
+    "Erector Spinae"
+   ],
+   "synergistMuscles": [
+    "Adductor Magnus",
+    "Gluteus Maximus",
+    "Hamstrings"
+   ],
+   "bodyParts": [
+    "Hips"
+   ],
+   "sortedEquipment": [
+    "barbell",
+    "dumbbell",
+    "band"
+   ]
+  },
+  {
+   "id": "straightLegDeadlift",
+   "name": "Straight Leg Deadlift",
+   "defaultWarmup": 10,
+   "defaultEquipment": "barbell",
+   "types": [
+    "lower",
+    "legs"
+   ],
+   "startingWeightKg": 50,
+   "startingWeightLb": 110,
+   "targetMuscles": [
+    "Hamstrings"
+   ],
+   "synergistMuscles": [
+    "Adductor Magnus",
+    "Erector Spinae",
+    "Gluteus Maximus"
+   ],
+   "bodyParts": [
+    "Thighs"
+   ],
+   "sortedEquipment": [
+    "barbell",
+    "dumbbell",
+    "band",
+    "kettlebell"
+   ]
+  },
+  {
+   "id": "sumoDeadlift",
+   "name": "Sumo Deadlift",
+   "defaultWarmup": 95,
+   "defaultEquipment": "barbell",
+   "types": [
+    "lower",
+    "legs"
+   ],
+   "startingWeightKg": 77.5,
+   "startingWeightLb": 175,
+   "targetMuscles": [
+    "Erector Spinae"
+   ],
+   "synergistMuscles": [
+    "Adductor Magnus",
+    "Gluteus Maximus",
+    "Quadriceps",
+    "Soleus"
+   ],
+   "bodyParts": [
+    "Hips"
+   ],
+   "sortedEquipment": [
+    "barbell"
+   ]
+  },
+  {
+   "id": "sumoDeadliftHighPull",
+   "name": "Sumo Deadlift High Pull",
+   "defaultWarmup": 95,
+   "defaultEquipment": "barbell",
+   "types": [
+    "upper",
+    "lower",
+    "pull"
+   ],
+   "startingWeightKg": 37.5,
+   "startingWeightLb": 85,
+   "targetMuscles": [
+    "Deltoid Lateral",
+    "Gluteus Maximus",
+    "Quadriceps"
+   ],
+   "synergistMuscles": [
+    "Adductor Magnus",
+    "Biceps Brachii",
+    "Brachialis",
+    "Brachioradialis",
+    "Deltoid Anterior",
+    "Gastrocnemius",
+    "Infraspinatus",
+    "Soleus",
+    "Teres Minor",
+    "Trapezius Lower Fibers",
+    "Trapezius Middle Fibers"
+   ],
+   "bodyParts": [
+    "Shoulders"
+   ],
+   "sortedEquipment": [
+    "barbell"
+   ]
+  },
+  {
+   "id": "superman",
+   "name": "Superman",
+   "defaultWarmup": 10,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "core"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Erector Spinae"
+   ],
+   "synergistMuscles": [
+    "Gluteus Maximus",
+    "Hamstrings"
+   ],
+   "bodyParts": [
+    "Waist"
+   ],
+   "sortedEquipment": [
+    "bodyweight",
+    "dumbbell"
+   ]
+  },
+  {
+   "id": "tBarRow",
+   "name": "T Bar Row",
+   "defaultWarmup": 10,
+   "defaultEquipment": "leverageMachine",
+   "types": [
+    "upper",
+    "pull"
+   ],
+   "startingWeightKg": 40,
+   "startingWeightLb": 90,
+   "targetMuscles": [
+    "Latissimus Dorsi",
+    "Trapezius Lower Fibers",
+    "Trapezius Middle Fibers"
+   ],
+   "synergistMuscles": [
+    "Brachialis",
+    "Brachioradialis",
+    "Deltoid Posterior",
+    "Infraspinatus",
+    "Pectoralis Major Sternal Head",
+    "Teres Major",
+    "Teres Minor"
+   ],
+   "bodyParts": [
+    "Back"
+   ],
+   "sortedEquipment": [
+    "leverageMachine"
+   ]
+  },
+  {
+   "id": "thruster",
+   "name": "Thruster",
+   "defaultWarmup": 45,
+   "defaultEquipment": "barbell",
+   "types": [
+    "upper",
+    "lower",
+    "push"
+   ],
+   "startingWeightKg": 27.5,
+   "startingWeightLb": 65,
+   "targetMuscles": [
+    "Deltoid Anterior",
+    "Gluteus Maximus",
+    "Quadriceps"
+   ],
+   "synergistMuscles": [
+    "Adductor Magnus",
+    "Deltoid Lateral",
+    "Pectoralis Major Clavicular Head",
+    "Serratus Anterior",
+    "Soleus",
+    "Triceps Brachii"
+   ],
+   "bodyParts": [
+    "Shoulders",
+    "Thighs"
+   ],
+   "sortedEquipment": [
+    "barbell"
+   ]
+  },
+  {
+   "id": "toesToBar",
+   "name": "Toes To Bar",
+   "defaultWarmup": 10,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "core"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Rectus Abdominis"
+   ],
+   "synergistMuscles": [
+    "Iliopsoas",
+    "Obliques",
+    "Quadriceps",
+    "Sartorius",
+    "Tensor Fasciae Latae"
+   ],
+   "bodyParts": [
+    "Waist"
+   ],
+   "sortedEquipment": [
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "torsoRotation",
+   "name": "Torso Rotation",
+   "defaultWarmup": 10,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "core"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Obliques"
+   ],
+   "synergistMuscles": [
+    "Erector Spinae"
+   ],
+   "bodyParts": [
+    "Waist"
+   ],
+   "sortedEquipment": [
+    "cable"
+   ]
+  },
+  {
+   "id": "trapBarDeadlift",
+   "name": "Trap Bar Deadlift",
+   "defaultWarmup": 10,
+   "defaultEquipment": "trapbar",
+   "types": [
+    "lower",
+    "legs"
+   ],
+   "startingWeightKg": 82.5,
+   "startingWeightLb": 185,
+   "targetMuscles": [
+    "Gluteus Maximus"
+   ],
+   "synergistMuscles": [
+    "Adductor Magnus",
+    "Quadriceps",
+    "Soleus"
+   ],
+   "bodyParts": [
+    "Thighs"
+   ],
+   "sortedEquipment": [
+    "trapbar"
+   ]
+  },
+  {
+   "id": "tricepsDip",
+   "name": "Triceps Dip",
+   "defaultWarmup": 10,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "upper",
+    "push"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Triceps Brachii"
+   ],
+   "synergistMuscles": [
+    "Deltoid Anterior",
+    "Latissimus Dorsi",
+    "Levator Scapulae",
+    "Pectoralis Major Clavicular Head",
+    "Pectoralis Major Sternal Head"
+   ],
+   "bodyParts": [
+    "Upper Arms"
+   ],
+   "sortedEquipment": [
+    "bodyweight",
+    "leverageMachine"
+   ]
+  },
+  {
+   "id": "tricepsExtension",
+   "name": "Triceps Extension",
+   "defaultWarmup": 10,
+   "defaultEquipment": "dumbbell",
+   "types": [
+    "upper",
+    "push"
+   ],
+   "startingWeightKg": 7.5,
+   "startingWeightLb": 20,
+   "targetMuscles": [
+    "Triceps Brachii"
+   ],
+   "synergistMuscles": [],
+   "bodyParts": [
+    "Upper Arms"
+   ],
+   "sortedEquipment": [
+    "barbell",
+    "cable",
+    "band",
+    "dumbbell"
+   ]
+  },
+  {
+   "id": "tricepsPushdown",
+   "name": "Triceps Pushdown",
+   "defaultWarmup": 10,
+   "defaultEquipment": "cable",
+   "types": [
+    "upper",
+    "push"
+   ],
+   "startingWeightKg": 17.5,
+   "startingWeightLb": 40,
+   "targetMuscles": [
+    "Triceps Brachii"
+   ],
+   "synergistMuscles": [],
+   "bodyParts": [
+    "Upper Arms"
+   ],
+   "sortedEquipment": [
+    "cable"
+   ]
+  },
+  {
+   "id": "uprightRow",
+   "name": "Upright Row",
+   "defaultWarmup": 10,
+   "defaultEquipment": "dumbbell",
+   "types": [
+    "upper",
+    "pull"
+   ],
+   "startingWeightKg": 7.5,
+   "startingWeightLb": 20,
+   "targetMuscles": [
+    "Deltoid Lateral"
+   ],
+   "synergistMuscles": [
+    "Biceps Brachii",
+    "Brachialis",
+    "Brachioradialis",
+    "Deltoid Anterior",
+    "Infraspinatus",
+    "Serratus Anterior",
+    "Teres Minor",
+    "Trapezius Lower Fibers",
+    "Trapezius Middle Fibers"
+   ],
+   "bodyParts": [
+    "Shoulders"
+   ],
+   "sortedEquipment": [
+    "barbell",
+    "cable",
+    "dumbbell",
+    "band"
+   ]
+  },
+  {
+   "id": "vUp",
+   "name": "V Up",
+   "defaultWarmup": 10,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "core"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Rectus Abdominis"
+   ],
+   "synergistMuscles": [
+    "Iliopsoas",
+    "Obliques",
+    "Pectineous",
+    "Quadriceps",
+    "Sartorius",
+    "Tensor Fasciae Latae"
+   ],
+   "bodyParts": [
+    "Waist"
+   ],
+   "sortedEquipment": [
+    "bodyweight",
+    "band",
+    "dumbbell"
+   ]
+  },
+  {
+   "id": "widePullUp",
+   "name": "Wide Pull Up",
+   "defaultWarmup": 10,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "upper",
+    "pull"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Latissimus Dorsi"
+   ],
+   "synergistMuscles": [
+    "Brachialis",
+    "Brachioradialis",
+    "Deltoid Posterior",
+    "Infraspinatus",
+    "Levator Scapulae",
+    "Serratus Anterior",
+    "Teres Major",
+    "Teres Minor",
+    "Trapezius Lower Fibers",
+    "Trapezius Middle Fibers"
+   ],
+   "bodyParts": [
+    "Back"
+   ],
+   "sortedEquipment": [
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "wristCurl",
+   "name": "Wrist Curl",
+   "defaultWarmup": 10,
+   "defaultEquipment": "barbell",
+   "types": [
+    "upper",
+    "pull"
+   ],
+   "startingWeightKg": 10,
+   "startingWeightLb": 25,
+   "targetMuscles": [
+    "Wrist Flexors"
+   ],
+   "synergistMuscles": [],
+   "bodyParts": [
+    "Forearms"
+   ],
+   "sortedEquipment": [
+    "barbell"
+   ]
+  },
+  {
+   "id": "wristRoller",
+   "name": "Wrist Roller",
+   "defaultWarmup": 10,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "upper",
+    "pull"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Wrist Extensors",
+    "Wrist Flexors"
+   ],
+   "synergistMuscles": [],
+   "bodyParts": [
+    "Forearms"
+   ],
+   "sortedEquipment": [
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "zercherSquat",
+   "name": "Zercher Squat",
+   "defaultWarmup": 45,
+   "defaultEquipment": "barbell",
+   "types": [
+    "lower",
+    "legs"
+   ],
+   "startingWeightKg": 47.5,
+   "startingWeightLb": 105,
+   "targetMuscles": [
+    "Quadriceps"
+   ],
+   "synergistMuscles": [
+    "Adductor Magnus",
+    "Gluteus Maximus",
+    "Soleus"
+   ],
+   "bodyParts": [
+    "Hips"
+   ],
+   "sortedEquipment": [
+    "barbell"
+   ]
+  },
+  {
+   "id": "wallPushup",
+   "name": "Wall Push Up",
+   "defaultWarmup": 10,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "upper",
+    "push"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Pectoralis Major Sternal Head"
+   ],
+   "synergistMuscles": [
+    "Deltoid Anterior",
+    "Pectoralis Major Clavicular Head",
+    "Triceps Brachii"
+   ],
+   "bodyParts": [
+    "Chest"
+   ],
+   "sortedEquipment": [
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "inclinePushup",
+   "name": "Incline Push Up",
+   "defaultWarmup": 10,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "upper",
+    "push"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Pectoralis Major Sternal Head"
+   ],
+   "synergistMuscles": [
+    "Deltoid Anterior",
+    "Pectoralis Major Clavicular Head",
+    "Triceps Brachii"
+   ],
+   "bodyParts": [
+    "Chest"
+   ],
+   "sortedEquipment": [
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "kneePushup",
+   "name": "Knee Push Up",
+   "defaultWarmup": 10,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "upper",
+    "push"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Pectoralis Major Sternal Head"
+   ],
+   "synergistMuscles": [
+    "Deltoid Anterior",
+    "Pectoralis Major Clavicular Head",
+    "Triceps Brachii"
+   ],
+   "bodyParts": [
+    "Chest"
+   ],
+   "sortedEquipment": [
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "diamondPushup",
+   "name": "Diamond Push Up",
+   "defaultWarmup": 10,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "upper",
+    "push"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Triceps Brachii"
+   ],
+   "synergistMuscles": [
+    "Deltoid Anterior",
+    "Pectoralis Major Clavicular Head",
+    "Pectoralis Major Sternal Head"
+   ],
+   "bodyParts": [
+    "Upper Arms"
+   ],
+   "sortedEquipment": [
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "pseudoPlanchePushup",
+   "name": "Pseudo Planche Push Up",
+   "defaultWarmup": 10,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "upper",
+    "push"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Pectoralis Major Sternal Head"
+   ],
+   "synergistMuscles": [
+    "Deltoid Anterior",
+    "Pectoralis Major Clavicular Head",
+    "Serratus Anterior",
+    "Triceps Brachii"
+   ],
+   "bodyParts": [
+    "Chest"
+   ],
+   "sortedEquipment": [
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "pikePushup",
+   "name": "Pike Push Up",
+   "defaultWarmup": 10,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "upper",
+    "push"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Deltoid Anterior"
+   ],
+   "synergistMuscles": [
+    "Deltoid Lateral",
+    "Pectoralis Major Clavicular Head",
+    "Serratus Anterior",
+    "Triceps Brachii"
+   ],
+   "bodyParts": [
+    "Shoulders"
+   ],
+   "sortedEquipment": [
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "ringDip",
+   "name": "Ring Dip",
+   "defaultWarmup": 10,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "upper",
+    "push"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Pectoralis Major Sternal Head"
+   ],
+   "synergistMuscles": [
+    "Deltoid Anterior",
+    "Latissimus Dorsi",
+    "Levator Scapulae",
+    "Pectoralis Major Clavicular Head",
+    "Serratus Anterior",
+    "Teres Major",
+    "Trapezius Middle Fibers",
+    "Triceps Brachii"
+   ],
+   "bodyParts": [
+    "Chest"
+   ],
+   "sortedEquipment": [
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "negativeDip",
+   "name": "Negative Dip",
+   "defaultWarmup": 10,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "upper",
+    "push"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Pectoralis Major Sternal Head"
+   ],
+   "synergistMuscles": [
+    "Deltoid Anterior",
+    "Latissimus Dorsi",
+    "Levator Scapulae",
+    "Pectoralis Major Clavicular Head",
+    "Serratus Anterior",
+    "Teres Major",
+    "Trapezius Middle Fibers",
+    "Triceps Brachii"
+   ],
+   "bodyParts": [
+    "Chest"
+   ],
+   "sortedEquipment": [
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "verticalRow",
+   "name": "Vertical Row",
+   "defaultWarmup": 10,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "upper",
+    "pull"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Latissimus Dorsi",
+    "Trapezius Lower Fibers",
+    "Trapezius Middle Fibers"
+   ],
+   "synergistMuscles": [
+    "Infraspinatus",
+    "Teres Major",
+    "Teres Minor",
+    "Brachialis",
+    "Brachioradialis",
+    "Deltoid Posterior",
+    "Pectoralis Major Sternal Head"
+   ],
+   "bodyParts": [
+    "Back"
+   ],
+   "sortedEquipment": [
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "wideRow",
+   "name": "Wide Row",
+   "defaultWarmup": 10,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "upper",
+    "pull"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Latissimus Dorsi",
+    "Trapezius Middle Fibers"
+   ],
+   "synergistMuscles": [
+    "Deltoid Posterior",
+    "Infraspinatus",
+    "Teres Major",
+    "Teres Minor",
+    "Brachialis",
+    "Brachioradialis"
+   ],
+   "bodyParts": [
+    "Back"
+   ],
+   "sortedEquipment": [
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "ringRow",
+   "name": "Ring Row",
+   "defaultWarmup": 10,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "upper",
+    "pull"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Latissimus Dorsi",
+    "Trapezius Lower Fibers",
+    "Trapezius Middle Fibers"
+   ],
+   "synergistMuscles": [
+    "Infraspinatus",
+    "Teres Major",
+    "Teres Minor",
+    "Brachialis",
+    "Brachioradialis",
+    "Deltoid Posterior",
+    "Pectoralis Major Sternal Head"
+   ],
+   "bodyParts": [
+    "Back"
+   ],
+   "sortedEquipment": [
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "tuckFrontLeverRow",
+   "name": "Tuck Front Lever Row",
+   "defaultWarmup": 10,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "upper",
+    "pull"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Latissimus Dorsi"
+   ],
+   "synergistMuscles": [
+    "Teres Major",
+    "Trapezius Lower Fibers",
+    "Trapezius Middle Fibers",
+    "Deltoid Posterior",
+    "Rectus Abdominis",
+    "Brachialis"
+   ],
+   "bodyParts": [
+    "Back"
+   ],
+   "sortedEquipment": [
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "frontLeverRow",
+   "name": "Front Lever Row",
+   "defaultWarmup": 10,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "upper",
+    "pull"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Latissimus Dorsi"
+   ],
+   "synergistMuscles": [
+    "Teres Major",
+    "Trapezius Lower Fibers",
+    "Trapezius Middle Fibers",
+    "Deltoid Posterior",
+    "Rectus Abdominis",
+    "Brachialis"
+   ],
+   "bodyParts": [
+    "Back"
+   ],
+   "sortedEquipment": [
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "scapularPullUp",
+   "name": "Scapular Pull Up",
+   "defaultWarmup": 10,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "upper",
+    "pull"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Trapezius Lower Fibers",
+    "Trapezius Middle Fibers"
+   ],
+   "synergistMuscles": [
+    "Latissimus Dorsi",
+    "Levator Scapulae",
+    "Serratus Anterior",
+    "Teres Major"
+   ],
+   "bodyParts": [
+    "Back"
+   ],
+   "sortedEquipment": [
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "deadHang",
+   "name": "Dead Hang",
+   "defaultWarmup": 10,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "upper",
+    "pull"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Latissimus Dorsi",
+    "Wrist Flexors"
+   ],
+   "synergistMuscles": [
+    "Teres Major",
+    "Trapezius Lower Fibers",
+    "Trapezius Middle Fibers"
+   ],
+   "bodyParts": [
+    "Back"
+   ],
+   "sortedEquipment": [
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "negativePullup",
+   "name": "Negative Pull Up",
+   "defaultWarmup": 10,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "upper",
+    "pull"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Latissimus Dorsi"
+   ],
+   "synergistMuscles": [
+    "Biceps Brachii",
+    "Brachialis",
+    "Brachioradialis",
+    "Deltoid Posterior",
+    "Infraspinatus",
+    "Levator Scapulae",
+    "Teres Major",
+    "Teres Minor",
+    "Trapezius Lower Fibers",
+    "Trapezius Middle Fibers"
+   ],
+   "bodyParts": [
+    "Back"
+   ],
+   "sortedEquipment": [
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "assistedSquat",
+   "name": "Assisted Squat",
+   "defaultWarmup": 10,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "lower",
+    "legs"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Quadriceps"
+   ],
+   "synergistMuscles": [
+    "Adductor Magnus",
+    "Gluteus Maximus",
+    "Soleus"
+   ],
+   "bodyParts": [
+    "Thighs"
+   ],
+   "sortedEquipment": [
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "shrimpSquat",
+   "name": "Shrimp Squat",
+   "defaultWarmup": 10,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "lower",
+    "legs"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Gluteus Maximus"
+   ],
+   "synergistMuscles": [
+    "Adductor Magnus",
+    "Quadriceps",
+    "Soleus"
+   ],
+   "bodyParts": [
+    "Thighs"
+   ],
+   "sortedEquipment": [
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "nordicCurl",
+   "name": "Nordic Curl",
+   "defaultWarmup": 10,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "lower",
+    "legs"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Hamstrings"
+   ],
+   "synergistMuscles": [
+    "Gastrocnemius",
+    "Gluteus Maximus",
+    "Erector Spinae"
+   ],
+   "bodyParts": [
+    "Thighs"
+   ],
+   "sortedEquipment": [
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "handstand",
+   "name": "Handstand",
+   "defaultWarmup": 10,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "upper",
+    "push"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Deltoid Anterior"
+   ],
+   "synergistMuscles": [
+    "Deltoid Lateral",
+    "Trapezius Upper Fibers",
+    "Triceps Brachii",
+    "Serratus Anterior",
+    "Rectus Abdominis"
+   ],
+   "bodyParts": [
+    "Shoulders"
+   ],
+   "sortedEquipment": [
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "wallHandstand",
+   "name": "Wall Handstand",
+   "defaultWarmup": 10,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "upper",
+    "push"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Deltoid Anterior"
+   ],
+   "synergistMuscles": [
+    "Deltoid Lateral",
+    "Trapezius Upper Fibers",
+    "Triceps Brachii",
+    "Serratus Anterior",
+    "Rectus Abdominis"
+   ],
+   "bodyParts": [
+    "Shoulders"
+   ],
+   "sortedEquipment": [
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "crowPose",
+   "name": "Crow Pose",
+   "defaultWarmup": 10,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "upper",
+    "push"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Deltoid Anterior"
+   ],
+   "synergistMuscles": [
+    "Triceps Brachii",
+    "Serratus Anterior",
+    "Rectus Abdominis",
+    "Wrist Flexors"
+   ],
+   "bodyParts": [
+    "Shoulders"
+   ],
+   "sortedEquipment": [
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "dragonFlag",
+   "name": "Dragon Flag",
+   "defaultWarmup": 10,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "core"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Rectus Abdominis"
+   ],
+   "synergistMuscles": [
+    "Obliques",
+    "Iliopsoas",
+    "Erector Spinae"
+   ],
+   "bodyParts": [
+    "Waist"
+   ],
+   "sortedEquipment": [
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "copenhagenPlank",
+   "name": "Copenhagen Plank",
+   "defaultWarmup": 10,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "core"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Adductor Magnus"
+   ],
+   "synergistMuscles": [
+    "Adductor Brevis",
+    "Adductor Longus",
+    "Obliques",
+    "Gluteus Medius"
+   ],
+   "bodyParts": [
+    "Waist"
+   ],
+   "sortedEquipment": [
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "hangingKneeRaise",
+   "name": "Hanging Knee Raise",
+   "defaultWarmup": 10,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "core"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Iliopsoas"
+   ],
+   "synergistMuscles": [
+    "Adductor Brevis",
+    "Adductor Longus",
+    "Pectineous",
+    "Rectus Abdominis",
+    "Sartorius",
+    "Tensor Fasciae Latae"
+   ],
+   "bodyParts": [
+    "Waist"
+   ],
+   "sortedEquipment": [
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "archHang",
+   "name": "Arch Hang",
+   "defaultWarmup": 10,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "upper",
+    "pull"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Latissimus Dorsi"
+   ],
+   "synergistMuscles": [
+    "Teres Major",
+    "Trapezius Lower Fibers",
+    "Trapezius Middle Fibers",
+    "Deltoid Posterior",
+    "Wrist Flexors"
+   ],
+   "bodyParts": [
+    "Back"
+   ],
+   "sortedEquipment": [
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "supportHold",
+   "name": "Support Hold",
+   "defaultWarmup": 10,
+   "defaultEquipment": "bodyweight",
+   "types": [
+    "upper",
+    "push"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Pectoralis Major Sternal Head"
+   ],
+   "synergistMuscles": [
+    "Deltoid Anterior",
+    "Latissimus Dorsi",
+    "Serratus Anterior",
+    "Triceps Brachii",
+    "Trapezius Lower Fibers",
+    "Trapezius Middle Fibers"
+   ],
+   "bodyParts": [
+    "Chest"
+   ],
+   "sortedEquipment": [
+    "bodyweight"
+   ]
+  },
+  {
+   "id": "pallofPress",
+   "name": "Pallof Press",
+   "defaultWarmup": 10,
+   "defaultEquipment": "band",
+   "types": [
+    "core"
+   ],
+   "startingWeightKg": 0,
+   "startingWeightLb": 0,
+   "targetMuscles": [
+    "Obliques"
+   ],
+   "synergistMuscles": [
+    "Rectus Abdominis"
+   ],
+   "bodyParts": [
+    "Waist"
+   ],
+   "sortedEquipment": [
+    "band"
+   ]
+  },
+  {
+   "id": "renegadeRow",
+   "name": "Renegade Row",
+   "defaultWarmup": 10,
+   "defaultEquipment": "dumbbell",
+   "types": [
+    "upper",
+    "pull",
+    "core"
+   ],
+   "startingWeightKg": 10,
+   "startingWeightLb": 20,
+   "targetMuscles": [
+    "Latissimus Dorsi",
+    "Obliques"
+   ],
+   "synergistMuscles": [
+    "Trapezius Lower Fibers",
+    "Trapezius Middle Fibers",
+    "Teres Major",
+    "Deltoid Posterior",
+    "Brachialis",
+    "Brachioradialis",
+    "Rectus Abdominis"
+   ],
+   "bodyParts": [
+    "Back",
+    "Waist"
+   ],
+   "sortedEquipment": [
+    "dumbbell"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,34 @@
+{
+ "Program_nextHistoryEntry": [
+  "sets[].id",
+  "warmupSets[].id"
+ ],
+ "evaluateQalaProgram": [
+  "id",
+  "weeks[].days[].exercises[].descriptions.reuse.exercise.id",
+  "weeks[].days[].exercises[].id",
+  "weeks[].days[].exercises[].progress.reuse.exercise.id",
+  "weeks[].days[].exercises[].reuse.exercise.id"
+ ],
+ "forceEvaluateText": [
+  "id",
+  "weeks[].days[].exercises[].descriptions.reuse.exercise.id",
+  "weeks[].days[].exercises[].descriptions.reuse.exercise.progress.reuse.exercise.id",
+  "weeks[].days[].exercises[].id",
+  "weeks[].days[].exercises[].progress.reuse.exercise.id",
+  "weeks[].days[].exercises[].progress.reuse.exercise.progress.reuse.exercise.id",
+  "weeks[].days[].exercises[].progress.reuse.exercise.update.reuse.exercise.id",
+  "weeks[].days[].exercises[].reuse.exercise.id",
+  "weeks[].days[].exercises[].reuse.exercise.progress.reuse.exercise.id",
+  "weeks[].days[].exercises[].reuse.exercise.update.reuse.exercise.id",
+  "weeks[].days[].exercises[].update.reuse.exercise.id",
+  "weeks[].days[].exercises[].update.reuse.exercise.progress.reuse.exercise.id",
+  "weeks[].days[].exercises[].update.reuse.exercise.update.reuse.exercise.id"
+ ],
+ "qalaLiftEntryToHistoryEntry": [
+  "sets[].id"
+ ],
+ "qalaLiftSessionToHistoryRecord": [
+  "entries[].sets[].id"
+ ]
+}
