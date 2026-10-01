@@ -9,6 +9,13 @@ workspace and a recomposed Today and Plan. Those stay. Its surface treatment
 a generic app rather than a Beamer sibling, and the owner had it reverted the
 same day (L8). The review canvas predates both passes.
 
+Phone visual pass, 2026-09-30 (branch `visual-update`): the owner asked for a
+visual update of the whole phone app, with plates that look like plates, every
+chart reviewed, consistent buttons and one vibe, and said Qala no longer has to
+match Beamer (L9). The pass left `tokens.css` alone and spent that freedom on
+controls, plates, charts and composition. What it changed is noted per section
+below; the decisions are L9 to L11 and U14 to U19.
+
 ## 1. Principles
 
 1. **Beamer first.** Qala should look like a sibling of the owner's Beamer app: off-white ground, white surfaces, 2px borders, hard offset shadows with zero blur, 4/6/8px radii, no pills, no logo tile (the Qala Test wordmark is the brand). Cards are flat at rest and lift on hover or press. Each screen still gets one clear reading order (L1, L8).
@@ -142,16 +149,20 @@ Lucide via `lucide-react` (ISC; add to NOTICE). Stroke 2 at 24px, `currentColor`
 
 ## 5. Components
 
-Anatomy copies Beamer; phone controls scale up to a 44px minimum touch target.
+Anatomy started from Beamer; phone controls scale up to a 44px minimum touch target. Shared components live in `apps/web/src/shared/ui.tsx` and `shared/plates.tsx`.
 
 1. **Card:** `--bg-surface`, 2px `--border`, `--radius-md`, 20px phone / 24px desktop padding, flat at rest, `--shadow-card` on hover or press; the Today hero carries it at rest.
 2. **Group:** one bordered container with a `--bg-recessed` header band holding the group label, optional right-side action, a 2px line under the band and 1px dividers between rows (Beamer's settings groups).
-3. **Buttons:** primary is ember fill, `--on-accent` text, `--radius`, `--shadow-cta`, 52px tall on phone; the large primary on Today is 64px with a 22px icon. Secondary is a 2px bordered surface button. Utility actions use neutral ink. Inputs are 2px bordered, `--border-strong` on hover, ember on focus.
-4. **Chips and segmented controls:** 4px radius chips on `--bg-active`; segmented controls are one bordered strip with the selected cell on `--bg-active`.
-5. **Toggles:** square-cornered, ember when on.
+3. **Buttons:** primary is ember fill, `--on-accent` text, `--radius`, `--shadow-cta`, 52px tall on phone; the large primary is 64px with a 22px icon and is what every screen's main action uses. One primary per screen. Secondary is a 2px bordered surface button; `small` is the 40px header variant for Finish, Skip and Edit. Utility actions use neutral ink. Inputs are 2px bordered, `--border-strong` on hover, ember on focus. Both button kinds keep their `onClick` when rendered as links (fixed 2026-09-30: check-in, session finish and run save never queued their ops).
+4. **Chips and segmented controls:** 4px radius chips on `--bg-active`; segmented controls (view switchers: Overview / Details, the Live run pages) are one bordered strip with the selected cell on `--bg-active`. A pressed chip fills with ink.
+5. **Toggles:** square-cornered, ember when on. `Toggle` is shared.
+5a. **Scale picker (U14):** every choice of a value on a scale (recovery 0-10, soreness 1-4, RPE, session effort, muscle performance, bar, theme, title font) is one `ScalePicker`: a single 2px bordered strip of 48px cells, the picked cell filled with ink (`--fg` with `--bg-surface` text), optional anchor words under the ends. Ember is never used as a selected state.
+5b. **Stepper:** a big figure with two 48px bordered - / + buttons under it (weight and reps, plate target).
+5c. **Tool bar:** secondary per-exercise tools as one bordered strip, each an icon with a word under it (Info, Swap, Note, Joint pain).
+5d. **Flow header:** in-session screens (workout, rest, all exercises) share one header: zoom out to all exercises (or back), the session with its ticking clock, and a small Finish.
 6. **Tab bar:** 72px plus the device safe area, 2px top border, a 3px ember bar above the active tab's icon. Capped to the phone shell width.
 7. **Exercise note card:** `--note` fill, `--note-border`, sticky-note icon, date label, Got it / Pin / Resolved.
-8. **Plate drawing and plate chips.** The drawing shows one side of the bar: sleeve to the left, collar and bar label to the right, plates heaviest innermost, each plate labeled with its weight (rotated on tall plates, below on small ones). Plate heights step down with weight. Chips are small filled rectangles in plate color with the weight printed, used as shorthand ("45 · 45 · 10"). Colors, text color on each, and editability are in PLAN 6.8; defaults: 55 red `#d64541`, 45 blue `#2f6bd1`, 35 yellow `#e9b824` (ink text), 25 green `#2f9c5a`, 10 white `#eef0f4` with a hairline (ink text), 5 charcoal `#3b404c`, 2.5 silver `#b9bfca` (ink text).
+8. **Plates and bar are rendered in Blender (L10, L12).** After several rounds of hand-drawn SVG that the owner called fake, the plates and bar are real 3D models rendered to sprites. `assets/3d/build_sprites.py` builds the scene from scratch (1 unit = 1 inch) and renders, headless: every bumper (55, 45, 35, 25, 10 lb) in each of the seven named colors, the 5, 2.5 and 1.25 lb iron plates, and the bar. `assets/3d/pack_sprites.py` trims them to WebP in `apps/web/public/plates/` (about 0.7 MB) and writes `apps/web/src/shared/plateSprites.json`. Run: `blender -b -P assets/3d/build_sprites.py -- --out /tmp/s` then `python3 assets/3d/pack_sprites.py /tmp/s apps/web/public/plates apps/web/src/shared/plateSprites.json`. The plate has the real 17.7" bumper profile and thicknesses by weight: a high outer lip, a narrow recessed groove, a lower middle field, a raised ring round a steel hub, and raised Montserrat Bold lettering (the weight on both sides of the hub, the right one upside down, and QALA curved top and bottom), white on colored plates and dark on white and silver ones. The bar follows a standard bar: a 28 mm shaft, a collar with a seam, a 50 mm polished sleeve, a blue end cap. One orthographic camera made every sprite (52 degrees round from the plate's normal, 12 degrees up), so `PlateDrawing` (`shared/plates.tsx`) places a part by moving it along the bar's axis on screen: plates stack from the collar, the sleeve and knurled shaft are repeated strips (a polished tube lit evenly repeats cleanly) and the sleeve is shortened so the plates stay large, with its tip drawn over the outermost plate. Inner plates show only their rims, so their weights are written beneath, skipped where they would crowd; the caption lists them all. `PlateChips` uses nearly face-on renders with the weight in HTML on the outermost chip. Colors come from `settings.plates`; a color with no render falls back to charcoal. The earlier SVG drawings are gone. Blender 5.2.2 and the MCP server (`uvx mcp-for-blender`) were installed for this under `~/.local`; Montserrat is OFL (copy in `assets/3d/`).
 9. **Readiness ring** (section 6.4).
 10. **Timeline rail** (section 7.1).
 
@@ -197,22 +208,22 @@ Code lives in `apps/web/src/shared/charts/`. The plate drawing and the readiness
 |---|---|---|---|
 | This week | Today hero, desktop Overview, landing | seven-day strip: one bar per day, height the day's load, fill the part done; done teal, today ember on an `--accent-subtle` band, later outlined, rest a dash; a lift/run/both/rest glyph and the day letter under each; a caption naming the tapped, hovered or focused day (today by default) and a week total line (U13) | HTML/CSS, no plotting library |
 | Readiness ring | Today hero | ring meter out of 100 with average and low markers (6.4) | visx `Arc` |
-| Readiness, last 7 days | Body | line with markers, average and low as hairlines | visx |
+| Readiness, last 7 days | Body | line with markers by weekday, today's value as a headline, average and low as hairlines | visx |
 | Where the time went | Session complete | one stacked horizontal bar, categorical | visx |
-| Sets by muscle | Session complete, Progress | horizontal bars, earlier this week in gray with today in ember, hairlines at 10 and 20 | visx |
-| Main-lift e1RM, recent | Session complete, Progress | 2px line with markers, today's point in ember, tested 1RMs as diamonds | visx |
+| Sets by muscle | Session complete, Progress | horizontal bars, earlier this week in gray with today in ember, the 10-20 weekly target shaded as a band, each bar ending with its total | visx |
+| Main-lift e1RM, recent | Session complete, Progress | 2px line with markers, today's point in ember, tested 1RMs as diamonds, the latest value and its change as a headline, dates or weeks on the axis | visx |
 | Main-lift e1RM, full history | Desktop graphs | the same encoding with zoom and drag | uPlot |
-| Reps by intensity | Session complete | one stacked bar, ordinal ramp, NL85 as the headline figure | visx |
+| Reps by intensity | Session complete | one stacked bar, ordinal ramp, NL85 as the headline figure with a bracket over the 85%+ segments, counts in the legend | visx |
 | Reps at 85%+ vs block target | Progress | bullet bars with an ember target tick | visx |
 | Fatigue by muscle | Body | bars split lifting and running | visx |
 | Running fitness | Progress | sparkline | visx |
-| Splits | Run summary | table with inline bars | visx |
+| Splits | Run summary, desktop run detail | each mile as its difference from the run's average pace: a bar right of the center line is faster, left is slower, labeled in seconds next to the pace (U17). Bars from zero made 8:58 and 9:11 look the same and the slowest mile the longest bar | HTML/CSS |
 | Pace, heart rate, elevation | Run summary, desktop run detail | synced time series | uPlot |
 | Fitness and fatigue curves, calibration residuals | Desktop graphs, calibration | time series | uPlot |
 
 ### 6.4 Readiness ring
 
-`readiness` (0-1 from PLAN 6.2) x 100, drawn as a ring. The track is `--bg-active`; the low zone from 0 to the low line is tinted `--low-zone`; the value arc is slimmer and round-capped, `--progress-fill` at or above the low line and `--danger` below it with a "low" word next to the ring. A dark tick marks the owner's 28-day average; a red tick marks the low line at `mean - 1.5 SD` of the same window (the z <= -1.5 flag in PLAN 6.2). A check-in with PRS <= 4 counts as low whatever the number. Until 14 check-ins exist, the average tick is hidden and the low line sits at 50 (assumption). A two-line legend under the ring: "your avg 76", "low under 64".
+`readiness` (0-1 from PLAN 6.2) x 100, drawn as a ring. The track is `--bg-active`; the low zone from 0 to the low line is a thin `--low-zone` band just outside the track, like the red zone on a gauge (changed 2026-09-30: tinting the track under a slimmer arc showed as pink edges around the value); the value arc fills the track width and is round-capped, `--progress-fill` at or above the low line and `--danger` below it with a "low" word next to the ring. A dark tick marks the owner's 28-day average; a red tick marks the low line at `mean - 1.5 SD` of the same window (the z <= -1.5 flag in PLAN 6.2). A check-in with PRS <= 4 counts as low whatever the number. Until 14 check-ins exist, the average tick is hidden and the low line sits at 50 (assumption). A two-line legend under the ring: "your avg 76", "low under 64".
 
 ## 7. Screens
 
@@ -244,57 +255,85 @@ then the next run. The ring and the week strip live in a full-width expandable
 "Readiness & weekly load" section beneath the action. This avoids squeezing two
 chart columns beside the rail.
 
+Build, 2026-09-30: composition unchanged. Stage cards share one title style and no longer nest a bordered tile grid; after the lift and in the evening they show three figures in a row. The preview label has a Back to now button. The disclosure reads "Readiness and this week" with a chevron. The secondary under the hero is Run first instead. The evening card names tomorrow's actual session (Upper A) rather than a rest day.
+
 ### 7.2 Plan (U4)
 
 Header: block name and periodization, `< Week 3 of 6 >` with arrows, a thin strip of the block's weeks (done, current in ember, deload lighter). Day tabs Monday to Sunday with the date and a glyph (`dumbbell`, `sport-shoe`, `bed`), the selected day underlined in ember. Below: day title and length including warm-up, the Start workout button, Overview / Details. Overview is a two-column grid of exercise cards (name, sets x reps x load, a note icon when a note is waiting, a chip such as "+1 set"). Details lists the warm-up, every set, and the day's run.
+
+Build, 2026-09-30: each day carries its own exercises (the cards used to repeat today's workout on every lift day), and the sample week matches the Today strip's days and statuses. Day tabs show the date and a done check, a skipped day is struck through. The block strip numbers its weeks with D for the deload, and the arrows and strip change the week shown. Start workout is the primary only on today; a done day offers See what you did and a later day Do this today instead. Overview is the exercise grid and Details the set list (they were swapped).
 
 ### 7.3 Check-in
 
 Title "How are you walking in?". Recovery 0-10 as a row of buttons with anchors. Soreness 1-4 for each muscle today's session trains, with when it was last trained and the four meanings. A free-text line; the coach turns it into removable chips ("Sleep 6 h", "Left knee: watch"). On a rest day, the card also surfaces a suggested mobility/recovery line (foam roller, Theragun, stretching) drawn from soreness answers and owned equipment — a tip, not a tracked stage (DECISIONS U10; see CONTEXT.md's "mobility" entry for how this differs from the warm-up's mobility block). Continue to warm-up.
 
+Build, 2026-09-30: recovery and soreness use the scale picker; each muscle shows the meaning of the picked value in place of a hover title. On a rest day the button saves the check-in and returns to Today instead of opening the warm-up.
+
 ### 7.4 Warm-up (T6, T7)
 
 Four numbered groups from PLAN 6.7, each with a duration: General (the machine, pace, a timer, and why it's 10 minutes today), Soft tissue (muscle, tool, time, a check each, and why: "Sore (4): 2 min, no Theragun"), Mobility (drills and reps), Ramp sets (step, load, reps, plates per side as chips, rest; an extra step labeled "extra step: quads sore"), ending with the work sets and their plates. A footnote marks coach-practice rules. Start workout; Skip in the header.
+
+Build, 2026-09-30: four numbered step cards with their times. Soft tissue and mobility items are check rows. Ramp sets show load, reps, plate discs and rest per row, the extra step flagged in ember, and a closing work-sets row.
 
 ### 7.5 Workout: one exercise (U5, T9, T10)
 
 Top: collapse, day name and the ticking workout clock, Finish. A segmented progress bar, one segment per exercise, filled per completed set, the current one outlined. "Exercise 1 of 6 · Set 3 of 3". A returning note card when one is waiting. The exercise title and last time's sets. The logging card: weight x reps as big figures with -/+ steppers, plate shorthand chips and a calculator button, RPE chips 7-10 in half steps. Actions: Info, Swap, Note, Log set (primary). A rest preview and the next exercise. "All exercises" and a swipe hint.
 
+Build, 2026-09-30: flow header (all exercises, session clock, Finish). Progress segments fill per completed set and are buttons that jump to that exercise. Weight and reps are steppers; the plate discs and shorthand open the calculator; RPE is one scale strip with "3 in the tank" and "max" anchors; Log set is the large primary. The coach banner says "Coach suggests" with Use 240 while pending, and "Coach adjusted today" with Use engine once applied; accepting moves the weight. Info, Swap, Note and Joint pain sit in a labeled tool bar under the card, and Prev / Next buttons name the neighbouring exercise.
+
 ### 7.6 Rest (T8, T10)
 
 The workout top bar stays. "Back Squat · set 2 logged: 245 x 4 @ 9". The countdown as a ticking figure with "of 3:45", a progress bar, Ready early and +30 s. The next set's load as the plate drawing ("Same as last set" or the change instruction). "Why 3:45" lists base, pace, effort, readiness adjustments with their seconds. A card for the change to the next exercise ("After squats: RDL 205. Take off 45 and 10, add 35 each side.").
+
+Build, 2026-09-30: the bar runs down as time passes. Ready early is the primary and becomes Start set 3 at zero, with +30 s beside it (the separate Next set button is gone). The next set's load sits on its own card with the loaded bar. Why 3:45 is a ledger: base, each adjustment with its seconds, the total. The plate change after this exercise is its own card with before and after discs.
 
 ### 7.7 All exercises
 
 The zoomed-out view: warm-up done, then a two-column grid of exercises with set dots, the current one outlined in ember; tap to jump. Doing them out of order is fine and history keeps the actual order.
 
+Build, 2026-09-30: flow header with a way back, the warm-up line, then numbered cards with a box per set; the current exercise has the ember border.
+
 ### 7.8 Session complete (U6)
 
 Top to bottom: title ("Lower A, done"); four stat tiles (duration, volume, hard sets, PRs, each with a delta against the same session last time); where the time went; sets by muscle this week; the main lift's e1RM over 8 sessions; reps by intensity with NL85; the exercise list with volume delta chips; two quick questions (per-muscle performance, session RPE); the day's run handoff; Finish.
+
+Build, 2026-09-30: exercise rows carry a volume delta badge. The performance question uses words (Beat it, Hit it, Barely, Missed) on the scale picker, session RPE has CR-10 anchors, and the run handoff is the last card with Finish session.
 
 ### 7.9 Body
 
 "Legs are still recovering". Readiness over 7 days. The front and back muscle map (liftosaur's SVGs). Fatigue by muscle split lifting and running, with when each is ready. Deload status. Recovery tools owned.
 
+Build, 2026-09-30: the muscle map is still to come; in its place a soreness list with a four-step meter per muscle (3 and 4 in ember) and a word for the level.
+
 ### 7.10 Progress
 
 The block and week, a headline ("Squat is up 4% this block"), squat 1RM with daily best, estimate and tested markers, reps at 85%+ against the block target, sets per muscle, running fitness and weekly miles, recent sessions and "All history".
+
+Build, 2026-09-30: the headline is the page title; reference, estimate and tested 1RM are three figures under it. Recent sessions use the shared session rows with a lift or run glyph.
 
 ### 7.11 Coach (U8)
 
 Open-ended conversation within fitness/training/health/recovery topics (declines unrelated requests); every actionable suggestion still passes through the P3 envelope (decided 2026-09-13; `docs/adr/0001-coach-open-chat.md`). Context chips (today's session, check-in), the conversation, a suggested change card showing engine and coach numbers side by side including plates per side, the limits, Use coach / Keep engine, and "Remember this?" memory proposals. Composer above the tab bar; "Runs on callisto".
 
+Build, 2026-09-30: the thread is coach and you turns (you filled with ink, right aligned). The suggestion card shows engine and coach side by side, the coach's plates as discs (the sample said 45 · 25 · 5 for 240, which loads 195; it is now 45 · 45 · 5 · 2.5), the limits, and Keep engine / Use coach.
+
 ### 7.12 Plate calculator (T10)
 
 Target weight as a big figure with -/+, the bar choice, the plate drawing for one side, a summary (bar plus plates with counts and the arithmetic), and the owner's plate inventory with counts and an Edit action. Opened from the logging card, the rest screen, or Settings.
+
+Build, 2026-09-30: target as a stepper, bar on the scale picker, the loaded bar, the arithmetic, and the inventory listed with a disc per plate. 55 lb bumpers are optional (owner, 2026-10-01): a switch at the top of the inventory adds them with a pair count, and the plate math uses them once on (245 becomes 55 · 45 a side). Settings are not persisted yet, so this resets on reload like every other setting.
 
 ### 7.13 Settings
 
 Groups in order: Units; Bars and plates (default bar, plates, plate colors, collars); Equipment you own (foam roller, Theragun, bike, rower, treadmill); Warm-up (build a warm-up, soft tissue, prefer Theragun, time); Rest timer (automatic, learn from taps, show plates for the next set, alert); Check-ins; Running (audio cues, auto-pause, heart-rate strap, offline map area); Coach (status, limits, memory); Appearance (theme, title font).
 
+Build, 2026-09-30: rows are label left, value right; plate colors show the inventory's discs; theme and title font use the scale picker, with a title-font sample.
+
 ### 7.14 Running
 
 Start (map, GPS status, the planned run, Start run), Live (time, miles largest, current and average pace as ticking figures; pause as a square ember button), Guided (step name in ember, time left, the target pace band with the current pace marker, "Speed up a little", miles and time), Summary (map with mile markers, title, six figures, splits, effort, what it means for tomorrow, Save run). Run glyphs use `sport-shoe`.
+
+Build, 2026-09-30: the map is a drawn stand-in (streets, the loop in the run color, start dot, mile markers on the summary) until MapLibre lands. Start shows GPS and a cues switch. Live switches Numbers / Splits / Map with a segmented control, shows miles largest, and pairs a square ember pause with Finish run (no hold gesture yet). Guided draws the pace band slow to fast with both edges labeled and the current pace as a marker; Back to numbers is secondary. Summary uses the splits chart and the effort scale.
 
 ### 7.15 Desktop: program editor
 

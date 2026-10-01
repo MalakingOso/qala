@@ -2,24 +2,13 @@
  * Equipment; Warm-up; Rest timer; Check-ins; Running; Coach; Appearance. */
 
 import { useQala } from "../../store/qalaStore.tsx";
-import { Group, GroupRow } from "../../shared/ui.tsx";
-
-function Toggle(
-  { on, onFlip, label }: { on: boolean; onFlip: () => void; label: string },
-) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={on}
-      aria-label={label}
-      className="toggle"
-      onClick={onFlip}
-    >
-      <span className="knob" aria-hidden="true" />
-    </button>
-  );
-}
+import {
+  Group,
+  GroupRow,
+  PlateChips,
+  ScalePicker,
+  Toggle,
+} from "../../shared/ui.tsx";
 
 export function SettingsPage() {
   const { settings: s, updateSettings: u } = useQala();
@@ -32,8 +21,12 @@ export function SettingsPage() {
       </div>
       <Group label="Units">
         <GroupRow>
-          <span>Weight · lb</span>
-          <span className="kbd-hint">Distance · mi · pace min/mi</span>
+          <span>Weight</span>
+          <span className="kbd-hint">lb</span>
+        </GroupRow>
+        <GroupRow>
+          <span>Distance and pace</span>
+          <span className="kbd-hint">mi · min/mi</span>
         </GroupRow>
       </Group>
       <Group
@@ -41,12 +34,21 @@ export function SettingsPage() {
         action={<a className="link-btn" href="#/phone/plates">Calculator</a>}
       >
         <GroupRow>
-          <span>Default bar · {s.defaultBar} lb</span>
-          <span className="kbd-hint">collar {s.collarWeight} lb</span>
+          <span>Default bar</span>
+          <span className="kbd-hint">{s.defaultBar} lb</span>
+        </GroupRow>
+        <GroupRow>
+          <span>Collars</span>
+          <span className="kbd-hint">{s.collarWeight} lb</span>
         </GroupRow>
         <GroupRow>
           <span>Plate colors</span>
-          <span className="kbd-hint">bumper · editable</span>
+          <PlateChips
+            plates={s.plates.map((p) => p.weight)}
+            inventory={s.plates}
+            mode="row"
+            size={26}
+          />
         </GroupRow>
       </Group>
       <Group label="Equipment you own">
@@ -110,7 +112,8 @@ export function SettingsPage() {
           />
         </GroupRow>
         <GroupRow>
-          <span>Time · {s.warmup.minutes} min</span>
+          <span>Time</span>
+          <span className="kbd-hint">{s.warmup.minutes} min</span>
         </GroupRow>
       </Group>
       <Group label="Rest timer">
@@ -148,7 +151,8 @@ export function SettingsPage() {
           />
         </GroupRow>
         <GroupRow>
-          <span>Alert · {s.rest.alert}</span>
+          <span>Alert</span>
+          <span className="kbd-hint">{s.rest.alert}</span>
         </GroupRow>
       </Group>
       <Group label="Check-ins">
@@ -198,52 +202,41 @@ export function SettingsPage() {
       </Group>
       <Group label="Coach">
         <GroupRow>
-          <span>Status · {s.coach.status}</span>
+          <span>Status</span>
+          <span className="kbd-hint">{s.coach.status}</span>
         </GroupRow>
         <GroupRow>
-          <span>Limits · {s.coach.limits}</span>
+          <span>Limits</span>
+          <span className="kbd-hint">{s.coach.limits}</span>
         </GroupRow>
       </Group>
       <Group label="Appearance">
-        <GroupRow>
-          <span>Theme · {s.theme}</span>
-          <span>
-            {(["light", "dark", "system"] as const).map((t) => (
-              <button
-                key={t}
-                type="button"
-                className="chip"
-                aria-pressed={s.theme === t}
-                onClick={() => u((p) => ({ ...p, theme: t }))}
-              >
-                {t}
-              </button>
-            ))}
-          </span>
-        </GroupRow>
-        <GroupRow>
-          <span>
-            Title font · {s.titleFont === "qalaTest" ? "Qala Test" : "Faustina"}
-          </span>
-          <span>
-            <button
-              type="button"
-              className="chip"
-              onClick={() =>
-                u((p) => ({ ...p, titleFont: "qalaTest" as const }))}
-            >
-              Qala Test
-            </button>{" "}
-            <button
-              type="button"
-              className="chip"
-              onClick={() =>
-                u((p) => ({ ...p, titleFont: "faustina" as const }))}
-            >
-              Faustina
-            </button>
-          </span>
-        </GroupRow>
+        <div className="group-row stacked">
+          <span>Theme</span>
+          <ScalePicker
+            label="Theme"
+            options={[
+              { value: "light", label: "Light" },
+              { value: "dark", label: "Dark" },
+              { value: "system", label: "System" },
+            ]}
+            value={s.theme}
+            onPick={(t) => u((p) => ({ ...p, theme: t }))}
+          />
+        </div>
+        <div className="group-row stacked">
+          <span>Title font</span>
+          <ScalePicker
+            label="Title font"
+            options={[
+              { value: "qalaTest", label: "Qala Test" },
+              { value: "faustina", label: "Faustina" },
+            ]}
+            value={s.titleFont}
+            onPick={(f) => u((p) => ({ ...p, titleFont: f }))}
+          />
+          <span className="title font-sample">Lower A · 245 × 4</span>
+        </div>
       </Group>
     </div>
   );

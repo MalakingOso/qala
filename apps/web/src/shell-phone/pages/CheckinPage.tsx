@@ -5,7 +5,8 @@
 
 import { useState } from "react";
 import { useQala } from "../../store/qalaStore.tsx";
-import { Card, Chip, PrimaryButton } from "../../shared/ui.tsx";
+import { Card, Chip, PrimaryButton, ScalePicker } from "../../shared/ui.tsx";
+import { ArrowRight, Sun } from "../../shared/icons.ts";
 
 const TRAINED = [
   {
@@ -73,96 +74,85 @@ export function CheckinPage({ restDay = false }: { restDay?: boolean }) {
         <h1 className="page-title title">How are you walking in?</h1>
       </div>
       <Card hero>
-        <p className="group-label">Recovery 0-10</p>
-        <div
-          style={{ display: "flex", gap: 4, flexWrap: "wrap" }}
-          role="radiogroup"
-          aria-label="Recovery"
-        >
-          {Array.from({ length: 11 }, (_, v) => (
-            <button
-              key={v}
-              type="button"
-              role="radio"
-              aria-checked={prs === v}
-              onClick={() => setPrs(v)}
-              className="icon-btn"
-              style={prs === v
-                ? { background: "var(--accent)", color: "var(--on-accent)" }
-                : undefined}
-            >
-              {v}
-            </button>
-          ))}
+        <div className="field-head">
+          <span className="group-label">Recovery</span>
+          <span className="kbd-hint">0 to 10</span>
         </div>
-        <p className="kbd-hint">
-          0-2 worse session expected · 3-7 normal · 8-10 better
-        </p>
-        <p className="group-label">Soreness 1-4</p>
-        {TRAINED.map((t) => (
-          <div key={t.muscle} style={{ marginBottom: 8 }}>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <strong style={{ textTransform: "capitalize" }}>
-                {t.muscle}
-              </strong>
-              <span className="kbd-hint">{t.last}</span>
+        <ScalePicker
+          label="Recovery"
+          options={Array.from({ length: 11 }, (_, v) => v)}
+          value={prs}
+          onPick={setPrs}
+          anchors={["worse session", "normal", "better"]}
+        />
+        <div className="field-head soreness-head">
+          <span className="group-label">Soreness</span>
+          <span className="kbd-hint">muscles today's session trains</span>
+        </div>
+        {TRAINED.map((t) => {
+          const v = sore[t.muscle] ?? 0;
+          return (
+            <div key={t.muscle} className="sore-row">
+              <div className="sore-label">
+                <strong>{t.muscle}</strong>
+                <span className="kbd-hint">
+                  {v ? t.meaning[v - 1] : t.last}
+                </span>
+              </div>
+              <ScalePicker
+                label={`${t.muscle} soreness`}
+                options={[1, 2, 3, 4]}
+                value={v || null}
+                onPick={(n) => setSore((s) => ({ ...s, [t.muscle]: n }))}
+                describe={(n) => t.meaning[n - 1]}
+              />
             </div>
-            <div style={{ display: "flex", gap: 4 }}>
-              {[1, 2, 3, 4].map((v) => (
-                <button
-                  key={v}
-                  type="button"
-                  aria-pressed={(sore[t.muscle] ?? 0) === v}
-                  onClick={() => setSore((s) => ({ ...s, [t.muscle]: v }))}
-                  className="icon-btn"
-                  title={t.meaning[v - 1]}
-                  style={(sore[t.muscle] ?? 0) === v
-                    ? {
-                      background: "var(--bg-active)",
-                      outline: "2px solid var(--accent)",
-                    }
-                    : undefined}
-                >
-                  {v}
-                </button>
-              ))}
-            </div>
-          </div>
-        ))}
-        <p className="group-label">Anything else? (one line)</p>
+          );
+        })}
+        <label className="field-head" htmlFor="checkin-text">
+          <span className="group-label">Anything else?</span>
+          <span className="kbd-hint">one line</span>
+        </label>
         <input
-          aria-label="Free text check-in"
+          id="checkin-text"
+          className="field"
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="e.g. left knee achy, short on time"
-          style={{ width: "100%", minHeight: 44, font: "inherit", padding: 8 }}
+          placeholder="e.g. knee achy, short on time"
         />
-        <div
-          style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 8 }}
-        >
-          {chips.map((c) => (
-            <Chip
-              key={c}
-              onRemove={() => setChips((cs) => cs.filter((x) => x !== c))}
-            >
-              {c}
-            </Chip>
-          ))}
-        </div>
-        {isRest
+        {chips.length
           ? (
-            <div className="note-card" style={{ marginTop: 12 }}>
-              <div className="note-head">Rest-day tip</div>
-              <div>{tip}</div>
+            <div className="chip-row">
+              {chips.map((c) => (
+                <Chip
+                  key={c}
+                  onRemove={() => setChips((cs) => cs.filter((x) => x !== c))}
+                >
+                  {c}
+                </Chip>
+              ))}
             </div>
           )
           : null}
-        <div style={{ marginTop: 12 }}>
+        {isRest
+          ? (
+            <div className="tip-card">
+              <Sun size={16} aria-hidden="true" />
+              <div>
+                <span className="group-label">Rest-day tip</span>
+                <p>{tip}</p>
+              </div>
+            </div>
+          )
+          : null}
+        <div className="card-cta">
           <PrimaryButton
-            href="#/phone/warmup"
+            large
+            href={isRest ? "#/phone/today" : "#/phone/warmup"}
             onClick={() => queueOp("checkin", { prs, soreness: sore, text })}
           >
-            Continue to warm-up
+            {isRest ? "Save check-in" : "Continue to warm-up"}{" "}
+            <ArrowRight size={20} />
           </PrimaryButton>
         </div>
       </Card>

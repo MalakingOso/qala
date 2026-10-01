@@ -20,3 +20,17 @@ Deno.test("average hidden before 14 check-ins, low line at 50", () => {
   assertEquals(r.lowFrac, 0.5);
   assertEquals(r.legendLow, "low under 50");
 });
+
+Deno.test("usual range is the average plus and minus one SD", () => {
+  const r = readinessRing(0.72, 76, 64, 20, 7);
+  assertEquals(r.usualLoFrac, 0.68);
+  assertEquals(r.usualHiFrac, 0.84);
+  assertEquals(r.legendUsual, "68 to 84");
+  assertEquals(r.margin, 8);
+});
+
+Deno.test("no usual range before 14 check-ins", () => {
+  const r = readinessRing(0.58, 76, 64, 5, 7);
+  assertEquals(r.usualLoFrac, null);
+  assertEquals(r.margin, 8);
+});

@@ -1,9 +1,11 @@
-/* Workout, one exercise (DESIGN 7.5): progress segments, returning note,
- * big weight x reps steppers, plate shorthand, RPE chips, actions, rest
- * preview + next exercise. All-exercises overview lives next door. */
+/* Workout, one exercise (DESIGN 7.5): progress segments you can tap to jump,
+ * returning note, big weight x reps steppers, plates for the set, one RPE
+ * strip, labeled tools, Log set, then the rest preview. Prev / Next name the
+ * neighbouring exercise; the grid button zooms out to all exercises. */
 
 import { useState } from "react";
 import { useQala } from "../../store/qalaStore.tsx";
+import { FlowHeader } from "../FlowHeader.tsx";
 import type { WorkoutExercise } from "../../store/types.ts";
 import {
   Card,
@@ -12,6 +14,9 @@ import {
   PlateChips,
   PrimaryButton,
   ProgressSegments,
+  ScalePicker,
+  Stepper,
+  ToolBar,
 } from "../../shared/ui.tsx";
 import {
   nearestLoadable,
@@ -23,38 +28,34 @@ import {
   Calculator,
   Check,
   ChevronLeft,
+  ChevronRight,
+  Hourglass,
   Info,
-  LayoutGrid,
-  Minus,
-  Plus,
   StickyNote,
   TriangleAlert,
 } from "../../shared/icons.ts";
+
+const RPE = [7, 7.5, 8, 8.5, 9, 9.5, 10] as const;
 
 export function WorkoutPage({ initialIdx = 0 }: { initialIdx?: number }) {
   const { exercises } = useQala();
   const [idx, setIdx] = useState(initialIdx);
   const ex = exercises[idx];
   if (!ex) return <p>No exercises today.</p>;
+  const prev = exercises[idx - 1];
+  const next = exercises[idx + 1];
 
   return (
     <div>
-      <div className="page-head">
-        <a className="icon-btn" href="#/phone/allex" aria-label="Collapse">
-          <ChevronLeft size={20} />
-        </a>
-        <span className="kbd-hint">
-          Lower A · <span className="ticking">24:10</span>
-        </span>
-        <a className="link-btn" href="#/phone/complete">
-          Finish
-        </a>
-      </div>
+      <FlowHeader session="Lower A" clock="24:10" />
       <ProgressSegments
-        total={exercises.length}
-        done={idx}
+        items={exercises.map((e) => ({
+          name: e.name,
+          done: e.sets.filter((s) => s.done).length,
+          total: e.sets.length,
+        }))}
         current={idx}
-        label={`Exercise ${idx + 1} of ${exercises.length}`}
+        onPick={setIdx}
       />
       {
         /* Keyed by exercise id: each exercise gets its own fresh weight/reps/RPE
@@ -65,29 +66,26 @@ export function WorkoutPage({ initialIdx = 0 }: { initialIdx?: number }) {
         ex={ex}
         idx={idx}
         total={exercises.length}
-        nextName={exercises[idx + 1]?.name}
+        nextName={next?.name}
       />
-      <p>
-        <a className="link-btn" href="#/phone/allex">
-          <LayoutGrid size={16} /> All exercises · tap a card to jump
-        </a>
-      </p>
-      <div className="row-btns">
+      <div className="ex-nav">
         <button
           type="button"
-          className="icon-btn"
-          disabled={idx === 0}
+          className="btn-secondary"
+          disabled={!prev}
           onClick={() => setIdx((i) => Math.max(0, i - 1))}
         >
-          Prev
+          <ChevronLeft size={18} />
+          <span>{prev ? prev.name : "Start"}</span>
         </button>
         <button
           type="button"
-          className="icon-btn"
-          disabled={idx >= exercises.length - 1}
+          className="btn-secondary"
+          disabled={!next}
           onClick={() => setIdx((i) => Math.min(exercises.length - 1, i + 1))}
         >
-          Next
+          <span>{next ? next.name : "End"}</span>
+          <ChevronRight size={18} />
         </button>
       </div>
     </div>
@@ -109,7 +107,14 @@ function WorkoutBody({
   const doneSets = ex.sets.filter((s) => s.done).length;
   const setNo = Math.min(doneSets + 1, ex.sets.length);
   const currentSet = ex.sets[setNo - 1];
-  const [weight, setWeight] = useState(currentSet?.w ?? 245);
+  const envelope = envelopes.find((e) => e.exerciseId === ex.id);
+  const showBanner = envelope && envelope.accepted !== false;
+  const coachWeight = envelope ? parseFloat(envelope.coach) : NaN;
+  const [weight, setWeight] = useState(
+    envelope?.accepted === true && Number.isFinite(coachWeight)
+      ? coachWeight
+      : currentSet?.w ?? 245,
+  );
   const [reps, setReps] = useState(currentSet?.r ?? 4);
   const [rpe, setRpe] = useState<number | null>(null);
   const [jointPain, setJointPain] = useState(false);
@@ -122,13 +127,12 @@ function WorkoutBody({
   );
   const perSide = nearestLoadable(plan)?.perSide ?? [];
 
-  const envelope = envelopes.find((e) => e.exerciseId === ex.id);
-  const showBanner = envelope && envelope.accepted !== false;
-
   return (
     <>
-      <p className="kbd-hint">
-        Exercise {idx + 1} of {total} · Set {setNo} of {ex.sets.length}
+      <p className="flow-step">
+        Exercise {idx + 1} of {total}
+        <span aria-hidden="true">·</span>
+        <strong>Set {setNo} of {ex.sets.length}</strong>
       </p>
       {ex.note && !noteGone
         ? (
@@ -145,167 +149,105 @@ function WorkoutBody({
       {showBanner
         ? (
           <EngineBanner
-            text={`Coach suggests ${envelope.coach} (${envelope.reason}). Engine says ${envelope.engine}.`}
+            text={envelope.reason}
             engine={envelope.engine}
             coach={envelope.coach}
-            onRevert={() => decideEnvelope(envelope.id, false)}
+            pending={envelope.accepted === null}
+            onAccept={() => {
+              decideEnvelope(envelope.id, true);
+              if (Number.isFinite(coachWeight)) setWeight(coachWeight);
+            }}
+            onRevert={() => {
+              decideEnvelope(envelope.id, false);
+              if (currentSet) setWeight(currentSet.w);
+            }}
           />
         )
         : null}
       <Card hero>
-        <h1 className="title" style={{ fontSize: 24, margin: "0 0 4px" }}>
-          {ex.name}
-        </h1>
-        <p className="kbd-hint">Last time: {ex.lastTime}</p>
-        <div
-          style={{
-            display: "flex",
-            gap: 16,
-            alignItems: "center",
-            margin: "12px 0",
+        <h1 className="title log-title">{ex.name}</h1>
+        {ex.lastTime
+          ? <p className="kbd-hint log-last">Last time {ex.lastTime}</p>
+          : null}
+        <div className="log-grid">
+          <Stepper
+            label="Weight"
+            value={weight}
+            unit="lb"
+            step={5}
+            onStep={(d) =>
+              setWeight((w) => Math.max(settings.defaultBar, w + d))}
+          />
+          <span className="log-times figure" aria-hidden="true">×</span>
+          <Stepper
+            label="Reps"
+            value={reps}
+            onStep={(d) => setReps((r) => Math.max(1, r + d))}
+          />
+        </div>
+        <a
+          className="log-plates"
+          href="#/phone/plates"
+          aria-label={`Plates: ${
+            platesShorthand(perSide)
+          }. Open plate calculator`}
+        >
+          <PlateChips plates={perSide} inventory={settings.plates} />
+          <span className="kbd-hint">{platesShorthand(perSide)}</span>
+          <Calculator size={18} aria-hidden="true" />
+        </a>
+        <div className="log-rpe-head">
+          <span className="group-label">RPE</span>
+          {ex.targetRpe
+            ? <span className="kbd-hint">target {ex.targetRpe}</span>
+            : null}
+        </div>
+        <ScalePicker
+          label="RPE"
+          options={RPE}
+          value={rpe}
+          onPick={setRpe}
+          anchors={["3 in the tank", "max"]}
+        />
+        <PrimaryButton
+          large
+          onClick={() => {
+            logSet(ex.id, setNo - 1, {
+              w: weight,
+              r: reps,
+              rpe: rpe ?? undefined,
+            });
+            window.location.hash = "#/phone/rest";
           }}
         >
-          <div>
-            <div className="group-label">Weight</div>
-            <div className="figure" style={{ fontSize: 56 }}>
-              {weight}
-            </div>
-            <div>
-              <button
-                type="button"
-                className="icon-btn"
-                aria-label="Less weight"
-                onClick={() => setWeight((w) => w - 5)}
-              >
-                <Minus size={18} />
-              </button>{" "}
-              <button
-                type="button"
-                className="icon-btn"
-                aria-label="More weight"
-                onClick={() => setWeight((w) => w + 5)}
-              >
-                <Plus size={18} />
-              </button>
-            </div>
-          </div>
-          <div className="figure" style={{ fontSize: 40 }} aria-hidden="true">
-            ×
-          </div>
-          <div>
-            <div className="group-label">Reps</div>
-            <div className="figure" style={{ fontSize: 56 }}>
-              {reps}
-            </div>
-            <div>
-              <button
-                type="button"
-                className="icon-btn"
-                aria-label="Fewer reps"
-                onClick={() => setReps((r) => Math.max(1, r - 1))}
-              >
-                <Minus size={18} />
-              </button>{" "}
-              <button
-                type="button"
-                className="icon-btn"
-                aria-label="More reps"
-                onClick={() => setReps((r) => r + 1)}
-              >
-                <Plus size={18} />
-              </button>
-            </div>
-          </div>
-        </div>
-        <p>
-          <PlateChips plates={perSide} />{" "}
-          <a
-            className="link-btn"
-            href="#/phone/plates"
-            aria-label="Open plate calculator"
-          >
-            <Calculator size={16} /> {platesShorthand(perSide)}
-          </a>
-        </p>
-        <p className="group-label">RPE (target {ex.targetRpe})</p>
-        <div className="rpe-options">
-          {[7, 7.5, 8, 8.5, 9, 9.5, 10].map((v) => (
-            <button
-              key={v}
-              type="button"
-              aria-pressed={rpe === v}
-              onClick={() => setRpe(v)}
-              className="icon-btn"
-              style={rpe === v
-                ? {
-                  background: "var(--bg-active)",
-                  outline: "2px solid var(--accent)",
-                }
-                : undefined}
-            >
-              {v}
-            </button>
-          ))}
-        </div>
-        <div className="row-btns" style={{ marginTop: 12 }}>
-          <button
-            type="button"
-            className="icon-btn"
-            aria-label="Exercise info"
-            style={{ flex: 1 }}
-          >
-            <Info size={18} />
-          </button>
-          <button
-            type="button"
-            className="icon-btn"
-            aria-label="Swap exercise"
-            style={{ flex: 1 }}
-          >
-            <ArrowLeftRight size={18} />
-          </button>
-          <button
-            type="button"
-            className="icon-btn"
-            aria-label="Add note"
-            style={{ flex: 1 }}
-          >
-            <StickyNote size={18} />
-          </button>
-          <button
-            type="button"
-            className="icon-btn"
-            aria-label="Joint pain"
-            aria-pressed={jointPain}
-            style={jointPain
-              ? { outline: "2px solid var(--danger)", flex: 1 }
-              : { flex: 1 }}
-            onClick={() => {
-              setJointPain((j) => !j);
-              queueOp("joint-pain", { exerciseId: ex.id });
-            }}
-          >
-            <TriangleAlert size={18} />
-          </button>
-        </div>
-        <div style={{ marginTop: 12 }}>
-          <PrimaryButton
-            onClick={() => {
-              logSet(ex.id, setNo - 1, {
-                w: weight,
-                r: reps,
-                rpe: rpe ?? undefined,
-              });
-              window.location.hash = "#/phone/rest";
-            }}
-          >
-            <Check size={20} /> Log set
-          </PrimaryButton>
-        </div>
-        <p className="kbd-hint">
-          Rest preview 3:45 · Next: {nextName ?? "done"}
+          <Check size={22} /> Log set
+        </PrimaryButton>
+        <p className="log-after">
+          <Hourglass size={14} aria-hidden="true" />
+          <span>
+            Rest about 3:45, then {setNo < ex.sets.length
+              ? `set ${setNo + 1}`
+              : nextName ?? "you're done"}
+          </span>
         </p>
       </Card>
+      <ToolBar
+        tools={[
+          { label: "Info", icon: <Info size={18} /> },
+          { label: "Swap", icon: <ArrowLeftRight size={18} /> },
+          { label: "Note", icon: <StickyNote size={18} /> },
+          {
+            label: "Joint pain",
+            icon: <TriangleAlert size={18} />,
+            tone: "danger",
+            pressed: jointPain,
+            onClick: () => {
+              setJointPain((j) => !j);
+              queueOp("joint-pain", { exerciseId: ex.id });
+            },
+          },
+        ]}
+      />
     </>
   );
 }

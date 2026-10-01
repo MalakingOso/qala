@@ -41,6 +41,7 @@ export {
   SlidersHorizontal,
   Smartphone,
   SportShoe,
+  Square,
   StickyNote,
   Sun,
   Table2,

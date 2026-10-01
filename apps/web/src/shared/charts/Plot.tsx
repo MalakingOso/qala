@@ -42,7 +42,13 @@ export function Plot({ height, children }: {
 }
 
 export function ChartLegend({ items }: {
-  items: { label: string; color: string; outline?: boolean; line?: boolean }[];
+  items: {
+    label: string;
+    color: string;
+    outline?: boolean;
+    line?: boolean;
+    diamond?: boolean;
+  }[];
 }) {
   return (
     <div className="chart-legend">
@@ -50,7 +56,11 @@ export function ChartLegend({ items }: {
         <span key={item.label}>
           <i
             aria-hidden="true"
-            className={item.line ? "legend-line" : "legend-swatch"}
+            className={item.line
+              ? "legend-line"
+              : item.diamond
+              ? "legend-swatch diamond"
+              : "legend-swatch"}
             style={{
               background: item.outline ? "transparent" : item.color,
               border: item.outline ? `2px solid ${item.color}` : undefined,

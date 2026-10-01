@@ -3,26 +3,9 @@
 
 import type { ReactNode } from "react";
 import type { MemoryProposal } from "../store/types.ts";
+import { Minus, Plus, StickyNote } from "./icons.ts";
 
-/** Plate color defaults (DESIGN 5.8 / PLAN 6.8). Editable in Settings. */
-function plateColor(weight: number): { bg: string; ink: string } {
-  switch (weight) {
-    case 55:
-      return { bg: "#d64541", ink: "#fff" };
-    case 45:
-      return { bg: "#2f6bd1", ink: "#fff" };
-    case 35:
-      return { bg: "#e9b824", ink: "#0f152a" };
-    case 25:
-      return { bg: "#2f9c5a", ink: "#fff" };
-    case 10:
-      return { bg: "#eef0f4", ink: "#0f152a" };
-    case 5:
-      return { bg: "#3b404c", ink: "#fff" };
-    default:
-      return { bg: "#b9bfca", ink: "#0f152a" };
-  }
-}
+export { PlateChips, PlateDrawing } from "./plates.tsx";
 
 export function Card({
   title,
@@ -81,7 +64,7 @@ export function PrimaryButton({
   const cls = large ? "btn-primary large" : "btn-primary";
   if (href !== undefined) {
     return (
-      <a className={cls} href={href} aria-label={label}>
+      <a className={cls} href={href} aria-label={label} onClick={onClick}>
         {children}
       </a>
     );
@@ -93,24 +76,31 @@ export function PrimaryButton({
   );
 }
 
+/** Bordered surface button. `small` is the header-sized variant (Finish,
+ * Skip, Edit) that sits beside a title instead of spanning the card. */
 export function SecondaryButton({
   children,
   onClick,
   href,
+  small,
+  label,
 }: {
   children: ReactNode;
   onClick?: () => void;
   href?: string;
+  small?: boolean;
+  label?: string;
 }) {
+  const cls = small ? "btn-secondary small" : "btn-secondary";
   if (href !== undefined) {
     return (
-      <a className="btn-secondary" href={href}>
+      <a className={cls} href={href} onClick={onClick} aria-label={label}>
         {children}
       </a>
     );
   }
   return (
-    <button type="button" className="btn-secondary" onClick={onClick}>
+    <button type="button" className={cls} onClick={onClick} aria-label={label}>
       {children}
     </button>
   );
@@ -140,6 +130,24 @@ export function Chip(
         )
         : null}
     </span>
+  );
+}
+
+/** On/off switch: square-cornered, ember when on (DESIGN 5.5). */
+export function Toggle(
+  { on, onFlip, label }: { on: boolean; onFlip: () => void; label: string },
+) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={on}
+      aria-label={label}
+      className="toggle"
+      onClick={onFlip}
+    >
+      <span className="knob" aria-hidden="true" />
+    </button>
   );
 }
 
@@ -189,29 +197,170 @@ export function StatTiles({
   );
 }
 
+/** Workout progress: one segment per exercise, filled per completed set,
+ * the current one outlined. Each segment is a button that jumps to that
+ * exercise (DECISIONS U5). */
 export function ProgressSegments({
-  total,
-  done,
+  items,
   current,
-  label,
+  onPick,
 }: {
-  total: number;
-  done: number;
+  items: { name: string; done: number; total: number }[];
   current: number;
-  label: string;
+  onPick?: (index: number) => void;
 }) {
   return (
-    <div className="seg-progress" role="img" aria-label={label}>
-      {Array.from({ length: total }, (_, i) => (
-        <div
+    <div className="seg-progress" role="group" aria-label="Exercises">
+      {items.map((it, i) => (
+        <button
           key={i}
-          className={i < done
-            ? "seg-cell filled"
-            : i === current
-            ? "seg-cell current"
-            : "seg-cell"}
-        />
+          type="button"
+          className={i === current ? "seg-cell current" : "seg-cell"}
+          aria-current={i === current ? "step" : undefined}
+          aria-label={`${it.name}, ${it.done} of ${it.total} sets`}
+          onClick={() => onPick?.(i)}
+        >
+          <span className="seg-track">
+            <span
+              className="seg-fill"
+              style={{
+                width: `${it.total ? (100 * it.done) / it.total : 0}%`,
+              }}
+            />
+          </span>
+        </button>
       ))}
+    </div>
+  );
+}
+
+/** One way to pick a value on a scale: recovery, soreness, RPE, effort,
+ * theme. A single bordered strip; the picked cell fills with ink. Anchors
+ * name the ends of the scale. */
+export function ScalePicker<T extends string | number>({
+  label,
+  options,
+  value,
+  onPick,
+  anchors,
+  describe,
+}: {
+  label: string;
+  options: readonly T[] | { value: T; label: string }[];
+  value: T | null | undefined;
+  onPick: (v: T) => void;
+  anchors?: [string, string] | [string, string, string];
+  describe?: (v: T) => string | undefined;
+}) {
+  const opts = (options as readonly unknown[]).map((o) =>
+    typeof o === "object" && o !== null
+      ? o as { value: T; label: string }
+      : { value: o as T, label: String(o) }
+  );
+  return (
+    <div className="scale">
+      <div className="scale-strip" role="radiogroup" aria-label={label}>
+        {opts.map((o) => (
+          <button
+            key={String(o.value)}
+            type="button"
+            role="radio"
+            aria-checked={o.value === value}
+            title={describe?.(o.value)}
+            onClick={() => onPick(o.value)}
+          >
+            {o.label}
+          </button>
+        ))}
+      </div>
+      {anchors
+        ? (
+          <div className="scale-anchors" aria-hidden="true">
+            {anchors.map((a) => <span key={a}>{a}</span>)}
+          </div>
+        )
+        : null}
+    </div>
+  );
+}
+
+/** A big figure with bordered - / + buttons under it. */
+export function Stepper({
+  label,
+  value,
+  unit,
+  onStep,
+  step = 1,
+}: {
+  label: string;
+  value: number;
+  unit?: string;
+  onStep: (delta: number) => void;
+  step?: number;
+}) {
+  return (
+    <div className="stepper">
+      <span className="group-label">{label}</span>
+      <span className="stepper-value figure">
+        {value}
+        {unit ? <span className="figure-unit">{unit}</span> : null}
+      </span>
+      <span className="stepper-buttons">
+        <button
+          type="button"
+          aria-label={`Less ${label.toLowerCase()}`}
+          onClick={() => onStep(-step)}
+        >
+          <Minus size={20} />
+        </button>
+        <button
+          type="button"
+          aria-label={`More ${label.toLowerCase()}`}
+          onClick={() => onStep(step)}
+        >
+          <Plus size={20} />
+        </button>
+      </span>
+    </div>
+  );
+}
+
+/** A row of secondary actions, each an icon with a short word under it. */
+export function ToolBar({
+  tools,
+}: {
+  tools: {
+    label: string;
+    icon: ReactNode;
+    onClick?: () => void;
+    href?: string;
+    pressed?: boolean;
+    tone?: "danger";
+  }[];
+}) {
+  return (
+    <div className="toolbar" role="group" aria-label="Exercise tools">
+      {tools.map((t) =>
+        t.href
+          ? (
+            <a key={t.label} className="tool" href={t.href}>
+              {t.icon}
+              <span>{t.label}</span>
+            </a>
+          )
+          : (
+            <button
+              key={t.label}
+              type="button"
+              className={t.tone === "danger" ? "tool danger" : "tool"}
+              aria-pressed={t.pressed}
+              onClick={t.onClick}
+            >
+              {t.icon}
+              <span>{t.label}</span>
+            </button>
+          )
+      )}
     </div>
   );
 }
@@ -234,147 +383,71 @@ export function NoteCard({
   return (
     <div className="note-card">
       <div className="note-head">
-        <span aria-hidden="true">▦</span>
+        <StickyNote size={16} aria-hidden="true" />
         <span>
-          Note · {date}
+          Your note · {date}
           {pinned ? " · pinned" : ""}
         </span>
       </div>
-      <div>{text}</div>
-      <div className="row-btns" style={{ marginTop: 8 }}>
-        <button type="button" className="chip" onClick={onGotIt}>
-          Got it
-        </button>
-        <button type="button" className="chip" onClick={onPin}>
+      <p className="note-text">{text}</p>
+      <div className="note-actions">
+        <button type="button" onClick={onGotIt}>Got it</button>
+        <button type="button" onClick={onPin}>
           {pinned ? "Unpin" : "Pin"}
         </button>
-        <button type="button" className="chip" onClick={onResolve}>
-          Resolved
-        </button>
+        <button type="button" onClick={onResolve}>Resolved</button>
       </div>
     </div>
   );
 }
 
-export function PlateChips({ plates }: { plates: number[] }) {
-  if (plates.length === 0) return <span className="kbd-hint">bar only</span>;
-  return (
-    <span>
-      {plates.map((p, i) => {
-        const c = plateColor(p);
-        return (
-          <span
-            key={`${p}-${i}`}
-            className="plate-chip"
-            style={{ background: c.bg, color: c.ink }}
-            title={`${p} lb plate`}
-          >
-            {p}
-          </span>
-        );
-      })}
-    </span>
-  );
-}
-
-/** One side of the bar: sleeve left, collar + bar label right, heaviest
- * plates innermost, every plate labeled (DESIGN 5.8). */
-export function PlateDrawing({
-  perSide,
-  barWeight = 45,
-  label,
-}: {
-  perSide: number[];
-  barWeight?: number;
-  label?: string;
-}) {
-  const maxP = Math.max(45, ...perSide);
-  const heightOf = (p: number) =>
-    24 + Math.round((64 * (p - 2.5)) / Math.max(1, maxP - 2.5));
-  const widthOf = (p: number) => (p >= 25 ? 16 : 10);
-  let x = 46;
-  const plates = perSide.map((p) => {
-    const w = widthOf(p);
-    const h = heightOf(p);
-    const el = { p, x, w, h };
-    x += w + 2;
-    return el;
-  });
-  const midY = 60;
-  const totalW = x + 90;
-  return (
-    <figure
-      style={{ margin: "8px 0" }}
-      aria-label={label ?? `Bar with ${perSide.join(", ")} per side`}
-    >
-      <svg viewBox={`0 0 ${totalW} 120`} width="100%" role="img">
-        {/* sleeve */}
-        <rect x={4} y={midY - 5} width={44} height={10} fill="var(--bar)" />
-        {plates.map((pl, i) => {
-          const c = plateColor(pl.p);
-          const tall = pl.h > 52;
-          return (
-            <g key={i}>
-              <rect
-                x={pl.x}
-                y={midY - pl.h / 2}
-                width={pl.w}
-                height={pl.h}
-                fill={c.bg}
-                stroke="var(--border-strong)"
-                strokeWidth={1}
-              />
-              <text
-                x={tall ? pl.x + pl.w / 2 : pl.x + pl.w + 3}
-                y={tall ? midY : midY + pl.h / 2 + 12}
-                fontSize={10}
-                fill={tall ? c.ink : "var(--fg)"}
-                textAnchor={tall ? "middle" : "start"}
-                transform={tall
-                  ? `rotate(-90 ${pl.x + pl.w / 2} ${midY})`
-                  : undefined}
-              >
-                {pl.p}
-              </text>
-            </g>
-          );
-        })}
-        {/* collar + bar label */}
-        <rect
-          x={x + 2}
-          y={midY - 12}
-          width={8}
-          height={24}
-          fill="var(--bar-collar)"
-        />
-        <text x={x + 14} y={midY + 4} fontSize={11} fill="var(--fg)">
-          {barWeight} bar
-        </text>
-      </svg>
-    </figure>
-  );
-}
-
+/** A coach adjustment (P3 envelope): what the engine said, what the coach
+ * proposes, the reason. Pending, it offers the coach's number; in use, it
+ * offers the way back to the engine. */
 export function EngineBanner({
   text,
   engine,
   coach,
+  pending,
+  onAccept,
   onRevert,
 }: {
   text: string;
   engine: string;
   coach: string;
+  pending?: boolean;
+  onAccept?: () => void;
   onRevert: () => void;
 }) {
   return (
     <div className="banner">
-      <div>{text}</div>
-      <div className="why">
-        engine {engine} · coach {coach}
+      <div className="banner-head">
+        <span className="group-label">
+          {pending ? "Coach suggests" : "Coach adjusted today"}
+        </span>
+        {pending
+          ? (
+            <span className="banner-actions">
+              <button type="button" className="link-btn" onClick={onRevert}>
+                Keep engine
+              </button>
+              <button type="button" className="chip" onClick={onAccept}>
+                Use {coach.split(" ")[0]}
+              </button>
+            </span>
+          )
+          : (
+            <button type="button" className="link-btn" onClick={onRevert}>
+              Use engine
+            </button>
+          )}
       </div>
-      <button type="button" className="link-btn" onClick={onRevert}>
-        Revert to engine
-      </button>
+      <p className="banner-nums">
+        <span className={pending ? undefined : "banner-was"}>{engine}</span>
+        <span aria-hidden="true">→</span>
+        <strong>{coach}</strong>
+      </p>
+      <p className="why">{text}</p>
     </div>
   );
 }
@@ -392,38 +465,38 @@ export function MemoryProposalList({
   rejectedLabel?: string;
 }) {
   return (
-    <>
+    <ul className="memory-list">
       {memory.map((m) => (
-        <div key={m.id} style={{ marginBottom: 10 }}>
-          <p style={{ margin: "4px 0" }}>{m.text}</p>
+        <li key={m.id}>
+          <p className="memory-text">{m.text}</p>
           <p className="kbd-hint">{m.source} · {m.date}</p>
           {m.accepted === null
             ? (
-              <div style={{ display: "flex", gap: 6 }}>
+              <div className="memory-actions">
                 <button
                   type="button"
-                  className="chip"
-                  onClick={() => decideMemory(m.id, true)}
-                >
-                  Accept
-                </button>
-                <button
-                  type="button"
-                  className="chip"
+                  className="btn-secondary small"
                   onClick={() => decideMemory(m.id, false)}
                 >
                   Reject
                 </button>
+                <button
+                  type="button"
+                  className="btn-secondary small"
+                  onClick={() => decideMemory(m.id, true)}
+                >
+                  Accept
+                </button>
               </div>
             )
             : (
-              <p className="kbd-hint">
+              <p className="memory-done">
                 {m.accepted ? acceptedLabel : rejectedLabel}
               </p>
             )}
-        </div>
+        </li>
       ))}
-    </>
+    </ul>
   );
 }
 

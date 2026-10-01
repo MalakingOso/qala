@@ -1,32 +1,65 @@
-import { Card, Group, GroupRow } from "../../shared/ui.tsx";
+/* History: every session, newest first, grouped by week. It starts cold;
+ * each session lands here and replays into the engine. */
+
+import { Group } from "../../shared/ui.tsx";
+import { SessionRow } from "../SessionRow.tsx";
 
 export function HistoryPage() {
   return (
     <div>
       <div className="page-head">
-        <h1 className="page-title title">History</h1>
+        <div>
+          <p className="group-label page-eyebrow">Strength block 2</p>
+          <h1 className="page-title title">History</h1>
+        </div>
       </div>
-      <Card>
-        <p className="kbd-hint">
-          Starts cold; every session lands here and replays into the engine.
-        </p>
-      </Card>
-      <Group label="This week">
-        <GroupRow>
-          <span>Sun · Lower A · 20.4k lb · 58 min</span>
-          <span className="kbd-hint">1 PR</span>
-        </GroupRow>
-        <GroupRow>
-          <span>Sat · Long run · 7.0 mi · 1:04</span>
-          <span className="kbd-hint">rTSS 84</span>
-        </GroupRow>
-        <GroupRow>
-          <span>Fri · Upper B · 14.1k lb · 52 min</span>
-        </GroupRow>
-        <GroupRow>
-          <span>Thu · Lower B · 18.9k lb · 61 min</span>
-        </GroupRow>
+      <Group
+        label="Week 3 · Sep 7-13"
+        action={<span className="kbd-hint">Thu run skipped</span>}
+      >
+        <SessionRow
+          kind="lift"
+          day="Sun"
+          title="Lower A"
+          detail="20.4k lb · 58 min"
+          badge="1 PR"
+        />
+        <SessionRow
+          kind="run"
+          day="Sat"
+          title="Long run"
+          detail="7.0 mi · 1:04"
+          badge="rTSS 84"
+        />
+        <SessionRow
+          kind="lift"
+          day="Fri"
+          title="Upper B"
+          detail="14.1k lb · 52 min"
+        />
+        <SessionRow
+          kind="lift"
+          day="Wed"
+          title="Lower B"
+          detail="18.9k lb · 61 min"
+        />
+        <SessionRow
+          kind="run"
+          day="Tue"
+          title="Easy run"
+          detail="4.0 mi · 37 min"
+        />
+        <SessionRow
+          kind="lift"
+          day="Mon"
+          title="Upper A"
+          detail="15.2k lb · 66 min"
+        />
       </Group>
+      <p className="kbd-hint footnote">
+        History starts cold. Every session lands here and replays into the
+        engine.
+      </p>
     </div>
   );
 }

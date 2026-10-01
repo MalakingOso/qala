@@ -1,33 +1,52 @@
-/* Progress (DESIGN 7.10): block headline, 1RM with markers, NL85 vs block
- * target, sets per muscle, running fitness + miles, recent sessions. */
+/* Progress (DESIGN 7.10): the block's headline, squat 1RM with estimate
+ * and tested markers, reps at 85%+ against the block target, sets per
+ * muscle, running fitness, recent sessions. */
 
-import { Card, Group, GroupRow } from "../../shared/ui.tsx";
+import { Group, SecondaryButton } from "../../shared/ui.tsx";
 import {
   BulletNl85,
   E1rmLine,
   RunSpark,
   SetsByMuscle,
 } from "../../shared/charts/index.ts";
+import { SessionRow } from "../SessionRow.tsx";
 
 export function ProgressPage() {
   return (
     <div>
       <div className="page-head">
-        <h1 className="page-title title">Strength B2 · W3</h1>
+        <div>
+          <p className="group-label page-eyebrow">
+            Strength block 2 · week 3 of 6
+          </p>
+          <h1 className="page-title title">Squat is up 4% this block</h1>
+        </div>
       </div>
-      <Card hero>
-        <h2 className="title" style={{ fontSize: 22, margin: "0 0 4px" }}>
-          Squat is up 4% this block
-        </h2>
-        <p className="kbd-hint">reference 1RM 280 · Kalman 283 · tested 280</p>
-      </Card>
+      <section className="card hero">
+        <dl className="today-figures progress-figures">
+          {[
+            { v: "280", l: "reference 1RM" },
+            { v: "283", l: "estimate today" },
+            { v: "280", l: "tested, week 3" },
+          ].map((s) => (
+            <div key={s.l}>
+              <dt>{s.l}</dt>
+              <dd className="figure">{s.v}</dd>
+            </div>
+          ))}
+        </dl>
+        <p className="today-line">
+          The estimate leads the tested number by 3 lb, so next block's loads
+          start from 283.
+        </p>
+      </section>
       <E1rmLine
-        lift="Squat 1RM"
+        lift="Squat"
         points={[
-          { label: "w1", e1rm: 272 },
-          { label: "w2", e1rm: 276 },
-          { label: "w3", e1rm: 279, tested: true },
-          { label: "now", e1rm: 283 },
+          { label: "Week 1", e1rm: 272 },
+          { label: "Week 2", e1rm: 276 },
+          { label: "Week 3", e1rm: 279, tested: true },
+          { label: "Today", e1rm: 283 },
         ]}
       />
       <BulletNl85
@@ -38,7 +57,7 @@ export function ProgressPage() {
         ]}
       />
       <SetsByMuscle
-        title="Sets per muscle"
+        title="Sets per muscle this week"
         muscles={[
           { muscle: "quads", earlier: 8, today: 5 },
           { muscle: "chest", earlier: 10, today: 0 },
@@ -50,22 +69,28 @@ export function ProgressPage() {
         label="VDOT rising across the block."
       />
       <Group label="Recent sessions">
-        <GroupRow>
-          <span>Sun · Lower A · 20.4k lb</span>
-          <span className="kbd-hint">today</span>
-        </GroupRow>
-        <GroupRow>
-          <span>Sat · Long run · 7.0 mi</span>
-          <span className="kbd-hint">rTSS 84</span>
-        </GroupRow>
-        <GroupRow>
-          <span>Fri · Upper B · 14.1k lb</span>
-          <span className="kbd-hint">1 PR</span>
-        </GroupRow>
+        <SessionRow
+          kind="lift"
+          day="Today"
+          title="Lower A"
+          detail="20.4k lb · 58 min"
+          badge="1 PR"
+        />
+        <SessionRow
+          kind="run"
+          day="Sat"
+          title="Long run"
+          detail="7.0 mi · 1:04"
+          badge="rTSS 84"
+        />
+        <SessionRow
+          kind="lift"
+          day="Fri"
+          title="Upper B"
+          detail="14.1k lb · 52 min"
+        />
       </Group>
-      <p>
-        <a className="link-btn" href="#/phone/history">All history</a>
-      </p>
+      <SecondaryButton href="#/phone/history">All history</SecondaryButton>
     </div>
   );
 }

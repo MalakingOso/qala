@@ -1,8 +1,9 @@
 /* This week: a seven-day strip (DESIGN 6.3, DECISIONS U13). One bar per
  * day, its height the day's load and its fill how much of that load is done,
- * in the timeline rail's own vocabulary: done days teal and filled, today
- * ember (outlined, filling as the day goes), later days outlined, rest days a
- * dash. A glyph under each bar says lift, run, both or rest. Tap, hover or
+ * in the timeline rail's own vocabulary: done days teal and filled, days
+ * only part done (a cut-short run, a lift or a run skipped on a double day)
+ * a teal outline filled to the share completed, today ember (outlined,
+ * filling as the day goes), later days outlined, rest days a dash. A glyph under each bar says lift, run, both or rest. Tap, hover or
  * focus a day and the caption names it with its numbers; the caption shows
  * today otherwise. Plain HTML so the seven columns wrap to any card width.
  *
@@ -15,7 +16,6 @@ import { weekTotals } from "../../logic/weeklyLoad.ts";
 import type { WeekLoadDay } from "../../store/types.ts";
 import { Bed, Dumbbell, SportShoe } from "../icons.ts";
 import { ChartShell } from "./ChartShell.tsx";
-import { ChartLegend } from "./Plot.tsx";
 
 const DAY_NAMES = [
   "Monday",
@@ -28,7 +28,7 @@ const DAY_NAMES = [
 ];
 
 type DayKind = "lift" | "run" | "both" | "rest";
-type DayState = "done" | "today" | "later" | "rest";
+type DayState = "done" | "partial" | "today" | "later" | "rest";
 
 interface DayView {
   index: number;
@@ -71,6 +71,8 @@ function describe(days: WeekLoadDay[]): DayView[] {
       ? "today"
       : done > 0 && done >= planned
       ? "done"
+      : done > 0
+      ? "partial"
       : "later";
     const session = d.label ??
       (kind === "both"
@@ -113,20 +115,11 @@ function Glyph({ kind }: { kind: DayKind }) {
   return <Bed size={14} />;
 }
 
-/** "420 done", "750 planned (lift 510, run 240)" or "300 of 750 done". */
+/** "420 done", "750 planned" or "300 of 750 done". The lift/run split lives
+ * in the table view. */
 function captionNums(v: DayView) {
-  if (v.done === 0) {
-    const split = v.kind === "both"
-      ? ` (lift ${n(v.liftPlanned)}, run ${n(v.runPlanned)})`
-      : "";
-    return `${n(v.planned)} planned${split}`;
-  }
-  if (v.done >= v.planned) {
-    const split = v.kind === "both"
-      ? ` (lift ${n(v.liftDone)}, run ${n(v.runDone)})`
-      : "";
-    return `${n(v.done)} done${split}`;
-  }
+  if (v.done === 0) return `${n(v.planned)} planned`;
+  if (v.done >= v.planned) return `${n(v.done)} done`;
   return `${n(v.done)} of ${n(v.planned)} done`;
 }
 
@@ -230,13 +223,6 @@ export function WeeklyLoad(
       <p className="week-total kbd-hint">
         Week: {n(totals.done)} done of {n(totals.planned)} planned
       </p>
-      <ChartLegend
-        items={[
-          { label: "Done", color: "var(--progress-fill)" },
-          { label: "Today", color: "var(--accent)", outline: true },
-          { label: "Later", color: "var(--fg-faint)", outline: true },
-        ]}
-      />
     </ChartShell>
   );
 }
