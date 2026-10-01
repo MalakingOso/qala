@@ -30,3 +30,4 @@ pub mod runtime;
 pub mod program_to_planner;
 pub mod diagnostics;
 pub mod fmt;
+pub mod lint;

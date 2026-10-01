@@ -7,9 +7,9 @@
 //! fresh `SequentialUid`, after dropping the fields listed in `STRIPPED`: they hold source
 //! text or source positions, which formatting is allowed to move.
 
-use std::fs;
-use std::path::{Path, PathBuf};
+mod common;
 
+use common::programs;
 use qala_lspp::fmt::format_planner;
 use qala_lspp::runtime;
 use qala_lspp::types::ISettings;
@@ -22,10 +22,6 @@ use serde_json::Value;
 /// (the evaluation of gzcl-general-gainz-burrito-but-big differs by one column). Everything
 /// else, including names, sets, weights, progress and update scripts, is compared.
 const STRIPPED: &[&str] = &["exerciseText", "text", "line", "offset", "from", "to"];
-
-fn golden_dir() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../testdata/golden/liftoscript")
-}
 
 fn strip(v: &mut Value) {
     match v {
@@ -81,28 +77,6 @@ fn eval_json(text: &str, name: &str, settings: &ISettings) -> Value {
     let mut v = serde_json::to_value(&p).unwrap();
     strip(&mut v);
     v
-}
-
-/// Every built-in: (file name, program text, name, settings).
-fn programs() -> Vec<(String, String, String, ISettings)> {
-    let mut out = vec![];
-    for dir in ["builtins", "builtins_kg"] {
-        let mut files: Vec<_> = fs::read_dir(golden_dir().join(dir)).unwrap().map(|e| e.unwrap().path()).collect();
-        files.sort();
-        for f in files {
-            let doc: Value = serde_json::from_str(&fs::read_to_string(&f).unwrap()).unwrap();
-            let case = doc["cases"].as_array().unwrap().iter().find(|c| c["fn"] == "forceEvaluateText").unwrap();
-            let inp = &case["inputs"];
-            let settings: ISettings = serde_json::from_value(inp["settings"].clone()).unwrap();
-            out.push((
-                format!("{dir}/{}", f.file_name().unwrap().to_string_lossy()),
-                inp["programText"].as_str().unwrap().to_string(),
-                inp["name"].as_str().unwrap().to_string(),
-                settings,
-            ));
-        }
-    }
-    out
 }
 
 /// Turns ", " into " ," after a number, `+`, `%` or a unit. A comma after letters can be part of
@@ -168,7 +142,8 @@ fn fmt_is_idempotent_and_preserves_evaluation_on_builtins() {
     let progs = programs();
     assert!(progs.len() >= 60, "found {} programs", progs.len());
     let mut changed_by_mangle = 0;
-    for (file, text, name, settings) in &progs {
+    for p in &progs {
+        let (file, text, name, settings) = (&p.file, &p.text, &p.name, &p.settings);
         let base = eval_json(text, name, settings);
 
         let f1 = format_planner(text).unwrap_or_else(|e| panic!("{file}: {e}"));

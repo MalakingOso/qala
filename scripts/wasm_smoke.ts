@@ -129,6 +129,9 @@ function request(doc: any, c: any): string {
   const fb = JSON.parse(q.formatPlanner("Squat / 3x"));
   if (fb.result.ok || fb.result.diagnostics.length === 0) throw new Error("formatPlanner accepted a syntax error");
   console.log("ok   formatPlanner");
+  const lint = JSON.parse(q.lintPlanner("# Week 1\n## Day 1\nSquat / 31x5 100lb\n"));
+  if (lint.result.length !== 1 || lint.result[0].code !== "too-many-sets" || lint.result[0].line !== 3) throw new Error("lintPlanner result");
+  console.log("ok   lintPlanner");
 }
 // 4. errors are values
 {

@@ -31,7 +31,6 @@ use qala_lspp::types::{
     IDayData, IEvaluatedProgram, IHistoryEntry, IProgramState, ISettings, IStats,
 };
 use qala_lspp::util::generator::{SequentialUid, UidSource};
-use qala_lspp::{planner_parse, script_parse};
 
 pub const VERSION: u32 = 1;
 
@@ -409,6 +408,17 @@ pub fn diagnose_planner(text: &str) -> ApiResult {
 /// `diagnose_script(text)`: raw liftoscript source, same result shape as `diagnose_planner`.
 pub fn diagnose_script(text: &str) -> ApiResult {
     guarded(|| ok(&script_diagnostics(text)))
+}
+
+// ---------------------------------------------------------------------------
+// lint
+
+/// `lint_planner(text)`: `text` is the raw program text. Result: array of
+/// `{code, from, to, message, line, col, endLine, endCol, suggestion}` (UTF-16 offsets,
+/// 1-based line and col), empty when nothing looks wrong. Text with syntax errors yields an
+/// empty array; call `diagnose_planner` for those.
+pub fn lint_planner(text: &str) -> ApiResult {
+    guarded(|| ok(&qala_lspp::lint::lint_planner(text)))
 }
 
 // ---------------------------------------------------------------------------

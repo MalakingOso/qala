@@ -58,6 +58,14 @@ fn diagnostics() {
 }
 
 #[test]
+fn lint_planner_export() {
+    assert_eq!(result_of(&w::lint_planner("# Week 1\n## Day 1\nSquat / 3x5 100lb\n")), json!([]));
+    let r = result_of(&w::lint_planner("# Week 1\n## Day 1\nSquat / 31x5 100lb\n"));
+    assert_eq!(r[0]["code"], "too-many-sets");
+    assert_eq!(r[0]["line"], 3);
+}
+
+#[test]
 fn format_planner_export() {
     let r = result_of(&w::format_planner("Squat/3x5   100lb"));
     assert_eq!(r, json!({"ok": true, "text": "Squat / 3x5 100lb\n", "changed": true}));

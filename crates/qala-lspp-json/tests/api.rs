@@ -164,6 +164,16 @@ fn diagnostics_use_utf16_offsets() {
 }
 
 #[test]
+fn lint_planner_results() {
+    assert_eq!(result_of(&api::lint_planner("# Week 1\n## Day 1\nSquat / 3x5 100lb\n").unwrap()), json!([]));
+    let r = result_of(&api::lint_planner("# Week 1\n## Day 1\nSquat / 3x5 100lb / progress: custom(spare: 1) {~ ~}\n").unwrap());
+    assert_eq!(r[0]["code"], "unused-state");
+    assert_eq!(r[0]["endCol"].as_u64().unwrap() > r[0]["col"].as_u64().unwrap(), true);
+    assert!(r[0]["suggestion"].as_str().unwrap().contains("spare"));
+    assert_eq!(result_of(&api::lint_planner("Squat / 3x").unwrap()), json!([]));
+}
+
+#[test]
 fn format_planner_results() {
     let r = result_of(&api::format_planner("# Week 1\n## Day 1\nSquat /3x5,  1x5+ 100lb\n").unwrap());
     assert_eq!(r["ok"], true);
