@@ -356,7 +356,9 @@ Dated, sourced facts with Accept / Reject for pending ones, the profile the coac
 
 For people reaching Qala on the tailnet: a wide editorial hero, "Train with the
 whole picture.", concise supporting copy, Open Qala and How it decides, and a
-clearly labeled example training card using the real weekly-load chart. Three
+device morph on the right: one frame that loops phone, laptop, desktop and
+then the bare app card (`shared/DeviceMorph.tsx`, CSS keyframes only, static
+laptop under reduced motion), to show where Qala runs. Three
 sections explain planning, adaptation, and progress. Open Qala enters the
 desktop workspace on wide screens and Today on phones. AGPL and liftosaur
 credit remain in the footer.

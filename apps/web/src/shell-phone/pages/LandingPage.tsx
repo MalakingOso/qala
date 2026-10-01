@@ -1,13 +1,7 @@
 /* A wide entry page with a real chart preview and entry points to both shells. */
 
-import {
-  ArrowRight,
-  Dumbbell,
-  SportShoe,
-  TrendingUp,
-} from "../../shared/icons.ts";
-import { WeeklyLoad } from "../../shared/charts/index.ts";
-import { sampleWeekLoad } from "../../store/sample.ts";
+import { ArrowRight, TrendingUp } from "../../shared/icons.ts";
+import { DeviceMorph } from "../../shared/DeviceMorph.tsx";
 
 export function LandingPage() {
   return (
@@ -68,33 +62,7 @@ export function LandingPage() {
               Self-hosted. Your training stays yours.
             </p>
           </div>
-          <div className="landing-preview">
-            <div className="landing-preview-head">
-              <span className="group-label">A day with Qala</span>
-              <span className="kbd-hint">Example</span>
-            </div>
-            <div className="landing-session">
-              <div>
-                <h2 className="title">Lower A</h2>
-                <p className="kbd-hint">Squat day · strength block</p>
-              </div>
-              <Dumbbell size={28} />
-            </div>
-            <div className="landing-topset">
-              <span className="figure">
-                245 <span className="figure-unit">lb</span> × 4
-              </span>
-              <span className="group-label">Top set</span>
-            </div>
-            <p className="landing-reason">
-              A little under your average, so squat holds.
-            </p>
-            <WeeklyLoad days={sampleWeekLoad} flat />
-            <div className="landing-next">
-              <SportShoe size={18} />
-              <span>Then, an easy 3-mile run</span>
-            </div>
-          </div>
+          <DeviceMorph />
         </section>
         <section
           className="landing-features"
