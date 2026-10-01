@@ -387,103 +387,21 @@ pub fn run_all_finish_day_scripts(request: &str) -> ApiResult {
 // ---------------------------------------------------------------------------
 // diagnostics for the desktop editor
 
-#[derive(Serialize, Debug, Clone, PartialEq, Eq)]
-pub struct Diagnostic {
-    pub from: usize,
-    pub to: usize,
-    pub message: String,
-}
-
-fn utf16_len(text: &str) -> usize {
-    text.encode_utf16().count()
-}
-
-/// Widens a zero-width error to one character so an editor can underline it, and
-/// keeps the range inside the document.
-fn visible_range(from: usize, to: usize, len: usize) -> (usize, usize) {
-    let (mut from, mut to) = (from.min(len), to.min(len));
-    if from >= to {
-        if to < len {
-            to += 1;
-        } else {
-            from = to.saturating_sub(1);
-        }
-    }
-    (from, to)
-}
-
-fn describe_planner(parent: Option<&str>, zero_width: bool) -> String {
-    let what = match parent {
-        Some("ExerciseExpression") | Some("ExerciseSection") | Some("ExerciseProperty") => Some("exercise line"),
-        Some("FunctionExpression") => Some("function call"),
-        Some("ExerciseVariations") | Some("ExerciseVariation") => Some("exercise variations"),
-        Some("Week") | Some("Day") | Some("Program") => None,
-        _ => None,
-    };
-    let base = if zero_width { "Syntax error, something is missing here" } else { "Syntax error" };
-    match what {
-        Some(w) => format!("{base} in {w}"),
-        None => base.to_string(),
-    }
-}
-
-fn describe_script(parent: Option<&str>, zero_width: bool) -> String {
-    let what = match parent {
-        Some("IfExpression") => Some("if expression"),
-        Some("ForExpression") | Some("ForInExpression") => Some("for loop"),
-        Some("BuiltinFunctionExpression") => Some("function call"),
-        Some("BinaryExpression") => Some("expression"),
-        Some("Ternary") => Some("ternary"),
-        Some("BlockExpression") => Some("block"),
-        Some("AssignmentExpression") | Some("IncAssignmentExpression") => Some("assignment"),
-        _ => None,
-    };
-    let base = if zero_width { "Syntax error, something is missing here" } else { "Syntax error" };
-    match what {
-        Some(w) => format!("{base} in {w}"),
-        None => base.to_string(),
-    }
-}
+pub use qala_lspp::diagnostics::Diagnostic;
 
 /// Diagnostics for planner text: one per outermost error node, UTF-16 offsets.
 pub fn planner_diagnostics(text: &str) -> Vec<Diagnostic> {
-    fn walk(n: &planner_parse::Node, parent: Option<&str>, len: usize, out: &mut Vec<Diagnostic>) {
-        if n.is_error() {
-            let (from, to) = visible_range(n.from, n.to, len);
-            out.push(Diagnostic { from, to, message: describe_planner(parent, n.from == n.to) });
-            return;
-        }
-        for c in &n.children {
-            walk(c, Some(n.name()), len, out);
-        }
-    }
-    let root = planner_parse::parse(text);
-    let mut out = Vec::new();
-    walk(&root, None, utf16_len(text), &mut out);
-    out
+    qala_lspp::diagnostics::planner_diagnostics(text)
 }
 
 /// Diagnostics for liftoscript source: one per outermost error node, UTF-16 offsets.
 pub fn script_diagnostics(text: &str) -> Vec<Diagnostic> {
-    fn walk(n: &script_parse::Node, parent: Option<&str>, len: usize, out: &mut Vec<Diagnostic>) {
-        if n.is_error() {
-            let (from, to) = visible_range(n.from, n.to, len);
-            out.push(Diagnostic { from, to, message: describe_script(parent, n.from == n.to) });
-            return;
-        }
-        let name = format!("{:?}", n.kind);
-        for c in &n.children {
-            walk(c, Some(&name), len, out);
-        }
-    }
-    let root = script_parse::parse(text);
-    let mut out = Vec::new();
-    walk(&root, None, utf16_len(text), &mut out);
-    out
+    qala_lspp::diagnostics::script_diagnostics(text)
 }
 
 /// `diagnose_planner(text)`: `text` is the raw program text, not a request object.
-/// Result: array of `{from, to, message}`, empty when the text parses cleanly.
+/// Result: array of `{from, to, message, line, col, endLine, endCol, suggestion?}` (line and col
+/// are 1-based), empty when the text parses cleanly.
 pub fn diagnose_planner(text: &str) -> ApiResult {
     guarded(|| ok(&planner_diagnostics(text)))
 }

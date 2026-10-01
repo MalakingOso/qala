@@ -50,6 +50,9 @@ fn errors_are_values() {
 fn diagnostics() {
     let r = result_of(&w::diagnose_planner("Squat / 3x"));
     assert!(!r.as_array().unwrap().is_empty());
+    let first = &r[0];
+    assert_eq!((first["line"].as_u64(), first["col"].as_u64()), (Some(1), Some(10)));
+    assert!(first["suggestion"].as_str().unwrap().contains("3x5"));
     assert_eq!(result_of(&w::diagnose_script("")), json!([]));
     assert_eq!(result_of(&w::diagnose_planner("# Week 1\n## Day 1\nSquat / 3x5\n")), json!([]));
 }

@@ -28,3 +28,4 @@ pub mod program_set;
 pub mod program_exercise;
 pub mod runtime;
 pub mod program_to_planner;
+pub mod diagnostics;

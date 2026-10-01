@@ -115,7 +115,10 @@ function request(doc: any, c: any): string {
 {
   const bad = JSON.parse(q.diagnosePlanner("Squat / 3x"));
   if (bad.v !== 1 || !Array.isArray(bad.result) || bad.result.length === 0) throw new Error("diagnosePlanner found nothing");
-  for (const d of bad.result) if (!(d.from < d.to) || typeof d.message !== "string") throw new Error("bad diagnostic");
+  for (const d of bad.result) {
+    if (!(d.from < d.to) || typeof d.message !== "string") throw new Error("bad diagnostic");
+    if (!(d.line >= 1) || !(d.col >= 1) || typeof d.suggestion !== "string") throw new Error("diagnostic lacks line, col or suggestion");
+  }
   const clean = JSON.parse(q.diagnosePlanner("# Week 1\n## Day 1\nSquat / 3x5\n"));
   if (clean.result.length !== 0) throw new Error("clean program reported errors");
   const s = JSON.parse(q.diagnoseScript("if (completedReps >= ) { weights += }"));

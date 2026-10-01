@@ -146,7 +146,10 @@ fn planner_diagnostics() {
         assert!(x["from"].as_u64().unwrap() < x["to"].as_u64().unwrap());
         assert!(x["to"].as_u64().unwrap() <= 10);
         assert!(x["message"].as_str().unwrap().starts_with("Syntax error"));
+        assert!(x["line"].as_u64().unwrap() >= 1 && x["col"].as_u64().unwrap() >= 1);
+        assert!(x["endLine"].as_u64().is_some() && x["endCol"].as_u64().is_some());
     }
+    assert_eq!(d[0]["suggestion"], "put a rep count after the x, for example 3x5");
 }
 
 #[test]
