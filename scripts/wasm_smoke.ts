@@ -115,12 +115,42 @@ function request(doc: any, c: any): string {
 {
   const bad = JSON.parse(q.diagnosePlanner("Squat / 3x"));
   if (bad.v !== 1 || !Array.isArray(bad.result) || bad.result.length === 0) throw new Error("diagnosePlanner found nothing");
-  for (const d of bad.result) if (!(d.from < d.to) || typeof d.message !== "string") throw new Error("bad diagnostic");
+  for (const d of bad.result) {
+    if (!(d.from < d.to) || typeof d.message !== "string") throw new Error("bad diagnostic");
+    if (!(d.line >= 1) || !(d.col >= 1) || typeof d.suggestion !== "string") throw new Error("diagnostic lacks line, col or suggestion");
+  }
   const clean = JSON.parse(q.diagnosePlanner("# Week 1\n## Day 1\nSquat / 3x5\n"));
   if (clean.result.length !== 0) throw new Error("clean program reported errors");
   const s = JSON.parse(q.diagnoseScript("if (completedReps >= ) { weights += }"));
   if (s.result.length === 0) throw new Error("diagnoseScript found nothing");
   console.log(`ok   diagnosePlanner / diagnoseScript ${JSON.stringify(bad.result)}`);
+  const f = JSON.parse(q.formatPlanner("Squat/3x5   100lb"));
+  if (!f.result.ok || f.result.text !== "Squat / 3x5 100lb\n" || !f.result.changed) throw new Error("formatPlanner result");
+  const fb = JSON.parse(q.formatPlanner("Squat / 3x"));
+  if (fb.result.ok || fb.result.diagnostics.length === 0) throw new Error("formatPlanner accepted a syntax error");
+  console.log("ok   formatPlanner");
+  const lint = JSON.parse(q.lintPlanner("# Week 1\n## Day 1\nSquat / 31x5 100lb\n"));
+  if (lint.result.length !== 1 || lint.result[0].code !== "too-many-sets" || lint.result[0].line !== 3) throw new Error("lintPlanner result");
+  console.log("ok   lintPlanner");
+  const rot = golden("finish_day_rotation_gzclp.json");
+  const dry = JSON.parse(q.dryRun(JSON.stringify({
+    v: 1,
+    program: rot.fixtures.programs.gzclp,
+    settings: rot.fixtures.settings.gzclp_settings,
+    fromDay: 1,
+    sessions: 1,
+  })));
+  if (dry.error || dry.result.sessions.length !== 1 || dry.result.finalText !== rot.cases[0].output.plannerText) {
+    throw new Error("dryRun does not match the rotation golden");
+  }
+  console.log("ok   dryRun");
+  const un = JSON.parse(q.unresolvedSets(JSON.stringify({
+    v: 1,
+    programText: "# Week 1\n## Day 1\nSplit Squat / 2x8 ?+\n",
+    settings: rot.fixtures.settings.gzclp_settings,
+  })));
+  if (un.error || un.result.length !== 2 || un.result[0].state !== "blank") throw new Error("unresolvedSets result");
+  console.log("ok   unresolvedSets");
 }
 // 4. errors are values
 {

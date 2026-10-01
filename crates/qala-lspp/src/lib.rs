@@ -28,3 +28,8 @@ pub mod program_set;
 pub mod program_exercise;
 pub mod runtime;
 pub mod program_to_planner;
+pub mod diagnostics;
+pub mod fmt;
+pub mod lint;
+pub mod dry_run;
+pub mod partial;

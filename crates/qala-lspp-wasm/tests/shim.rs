@@ -50,6 +50,55 @@ fn errors_are_values() {
 fn diagnostics() {
     let r = result_of(&w::diagnose_planner("Squat / 3x"));
     assert!(!r.as_array().unwrap().is_empty());
+    let first = &r[0];
+    assert_eq!((first["line"].as_u64(), first["col"].as_u64()), (Some(1), Some(10)));
+    assert!(first["suggestion"].as_str().unwrap().contains("3x5"));
     assert_eq!(result_of(&w::diagnose_script("")), json!([]));
     assert_eq!(result_of(&w::diagnose_planner("# Week 1\n## Day 1\nSquat / 3x5\n")), json!([]));
+}
+
+#[test]
+fn dry_run_export() {
+    let doc = load("finish_day_rotation_gzclp.json");
+    let req = json!({
+        "v": 1, "program": doc["fixtures"]["programs"]["gzclp"], "settings": doc["fixtures"]["settings"]["gzclp_settings"],
+        "fromDay": 1, "sessions": 1
+    });
+    let r = result_of(&w::dry_run(&req.to_string()));
+    assert_eq!(r["sessions"][0]["day"], 1);
+    assert_eq!(r["finalText"], doc["cases"][0]["output"]["plannerText"]);
+    let (kind, _) = error_of(&w::dry_run("{}"));
+    assert_eq!(kind, "invalidInput");
+}
+
+#[test]
+fn unresolved_sets_export() {
+    let doc = load("finish_day_rotation_gzclp.json");
+    let req = json!({
+        "v": 1, "programText": "# Week 1\n## Day 1\nSplit Squat / 1x8 ?+\n",
+        "settings": doc["fixtures"]["settings"]["gzclp_settings"]
+    });
+    let r = result_of(&w::unresolved_sets(&req.to_string()));
+    assert_eq!(r[0]["state"], "blank");
+    let (kind, _) = error_of(&w::unresolved_sets("{}"));
+    assert_eq!(kind, "invalidInput");
+}
+
+#[test]
+fn lint_planner_export() {
+    assert_eq!(result_of(&w::lint_planner("# Week 1\n## Day 1\nSquat / 3x5 100lb\n")), json!([]));
+    let r = result_of(&w::lint_planner("# Week 1\n## Day 1\nSquat / 31x5 100lb\n"));
+    assert_eq!(r[0]["code"], "too-many-sets");
+    assert_eq!(r[0]["line"], 3);
+}
+
+#[test]
+fn format_planner_export() {
+    let r = result_of(&w::format_planner("Squat/3x5   100lb"));
+    assert_eq!(r, json!({"ok": true, "text": "Squat / 3x5 100lb\n", "changed": true}));
+    let r = result_of(&w::format_planner("Squat / 3x5 100lb\n"));
+    assert_eq!(r["changed"], false);
+    let r = result_of(&w::format_planner("Squat / 3x"));
+    assert_eq!(r["ok"], false);
+    assert!(!r["diagnostics"].as_array().unwrap().is_empty());
 }

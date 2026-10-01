@@ -31,7 +31,6 @@ use qala_lspp::types::{
     IDayData, IEvaluatedProgram, IHistoryEntry, IProgramState, ISettings, IStats,
 };
 use qala_lspp::util::generator::{SequentialUid, UidSource};
-use qala_lspp::{planner_parse, script_parse};
 
 pub const VERSION: u32 = 1;
 
@@ -387,103 +386,21 @@ pub fn run_all_finish_day_scripts(request: &str) -> ApiResult {
 // ---------------------------------------------------------------------------
 // diagnostics for the desktop editor
 
-#[derive(Serialize, Debug, Clone, PartialEq, Eq)]
-pub struct Diagnostic {
-    pub from: usize,
-    pub to: usize,
-    pub message: String,
-}
-
-fn utf16_len(text: &str) -> usize {
-    text.encode_utf16().count()
-}
-
-/// Widens a zero-width error to one character so an editor can underline it, and
-/// keeps the range inside the document.
-fn visible_range(from: usize, to: usize, len: usize) -> (usize, usize) {
-    let (mut from, mut to) = (from.min(len), to.min(len));
-    if from >= to {
-        if to < len {
-            to += 1;
-        } else {
-            from = to.saturating_sub(1);
-        }
-    }
-    (from, to)
-}
-
-fn describe_planner(parent: Option<&str>, zero_width: bool) -> String {
-    let what = match parent {
-        Some("ExerciseExpression") | Some("ExerciseSection") | Some("ExerciseProperty") => Some("exercise line"),
-        Some("FunctionExpression") => Some("function call"),
-        Some("ExerciseVariations") | Some("ExerciseVariation") => Some("exercise variations"),
-        Some("Week") | Some("Day") | Some("Program") => None,
-        _ => None,
-    };
-    let base = if zero_width { "Syntax error, something is missing here" } else { "Syntax error" };
-    match what {
-        Some(w) => format!("{base} in {w}"),
-        None => base.to_string(),
-    }
-}
-
-fn describe_script(parent: Option<&str>, zero_width: bool) -> String {
-    let what = match parent {
-        Some("IfExpression") => Some("if expression"),
-        Some("ForExpression") | Some("ForInExpression") => Some("for loop"),
-        Some("BuiltinFunctionExpression") => Some("function call"),
-        Some("BinaryExpression") => Some("expression"),
-        Some("Ternary") => Some("ternary"),
-        Some("BlockExpression") => Some("block"),
-        Some("AssignmentExpression") | Some("IncAssignmentExpression") => Some("assignment"),
-        _ => None,
-    };
-    let base = if zero_width { "Syntax error, something is missing here" } else { "Syntax error" };
-    match what {
-        Some(w) => format!("{base} in {w}"),
-        None => base.to_string(),
-    }
-}
+pub use qala_lspp::diagnostics::Diagnostic;
 
 /// Diagnostics for planner text: one per outermost error node, UTF-16 offsets.
 pub fn planner_diagnostics(text: &str) -> Vec<Diagnostic> {
-    fn walk(n: &planner_parse::Node, parent: Option<&str>, len: usize, out: &mut Vec<Diagnostic>) {
-        if n.is_error() {
-            let (from, to) = visible_range(n.from, n.to, len);
-            out.push(Diagnostic { from, to, message: describe_planner(parent, n.from == n.to) });
-            return;
-        }
-        for c in &n.children {
-            walk(c, Some(n.name()), len, out);
-        }
-    }
-    let root = planner_parse::parse(text);
-    let mut out = Vec::new();
-    walk(&root, None, utf16_len(text), &mut out);
-    out
+    qala_lspp::diagnostics::planner_diagnostics(text)
 }
 
 /// Diagnostics for liftoscript source: one per outermost error node, UTF-16 offsets.
 pub fn script_diagnostics(text: &str) -> Vec<Diagnostic> {
-    fn walk(n: &script_parse::Node, parent: Option<&str>, len: usize, out: &mut Vec<Diagnostic>) {
-        if n.is_error() {
-            let (from, to) = visible_range(n.from, n.to, len);
-            out.push(Diagnostic { from, to, message: describe_script(parent, n.from == n.to) });
-            return;
-        }
-        let name = format!("{:?}", n.kind);
-        for c in &n.children {
-            walk(c, Some(&name), len, out);
-        }
-    }
-    let root = script_parse::parse(text);
-    let mut out = Vec::new();
-    walk(&root, None, utf16_len(text), &mut out);
-    out
+    qala_lspp::diagnostics::script_diagnostics(text)
 }
 
 /// `diagnose_planner(text)`: `text` is the raw program text, not a request object.
-/// Result: array of `{from, to, message}`, empty when the text parses cleanly.
+/// Result: array of `{from, to, message, line, col, endLine, endCol, suggestion?}` (line and col
+/// are 1-based), empty when the text parses cleanly.
 pub fn diagnose_planner(text: &str) -> ApiResult {
     guarded(|| ok(&planner_diagnostics(text)))
 }
@@ -491,4 +408,139 @@ pub fn diagnose_planner(text: &str) -> ApiResult {
 /// `diagnose_script(text)`: raw liftoscript source, same result shape as `diagnose_planner`.
 pub fn diagnose_script(text: &str) -> ApiResult {
     guarded(|| ok(&script_diagnostics(text)))
+}
+
+// ---------------------------------------------------------------------------
+// dry run
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct DryRunReq {
+    /// An evaluated program (one in progress keeps its state), or `programText` + `name`.
+    #[serde(default)]
+    program: Option<IEvaluatedProgram>,
+    #[serde(default)]
+    program_text: Option<String>,
+    #[serde(default)]
+    name: Option<String>,
+    settings: ISettings,
+    #[serde(default)]
+    from_day: Option<i64>,
+    #[serde(default)]
+    sessions: Option<usize>,
+    #[serde(default)]
+    through_week: Option<i64>,
+    uids: Option<Vec<String>>,
+    uid_seed: Option<u64>,
+}
+
+/// `dryRun`. Request: `{v, program | (programText, name), settings, fromDay?, sessions?,
+/// throughWeek?, uids?, uidSeed?}`. Simulates the next sessions assuming every set hits its
+/// planned reps and weight and returns, per session, the prescribed sets, then the progressed
+/// program text. `?+` sets stay blank (`blank: true`). Read-only: nothing is stored and the
+/// request's program is not modified. Result: `{sessions, blankSets, finalText}`.
+pub fn dry_run(request: &str) -> ApiResult {
+    guarded(|| {
+        let r: DryRunReq = parse_request(request)?;
+        let mut uid = RequestUid::new(r.uids, r.uid_seed);
+        let program = match (r.program, r.program_text) {
+            (Some(p), _) => p,
+            (None, Some(text)) => {
+                runtime::force_evaluate_text(&text, r.name.as_deref().unwrap_or("Program"), &r.settings, &mut uid)
+            }
+            (None, None) => return Err(ApiError::InvalidInput("request needs \"program\" or \"programText\"".to_string())),
+        };
+        let opts = qala_lspp::dry_run::DryRunOpts { from_day: r.from_day, sessions: r.sessions, through_week: r.through_week };
+        let out = qala_lspp::dry_run::dry_run(&program, &r.settings, &opts, &mut uid)
+            .map_err(|e| ApiError::Evaluation(e.to_string()))?;
+        ok(&out)
+    })
+}
+
+// ---------------------------------------------------------------------------
+// partial prescriptions
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct UnresolvedReq {
+    #[serde(default)]
+    program: Option<IEvaluatedProgram>,
+    #[serde(default)]
+    program_text: Option<String>,
+    #[serde(default)]
+    name: Option<String>,
+    /// Needed only with `programText`.
+    #[serde(default)]
+    settings: Option<ISettings>,
+}
+
+/// `unresolvedSets`. Request: `{v, program | (programText, name?, settings)}`. Result: array of
+/// `{state, week, dayInWeek, day, dayName, exerciseKey, exerciseName, variation, setIndex,
+/// line, weight, reps}`, one per set still waiting for a weight (`?+`, state "blank", or a
+/// starting weight with a plus such as `0lb+`, state "seeded"), in program order.
+pub fn unresolved_sets(request: &str) -> ApiResult {
+    guarded(|| {
+        let r: UnresolvedReq = parse_request(request)?;
+        let program = match (r.program, r.program_text) {
+            (Some(p), _) => p,
+            (None, Some(text)) => {
+                let settings = r
+                    .settings
+                    .ok_or_else(|| ApiError::InvalidInput("\"programText\" needs \"settings\"".to_string()))?;
+                let mut uid = RequestUid::new(None, None);
+                runtime::force_evaluate_text(&text, r.name.as_deref().unwrap_or("Program"), &settings, &mut uid)
+            }
+            (None, None) => return Err(ApiError::InvalidInput("request needs \"program\" or \"programText\"".to_string())),
+        };
+        ok(&qala_lspp::partial::unresolved_sets(&program))
+    })
+}
+
+// ---------------------------------------------------------------------------
+// lint
+
+/// `lint_planner(text)`: `text` is the raw program text. Result: array of
+/// `{code, from, to, message, line, col, endLine, endCol, suggestion}` (UTF-16 offsets,
+/// 1-based line and col), empty when nothing looks wrong. Text with syntax errors yields an
+/// empty array; call `diagnose_planner` for those.
+pub fn lint_planner(text: &str) -> ApiResult {
+    guarded(|| ok(&qala_lspp::lint::lint_planner(text)))
+}
+
+// ---------------------------------------------------------------------------
+// fmt
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct FormatOk {
+    ok: bool,
+    text: String,
+    changed: bool,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct FormatRefused {
+    ok: bool,
+    reason: String,
+    diagnostics: Vec<Diagnostic>,
+}
+
+/// `format_planner(text)`: `text` is the raw program text. Result is `{ok: true, text, changed}`,
+/// or `{ok: false, reason, diagnostics}` when the text has syntax errors (nothing is
+/// formatted, `reason` is "syntax") or when formatting could not be proven safe (`reason`
+/// says why and `diagnostics` is empty).
+pub fn format_planner(text: &str) -> ApiResult {
+    guarded(|| match qala_lspp::fmt::format_planner(text) {
+        Ok(out) => {
+            let changed = out != text;
+            ok(&FormatOk { ok: true, text: out, changed })
+        }
+        Err(qala_lspp::fmt::FormatError::Syntax(diagnostics)) => {
+            ok(&FormatRefused { ok: false, reason: "syntax".to_string(), diagnostics })
+        }
+        Err(e @ qala_lspp::fmt::FormatError::Unsafe(_)) => {
+            ok(&FormatRefused { ok: false, reason: e.to_string(), diagnostics: vec![] })
+        }
+    })
 }

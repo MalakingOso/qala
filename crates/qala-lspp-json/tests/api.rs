@@ -146,7 +146,10 @@ fn planner_diagnostics() {
         assert!(x["from"].as_u64().unwrap() < x["to"].as_u64().unwrap());
         assert!(x["to"].as_u64().unwrap() <= 10);
         assert!(x["message"].as_str().unwrap().starts_with("Syntax error"));
+        assert!(x["line"].as_u64().unwrap() >= 1 && x["col"].as_u64().unwrap() >= 1);
+        assert!(x["endLine"].as_u64().is_some() && x["endCol"].as_u64().is_some());
     }
+    assert_eq!(d[0]["suggestion"], "put a rep count after the x, for example 3x5");
 }
 
 #[test]
@@ -158,6 +161,90 @@ fn diagnostics_use_utf16_offsets() {
     for x in out.as_array().unwrap() {
         assert!(x["to"].as_u64().unwrap() as usize <= units);
     }
+}
+
+#[test]
+fn dry_run_matches_the_rotation_golden_and_is_read_only() {
+    let doc = load("finish_day_rotation_gzclp.json");
+    let program = doc["fixtures"]["programs"]["gzclp"].clone();
+    let req = json!({
+        "v": 1, "program": program, "settings": doc["fixtures"]["settings"]["gzclp_settings"],
+        "fromDay": 1, "sessions": 2
+    });
+    let before = req.to_string();
+    let r = result_of(&api::dry_run(&req.to_string()).unwrap());
+    assert_eq!(req.to_string(), before);
+    let sessions = r["sessions"].as_array().unwrap();
+    assert_eq!(sessions.len(), 2);
+    let first_entry = &doc["cases"][0]["inputs"]["entries"][0];
+    assert_eq!(sessions[0]["exercises"][0]["key"], first_entry["programExerciseId"]);
+    assert_eq!(sessions[0]["exercises"][0]["sets"][0]["weight"], first_entry["sets"][0]["weight"]);
+    assert_eq!(r["blankSets"], 0);
+    assert_eq!(r["finalText"], doc["cases"][1]["output"]["plannerText"]);
+}
+
+#[test]
+fn dry_run_from_text_keeps_blank_weights_blank() {
+    let doc = load("finish_day_rotation_gzclp.json");
+    let req = json!({
+        "v": 1, "programText": "# Week 1\n## Day 1\nSplit Squat / 3x8 ?+\n", "name": "t",
+        "settings": doc["fixtures"]["settings"]["gzclp_settings"], "sessions": 1
+    });
+    let r = result_of(&api::dry_run(&req.to_string()).unwrap());
+    assert_eq!(r["blankSets"], 3);
+    let set = &r["sessions"][0]["exercises"][0]["sets"][0];
+    assert_eq!(set["blank"], true);
+    assert!(set["weight"].is_null());
+}
+
+#[test]
+fn unresolved_sets_lists_question_mark_plus() {
+    let doc = load("finish_day_rotation_gzclp.json");
+    let settings = doc["fixtures"]["settings"]["gzclp_settings"].clone();
+    let text = "# Week 1\n## Day 1\nSplit Squat / 2x8 ?+\nBench Press / 3x5 100lb\n";
+    let req = json!({"v": 1, "programText": text, "settings": settings});
+    let r = result_of(&api::unresolved_sets(&req.to_string()).unwrap());
+    let a = r.as_array().unwrap();
+    assert_eq!(a.len(), 2);
+    assert_eq!(a[0]["state"], "blank");
+    assert_eq!(a[0]["exerciseName"], "Split Squat");
+    assert_eq!((a[0]["week"].as_i64(), a[1]["setIndex"].as_u64()), (Some(1), Some(1)));
+    let none = json!({"v": 1, "programText": "# Week 1\n## Day 1\nSquat / 3x5 100lb\n", "settings": settings});
+    assert_eq!(result_of(&api::unresolved_sets(&none.to_string()).unwrap()), json!([]));
+    let e = api::unresolved_sets(&json!({"v": 1, "programText": text}).to_string()).unwrap_err();
+    assert_eq!(e.kind(), "invalidInput");
+}
+
+#[test]
+fn dry_run_rejects_a_request_without_a_program() {
+    let doc = load("finish_day_rotation_gzclp.json");
+    let req = json!({"v": 1, "settings": doc["fixtures"]["settings"]["gzclp_settings"]});
+    let e = api::dry_run(&req.to_string()).unwrap_err();
+    assert_eq!(e.kind(), "invalidInput");
+}
+
+#[test]
+fn lint_planner_results() {
+    assert_eq!(result_of(&api::lint_planner("# Week 1\n## Day 1\nSquat / 3x5 100lb\n").unwrap()), json!([]));
+    let r = result_of(&api::lint_planner("# Week 1\n## Day 1\nSquat / 3x5 100lb / progress: custom(spare: 1) {~ ~}\n").unwrap());
+    assert_eq!(r[0]["code"], "unused-state");
+    assert_eq!(r[0]["endCol"].as_u64().unwrap() > r[0]["col"].as_u64().unwrap(), true);
+    assert!(r[0]["suggestion"].as_str().unwrap().contains("spare"));
+    assert_eq!(result_of(&api::lint_planner("Squat / 3x").unwrap()), json!([]));
+}
+
+#[test]
+fn format_planner_results() {
+    let r = result_of(&api::format_planner("# Week 1\n## Day 1\nSquat /3x5,  1x5+ 100lb\n").unwrap());
+    assert_eq!(r["ok"], true);
+    assert_eq!(r["text"], "# Week 1\n## Day 1\nSquat / 3x5, 1x5+ 100lb\n");
+    assert_eq!(r["changed"], true);
+    let again = result_of(&api::format_planner(r["text"].as_str().unwrap()).unwrap());
+    assert_eq!(again["changed"], false);
+    let bad = result_of(&api::format_planner("Squat / 3x").unwrap());
+    assert_eq!(bad["ok"], false);
+    assert_eq!(bad["reason"], "syntax");
+    assert_eq!(bad["diagnostics"][0]["line"], 1);
 }
 
 #[test]
