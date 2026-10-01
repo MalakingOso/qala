@@ -58,6 +58,20 @@ fn diagnostics() {
 }
 
 #[test]
+fn dry_run_export() {
+    let doc = load("finish_day_rotation_gzclp.json");
+    let req = json!({
+        "v": 1, "program": doc["fixtures"]["programs"]["gzclp"], "settings": doc["fixtures"]["settings"]["gzclp_settings"],
+        "fromDay": 1, "sessions": 1
+    });
+    let r = result_of(&w::dry_run(&req.to_string()));
+    assert_eq!(r["sessions"][0]["day"], 1);
+    assert_eq!(r["finalText"], doc["cases"][0]["output"]["plannerText"]);
+    let (kind, _) = error_of(&w::dry_run("{}"));
+    assert_eq!(kind, "invalidInput");
+}
+
+#[test]
 fn lint_planner_export() {
     assert_eq!(result_of(&w::lint_planner("# Week 1\n## Day 1\nSquat / 3x5 100lb\n")), json!([]));
     let r = result_of(&w::lint_planner("# Week 1\n## Day 1\nSquat / 31x5 100lb\n"));

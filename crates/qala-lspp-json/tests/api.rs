@@ -164,6 +164,48 @@ fn diagnostics_use_utf16_offsets() {
 }
 
 #[test]
+fn dry_run_matches_the_rotation_golden_and_is_read_only() {
+    let doc = load("finish_day_rotation_gzclp.json");
+    let program = doc["fixtures"]["programs"]["gzclp"].clone();
+    let req = json!({
+        "v": 1, "program": program, "settings": doc["fixtures"]["settings"]["gzclp_settings"],
+        "fromDay": 1, "sessions": 2
+    });
+    let before = req.to_string();
+    let r = result_of(&api::dry_run(&req.to_string()).unwrap());
+    assert_eq!(req.to_string(), before);
+    let sessions = r["sessions"].as_array().unwrap();
+    assert_eq!(sessions.len(), 2);
+    let first_entry = &doc["cases"][0]["inputs"]["entries"][0];
+    assert_eq!(sessions[0]["exercises"][0]["key"], first_entry["programExerciseId"]);
+    assert_eq!(sessions[0]["exercises"][0]["sets"][0]["weight"], first_entry["sets"][0]["weight"]);
+    assert_eq!(r["blankSets"], 0);
+    assert_eq!(r["finalText"], doc["cases"][1]["output"]["plannerText"]);
+}
+
+#[test]
+fn dry_run_from_text_keeps_blank_weights_blank() {
+    let doc = load("finish_day_rotation_gzclp.json");
+    let req = json!({
+        "v": 1, "programText": "# Week 1\n## Day 1\nSplit Squat / 3x8 ?+\n", "name": "t",
+        "settings": doc["fixtures"]["settings"]["gzclp_settings"], "sessions": 1
+    });
+    let r = result_of(&api::dry_run(&req.to_string()).unwrap());
+    assert_eq!(r["blankSets"], 3);
+    let set = &r["sessions"][0]["exercises"][0]["sets"][0];
+    assert_eq!(set["blank"], true);
+    assert!(set["weight"].is_null());
+}
+
+#[test]
+fn dry_run_rejects_a_request_without_a_program() {
+    let doc = load("finish_day_rotation_gzclp.json");
+    let req = json!({"v": 1, "settings": doc["fixtures"]["settings"]["gzclp_settings"]});
+    let e = api::dry_run(&req.to_string()).unwrap_err();
+    assert_eq!(e.kind(), "invalidInput");
+}
+
+#[test]
 fn lint_planner_results() {
     assert_eq!(result_of(&api::lint_planner("# Week 1\n## Day 1\nSquat / 3x5 100lb\n").unwrap()), json!([]));
     let r = result_of(&api::lint_planner("# Week 1\n## Day 1\nSquat / 3x5 100lb / progress: custom(spare: 1) {~ ~}\n").unwrap());

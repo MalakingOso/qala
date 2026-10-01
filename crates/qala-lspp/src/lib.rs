@@ -31,3 +31,4 @@ pub mod program_to_planner;
 pub mod diagnostics;
 pub mod fmt;
 pub mod lint;
+pub mod dry_run;

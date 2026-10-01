@@ -132,6 +132,18 @@ function request(doc: any, c: any): string {
   const lint = JSON.parse(q.lintPlanner("# Week 1\n## Day 1\nSquat / 31x5 100lb\n"));
   if (lint.result.length !== 1 || lint.result[0].code !== "too-many-sets" || lint.result[0].line !== 3) throw new Error("lintPlanner result");
   console.log("ok   lintPlanner");
+  const rot = golden("finish_day_rotation_gzclp.json");
+  const dry = JSON.parse(q.dryRun(JSON.stringify({
+    v: 1,
+    program: rot.fixtures.programs.gzclp,
+    settings: rot.fixtures.settings.gzclp_settings,
+    fromDay: 1,
+    sessions: 1,
+  })));
+  if (dry.error || dry.result.sessions.length !== 1 || dry.result.finalText !== rot.cases[0].output.plannerText) {
+    throw new Error("dryRun does not match the rotation golden");
+  }
+  console.log("ok   dryRun");
 }
 // 4. errors are values
 {

@@ -411,6 +411,53 @@ pub fn diagnose_script(text: &str) -> ApiResult {
 }
 
 // ---------------------------------------------------------------------------
+// dry run
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct DryRunReq {
+    /// An evaluated program (one in progress keeps its state), or `programText` + `name`.
+    #[serde(default)]
+    program: Option<IEvaluatedProgram>,
+    #[serde(default)]
+    program_text: Option<String>,
+    #[serde(default)]
+    name: Option<String>,
+    settings: ISettings,
+    #[serde(default)]
+    from_day: Option<i64>,
+    #[serde(default)]
+    sessions: Option<usize>,
+    #[serde(default)]
+    through_week: Option<i64>,
+    uids: Option<Vec<String>>,
+    uid_seed: Option<u64>,
+}
+
+/// `dryRun`. Request: `{v, program | (programText, name), settings, fromDay?, sessions?,
+/// throughWeek?, uids?, uidSeed?}`. Simulates the next sessions assuming every set hits its
+/// planned reps and weight and returns, per session, the prescribed sets, then the progressed
+/// program text. `?+` sets stay blank (`blank: true`). Read-only: nothing is stored and the
+/// request's program is not modified. Result: `{sessions, blankSets, finalText}`.
+pub fn dry_run(request: &str) -> ApiResult {
+    guarded(|| {
+        let r: DryRunReq = parse_request(request)?;
+        let mut uid = RequestUid::new(r.uids, r.uid_seed);
+        let program = match (r.program, r.program_text) {
+            (Some(p), _) => p,
+            (None, Some(text)) => {
+                runtime::force_evaluate_text(&text, r.name.as_deref().unwrap_or("Program"), &r.settings, &mut uid)
+            }
+            (None, None) => return Err(ApiError::InvalidInput("request needs \"program\" or \"programText\"".to_string())),
+        };
+        let opts = qala_lspp::dry_run::DryRunOpts { from_day: r.from_day, sessions: r.sessions, through_week: r.through_week };
+        let out = qala_lspp::dry_run::dry_run(&program, &r.settings, &opts, &mut uid)
+            .map_err(|e| ApiError::Evaluation(e.to_string()))?;
+        ok(&out)
+    })
+}
+
+// ---------------------------------------------------------------------------
 // lint
 
 /// `lint_planner(text)`: `text` is the raw program text. Result: array of

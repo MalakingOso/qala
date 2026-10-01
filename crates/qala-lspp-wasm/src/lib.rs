@@ -62,6 +62,11 @@ pub fn diagnose_script(request: &str) -> String {
     api::envelope(api::diagnose_script(request))
 }
 
+#[wasm_bindgen(js_name = dryRun)]
+pub fn dry_run(request: &str) -> String {
+    api::envelope(api::dry_run(request))
+}
+
 #[wasm_bindgen(js_name = lintPlanner)]
 pub fn lint_planner(request: &str) -> String {
     api::envelope(api::lint_planner(request))
