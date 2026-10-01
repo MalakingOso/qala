@@ -20,6 +20,8 @@ export function TrendPlot(
     references = [],
     color = "var(--viz-2)",
     unit = "",
+    axisLabel,
+    axisHint,
     height = 224,
     compact = false,
   }: {
@@ -28,6 +30,10 @@ export function TrendPlot(
     references?: { label: string; value: number; color: string }[];
     color?: string;
     unit?: string;
+    /** Short y-axis label drawn above the tick numbers. */
+    axisLabel?: string;
+    /** Plain-language meaning of the axis, shown on hover and focus. */
+    axisHint?: string;
     height?: number;
     compact?: boolean;
   },
@@ -46,7 +52,7 @@ export function TrendPlot(
     <>
       <Plot height={height}>
         {(width) => {
-          const left = compact ? 8 : 38;
+          const left = compact ? 8 : axisLabel ? 58 : 38;
           const right = 16;
           const bottom = compact ? 12 : 32;
           const x = scalePoint<number>({
@@ -94,6 +100,35 @@ export function TrendPlot(
                     </text>
                   </g>
                 ))}
+                {!compact && axisLabel && (
+                  <g
+                    role="img"
+                    aria-label={axisHint ?? axisLabel}
+                    tabIndex={axisHint ? 0 : undefined}
+                    style={{ cursor: axisHint ? "help" : undefined }}
+                    transform={`translate(14 ${
+                      (24 + height - bottom) / 2
+                    }) rotate(-90)`}
+                  >
+                    {axisHint && <title>{axisHint}</title>}
+                    <rect
+                      x={-22}
+                      y={-14}
+                      width={44}
+                      height={26}
+                      fill="transparent"
+                    />
+                    <text
+                      textAnchor="middle"
+                      fontSize={17}
+                      fontWeight={700}
+                      fill={color}
+                      textDecoration={axisHint ? "underline dotted" : undefined}
+                    >
+                      {axisLabel}
+                    </text>
+                  </g>
+                )}
                 {references.map((r) => (
                   <line
                     key={r.label}

@@ -1,4 +1,7 @@
-/* Fixed-size labels and 18px bars, with 10/20-set guides above the plot. */
+/* Fixed-size labels and 16px bars. The 10-20 weekly sets band (DECISIONS
+ * T2, fractional sets) is a green-tinted lane, no outline, behind the bars, so a bar
+ * reads as under, in, or over the target at a glance; each bar ends with
+ * its total. */
 
 import { scaleLinear } from "@visx/scale";
 import { ChartShell } from "./ChartShell.tsx";
@@ -11,7 +14,7 @@ export function SetsByMuscle(
     onSelectMuscle?: (muscle: string) => void;
   },
 ) {
-  const height = muscles.length * 38 + 28;
+  const height = muscles.length * 36 + 30;
   const max = Math.max(22, ...muscles.map((m) => m.earlier + m.today));
   return (
     <ChartShell
@@ -27,32 +30,41 @@ export function SetsByMuscle(
           const left = 88;
           const x = scaleLinear<number>({
             domain: [0, max],
-            range: [left, Math.max(left + 1, width - 12)],
+            range: [left, Math.max(left + 1, width - 30)],
           });
           return (
             <svg width={width} height={height} role="presentation">
+              <rect
+                x={x(10)}
+                y={4}
+                width={x(20) - x(10)}
+                height={height - 28}
+                rx={8}
+                fill="color-mix(in srgb, var(--progress-fill) 12%, transparent)"
+              />
               {[10, 20].map((v) => (
-                <g key={v}>
-                  <line
-                    x1={x(v)}
-                    x2={x(v)}
-                    y1={24}
-                    y2={height}
-                    stroke="var(--grid)"
-                  />
-                  <text
-                    x={x(v)}
-                    y={12}
-                    textAnchor="middle"
-                    fontSize={10}
-                    fill="var(--fg-muted)"
-                  >
-                    {v}
-                  </text>
-                </g>
+                <text
+                  key={v}
+                  x={x(v)}
+                  y={height - 6}
+                  textAnchor="middle"
+                  fontSize={10}
+                  fill="var(--fg-muted)"
+                >
+                  {v}
+                </text>
               ))}
+              <text
+                x={(x(10) + x(20)) / 2}
+                y={height - 6}
+                textAnchor="middle"
+                fontSize={10}
+                fill="var(--fg-muted)"
+              >
+                target
+              </text>
               {muscles.map((m, i) => {
-                const yy = 28 + i * 38;
+                const yy = 12 + i * 36;
                 const end = x(m.earlier + m.today);
                 const split = x(m.earlier);
                 return (
@@ -87,16 +99,16 @@ export function SetsByMuscle(
                     />
                     <text
                       x={left - 10}
-                      y={yy + 13}
+                      y={yy + 12}
                       textAnchor="end"
-                      fontSize={11}
+                      fontSize={12}
                       fill="var(--fg-secondary)"
                     >
                       {m.muscle}
                     </text>
                     <path
-                      d={roundedBar(left, yy, end - left, 18)}
-                      fill="var(--mark-gray)"
+                      d={roundedBar(left, yy, end - left, 16)}
+                      fill="color-mix(in srgb, var(--accent) 35%, transparent)"
                     />
                     {m.today > 0 && (
                       <path
@@ -104,11 +116,20 @@ export function SetsByMuscle(
                           split + (m.earlier > 0 ? 2 : 0),
                           yy,
                           Math.max(0, end - split - (m.earlier > 0 ? 2 : 0)),
-                          18,
+                          16,
                         )}
                         fill="var(--accent)"
                       />
                     )}
+                    <text
+                      x={end + 6}
+                      y={yy + 12}
+                      fontSize={12}
+                      fontWeight={600}
+                      fill="var(--fg)"
+                    >
+                      {m.earlier + m.today}
+                    </text>
                   </g>
                 );
               })}
@@ -117,7 +138,7 @@ export function SetsByMuscle(
         }}
       </Plot>
       <ChartLegend
-        items={[{ label: "Earlier this week", color: "var(--mark-gray)" }, {
+        items={[{ label: "Earlier this week", color: "color-mix(in srgb, var(--accent) 35%, transparent)" }, {
           label: "Today",
           color: "var(--accent)",
         }]}

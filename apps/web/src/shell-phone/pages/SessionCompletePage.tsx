@@ -1,15 +1,36 @@
-/* Session complete (DESIGN 7.8): stat tiles with deltas, charts, volume
- * deltas, the two quick questions, the day's run handoff. */
+/* Session complete (DESIGN 7.8, DECISIONS U6): stat tiles with deltas,
+ * charts, volume deltas per exercise, the two quick questions, the day's
+ * run handoff. */
 
 import { useState } from "react";
 import { useQala } from "../../store/qalaStore.tsx";
-import { Card, Chip, PrimaryButton, StatTiles } from "../../shared/ui.tsx";
+import {
+  Group,
+  PrimaryButton,
+  ScalePicker,
+  StatTiles,
+} from "../../shared/ui.tsx";
 import {
   E1rmLine,
   RepsIntensity,
   SetsByMuscle,
   TimeSplit,
 } from "../../shared/charts/index.ts";
+import { Check, SportShoe } from "../../shared/icons.ts";
+
+const EXERCISES = [
+  { name: "Back Squat", sets: "245 × 4, 4, 4", delta: 6 },
+  { name: "Romanian Deadlift", sets: "205 × 8, 8", delta: 3 },
+  { name: "Walking Lunge", sets: "40 × 10", delta: 0 },
+  { name: "Standing Calf Raise", sets: "180 × 12, 12", delta: 8 },
+];
+
+const PERFORMANCE = [
+  { value: 1, label: "Beat it" },
+  { value: 2, label: "Hit it" },
+  { value: 3, label: "Barely" },
+  { value: 4, label: "Missed" },
+];
 
 export function SessionCompletePage() {
   const { queueOp } = useQala();
@@ -18,14 +39,17 @@ export function SessionCompletePage() {
   return (
     <div>
       <div className="page-head">
-        <h1 className="page-title title">Lower A, done</h1>
+        <div>
+          <p className="group-label page-eyebrow">Sunday · squat day</p>
+          <h1 className="page-title title">Lower A, done</h1>
+        </div>
       </div>
       <StatTiles
         tiles={[
-          { value: "58", delta: "-4 min", label: "minutes" },
+          { value: "58", delta: "−4 min", label: "minutes" },
           { value: "20.4k", delta: "+6%", label: "volume lb" },
           { value: "20", delta: "+2", label: "hard sets" },
-          { value: "1", delta: "squat", label: "PRs" },
+          { value: "1", delta: "squat e1RM", label: "PR" },
         ]}
       />
       <TimeSplit
@@ -47,14 +71,14 @@ export function SessionCompletePage() {
       <E1rmLine
         lift="Squat"
         points={[
-          { label: "s1", e1rm: 272 },
-          { label: "s2", e1rm: 274 },
-          { label: "s3", e1rm: 273 },
-          { label: "s4", e1rm: 277 },
-          { label: "s5", e1rm: 279 },
-          { label: "s6", e1rm: 278 },
-          { label: "s7", e1rm: 281 },
-          { label: "today", e1rm: 283 },
+          { label: "Aug 2", e1rm: 272 },
+          { label: "Aug 9", e1rm: 274 },
+          { label: "Aug 16", e1rm: 273 },
+          { label: "Aug 23", e1rm: 277 },
+          { label: "Aug 30", e1rm: 279 },
+          { label: "Sep 6", e1rm: 278 },
+          { label: "Sep 10", e1rm: 281 },
+          { label: "Today", e1rm: 283 },
         ]}
       />
       <RepsIntensity
@@ -67,79 +91,62 @@ export function SessionCompletePage() {
           { label: "90+", reps: 0 },
         ]}
       />
-      <Card>
-        <p className="group-label">Exercises · volume vs last time</p>
-        {["Back Squat +6%", "RDL +3%", "Lunge +0%", "Calf raise +8%"].map((
-          r,
-        ) => (
-          <p key={r} style={{ margin: "4px 0" }}>
-            {r}
-          </p>
-        ))}
-      </Card>
-      <Card>
-        <p className="group-label">Two quick questions</p>
-        <p>
-          How did each muscle perform? (1 exceeded · 2 hit · 3 struggled · 4 no
-          match)
-        </p>
-        {["quads", "glutes", "hamstrings"].map((m) => (
-          <div
-            key={m}
-            style={{
-              display: "flex",
-              gap: 4,
-              alignItems: "center",
-              marginBottom: 6,
-            }}
-          >
-            <span style={{ width: 110, textTransform: "capitalize" }}>{m}</span>
-            {[1, 2, 3, 4].map((v) => (
-              <button
-                key={v}
-                type="button"
-                aria-pressed={perf[m] === v}
-                onClick={() => setPerf((p) => ({ ...p, [m]: v }))}
-                className="icon-btn"
-                style={perf[m] === v
-                  ? { outline: "2px solid var(--accent)" }
-                  : undefined}
-              >
-                {v}
-              </button>
-            ))}
+      <Group label="Exercises · volume vs last time">
+        {EXERCISES.map((e) => (
+          <div className="group-row" key={e.name}>
+            <span className="ex-row">
+              <strong>{e.name}</strong>
+              <span className="kbd-hint">{e.sets}</span>
+            </span>
+            <span className={e.delta > 0 ? "delta up" : "delta"}>
+              {e.delta > 0 ? `+${e.delta}%` : "same"}
+            </span>
           </div>
         ))}
-        <p>Session RPE (CR-10)</p>
-        <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
-          {Array.from({ length: 11 }, (_, v) => (
-            <button
-              key={v}
-              type="button"
-              aria-pressed={srpe === v}
-              onClick={() => setSrpe(v)}
-              className="icon-btn"
-              style={srpe === v
-                ? { outline: "2px solid var(--accent)" }
-                : undefined}
-            >
-              {v}
-            </button>
-          ))}
+      </Group>
+      <section className="card flat-rest">
+        <h2 className="card-title title">Two quick questions</h2>
+        <p className="question">How did each muscle do against the plan?</p>
+        {["quads", "glutes", "hamstrings"].map((m) => (
+          <div key={m} className="sore-row">
+            <div className="sore-label">
+              <strong>{m}</strong>
+            </div>
+            <ScalePicker
+              label={`${m} performance`}
+              options={PERFORMANCE}
+              value={perf[m] ?? null}
+              onPick={(v) =>
+                setPerf((p) => ({ ...p, [m]: v }))}
+            />
+          </div>
+        ))}
+        <p className="question">How hard was the whole session?</p>
+        <ScalePicker
+          label="Session RPE"
+          options={Array.from({ length: 11 }, (_, v) => v)}
+          value={srpe}
+          onPick={setSrpe}
+          anchors={["rest", "hard", "max"]}
+        />
+      </section>
+      <section className="card hero handoff">
+        <span className="group-label">Tonight · 6 pm</span>
+        <div className="handoff-row">
+          <SportShoe size={22} aria-hidden="true" />
+          <div>
+            <strong className="title">Easy run · 3.0 mi</strong>
+            <p className="kbd-hint">Legs lifted today, so keep it easy.</p>
+          </div>
         </div>
-      </Card>
-      <Card>
-        <p className="group-label">Tonight</p>
-        <p>
-          Easy run · 3.0 mi · 6 pm. <Chip>legs lifted today: keep it easy</Chip>
-        </p>
         <PrimaryButton
+          large
           href="#/phone/today"
           onClick={() => queueOp("session-finish", { perf, srpe, minutes: 58 })}
         >
-          Finish
+          <Check size={22} /> Finish session
         </PrimaryButton>
-      </Card>
+      </section>
     </div>
   );
 }

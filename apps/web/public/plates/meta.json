@@ -1,0 +1,615 @@
+{
+ "px_per_in": 24,
+ "axis": [
+  18.912,
+  3.072
+ ],
+ "tile_in": 2.0,
+ "end_in": 7.0,
+ "sleeve_len": 16.25,
+ "face_px_per_in": 10.105263157894736,
+ "sprites": {
+  "face_1.25_charcoal": {
+   "file": "face_1.25_charcoal.webp",
+   "w": 54,
+   "h": 54,
+   "ox": 27.0,
+   "oy": 27.0
+  },
+  "face_1.25_silver": {
+   "file": "face_1.25_silver.webp",
+   "w": 54,
+   "h": 54,
+   "ox": 27.0,
+   "oy": 27.0
+  },
+  "face_10_blue": {
+   "file": "face_10_blue.webp",
+   "w": 181,
+   "h": 182,
+   "ox": 90.0,
+   "oy": 91.0
+  },
+  "face_10_charcoal": {
+   "file": "face_10_charcoal.webp",
+   "w": 181,
+   "h": 182,
+   "ox": 90.0,
+   "oy": 91.0
+  },
+  "face_10_green": {
+   "file": "face_10_green.webp",
+   "w": 181,
+   "h": 182,
+   "ox": 90.0,
+   "oy": 91.0
+  },
+  "face_10_red": {
+   "file": "face_10_red.webp",
+   "w": 181,
+   "h": 182,
+   "ox": 90.0,
+   "oy": 91.0
+  },
+  "face_10_silver": {
+   "file": "face_10_silver.webp",
+   "w": 181,
+   "h": 182,
+   "ox": 90.0,
+   "oy": 91.0
+  },
+  "face_10_white": {
+   "file": "face_10_white.webp",
+   "w": 181,
+   "h": 182,
+   "ox": 90.0,
+   "oy": 91.0
+  },
+  "face_10_yellow": {
+   "file": "face_10_yellow.webp",
+   "w": 181,
+   "h": 182,
+   "ox": 90.0,
+   "oy": 91.0
+  },
+  "face_2.5_charcoal": {
+   "file": "face_2.5_charcoal.webp",
+   "w": 69,
+   "h": 70,
+   "ox": 34.0,
+   "oy": 35.0
+  },
+  "face_2.5_silver": {
+   "file": "face_2.5_silver.webp",
+   "w": 69,
+   "h": 70,
+   "ox": 34.0,
+   "oy": 35.0
+  },
+  "face_25_blue": {
+   "file": "face_25_blue.webp",
+   "w": 182,
+   "h": 183,
+   "ox": 90.0,
+   "oy": 91.0
+  },
+  "face_25_charcoal": {
+   "file": "face_25_charcoal.webp",
+   "w": 182,
+   "h": 183,
+   "ox": 90.0,
+   "oy": 91.0
+  },
+  "face_25_green": {
+   "file": "face_25_green.webp",
+   "w": 182,
+   "h": 183,
+   "ox": 90.0,
+   "oy": 91.0
+  },
+  "face_25_red": {
+   "file": "face_25_red.webp",
+   "w": 182,
+   "h": 183,
+   "ox": 90.0,
+   "oy": 91.0
+  },
+  "face_25_silver": {
+   "file": "face_25_silver.webp",
+   "w": 182,
+   "h": 183,
+   "ox": 90.0,
+   "oy": 91.0
+  },
+  "face_25_white": {
+   "file": "face_25_white.webp",
+   "w": 182,
+   "h": 183,
+   "ox": 90.0,
+   "oy": 91.0
+  },
+  "face_25_yellow": {
+   "file": "face_25_yellow.webp",
+   "w": 182,
+   "h": 183,
+   "ox": 90.0,
+   "oy": 91.0
+  },
+  "face_35_blue": {
+   "file": "face_35_blue.webp",
+   "w": 183,
+   "h": 183,
+   "ox": 90.0,
+   "oy": 91.0
+  },
+  "face_35_charcoal": {
+   "file": "face_35_charcoal.webp",
+   "w": 183,
+   "h": 183,
+   "ox": 90.0,
+   "oy": 91.0
+  },
+  "face_35_green": {
+   "file": "face_35_green.webp",
+   "w": 183,
+   "h": 183,
+   "ox": 90.0,
+   "oy": 91.0
+  },
+  "face_35_red": {
+   "file": "face_35_red.webp",
+   "w": 183,
+   "h": 183,
+   "ox": 90.0,
+   "oy": 91.0
+  },
+  "face_35_silver": {
+   "file": "face_35_silver.webp",
+   "w": 183,
+   "h": 183,
+   "ox": 90.0,
+   "oy": 91.0
+  },
+  "face_35_white": {
+   "file": "face_35_white.webp",
+   "w": 183,
+   "h": 183,
+   "ox": 90.0,
+   "oy": 91.0
+  },
+  "face_35_yellow": {
+   "file": "face_35_yellow.webp",
+   "w": 183,
+   "h": 183,
+   "ox": 90.0,
+   "oy": 91.0
+  },
+  "face_45_blue": {
+   "file": "face_45_blue.webp",
+   "w": 184,
+   "h": 184,
+   "ox": 90.0,
+   "oy": 91.0
+  },
+  "face_45_charcoal": {
+   "file": "face_45_charcoal.webp",
+   "w": 184,
+   "h": 184,
+   "ox": 90.0,
+   "oy": 91.0
+  },
+  "face_45_green": {
+   "file": "face_45_green.webp",
+   "w": 184,
+   "h": 184,
+   "ox": 90.0,
+   "oy": 91.0
+  },
+  "face_45_red": {
+   "file": "face_45_red.webp",
+   "w": 184,
+   "h": 184,
+   "ox": 90.0,
+   "oy": 91.0
+  },
+  "face_45_silver": {
+   "file": "face_45_silver.webp",
+   "w": 184,
+   "h": 184,
+   "ox": 90.0,
+   "oy": 91.0
+  },
+  "face_45_white": {
+   "file": "face_45_white.webp",
+   "w": 184,
+   "h": 184,
+   "ox": 90.0,
+   "oy": 91.0
+  },
+  "face_45_yellow": {
+   "file": "face_45_yellow.webp",
+   "w": 184,
+   "h": 184,
+   "ox": 90.0,
+   "oy": 91.0
+  },
+  "face_55_blue": {
+   "file": "face_55_blue.webp",
+   "w": 184,
+   "h": 184,
+   "ox": 90.0,
+   "oy": 91.0
+  },
+  "face_55_charcoal": {
+   "file": "face_55_charcoal.webp",
+   "w": 184,
+   "h": 184,
+   "ox": 90.0,
+   "oy": 91.0
+  },
+  "face_55_green": {
+   "file": "face_55_green.webp",
+   "w": 184,
+   "h": 184,
+   "ox": 90.0,
+   "oy": 91.0
+  },
+  "face_55_red": {
+   "file": "face_55_red.webp",
+   "w": 184,
+   "h": 184,
+   "ox": 90.0,
+   "oy": 91.0
+  },
+  "face_55_silver": {
+   "file": "face_55_silver.webp",
+   "w": 184,
+   "h": 184,
+   "ox": 90.0,
+   "oy": 91.0
+  },
+  "face_55_white": {
+   "file": "face_55_white.webp",
+   "w": 184,
+   "h": 184,
+   "ox": 90.0,
+   "oy": 91.0
+  },
+  "face_55_yellow": {
+   "file": "face_55_yellow.webp",
+   "w": 184,
+   "h": 184,
+   "ox": 90.0,
+   "oy": 91.0
+  },
+  "face_5_charcoal": {
+   "file": "face_5_charcoal.webp",
+   "w": 95,
+   "h": 95,
+   "ox": 47.0,
+   "oy": 47.0
+  },
+  "face_5_silver": {
+   "file": "face_5_silver.webp",
+   "w": 95,
+   "h": 95,
+   "ox": 47.0,
+   "oy": 47.0
+  },
+  "plate_1.25_charcoal": {
+   "file": "plate_1.25_charcoal.webp",
+   "w": 83,
+   "h": 123,
+   "ox": 37.0,
+   "oy": 61.0
+  },
+  "plate_1.25_silver": {
+   "file": "plate_1.25_silver.webp",
+   "w": 83,
+   "h": 123,
+   "ox": 37.0,
+   "oy": 61.0
+  },
+  "plate_10_blue": {
+   "file": "plate_10_blue.webp",
+   "w": 276,
+   "h": 426,
+   "ox": 129.0,
+   "oy": 212.0
+  },
+  "plate_10_charcoal": {
+   "file": "plate_10_charcoal.webp",
+   "w": 276,
+   "h": 426,
+   "ox": 129.0,
+   "oy": 212.0
+  },
+  "plate_10_green": {
+   "file": "plate_10_green.webp",
+   "w": 276,
+   "h": 426,
+   "ox": 129.0,
+   "oy": 212.0
+  },
+  "plate_10_red": {
+   "file": "plate_10_red.webp",
+   "w": 276,
+   "h": 426,
+   "ox": 129.0,
+   "oy": 212.0
+  },
+  "plate_10_silver": {
+   "file": "plate_10_silver.webp",
+   "w": 276,
+   "h": 426,
+   "ox": 129.0,
+   "oy": 212.0
+  },
+  "plate_10_white": {
+   "file": "plate_10_white.webp",
+   "w": 276,
+   "h": 426,
+   "ox": 129.0,
+   "oy": 212.0
+  },
+  "plate_10_yellow": {
+   "file": "plate_10_yellow.webp",
+   "w": 276,
+   "h": 426,
+   "ox": 129.0,
+   "oy": 212.0
+  },
+  "plate_2.5_charcoal": {
+   "file": "plate_2.5_charcoal.webp",
+   "w": 107,
+   "h": 160,
+   "ox": 48.0,
+   "oy": 79.0
+  },
+  "plate_2.5_silver": {
+   "file": "plate_2.5_silver.webp",
+   "w": 107,
+   "h": 160,
+   "ox": 48.0,
+   "oy": 79.0
+  },
+  "plate_25_blue": {
+   "file": "plate_25_blue.webp",
+   "w": 290,
+   "h": 429,
+   "ox": 129.0,
+   "oy": 212.0
+  },
+  "plate_25_charcoal": {
+   "file": "plate_25_charcoal.webp",
+   "w": 290,
+   "h": 429,
+   "ox": 129.0,
+   "oy": 212.0
+  },
+  "plate_25_green": {
+   "file": "plate_25_green.webp",
+   "w": 290,
+   "h": 429,
+   "ox": 129.0,
+   "oy": 212.0
+  },
+  "plate_25_red": {
+   "file": "plate_25_red.webp",
+   "w": 290,
+   "h": 429,
+   "ox": 129.0,
+   "oy": 212.0
+  },
+  "plate_25_silver": {
+   "file": "plate_25_silver.webp",
+   "w": 290,
+   "h": 429,
+   "ox": 129.0,
+   "oy": 212.0
+  },
+  "plate_25_white": {
+   "file": "plate_25_white.webp",
+   "w": 290,
+   "h": 429,
+   "ox": 129.0,
+   "oy": 212.0
+  },
+  "plate_25_yellow": {
+   "file": "plate_25_yellow.webp",
+   "w": 290,
+   "h": 429,
+   "ox": 129.0,
+   "oy": 212.0
+  },
+  "plate_35_blue": {
+   "file": "plate_35_blue.webp",
+   "w": 302,
+   "h": 431,
+   "ox": 129.0,
+   "oy": 212.0
+  },
+  "plate_35_charcoal": {
+   "file": "plate_35_charcoal.webp",
+   "w": 302,
+   "h": 431,
+   "ox": 129.0,
+   "oy": 212.0
+  },
+  "plate_35_green": {
+   "file": "plate_35_green.webp",
+   "w": 302,
+   "h": 431,
+   "ox": 129.0,
+   "oy": 212.0
+  },
+  "plate_35_red": {
+   "file": "plate_35_red.webp",
+   "w": 302,
+   "h": 431,
+   "ox": 129.0,
+   "oy": 212.0
+  },
+  "plate_35_silver": {
+   "file": "plate_35_silver.webp",
+   "w": 302,
+   "h": 431,
+   "ox": 129.0,
+   "oy": 212.0
+  },
+  "plate_35_white": {
+   "file": "plate_35_white.webp",
+   "w": 302,
+   "h": 431,
+   "ox": 129.0,
+   "oy": 212.0
+  },
+  "plate_35_yellow": {
+   "file": "plate_35_yellow.webp",
+   "w": 302,
+   "h": 431,
+   "ox": 129.0,
+   "oy": 212.0
+  },
+  "plate_45_blue": {
+   "file": "plate_45_blue.webp",
+   "w": 313,
+   "h": 432,
+   "ox": 129.0,
+   "oy": 212.0
+  },
+  "plate_45_charcoal": {
+   "file": "plate_45_charcoal.webp",
+   "w": 313,
+   "h": 432,
+   "ox": 129.0,
+   "oy": 212.0
+  },
+  "plate_45_green": {
+   "file": "plate_45_green.webp",
+   "w": 313,
+   "h": 432,
+   "ox": 129.0,
+   "oy": 212.0
+  },
+  "plate_45_red": {
+   "file": "plate_45_red.webp",
+   "w": 313,
+   "h": 432,
+   "ox": 129.0,
+   "oy": 212.0
+  },
+  "plate_45_silver": {
+   "file": "plate_45_silver.webp",
+   "w": 313,
+   "h": 432,
+   "ox": 129.0,
+   "oy": 212.0
+  },
+  "plate_45_white": {
+   "file": "plate_45_white.webp",
+   "w": 313,
+   "h": 432,
+   "ox": 129.0,
+   "oy": 212.0
+  },
+  "plate_45_yellow": {
+   "file": "plate_45_yellow.webp",
+   "w": 313,
+   "h": 432,
+   "ox": 129.0,
+   "oy": 212.0
+  },
+  "plate_55_blue": {
+   "file": "plate_55_blue.webp",
+   "w": 321,
+   "h": 434,
+   "ox": 129.0,
+   "oy": 212.0
+  },
+  "plate_55_charcoal": {
+   "file": "plate_55_charcoal.webp",
+   "w": 321,
+   "h": 434,
+   "ox": 129.0,
+   "oy": 212.0
+  },
+  "plate_55_green": {
+   "file": "plate_55_green.webp",
+   "w": 321,
+   "h": 434,
+   "ox": 129.0,
+   "oy": 212.0
+  },
+  "plate_55_red": {
+   "file": "plate_55_red.webp",
+   "w": 321,
+   "h": 434,
+   "ox": 129.0,
+   "oy": 212.0
+  },
+  "plate_55_silver": {
+   "file": "plate_55_silver.webp",
+   "w": 321,
+   "h": 434,
+   "ox": 129.0,
+   "oy": 212.0
+  },
+  "plate_55_white": {
+   "file": "plate_55_white.webp",
+   "w": 321,
+   "h": 434,
+   "ox": 129.0,
+   "oy": 212.0
+  },
+  "plate_55_yellow": {
+   "file": "plate_55_yellow.webp",
+   "w": 321,
+   "h": 434,
+   "ox": 129.0,
+   "oy": 212.0
+  },
+  "plate_5_charcoal": {
+   "file": "plate_5_charcoal.webp",
+   "w": 146,
+   "h": 220,
+   "ox": 66.0,
+   "oy": 109.0
+  },
+  "plate_5_silver": {
+   "file": "plate_5_silver.webp",
+   "w": 146,
+   "h": 220,
+   "ox": 66.0,
+   "oy": 109.0
+  },
+  "bar_collar": {
+   "file": "bar_collar.webp",
+   "w": 141,
+   "h": 77,
+   "ox": 133.0,
+   "oy": 40.0
+  },
+  "knurl_tile": {
+   "file": "knurl_tile.webp",
+   "w": 38,
+   "h": 34,
+   "ox": 0.05,
+   "oy": 14.14
+  },
+  "sleeve_tile": {
+   "file": "sleeve_tile.webp",
+   "w": 39,
+   "h": 55,
+   "ox": 0.47,
+   "oy": 24.43
+  },
+  "sleeve_end": {
+   "file": "sleeve_end.webp",
+   "w": 257,
+   "h": 70,
+   "ox": -0.06,
+   "oy": 24.42
+  }
+ }
+}

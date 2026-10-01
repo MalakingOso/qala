@@ -1,16 +1,19 @@
 /* Run screens (DESIGN 7.14): Start (map, GPS, plan, Start), Live (stacked
- * numerals, pause square, swipe pages), Guided (step, target band, cues),
- * Summary (map with mile markers, six figures, splits, effort, save).
- * Run glyphs use sport-shoe. Live numbers come from the useSyncExternalStore
- * run store so ticks never re-render the shell. */
+ * numerals, square pause, Stop), Guided (step, target band, cue), Summary
+ * (map with mile markers, six figures, splits, effort, save). Run glyphs use
+ * sport-shoe. Live numbers come from the useSyncExternalStore run store so
+ * ticks never re-render the shell. The map is a drawn stand-in until the
+ * MapLibre layer (R4) lands. */
 
 import { useState, useSyncExternalStore } from "react";
 import { liveRunStore, useQala } from "../../store/qalaStore.tsx";
 import {
   Card,
-  Chip,
   PrimaryButton,
+  ScalePicker,
   SecondaryButton,
+  SegmentedControl,
+  Toggle,
 } from "../../shared/ui.tsx";
 import { SplitsTable } from "../../shared/charts/index.ts";
 import { sampleSplits } from "../../store/sample.ts";
@@ -18,12 +21,52 @@ import { formatElapsed, formatPace } from "../../logic/pace.ts";
 import {
   Pause,
   Play,
-  Route,
   SignalHigh,
   SportShoe,
+  Square,
   Volume2,
   Zap,
 } from "../../shared/icons.ts";
+
+/** A drawn route: streets as a faint grid, the loop in the run color,
+ * start and finish dots, and optional mile markers. */
+function RouteMap(
+  { label, miles = false, live = false }: {
+    label: string;
+    miles?: boolean;
+    live?: boolean;
+  },
+) {
+  const route =
+    "M40 150 C 70 150, 80 120, 110 112 S 160 70, 196 64 S 262 40, 290 70 S 300 128, 262 142 S 190 160, 150 168 S 70 176, 40 150";
+  return (
+    <figure className="route-map" role="img" aria-label={label}>
+      <svg viewBox="0 0 340 200" preserveAspectRatio="xMidYMid slice">
+        <g className="route-streets">
+          {[30, 75, 120, 165].map((y) => (
+            <path key={y} d={`M0 ${y} L340 ${y - 18}`} />
+          ))}
+          {[60, 140, 220, 300].map((x) => (
+            <path key={x} d={`M${x} 0 L${x + 24} 200`} />
+          ))}
+        </g>
+        <path className="route-park" d="M170 90 h70 v40 h-70 z" />
+        <path className="route-line-halo" d={route} />
+        <path className="route-line" d={route} />
+        {miles
+          ? [[196, 64, 1], [290, 70, 2], [150, 168, 3]].map(([x, y, n]) => (
+            <g key={n} className="route-mile">
+              <circle cx={x} cy={y} r={9} />
+              <text x={x} y={y + 3.5} textAnchor="middle">{n}</text>
+            </g>
+          ))
+          : null}
+        <circle className="route-start" cx={40} cy={150} r={6} />
+        {live ? <circle className="route-you" cx={262} cy={142} r={7} /> : null}
+      </svg>
+    </figure>
+  );
+}
 
 export function StartRunPage() {
   const { queueOp, settings, updateSettings } = useQala();
@@ -31,44 +74,34 @@ export function StartRunPage() {
   return (
     <div>
       <div className="page-head">
-        <h1 className="page-title title">Easy run · 3.0 mi</h1>
+        <div>
+          <p className="group-label page-eyebrow">Tonight · after Lower A</p>
+          <h1 className="page-title title">Easy run · 3.0 mi</h1>
+        </div>
       </div>
       <Card hero>
-        <div
-          style={{
-            height: 180,
-            background: "var(--bg-recessed)",
-            border: "var(--border-width) solid var(--border)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-          role="img"
-          aria-label="Route map preview"
-        >
-          <Route size={32} />
+        <RouteMap label="Map of your usual loop" />
+        <div className="run-status">
+          <span className="run-status-item ok">
+            <SignalHigh size={16} aria-hidden="true" /> GPS good
+          </span>
+          <span className="run-status-item">
+            <Volume2 size={16} aria-hidden="true" />
+            {cues ? "Cue every 0.5 mi" : "Cues off"}
+            <Toggle
+              on={cues}
+              label="Audio cues"
+              onFlip={() =>
+                updateSettings((s) => ({
+                  ...s,
+                  run: { ...s.run, audioCues: !s.run.audioCues },
+                }))}
+            />
+          </span>
         </div>
-        <p>
-          <SignalHigh size={16} /> GPS good · <Volume2 size={16} />{" "}
-          {cues ? "cues every 0.5 mi" : "cues off"}
-        </p>
-        <p className="kbd-hint">
-          Legs lifted today: keep it easy. Conversational pace.
-        </p>
-        <p>
-          <button
-            type="button"
-            className="chip"
-            aria-pressed={cues}
-            onClick={() =>
-              updateSettings((s) => ({
-                ...s,
-                run: { ...s.run, audioCues: !s.run.audioCues },
-              }))}
-          >
-            Audio cues {cues ? "on" : "off"}
-          </button>{" "}
-          <Chip>Workout: easy 3.0 mi</Chip>
+        <p className="run-why">
+          <SportShoe size={16} aria-hidden="true" />
+          Conversational pace. Legs lifted today, so keep it easy.
         </p>
         <PrimaryButton
           large
@@ -78,7 +111,7 @@ export function StartRunPage() {
             queueOp("run-start", { plan: "easy-3mi" });
           }}
         >
-          <SportShoe size={22} /> Start run
+          <Play size={22} /> Start run
         </PrimaryButton>
       </Card>
     </div>
@@ -94,170 +127,168 @@ export function LiveRunPage() {
   return (
     <div>
       <div className="page-head">
-        <h1 className="page-title title">Live</h1>
-        <span className="kbd-hint ticking">
-          {formatElapsed(snap.elapsedSec)}
+        <h1 className="page-title title">Easy run</h1>
+        <span
+          className={snap.running && !snap.paused
+            ? "run-state recording"
+            : "run-state"}
+        >
+          {snap.paused ? "Paused" : snap.running ? "Recording" : "Ready"}
         </span>
       </div>
-      <Card hero>
-        {page === "main"
-          ? (
-            <div style={{ textAlign: "center" }}>
-              <div className="group-label">Time</div>
-              <div className="figure ticking" style={{ fontSize: 64 }}>
-                {formatElapsed(snap.elapsedSec)}
+      <SegmentedControl
+        label="Run view"
+        value={page}
+        onPick={setPage}
+        options={[
+          { value: "main", label: "Numbers" },
+          { value: "splits", label: "Splits" },
+          { value: "map", label: "Map" },
+        ]}
+      />
+      {page === "main"
+        ? (
+          <Card hero>
+            <div className="live-nums">
+              <div className="live-miles">
+                <span
+                  className={snap.miles >= 10
+                    ? "figure ticking long"
+                    : "figure ticking"}
+                >
+                  {snap.miles.toFixed(2)}
+                </span>
+                <span className="group-label">miles</span>
               </div>
-              <div className="group-label">Distance</div>
-              <div
-                className="figure ticking"
-                style={{ fontSize: 96, lineHeight: 1.05 }}
-              >
-                {snap.miles.toFixed(2)}
-              </div>
-              <div className="kbd-hint">miles</div>
-              <div
-                style={{
-                  display: "flex",
-                  gap: 24,
-                  justifyContent: "center",
-                  marginTop: 8,
-                }}
-              >
+              <div className="live-row">
                 <div>
-                  <div className="group-label">Pace</div>
-                  <div className="figure ticking" style={{ fontSize: 32 }}>
+                  <span className="group-label">Time</span>
+                  <span className="figure ticking">
+                    {formatElapsed(snap.elapsedSec)}
+                  </span>
+                </div>
+                <div>
+                  <span className="group-label">Pace</span>
+                  <span className="figure ticking">
                     {formatPace(snap.paceSecPerMi)}
-                  </div>
+                  </span>
                 </div>
                 <div>
-                  <div className="group-label">Avg</div>
-                  <div className="figure ticking" style={{ fontSize: 32 }}>
+                  <span className="group-label">Avg</span>
+                  <span className="figure ticking">
                     {formatPace(snap.avgSecPerMi)}
-                  </div>
+                  </span>
                 </div>
               </div>
             </div>
-          )
-          : page === "splits"
-          ? <SplitsTable splits={sampleSplits} />
-          : (
-            <div
-              style={{
-                height: 240,
-                background: "var(--bg-recessed)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-              role="img"
-              aria-label="Live route map"
-            >
-              <Route size={32} />
-            </div>
-          )}
-        <div className="row-btns" style={{ marginTop: 12 }}>
-          {(["main", "splits", "map"] as const).map((p) => (
+          </Card>
+        )
+        : page === "splits"
+        ? <SplitsTable splits={sampleSplits} />
+        : <RouteMap label="Live route map" live />}
+      <div className="live-controls">
+        {snap.paused
+          ? (
             <button
-              key={p}
               type="button"
-              className="chip"
-              aria-pressed={page === p}
-              onClick={() => setPage(p)}
+              className="live-pause"
+              aria-label="Resume"
+              onClick={() => liveRunStore.resume()}
             >
-              {p}
+              <Play size={30} />
             </button>
-          ))}
-        </div>
-        <div className="row-btns" style={{ marginTop: 12 }}>
-          {snap.paused
-            ? (
-              <PrimaryButton onClick={() => liveRunStore.resume()}>
-                <Play size={20} /> Resume
-              </PrimaryButton>
-            )
-            : (
-              <button
-                type="button"
-                aria-label={snap.running ? "Pause" : "Start"}
-                onClick={() => (snap.running
-                  ? liveRunStore.pause()
-                  : liveRunStore.start())}
-                style={{
-                  flex: 1,
-                  minHeight: 64,
-                  background: "var(--accent)",
-                  color: "var(--on-accent)",
-                  border: "none",
-                  borderRadius: "var(--radius)",
-                  boxShadow: "var(--shadow-cta)",
-                }}
-              >
-                {snap.running ? <Pause size={24} /> : <Play size={24} />}
-              </button>
-            )}
-          <SecondaryButton
-            onClick={() => {
-              liveRunStore.stop();
-              window.location.hash = "#/phone/run/summary";
-            }}
-          >
-            Stop (hold)
-          </SecondaryButton>
-        </div>
-      </Card>
+          )
+          : (
+            <button
+              type="button"
+              className="live-pause"
+              aria-label={snap.running ? "Pause" : "Start"}
+              onClick={() => (snap.running
+                ? liveRunStore.pause()
+                : liveRunStore.start())}
+            >
+              {snap.running ? <Pause size={30} /> : <Play size={30} />}
+            </button>
+          )}
+        <SecondaryButton
+          onClick={() => {
+            liveRunStore.stop();
+            window.location.hash = "#/phone/run/summary";
+          }}
+        >
+          <Square size={16} /> Finish run
+        </SecondaryButton>
+      </div>
     </div>
   );
+}
+
+/** Pace band, slow on the left and fast on the right, so "speed up" means
+ * moving the marker right. */
+const BAND = { slow: 570, fast: 510, lo: 550, hi: 530, now: 554 };
+
+function pos(sec: number) {
+  return ((BAND.slow - sec) / (BAND.slow - BAND.fast)) * 100;
 }
 
 export function GuidedRunPage() {
   return (
     <div>
       <div className="page-head">
-        <h1 className="page-title title">Guided · Tempo</h1>
+        <div>
+          <p className="group-label page-eyebrow">Guided · Tempo 4 mi</p>
+          <h1 className="page-title title">Tempo</h1>
+        </div>
       </div>
       <Card hero>
-        <p className="group-label" style={{ color: "var(--accent)" }}>
-          Step 2 of 5 · Tempo 10:00
-        </p>
-        <div className="figure ticking" style={{ fontSize: 72 }}>7:32</div>
-        <p className="kbd-hint">left in step</p>
-        <div
-          style={{
-            height: 26,
-            background: "var(--bg-active)",
-            position: "relative",
-            margin: "12px 0",
-          }}
-          role="img"
-          aria-label="Target pace band 8:50 to 9:10, current 9:02"
-        >
-          <div
-            style={{
-              position: "absolute",
-              left: "20%",
-              right: "20%",
-              top: 0,
-              bottom: 0,
-              background: "var(--run)",
-              opacity: 0.5,
-            }}
-          />
-          <div
-            style={{
-              position: "absolute",
-              left: "46%",
-              top: -4,
-              bottom: -4,
-              width: 4,
-              background: "var(--accent)",
-            }}
-          />
+        <p className="group-label guided-step">Step 2 of 5 · tempo 10:00</p>
+        <div className="rest-clock">
+          <span className="figure ticking rest-left">7:32</span>
+          <span className="rest-of">left in step</span>
         </div>
-        <p>
-          <Zap size={16} /> Speed up a little · 9:02 in an 8:50-9:10 band
+        <div
+          className="pace-band"
+          role="img"
+          aria-label={`Target pace ${formatPace(BAND.lo)} to ${
+            formatPace(BAND.hi)
+          }, current ${formatPace(BAND.now)}, slower than the band`}
+        >
+          <div className="pace-track">
+            <span
+              className="pace-target"
+              style={{
+                left: `${pos(BAND.lo)}%`,
+                right: `${100 - pos(BAND.hi)}%`,
+              }}
+            />
+            <span className="pace-now" style={{ left: `${pos(BAND.now)}%` }}>
+              <span className="pace-now-label ticking">
+                {formatPace(BAND.now)}
+              </span>
+            </span>
+          </div>
+          <div className="pace-ticks" aria-hidden="true">
+            <span>slower</span>
+            <span style={{ left: `${pos(BAND.lo)}%` }}>
+              {formatPace(BAND.lo)}
+            </span>
+            <span style={{ left: `${pos(BAND.hi)}%` }}>
+              {formatPace(BAND.hi)}
+            </span>
+            <span>faster</span>
+          </div>
+        </div>
+        <p className="guided-cue">
+          <Zap size={18} aria-hidden="true" /> Speed up a little
         </p>
-        <p className="kbd-hint">1.8 mi · 16:40 total</p>
-        <PrimaryButton href="#/phone/run/live">Back to live</PrimaryButton>
+        <p className="kbd-hint">
+          {formatPace(BAND.now)} against a target of {formatPace(BAND.hi)} to
+          {" "}
+          {formatPace(BAND.lo)} · 1.8 mi · 16:40 total
+        </p>
+        <SecondaryButton href="#/phone/run/live">
+          Back to numbers
+        </SecondaryButton>
       </Card>
     </div>
   );
@@ -270,89 +301,56 @@ export function RunSummaryPage() {
     liveRunStore.subscribe,
     liveRunStore.getLast,
   );
-  const stats = last
-    ? [
-      { v: formatElapsed(last.elapsedSec), l: "time" },
-      { v: last.miles.toFixed(2), l: "miles" },
-      { v: formatPace(last.avgSecPerMi), l: "avg pace" },
-      // Heart rate, effort load, and elevation aren't tracked by the demo
-      // ticker yet (PLAN.md 14: real GPS/HR need the phone build).
-      { v: "—", l: "avg HR" },
-      { v: "—", l: "rTSS" },
-      { v: "—", l: "climb" },
-    ]
-    : [
-      { v: "—", l: "time" },
-      { v: "—", l: "miles" },
-      { v: "—", l: "avg pace" },
-      { v: "—", l: "avg HR" },
-      { v: "—", l: "rTSS" },
-      { v: "—", l: "climb" },
-    ];
+  // Heart rate, effort load, and elevation aren't tracked by the demo
+  // ticker yet (PLAN.md 14: real GPS/HR need the phone build).
+  const stats = [
+    { v: last ? formatElapsed(last.elapsedSec) : "—", l: "time" },
+    { v: last ? last.miles.toFixed(2) : "—", l: "miles" },
+    { v: last ? formatPace(last.avgSecPerMi) : "—", l: "avg pace" },
+    { v: "—", l: "avg HR" },
+    { v: "—", l: "rTSS" },
+    { v: "—", l: "climb ft" },
+  ];
   return (
     <div>
       <div className="page-head">
-        <h1 className="page-title title">Easy run · 3.0 mi</h1>
+        <div>
+          <p className="group-label page-eyebrow">Sunday · 6:04 pm</p>
+          <h1 className="page-title title">Easy run · 3.0 mi</h1>
+        </div>
       </div>
       <Card hero>
-        <div
-          style={{
-            height: 180,
-            background: "var(--bg-recessed)",
-            border: "var(--border-width) solid var(--border)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-          role="img"
-          aria-label="Route with mile markers colored by pace"
-        >
-          <Route size={32} />
-        </div>
-        <div
-          className="stat-tiles"
-          style={{ gridTemplateColumns: "repeat(3, 1fr)" }}
-        >
+        <RouteMap label="Route with mile markers" miles />
+        <dl className="run-figures">
           {stats.map((s) => (
-            <div className="stat-tile" key={s.l}>
-              <div className="v figure ticking">{s.v}</div>
-              <div className="l">{s.l}</div>
+            <div key={s.l}>
+              <dt>{s.l}</dt>
+              <dd className="figure ticking">{s.v}</dd>
             </div>
           ))}
-        </div>
+        </dl>
       </Card>
       <SplitsTable splits={sampleSplits} />
-      <Card>
-        <p className="group-label">Effort (sRPE)</p>
-        <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
-          {Array.from(
-            { length: 11 },
-            (_, v) => (
-              <button
-                key={v}
-                type="button"
-                aria-pressed={srpe === v}
-                onClick={() => setSrpe(v)}
-                className="icon-btn"
-                style={srpe === v
-                  ? { outline: "2px solid var(--accent)" }
-                  : undefined}
-              >
-                {v}
-              </button>
-            ),
-          )}
-        </div>
-        <p>What it means for tomorrow: legs stay fresh. Upper B as planned.</p>
-        <div style={{ marginTop: 8 }}>
-          <PrimaryButton
-            href="#/phone/today"
-            onClick={() => queueOp("run-save", { srpe })}
-          >
-            Save run
-          </PrimaryButton>
-        </div>
-      </Card>
+      <section className="card flat-rest">
+        <h2 className="card-title title">How hard was it?</h2>
+        <ScalePicker
+          label="Run effort"
+          options={Array.from({ length: 11 }, (_, v) => v)}
+          value={srpe}
+          onPick={setSrpe}
+          anchors={["rest", "hard", "max"]}
+        />
+        <p className="today-line">
+          For tomorrow: legs stay fresh, Upper A goes ahead as planned.
+        </p>
+        <PrimaryButton
+          large
+          href="#/phone/today"
+          onClick={() => queueOp("run-save", { srpe })}
+        >
+          Save run
+        </PrimaryButton>
+      </section>
     </div>
   );
 }

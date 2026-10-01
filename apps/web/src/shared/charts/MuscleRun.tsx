@@ -1,12 +1,20 @@
 /* Fatigue labels have dedicated left/right gutters. Running fitness shares
  * the same smooth, pixel-sized trend drawing as the strength charts. */
 
-import { scaleLinear } from "@visx/scale";
 import { ChartShell } from "./ChartShell.tsx";
-import { ChartLegend, Plot, roundedBar } from "./Plot.tsx";
 import { TrendPlot } from "./TrendPlot.tsx";
 import { CATEGORICAL } from "./tokens.ts";
 import { formatPace } from "../../logic/pace.ts";
+
+/* Plain-language recovery list for someone who has never heard of
+ * "fatigue load". Each row says how worn out the muscle is and when to train
+ * it again; the lifting/running numbers stay in the table view and tooltip. */
+function cause(lifting: number, running: number) {
+  const share = running / Math.max(0.001, lifting + running);
+  if (share < 0.2) return "from lifting";
+  if (share > 0.6) return "from running";
+  return "from lifting and running";
+}
 
 export function FatigueByMuscle({ muscles }: {
   muscles: {
@@ -16,103 +24,84 @@ export function FatigueByMuscle({ muscles }: {
     ready: string;
   }[];
 }) {
-  const height = muscles.length * 40 + 24;
-  const max = Math.max(1, ...muscles.map((m) => m.lifting + m.running));
+  const rows = [...muscles].sort((a, b) =>
+    b.lifting + b.running - (a.lifting + a.running)
+  );
+  const max = Math.max(1, ...rows.map((m) => m.lifting + m.running));
+  const tired = rows.filter((m) => m.ready !== "now");
+  const headline = tired.length === 0
+    ? "Everything is recovered. Train whatever you like."
+    : `Go easy on ${tired.map((m) => m.muscle).join(", ")} for now.`;
   return (
     <ChartShell
-      title="Fatigue by muscle"
+      title="Muscle recovery"
       head={["Muscle", "Lifting", "Running", "Ready"]}
       rows={muscles.map((
         m,
       ) => [m.muscle, m.lifting.toFixed(1), m.running.toFixed(1), m.ready])}
-      label="Fatigue split lifting and running per muscle."
+      label="Recovery per muscle after lifting and running."
     >
-      <Plot height={height}>
-        {(width) => {
-          const left = 88;
-          const x = scaleLinear<number>({
-            domain: [0, max],
-            range: [left, Math.max(left + 1, width - 56)],
-          });
+      <p style={{ margin: "0 0 16px", color: "var(--fg)" }}>{headline}</p>
+      <div style={{ display: "grid", gap: 16 }}>
+        {rows.map((m) => {
+          const level = (m.lifting + m.running) / max;
+          const ok = m.ready === "now";
           return (
-            <svg width={width} height={height} role="presentation">
-              <text
-                x={width - 2}
-                y={12}
-                textAnchor="end"
-                fontSize={10}
-                fill="var(--fg-muted)"
+            <div
+              key={m.muscle}
+              tabIndex={0}
+              role="img"
+              aria-label={`${m.muscle}: ${
+                ok ? "ready now" : `ready ${m.ready}`
+              }, ${cause(m.lifting, m.running)}`}
+              title={`${m.lifting.toFixed(1)} lifting + ${
+                m.running.toFixed(1)
+              } running`}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  gap: 12,
+                }}
               >
-                Ready
-              </text>
-              {muscles.map((m, i) => {
-                const yy = 26 + i * 40;
-                const split = x(m.lifting);
-                const end = x(m.lifting + m.running);
-                return (
-                  <g
-                    className="bar-row"
-                    key={m.muscle}
-                    tabIndex={0}
-                    role="img"
-                    aria-label={`${m.muscle}: lifting ${m.lifting}, running ${m.running}, ready ${m.ready}`}
-                  >
-                    <title>
-                      {`${m.muscle}: lifting ${m.lifting}, running ${m.running}, ready ${m.ready}`}
-                    </title>
-                    <rect
-                      x={0}
-                      y={yy - 8}
-                      width={width}
-                      height={36}
-                      fill="transparent"
-                    />
-                    <text
-                      x={left - 10}
-                      y={yy + 13}
-                      fontSize={11}
-                      textAnchor="end"
-                      fill="var(--fg-secondary)"
-                    >
-                      {m.muscle}
-                    </text>
-                    <path
-                      d={roundedBar(left, yy, end - left, 18)}
-                      fill={CATEGORICAL[0]}
-                    />
-                    {m.running > 0 && (
-                      <path
-                        d={roundedBar(
-                          split + 2,
-                          yy,
-                          Math.max(0, end - split - 2),
-                          18,
-                        )}
-                        fill={CATEGORICAL[1]}
-                      />
-                    )}
-                    <text
-                      x={width - 2}
-                      y={yy + 13}
-                      fontSize={10}
-                      textAnchor="end"
-                      fill="var(--fg-muted)"
-                    >
-                      {m.ready}
-                    </text>
-                  </g>
-                );
-              })}
-            </svg>
+                <span style={{ color: "var(--fg)" }}>{m.muscle}</span>
+                <span
+                  style={{
+                    color: ok ? "var(--fg)" : "var(--fg-secondary)",
+                    fontWeight: ok ? 600 : 400,
+                  }}
+                >
+                  {ok ? "Ready now" : `Ready ${m.ready}`}
+                </span>
+              </div>
+              <div
+                style={{
+                  height: 10,
+                  margin: "6px 0 4px",
+                  borderRadius: 5,
+                  background: "var(--bg-recessed)",
+                  overflow: "hidden",
+                }}
+              >
+                <div
+                  style={{
+                    height: "100%",
+                    width: `${Math.max(6, Math.round(level * 100))}%`,
+                    borderRadius: 5,
+                    background: ok ? "var(--viz-3)" : CATEGORICAL[0],
+                  }}
+                />
+              </div>
+              <span className="kbd-hint">
+                {ok
+                  ? "Barely worked"
+                  : `Worked hard ${cause(m.lifting, m.running)}`}
+              </span>
+            </div>
           );
-        }}
-      </Plot>
-      <ChartLegend
-        items={[{ label: "Lifting", color: CATEGORICAL[0] }, {
-          label: "Running",
-          color: CATEGORICAL[1],
-        }]}
-      />
+        })}
+      </div>
     </ChartShell>
   );
 }
@@ -131,46 +120,78 @@ export function RunSpark(
         points={points.map((p, i) => ({ label: `W${i + 1}`, value: p }))}
         height={160}
         color="var(--run)"
+        axisLabel={"V\u0307"}
+        axisHint="V-dot (VDOT): Daniels' running fitness score, the VO2max that a race or hard effort implies. Higher is fitter; 40 is about a 24 minute 5K."
       />
     </ChartShell>
   );
 }
 
+/** Splits as the difference from the run's average pace: a bar to the
+ * right is a faster mile, to the left a slower one, labeled in seconds.
+ * Bars from zero would draw 8:58 and 9:11 as near-identical lengths and
+ * make the slowest mile the longest bar. */
 export function SplitsTable(
   { splits }: { splits: { mile: number; sec: number }[] },
 ) {
-  const slowest = Math.max(1, ...splits.map((s) => s.sec));
+  const avg = splits.length
+    ? splits.reduce((a, s) => a + s.sec, 0) / splits.length
+    : 0;
+  const maxDev = Math.max(5, ...splits.map((s) => Math.abs(s.sec - avg)));
   return (
     <ChartShell
       title="Splits"
-      head={["Split", "Pace"]}
-      rows={splits.map((s) => [`Mile ${s.mile}`, formatPace(s.sec)])}
+      head={["Split", "Pace", "vs average"]}
+      rows={splits.map((s) => [
+        `Mile ${s.mile}`,
+        formatPace(s.sec),
+        Math.round(s.sec - avg) === 0
+          ? "avg"
+          : `${Math.round(s.sec - avg) > 0 ? "+" : "−"}${
+            Math.abs(Math.round(s.sec - avg))
+          } s`,
+      ])}
       label={splits.map((s) => `mile ${s.mile} ${formatPace(s.sec)}`).join(
         ", ",
       )}
     >
-      <table className="data">
-        <tbody>
-          {splits.map((s) => (
-            <tr key={s.mile}>
-              <td>Mile {s.mile}</td>
-              <td style={{ width: "50%" }}>
-                <div
-                  style={{
-                    height: 10,
-                    width: `${Math.round((s.sec / slowest) * 100)}%`,
-                    background: "var(--run)",
-                    borderRadius: "0 4px 4px 0",
-                  }}
-                  role="img"
-                  aria-label={`${formatPace(s.sec)} pace`}
+      <div className="splits">
+        <div className="splits-scale" aria-hidden="true">
+          <span>slower</span>
+          <span>avg {formatPace(avg)}</span>
+          <span>faster</span>
+        </div>
+        {splits.map((s) => {
+          const dev = Math.round(avg - s.sec); // positive = faster
+          const pct = (Math.abs(dev) / maxDev) * 50;
+          return (
+            <div
+              key={s.mile}
+              className="split-row"
+              role="img"
+              aria-label={`Mile ${s.mile}: ${formatPace(s.sec)}, ${
+                dev === 0
+                  ? "on average"
+                  : `${Math.abs(dev)} s ${dev > 0 ? "faster" : "slower"}`
+              }`}
+            >
+              <span className="split-mile">{s.mile}</span>
+              <span className="split-track">
+                <span
+                  className={dev >= 0 ? "split-bar faster" : "split-bar slower"}
+                  style={dev >= 0
+                    ? { left: "50%", width: `${pct}%` }
+                    : { right: "50%", width: `${pct}%` }}
                 />
-              </td>
-              <td className="ticking">{formatPace(s.sec)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+              </span>
+              <span className="split-pace ticking">{formatPace(s.sec)}</span>
+              <span className="split-dev">
+                {dev === 0 ? "avg" : `${dev > 0 ? "−" : "+"}${Math.abs(dev)} s`}
+              </span>
+            </div>
+          );
+        })}
+      </div>
     </ChartShell>
   );
 }

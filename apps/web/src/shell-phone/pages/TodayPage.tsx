@@ -11,7 +11,7 @@ import type { DayStageId } from "../../store/types.ts";
 import { Card, PrimaryButton, SecondaryButton } from "../../shared/ui.tsx";
 import { ReadinessRing, WeeklyLoad } from "../../shared/charts/index.ts";
 import {
-  Bed,
+  ChevronDown,
   CircleCheck,
   Clock,
   Dumbbell,
@@ -105,10 +105,22 @@ export function TodayPage() {
         </div>
         <div className="rail-body">
           <Card hero>
-            <p className="group-label today-stage">
-              {viewed.id === now.id ? "Now" : "Preview"} · {viewed.label}
-              {viewed.id !== now.id ? ` · back to ${now.label} soon` : ""}
-            </p>
+            <div className="today-stage">
+              <span className="group-label">
+                {viewed.id === now.id ? "Now" : "Preview"} · {viewed.label}
+              </span>
+              {viewed.id !== now.id
+                ? (
+                  <button
+                    type="button"
+                    className="link-btn"
+                    onClick={() => setViewing(now.id)}
+                  >
+                    Back to now
+                  </button>
+                )
+                : null}
+            </div>
             {viewed.id === "lift" || viewed.id === "warmup"
               ? (
                 <>
@@ -146,7 +158,10 @@ export function TodayPage() {
                     </p>
                   </div>
                   <details className="today-context">
-                    <summary>Readiness &amp; weekly load</summary>
+                    <summary>
+                      <span>Readiness and this week</span>
+                      <ChevronDown size={18} aria-hidden="true" />
+                    </summary>
                     <ReadinessRing
                       readiness={0.72}
                       avg={76}
@@ -162,48 +177,48 @@ export function TodayPage() {
               : viewed.id === "recover"
               ? (
                 <>
-                  <h2
-                    className="title"
-                    style={{ margin: "0 0 4px", fontSize: 24 }}
-                  >
-                    Lift done
-                  </h2>
-                  <div className="stat-tiles">
+                  <h2 className="title today-title">Lift done</h2>
+                  <dl className="today-figures">
                     {[
                       { v: "58", l: "min" },
-                      { v: "20.4k", l: "lb +6%" },
-                      { v: "20", l: "hard sets" },
+                      { v: "20.4k", l: "lb, +6%" },
                       { v: "1", l: "PR" },
                     ].map((s) => (
-                      <div className="stat-tile" key={s.l}>
-                        <div className="v figure">{s.v}</div>
-                        <div className="l">{s.l}</div>
+                      <div key={s.l}>
+                        <dt>{s.l}</dt>
+                        <dd className="figure">{s.v}</dd>
                       </div>
                     ))}
-                  </div>
+                  </dl>
                   <WeeklyLoad days={sampleWeekLoad} flat />
-                  <p>Quads will be ready Wednesday. Easy run stays easy.</p>
-                  <PrimaryButton href="#/phone/complete">
-                    See session
-                  </PrimaryButton>
-                  <p style={{ marginTop: 8 }}>
+                  <p className="today-line">
+                    Quads will be ready Wednesday. The easy run stays easy.
+                  </p>
+                  <div className="today-actions">
+                    <PrimaryButton large href="#/phone/complete">
+                      See session
+                    </PrimaryButton>
                     <SecondaryButton href="#/phone/run/start">
                       Run earlier instead
                     </SecondaryButton>
-                  </p>
-                  <p className="kbd-hint">Next · in 9 h 40 m · Easy run</p>
+                  </div>
+                  <div className="today-next">
+                    <SportShoe size={18} />
+                    <p>
+                      <span className="group-label">Next · in 9 h 40 m</span>
+                      <br />Easy run · 3.0 mi
+                    </p>
+                  </div>
                 </>
               )
               : viewed.id === "run"
               ? (
                 <>
-                  <h2
-                    className="title"
-                    style={{ margin: "0 0 4px", fontSize: 24 }}
-                  >
-                    Easy run · 3.0 mi
-                  </h2>
-                  <p>Conversational pace. Audio cue every half mile.</p>
+                  <h2 className="title today-title">Easy run</h2>
+                  <p className="today-exercise">3.0 mi · 6 pm</p>
+                  <p className="today-line">
+                    Conversational pace. Audio cue every half mile.
+                  </p>
                   <PrimaryButton large href="#/phone/run/start">
                     <SportShoe size={22} /> Start run
                   </PrimaryButton>
@@ -212,39 +227,37 @@ export function TodayPage() {
               : viewed.id === "winddown"
               ? (
                 <>
-                  <h2
-                    className="title"
-                    style={{ margin: "0 0 4px", fontSize: 24 }}
-                  >
-                    Day complete
-                  </h2>
-                  <p>
-                    Lift 58 min · run 3.0 mi · load 750. Tomorrow: Monday · rest
-                    day.
+                  <h2 className="title today-title">Day complete</h2>
+                  <dl className="today-figures">
+                    {[
+                      { v: "58", l: "min lifting" },
+                      { v: "3.0", l: "mi run" },
+                      { v: "11:00", l: "pm, sleep" },
+                    ].map((s) => (
+                      <div key={s.l}>
+                        <dt>{s.l}</dt>
+                        <dd className="figure">{s.v}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                  <p className="today-line">
+                    Tomorrow is Upper A, bench day. Load this week 2,600.
                   </p>
-                  <p>
-                    Sleep target <span className="figure">11:00p</span>
-                  </p>
-                  <PrimaryButton href="#/phone/complete">
+                  <PrimaryButton large href="#/phone/complete">
                     See day summary
                   </PrimaryButton>
                 </>
               )
               : (
                 <>
-                  <h2
-                    className="title"
-                    style={{ margin: "0 0 4px", fontSize: 24 }}
-                  >
-                    How are you walking in?
-                  </h2>
-                  <p>
+                  <h2 className="title today-title">How are you walking in?</h2>
+                  <p className="today-line">
                     {restDay
                       ? "Rest day. Check in, then recover."
                       : "Check in to set today's loads."}
                   </p>
-                  <PrimaryButton href="#/phone/checkin">
-                    <ViewIcon size={20} /> Check in
+                  <PrimaryButton large href="#/phone/checkin">
+                    <ViewIcon size={22} /> Check in
                   </PrimaryButton>
                 </>
               )}
@@ -252,7 +265,7 @@ export function TodayPage() {
           {now.id === "lift" && viewed.id === "lift"
             ? (
               <SecondaryButton href="#/phone/run/start">
-                <Bed size={18} /> Skip to run
+                <SportShoe size={18} /> Run first instead
               </SecondaryButton>
             )
             : null}

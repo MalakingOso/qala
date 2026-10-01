@@ -1,19 +1,23 @@
 /* Plate calculator sheet (DESIGN 7.12): big target figure, bar choice,
- * one-side drawing, arithmetic summary, editable inventory. */
+ * the loaded bar for one side, the arithmetic, and the inventory as the
+ * plates themselves. */
 
 import { useState } from "react";
 import { useQala } from "../../store/qalaStore.tsx";
 import {
   Card,
   Group,
-  GroupRow,
   PlateChips,
   PlateDrawing,
+  ScalePicker,
+  SecondaryButton,
+  Stepper,
+  Toggle,
 } from "../../shared/ui.tsx";
 import {
+  bumperColorFor,
   nearestLoadable,
   planPlates,
-  platesShorthand,
 } from "../../../../../packages/core/plates.ts";
 import { Minus, Plus } from "../../shared/icons.ts";
 
@@ -28,74 +32,126 @@ export function PlateCalcPage() {
   );
   const load = nearestLoadable(plan);
   const perSide = load?.perSide ?? [];
+  // 55s are optional and switched per session: sometimes they are there,
+  // sometimes not. Off by default.
+  const p55 = settings.plates.find((p) => p.weight === 55);
+  const pairs55 = typeof p55?.pairs === "number" ? p55.pairs : 1;
+  const set55 = (pairs: number | null) =>
+    updateSettings((s) => {
+      const rest = s.plates.filter((p) => p.weight !== 55);
+      return {
+        ...s,
+        plates: pairs === null ? rest : [
+          { weight: 55, pairs, color: p55?.color ?? bumperColorFor(55, "lb") },
+          ...rest,
+        ],
+      };
+    });
   return (
     <div>
       <div className="page-head">
-        <h1 className="page-title title">Plate calculator</h1>
-        <a className="link-btn" href="#/phone/settings">Edit inventory</a>
+        <h1 className="page-title title">Plates</h1>
+        <SecondaryButton small href="#/phone/settings">
+          Edit plates
+        </SecondaryButton>
       </div>
       <Card hero>
-        <p className="group-label">Target weight</p>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <button
-            type="button"
-            className="icon-btn"
-            aria-label="Less weight"
-            onClick={() => setTarget((t) => Math.max(45, t - 5))}
-          >
-            <Minus size={18} />
-          </button>
-          <span className="figure" style={{ fontSize: 64 }}>{target}</span>
-          <button
-            type="button"
-            className="icon-btn"
-            aria-label="More weight"
-            onClick={() => setTarget((t) => t + 5)}
-          >
-            <Plus size={18} />
-          </button>
-        </div>
-        <p className="group-label">Bar</p>
-        <div style={{ display: "flex", gap: 6 }}>
-          {[45, 35].map((b) => (
-            <button
-              key={b}
-              type="button"
-              className="chip"
-              aria-pressed={settings.defaultBar === b}
-              onClick={() => updateSettings((s) => ({ ...s, defaultBar: b }))}
-              style={settings.defaultBar === b
-                ? { outline: "2px solid var(--accent)" }
-                : undefined}
-            >
-              {b} lb bar
-            </button>
-          ))}
+        <div className="calc-top">
+          <Stepper
+            label="Target"
+            value={target}
+            unit="lb"
+            step={5}
+            onStep={(d) =>
+              setTarget((t) => Math.max(settings.defaultBar, t + d))}
+          />
+          <div className="calc-bar">
+            <span className="group-label">Bar</span>
+            <ScalePicker
+              label="Bar"
+              options={[
+                { value: 45, label: "45" },
+                { value: 35, label: "35" },
+              ]}
+              value={settings.defaultBar}
+              onPick={(b) => updateSettings((s) => ({ ...s, defaultBar: b }))}
+            />
+          </div>
         </div>
         <PlateDrawing
           perSide={perSide}
           barWeight={settings.defaultBar}
           label={`Plates for ${target}`}
+          inventory={settings.plates}
         />
-        <p>
-          {settings.defaultBar} + ({perSide.join(" + ") || "0"}) x 2 ={" "}
-          <span className="figure">{load ? load.total : "not loadable"}</span>
+        <p className="calc-sum">
+          {settings.defaultBar} bar + 2 × {load ? load.perSideTotal : 0} ={" "}
+          <strong className="figure">{load ? load.total : "—"}</strong>
           {load && load.total !== target
-            ? <span className="kbd-hint">(nearest to {target})</span>
+            ? (
+              <span className="kbd-hint">
+                nearest you can load to {target}
+              </span>
+            )
             : null}
-        </p>
-        <p>
-          <PlateChips plates={perSide} /> {platesShorthand(perSide)}
         </p>
       </Card>
       <Group label="Your plates">
-        {settings.plates.map((p) => (
-          <GroupRow key={p.weight}>
-            <span>{p.weight} lb</span>
-            <span className="kbd-hint">
-              {p.pairs === "enough" ? "enough" : `${p.pairs} pair(s)`}
+        <div className="group-row plate-55">
+          <span className="inventory-plate">
+            <PlateChips
+              plates={[55]}
+              inventory={settings.plates}
+              mode="single"
+            />
+            <span>55 lb</span>
+          </span>
+          {p55
+            ? (
+              <span className="pair-step">
+                <button
+                  type="button"
+                  aria-label="One fewer pair of 55s"
+                  disabled={pairs55 <= 1}
+                  onClick={() => set55(pairs55 - 1)}
+                >
+                  <Minus size={16} />
+                </button>
+                <span className="kbd-hint">
+                  {pairs55} {pairs55 === 1 ? "pair" : "pairs"}
+                </span>
+                <button
+                  type="button"
+                  aria-label="One more pair of 55s"
+                  onClick={() => set55(pairs55 + 1)}
+                >
+                  <Plus size={16} />
+                </button>
+              </span>
+            )
+            : <span className="kbd-hint plate-55-off">off for now</span>}
+          <Toggle
+            on={!!p55}
+            label="Use 55 lb plates"
+            onFlip={() => set55(p55 ? null : 1)}
+          />
+        </div>
+        {settings.plates.filter((p) => p.weight !== 55).map((p) => (
+          <div className="group-row" key={p.weight}>
+            <span className="inventory-plate">
+              <PlateChips
+                plates={[p.weight]}
+                inventory={settings.plates}
+                mode="single"
+              />
+              <span>{p.weight} lb</span>
             </span>
-          </GroupRow>
+            <span className="kbd-hint">
+              {p.pairs === "enough"
+                ? "plenty"
+                : `${p.pairs} ${p.pairs === 1 ? "pair" : "pairs"}`}
+            </span>
+          </div>
         ))}
       </Group>
     </div>

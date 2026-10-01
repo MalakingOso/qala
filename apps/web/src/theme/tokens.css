@@ -36,6 +36,13 @@
   --note-border: rgba(180,110,0,.28);
   --note-ink: #8a5a00;
   /* charts (section 6): categorical, ordinal ramp, emphasis gray, low-readiness zone */
+  /* recovery ramp: ready, then six steps toward long recovery */
+  --rec-0: #08a49c;
+  --rec-1: #7fb23a;
+  --rec-2: #d4b020;
+  --rec-3: #e08a1e;
+  --rec-4: #d4551a;
+  --rec-5: #b3261e;
   --viz-1: #c2410c;
   --viz-2: #485cc7;
   --viz-3: #08a49c;
@@ -94,6 +101,12 @@
   --note: #2a2412;
   --note-border: rgba(251,191,36,.30);
   --note-ink: #fbbf24;
+  --rec-0: #16a390;
+  --rec-1: #8cc24a;
+  --rec-2: #e0c13a;
+  --rec-3: #ee9a35;
+  --rec-4: #e8663a;
+  --rec-5: #d9453c;
   --viz-1: #e0652b;
   --viz-2: #6f80e6;
   --viz-3: #16a390;

@@ -1,61 +1,53 @@
-/* All exercises (DESIGN 7.7): zoomed-out grid with set dots, current
- * outlined in ember. Out-of-order work is fine; history keeps the order. */
+/* All exercises (DESIGN 7.7): the zoomed-out view. Warm-up done, then a
+ * grid of exercises with a box per set, the current one outlined in ember.
+ * Out-of-order work is fine; history keeps the order. */
 
 import { useQala } from "../../store/qalaStore.tsx";
-import { Card } from "../../shared/ui.tsx";
+import { FlowHeader } from "../FlowHeader.tsx";
+import { CircleCheck } from "../../shared/icons.ts";
 
 export function AllExercisesPage() {
   const { exercises } = useQala();
   const current = exercises.findIndex((e) => e.sets.some((s) => !s.done));
   return (
     <div>
+      <FlowHeader session="Lower A" clock="24:10" back="#/phone/workout" />
       <div className="page-head">
         <h1 className="page-title title">All exercises</h1>
       </div>
-      <Card>
-        <div
-          style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}
-        >
-          {exercises.map((e, i) => (
+      <p className="allex-warm">
+        <CircleCheck size={16} aria-hidden="true" /> Warm-up done · 15 min
+      </p>
+      <div className="allex-grid">
+        {exercises.map((e, i) => {
+          const done = e.sets.filter((s) => s.done).length;
+          const complete = done === e.sets.length;
+          return (
             <a
               key={e.id}
               href={`#/phone/workout?idx=${i}`}
-              style={{
-                textDecoration: "none",
-                color: "inherit",
-                border: "var(--border-width) solid var(--border)",
-                borderRadius: "var(--radius)",
-                padding: 10,
-                outline: i === current ? "2px solid var(--accent)" : "none",
-              }}
-              aria-label={`${e.name}, ${
-                e.sets.filter((s) => s.done).length
-              } of ${e.sets.length} sets`}
+              className={`allex-card${i === current ? " current" : ""}${
+                complete ? " complete" : ""
+              }`}
+              aria-label={`${e.name}, ${done} of ${e.sets.length} sets`}
             >
+              <span className="allex-n">{i + 1}</span>
               <strong>{e.name}</strong>
-              <div style={{ display: "flex", gap: 4, marginTop: 6 }}>
+              <span className="kbd-hint">
+                {e.sets.length} × {e.sets[0]?.r} @ {e.sets[0]?.w}
+              </span>
+              <span className="set-boxes" aria-hidden="true">
                 {e.sets.map((s, j) => (
-                  <span
-                    key={j}
-                    style={{
-                      width: 12,
-                      height: 12,
-                      borderRadius: "50%",
-                      background: s.done
-                        ? "var(--progress-fill)"
-                        : "var(--bg-active)",
-                      border: "1px solid var(--border-strong)",
-                    }}
-                  />
+                  <span key={j} className={s.done ? "done" : undefined} />
                 ))}
-              </div>
+              </span>
             </a>
-          ))}
-        </div>
-        <p className="kbd-hint">
-          Warm-up done. Tap to jump; order is yours to choose.
-        </p>
-      </Card>
+          );
+        })}
+      </div>
+      <p className="kbd-hint footnote">
+        Tap any exercise to jump to it. The order is yours to choose.
+      </p>
     </div>
   );
 }
