@@ -1,7 +1,7 @@
-// Smoke test for the wasm build of qala-liftoscript-wasm. Run `deno task build:wasm` first.
+// Smoke test for the wasm build of qala-lspp-wasm. Run `deno task build:wasm` first.
 // Checks the exported JSON entry points against testdata/golden/liftoscript, with the same
-// normalizations as crates/qala-liftoscript/tests/golden.rs.
-import * as q from "../target/wasm-out/deno/qala_liftoscript_wasm.js";
+// normalizations as crates/qala-lspp/tests/golden.rs.
+import * as q from "../target/wasm-out/deno/qala_lspp_wasm.js";
 
 type J = unknown;
 const golden = (f: string) =>

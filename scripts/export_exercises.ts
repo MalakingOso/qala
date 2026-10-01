@@ -1,5 +1,5 @@
 // Export the liftoscript exercise seed DB and muscle tables to JSON for the Rust port
-// (crates/qala-liftoscript/data/). Deterministic: DB order is the TS source order.
+// (crates/qala-lspp/data/). Deterministic: DB order is the TS source order.
 //
 //   deno run --allow-all --config packages/liftoscript/deno.json scripts/export_exercises.ts
 
@@ -20,7 +20,7 @@ import {
   screenMuscles,
 } from "../packages/liftoscript/src/types.ts";
 
-const outDir = new URL("../crates/qala-liftoscript/data/", import.meta.url);
+const outDir = new URL("../crates/qala-lspp/data/", import.meta.url);
 
 function must<T>(v: T | undefined | null, what: string): T {
   if (v == null) throw new Error(`missing ${what}`);

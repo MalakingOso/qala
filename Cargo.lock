@@ -335,7 +335,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "qala-liftoscript"
+name = "qala-lspp"
 version = "0.1.0"
 dependencies = [
  "indexmap",
@@ -344,29 +344,29 @@ dependencies = [
 ]
 
 [[package]]
-name = "qala-liftoscript-ffi"
+name = "qala-lspp-ffi"
 version = "0.1.0"
 dependencies = [
- "qala-liftoscript-json",
+ "qala-lspp-json",
  "serde_json",
  "uniffi",
 ]
 
 [[package]]
-name = "qala-liftoscript-json"
+name = "qala-lspp-json"
 version = "0.1.0"
 dependencies = [
  "indexmap",
- "qala-liftoscript",
+ "qala-lspp",
  "serde",
  "serde_json",
 ]
 
 [[package]]
-name = "qala-liftoscript-wasm"
+name = "qala-lspp-wasm"
 version = "0.1.0"
 dependencies = [
- "qala-liftoscript-json",
+ "qala-lspp-json",
  "serde_json",
  "wasm-bindgen",
 ]

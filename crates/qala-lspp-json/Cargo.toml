@@ -1,0 +1,12 @@
+[package]
+name = "qala-lspp-json"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+description = "JSON string boundary over qala-lspp, shared by the wasm and UniFFI shims. Plain Rust, no FFI."
+
+[dependencies]
+qala-lspp = { path = "../qala-lspp" }
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["preserve_order", "float_roundtrip"] }
+indexmap = { version = "2", features = ["serde"] }

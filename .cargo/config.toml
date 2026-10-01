@@ -1,4 +1,4 @@
-# The qala_liftoscript test binary was OOM-killed twice at 54 and 58 GB (2026-09-30, 2026-10-01).
+# The qala_lspp test binary was OOM-killed twice at 54 and 58 GB (2026-09-30, 2026-10-01).
 # Fewer parallel tests also means fewer copies of the large golden JSON files in memory.
 [env]
 RUST_TEST_THREADS = "2"

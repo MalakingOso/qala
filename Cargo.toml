@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["crates/qala-liftoscript", "crates/qala-liftoscript-json", "crates/qala-liftoscript-wasm", "crates/qala-liftoscript-ffi"]
+members = ["crates/qala-lspp", "crates/qala-lspp-json", "crates/qala-lspp-wasm", "crates/qala-lspp-ffi"]
 
 [workspace.package]
 edition = "2021"

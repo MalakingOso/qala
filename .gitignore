@@ -18,6 +18,6 @@ target/
 # Generated liftoscript test data (regenerate with `deno task gen:liftoscript`); about 80 MB.
 testdata/golden/liftoscript/fuzz/
 testdata/golden/liftoscript/lezer_trees/
-crates/qala-liftoscript/testdata/unit/cases_*.json
+crates/qala-lspp/testdata/unit/cases_*.json
 # Build output from the wasm and FFI crates.
 target/wasm-out/

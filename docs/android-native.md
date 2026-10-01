@@ -150,7 +150,7 @@ Installed 2026-10-01, all under the home directory with no system-wide changes. 
 | NDK | r29 (29.0.14206865) | `~/Android/Sdk/ndk/` |
 | Rust target and tool | `aarch64-linux-android`, `cargo-ndk` 4.1.2 | `~/.cargo` |
 
-Verified: Gradle 9.8.0 reports Kotlin 2.4.10; `cargo ndk -t arm64-v8a build -p qala-liftoscript-ffi --release` produces a 1.8 MB stripped `.so` (771 KB gzipped) whose LOAD segments are 16 KB aligned (spike check 1, size and alignment; call latency still untested). Not verified: an Android app build. A throwaway Compose app was started and abandoned at the owner's request.
+Verified: Gradle 9.8.0 reports Kotlin 2.4.10; `cargo ndk -t arm64-v8a build -p qala-lspp-ffi --release` produces a 1.8 MB stripped `.so` (771 KB gzipped) whose LOAD segments are 16 KB aligned (spike check 1, size and alignment; call latency still untested). Not verified: an Android app build. A throwaway Compose app was started and abandoned at the owner's request.
 
 Version notes found on the way, so the real project starts right: Compose BOM 2026.09.00 (Compose 1.12.1) requires Android Gradle Plugin 9.1 or newer, which needs Gradle 9.x. AGP 9.4.1 has built-in Kotlin, so do not apply `org.jetbrains.kotlin.android`; the `org.jetbrains.kotlin.plugin.compose` plugin is still needed (latest Kotlin plugin 2.4.20). AGP 8.13.2 works only with an older Compose BOM.
 

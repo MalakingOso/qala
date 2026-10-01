@@ -3,7 +3,7 @@
 # killed on its own instead of taking the whole terminal session down with it.
 # The build runs outside the cap (rustc needs the memory); only the tests are capped.
 #
-# Usage: scripts/cargo-test-safe.sh -p qala-liftoscript --lib planner_parse::tests::x -- --exact
+# Usage: scripts/cargo-test-safe.sh -p qala-lspp --lib planner_parse::tests::x -- --exact
 # Env:   QALA_TEST_MEM (default 2G), QALA_TEST_SECS (default 60)
 # Stop a stuck run:  systemctl --user kill --signal=KILL "qala-test-*.scope"
 set -euo pipefail

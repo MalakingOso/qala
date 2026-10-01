@@ -4,14 +4,14 @@ Status: **proposed**, 2026-09-30. Nothing here is built or approved. Read with `
 
 ## Status (2026-10-01)
 
-The liftoscript evaluation path is ported in `crates/qala-liftoscript` (about 27k lines including tests) and matches the TS oracle on the golden suite:
+The liftoscript evaluation path is ported in `crates/qala-lspp` (about 27k lines including tests) and matches the TS oracle on the golden suite:
 - All 60 built-in programs, both stages (planner parse and full evaluation), in lb, plus 5 in kg.
 - `Program_nextHistoryEntry`, every finish-day scenario including the chained GZCLP replay, and the engine-binding cases.
 - Both parsers match Lezer's trees node for node on every golden and fuzz input (valid input only; error recovery is best effort).
 - 132 unit tests (about 12,000 generated script cases, 2,192 planner-exercise cases, 111 program-to-planner cases) and 5 golden suites pass. Clippy is clean.
 "Matches the oracle" means after these documented normalizations: `<uid>` placeholders on random ids; the Lezer node reference dropped; NaN and Infinity compared as null; a Set-typed `stateKeys` compared as an empty object; object key order ignored on `vtype: set` and `history_entry` objects; key order of `description` relaxed in 6 built-ins on the program-to-planner path; nested `reuse` pruned for `shortcut-to-size`; and parser error-recovery trees on invalid input not matched to Lezer's (about 300 script cases, counted separately).
 
-Two bugs found while finishing it. First, a lone backslash made the planner parser loop forever, pushing empty nodes until the OOM killer fired; fixed with a progress check in `program()`. That cause is inferred from timing (the parser file changed one minute before the first OOM) and from the test inputs, and confirmed on the 34 inputs of `bad_input_does_not_panic`, not proven for every input. The second OOM at 05:12 was my own `cargo test` at the start of a session. Second, `numberOfSets` had no upper bound, so `numberOfSets = 1e9` would allocate tens of GB: it is now capped at `MAX_SETS = 30` in `script_eval.rs` (the owner's limit), with a script error past it, and index writes past the cap are dropped. This is a deliberate divergence from TS, which allows any count; the oracle's own corpus sets `numberOfSets` from weights like 135, and 14 of 12,290 generated cases are exempted for that reason in `script_eval_tests.rs`. Run tests only through `scripts/cargo-test-safe.sh -p qala-liftoscript`.
+Two bugs found while finishing it. First, a lone backslash made the planner parser loop forever, pushing empty nodes until the OOM killer fired; fixed with a progress check in `program()`. That cause is inferred from timing (the parser file changed one minute before the first OOM) and from the test inputs, and confirmed on the 34 inputs of `bad_input_does_not_panic`, not proven for every input. The second OOM at 05:12 was my own `cargo test` at the start of a session. Second, `numberOfSets` had no upper bound, so `numberOfSets = 1e9` would allocate tens of GB: it is now capped at `MAX_SETS = 30` in `script_eval.rs` (the owner's limit), with a script error past it, and index writes past the cap are dropped. This is a deliberate divergence from TS, which allows any count; the oracle's own corpus sets `numberOfSets` from weights like 135, and 14 of 12,290 generated cases are exempted for that reason in `script_eval_tests.rs`. Run tests only through `scripts/cargo-test-safe.sh -p qala-lspp`.
 
 Cleanup still to do: private duplicate helpers in `program_exercise.rs` and `program_to_planner.rs` that belong in `planner_program_exercise.rs` and `program_set.rs`; the UniFFI and wasm shims (R0); a program-level differential fuzz; and test-data size (91 MB: gitignore the generated `cases_*.json` and `*_fuzz.json` and regenerate them with the Deno scripts, keep the 60 `builtins/*.json`). Nothing is committed, so about 27k lines of Rust are uncommitted.
 
@@ -54,7 +54,7 @@ crates/
     engine/       state, decay, e1rm, kalman, readiness, volume, rest, warmup, running
   qala-ffi/       UniFFI proc-macro exports (Android)
   qala-wasm/      wasm-bindgen exports (web, Deno)
-  qala-liftoscript/  from R5, section 8
+  qala-lspp/  from R5, section 8
 ```
 
 `docs/spike/qcore/` is a throwaway. The real crates are written fresh against the golden vectors.

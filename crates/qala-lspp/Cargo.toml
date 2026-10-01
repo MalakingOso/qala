@@ -1,0 +1,11 @@
+[package]
+name = "qala-lspp"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+description = "Liftoscript evaluation path in Rust (DECISIONS S12). Oracle: packages/liftoscript (TS)."
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["preserve_order", "float_roundtrip"] }
+indexmap = { version = "2", features = ["serde"] }

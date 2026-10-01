@@ -1,4 +1,4 @@
-// Golden vectors for crates/qala-liftoscript/src/exercise.rs and muscle.rs, computed by the TS
+// Golden vectors for crates/qala-lspp/src/exercise.rs and muscle.rs, computed by the TS
 // oracle. Writes testdata/golden/liftoscript/exercise_lookup.json and exercise_functions.json.
 //
 //   deno run --allow-all --config packages/liftoscript/deno.json scripts/export_exercise_golden.ts

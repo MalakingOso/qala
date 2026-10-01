@@ -1,7 +1,7 @@
 # liftoscript golden files
 
 Output of the TypeScript liftoscript stack (`packages/liftoscript`, the
-oracle) recorded as JSON so the Rust port in `crates/qala-liftoscript` can be
+oracle) recorded as JSON so the Rust port in `crates/qala-lspp` can be
 checked for identical behaviour. Nothing here is hand-edited.
 
 ## Regenerate

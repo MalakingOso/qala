@@ -9,7 +9,7 @@
 // Output is deterministic: a private seeded PRNG drives generation and the
 // golden lib's seeded Math.random / pinned Date.now drive the oracle.
 // File format and canonical JSON rules: testdata/golden/liftoscript/README.md.
-// The replay test is crates/qala-liftoscript/tests/fuzz_programs.rs.
+// The replay test is crates/qala-lspp/tests/fuzz_programs.rs.
 
 import {
   builtinProgramNames,

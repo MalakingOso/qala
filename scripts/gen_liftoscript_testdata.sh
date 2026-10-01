@@ -6,7 +6,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 CFG=packages/liftoscript/deno.json
-UNIT=crates/qala-liftoscript/testdata/unit
+UNIT=crates/qala-lspp/testdata/unit
 run() { echo "== deno run -A $*"; deno run -A --v8-flags=--max-old-space-size=7168 "$@"; }
 
 run scripts/golden_liftoscript.ts                      # builtins, lezer_trees, finish_day, bindings
