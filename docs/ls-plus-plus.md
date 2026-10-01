@@ -20,9 +20,9 @@ The built-in `lp` script already treats `weights[i] == 0` with a nonzero complet
 
 All additive.
 
-1. **Error messages with positions.** The Rust parsers match Lezer on valid input but recover from errors only on a best-effort basis. Give every error a line, column, span and a one-line fix suggestion. The import repair loop (section 4) depends on this.
-2. **`fmt`.** One canonical text form. `program_to_planner` already exists, so this is mostly a front end plus a round-trip test: `fmt(fmt(x)) == fmt(x)` and `evaluate(fmt(x)) == evaluate(x)` over the 60 built-ins.
-3. **Lint.** Warnings for things that parse but are probably wrong: a set count over `MAX_SETS`, a progression reading a state variable that is never written, a day with no exercises, a weight written in the wrong unit.
+1. **Error messages with positions.** The Rust parsers match Lezer on valid input but recover from errors only on a best-effort basis. Give every error a line, column, span and a one-line fix suggestion. Note the TS evaluator returns `errors[]` (type `parse` or `unknownExercise`) rather than throwing, and its error lines are relative to the day block; pick one convention and document it. The TS evaluator also accepts `99999x8`, only Rust caps sets, so importers bound every number themselves. The import repair loop (section 4) depends on this.
+2. **`fmt`.** One canonical text form. Blank lines are meaningful to the evaluator, so fmt never adds, removes or merges them. `program_to_planner` already exists, so this is mostly a front end plus a round-trip test: `fmt(fmt(x)) == fmt(x)` and `evaluate(fmt(x)) == evaluate(x)` over the 60 built-ins.
+3. **Lint.** Warnings for things that parse but are probably wrong. As built (branch `worktree-agent-a61e26ced232126f4`): `too-many-sets` (over `MAX_SETS`), `unused-state` (declared but never mentioned; an assignment counts as use), `empty-program`, `mixed-units`. The built-ins ruled out the first draft: header-only days are rest days, whole empty weeks occur via `Bench[1-3]`, and the kg variants write lb weights.
 4. **Dry run.** "What does week 2 look like if I hit every rep" using the Rust evaluator (compiled to wasm in the desktop shell). Read-only, no history written.
 5. **Partial prescriptions as a first-class idea.** `?+` stays the syntax. The editor and the importers treat "weight unknown" as a state to resolve, not an error, and the dry run shows it as a blank.
 
@@ -59,14 +59,14 @@ edit list -> exercise matching (fuzzy, confirm ambiguous) -> emitter (LS++ text)
 
 Voxtral: Beamer's `voxtral_test.rs` uses Mistral's hosted API, which sends audio off the machine. Only the open-weight Voxtral Mini 4B Realtime would be self-hosted. whisper.cpp first; try Voxtral only if live captions while speaking matter.
 
-Gemma 4 E4B accepts image and audio through its mmproj file in llama-server, but the callisto router currently loads the model without it. Adding the mmproj would let one model cover short dictation and page photos. Worth a benchmark against whisper.cpp on 20 gym phrases before choosing.
+Gemma 4 E4B accepts image and audio through its mmproj file in llama-server, but the callisto router currently loads the model without it. Adding the mmproj would let one model cover short dictation and page photos. Worth a benchmark against whisper.cpp on 20 gym phrases before choosing. Both are running for that (2026-10-01): whisper.cpp large-v3-turbo-q5_0 on the B570 at :8082 (`scripts/whisper-serve.sh`, `-dev 0`), E4B plus BF16 mmproj on the B60 at :8083 (standalone llama-server, alias `gemma-4-E4B-mm`, mmproj in `~/models/beamer-mm/`). Both transcribed jfk.wav correctly in about 0.4 s warm; whisper adds punctuation, E4B does not.
 
 ## 6. Build order
 
 1. Rename the crates to LS++ and keep every golden suite green.
-2. Parser error positions, then `fmt`, then lint, then dry run.
-3. Edit-list schema, emitter and validator in `packages/llm` (or Rust), tested without any model.
-4. `POST /api/import/text` against the agent, then wire PDF via MinerU.
+2. Parser error positions, then `fmt`, then lint, then dry run, then `unresolved_sets`. Done in Rust (branch `worktree-agent-a61e26ced232126f4`, `c6bb488` to `e247e55`, not merged). Open: FFI exports plus Kotlin regen, suggestions for evaluation-time errors, fmt for standalone scripts, wasm build never run.
+3. Edit-list schema, emitter and validator in `packages/llm`, tested without any model. Done in TS (branch `worktree-agent-a1a5843dba2873ba1`, `8f5bd5c`, not merged).
+4. `POST /api/import/text` against the agent (done on that branch; the confirm step is the same endpoint with `resolutions`), then wire PDF via MinerU (open).
 5. whisper.cpp service and `POST /api/transcribe`; mic capture on the phone and desktop shells.
 
 Run Rust tests only through `scripts/cargo-test-safe.sh`.
