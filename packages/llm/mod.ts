@@ -35,6 +35,48 @@ export {
 } from "./schemas.ts";
 export type { FeatureKind } from "./schemas.ts";
 export {
+  EditListSchema,
+  IMPORT_LIMITS,
+  validateEditList,
+} from "./importSchema.ts";
+export type {
+  EditItem,
+  EditListResult,
+  RejectedItem,
+  WeightUnit,
+} from "./importSchema.ts";
+export {
+  ALIASES,
+  AMBIGUOUS_NAMES,
+  matchExercise,
+  nameKey,
+} from "./importMatch.ts";
+export type {
+  CatalogEntry,
+  ConfirmReason,
+  MatchResult,
+} from "./importMatch.ts";
+export {
+  buildImportPrompt,
+  IMPORT_SYSTEM_PROMPT,
+  MAX_IMPORT_CHARS,
+} from "./importPrompt.ts";
+export {
+  diffLines,
+  emitLine,
+  emitProgram,
+  safeDayLabel,
+} from "./importEmit.ts";
+export type { DiffLine, ResolvedItem } from "./importEmit.ts";
+export { importText, resolveEditList } from "./importPipeline.ts";
+export type {
+  ConfirmItem,
+  ImportDeps,
+  ImportProposal,
+  ImportStatus,
+  Resolutions,
+} from "./importPipeline.ts";
+export {
   acceptedMemories,
   acceptProposal,
   deserializeProposals,
