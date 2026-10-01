@@ -198,6 +198,24 @@ fn dry_run_from_text_keeps_blank_weights_blank() {
 }
 
 #[test]
+fn unresolved_sets_lists_question_mark_plus() {
+    let doc = load("finish_day_rotation_gzclp.json");
+    let settings = doc["fixtures"]["settings"]["gzclp_settings"].clone();
+    let text = "# Week 1\n## Day 1\nSplit Squat / 2x8 ?+\nBench Press / 3x5 100lb\n";
+    let req = json!({"v": 1, "programText": text, "settings": settings});
+    let r = result_of(&api::unresolved_sets(&req.to_string()).unwrap());
+    let a = r.as_array().unwrap();
+    assert_eq!(a.len(), 2);
+    assert_eq!(a[0]["state"], "blank");
+    assert_eq!(a[0]["exerciseName"], "Split Squat");
+    assert_eq!((a[0]["week"].as_i64(), a[1]["setIndex"].as_u64()), (Some(1), Some(1)));
+    let none = json!({"v": 1, "programText": "# Week 1\n## Day 1\nSquat / 3x5 100lb\n", "settings": settings});
+    assert_eq!(result_of(&api::unresolved_sets(&none.to_string()).unwrap()), json!([]));
+    let e = api::unresolved_sets(&json!({"v": 1, "programText": text}).to_string()).unwrap_err();
+    assert_eq!(e.kind(), "invalidInput");
+}
+
+#[test]
 fn dry_run_rejects_a_request_without_a_program() {
     let doc = load("finish_day_rotation_gzclp.json");
     let req = json!({"v": 1, "settings": doc["fixtures"]["settings"]["gzclp_settings"]});

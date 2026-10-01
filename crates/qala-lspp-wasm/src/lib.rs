@@ -67,6 +67,11 @@ pub fn dry_run(request: &str) -> String {
     api::envelope(api::dry_run(request))
 }
 
+#[wasm_bindgen(js_name = unresolvedSets)]
+pub fn unresolved_sets(request: &str) -> String {
+    api::envelope(api::unresolved_sets(request))
+}
+
 #[wasm_bindgen(js_name = lintPlanner)]
 pub fn lint_planner(request: &str) -> String {
     api::envelope(api::lint_planner(request))

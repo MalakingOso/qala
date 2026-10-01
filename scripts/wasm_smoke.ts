@@ -144,6 +144,13 @@ function request(doc: any, c: any): string {
     throw new Error("dryRun does not match the rotation golden");
   }
   console.log("ok   dryRun");
+  const un = JSON.parse(q.unresolvedSets(JSON.stringify({
+    v: 1,
+    programText: "# Week 1\n## Day 1\nSplit Squat / 2x8 ?+\n",
+    settings: rot.fixtures.settings.gzclp_settings,
+  })));
+  if (un.error || un.result.length !== 2 || un.result[0].state !== "blank") throw new Error("unresolvedSets result");
+  console.log("ok   unresolvedSets");
 }
 // 4. errors are values
 {

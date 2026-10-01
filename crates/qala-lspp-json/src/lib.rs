@@ -458,6 +458,45 @@ pub fn dry_run(request: &str) -> ApiResult {
 }
 
 // ---------------------------------------------------------------------------
+// partial prescriptions
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct UnresolvedReq {
+    #[serde(default)]
+    program: Option<IEvaluatedProgram>,
+    #[serde(default)]
+    program_text: Option<String>,
+    #[serde(default)]
+    name: Option<String>,
+    /// Needed only with `programText`.
+    #[serde(default)]
+    settings: Option<ISettings>,
+}
+
+/// `unresolvedSets`. Request: `{v, program | (programText, name?, settings)}`. Result: array of
+/// `{state, week, dayInWeek, day, dayName, exerciseKey, exerciseName, variation, setIndex,
+/// line, weight, reps}`, one per set still waiting for a weight (`?+`, state "blank", or a
+/// starting weight with a plus such as `0lb+`, state "seeded"), in program order.
+pub fn unresolved_sets(request: &str) -> ApiResult {
+    guarded(|| {
+        let r: UnresolvedReq = parse_request(request)?;
+        let program = match (r.program, r.program_text) {
+            (Some(p), _) => p,
+            (None, Some(text)) => {
+                let settings = r
+                    .settings
+                    .ok_or_else(|| ApiError::InvalidInput("\"programText\" needs \"settings\"".to_string()))?;
+                let mut uid = RequestUid::new(None, None);
+                runtime::force_evaluate_text(&text, r.name.as_deref().unwrap_or("Program"), &settings, &mut uid)
+            }
+            (None, None) => return Err(ApiError::InvalidInput("request needs \"program\" or \"programText\"".to_string())),
+        };
+        ok(&qala_lspp::partial::unresolved_sets(&program))
+    })
+}
+
+// ---------------------------------------------------------------------------
 // lint
 
 /// `lint_planner(text)`: `text` is the raw program text. Result: array of

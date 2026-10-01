@@ -32,3 +32,4 @@ pub mod diagnostics;
 pub mod fmt;
 pub mod lint;
 pub mod dry_run;
+pub mod partial;

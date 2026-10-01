@@ -72,6 +72,19 @@ fn dry_run_export() {
 }
 
 #[test]
+fn unresolved_sets_export() {
+    let doc = load("finish_day_rotation_gzclp.json");
+    let req = json!({
+        "v": 1, "programText": "# Week 1\n## Day 1\nSplit Squat / 1x8 ?+\n",
+        "settings": doc["fixtures"]["settings"]["gzclp_settings"]
+    });
+    let r = result_of(&w::unresolved_sets(&req.to_string()));
+    assert_eq!(r[0]["state"], "blank");
+    let (kind, _) = error_of(&w::unresolved_sets("{}"));
+    assert_eq!(kind, "invalidInput");
+}
+
+#[test]
 fn lint_planner_export() {
     assert_eq!(result_of(&w::lint_planner("# Week 1\n## Day 1\nSquat / 3x5 100lb\n")), json!([]));
     let r = result_of(&w::lint_planner("# Week 1\n## Day 1\nSquat / 31x5 100lb\n"));
