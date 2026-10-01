@@ -124,6 +124,11 @@ function request(doc: any, c: any): string {
   const s = JSON.parse(q.diagnoseScript("if (completedReps >= ) { weights += }"));
   if (s.result.length === 0) throw new Error("diagnoseScript found nothing");
   console.log(`ok   diagnosePlanner / diagnoseScript ${JSON.stringify(bad.result)}`);
+  const f = JSON.parse(q.formatPlanner("Squat/3x5   100lb"));
+  if (!f.result.ok || f.result.text !== "Squat / 3x5 100lb\n" || !f.result.changed) throw new Error("formatPlanner result");
+  const fb = JSON.parse(q.formatPlanner("Squat / 3x"));
+  if (fb.result.ok || fb.result.diagnostics.length === 0) throw new Error("formatPlanner accepted a syntax error");
+  console.log("ok   formatPlanner");
 }
 // 4. errors are values
 {

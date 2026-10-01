@@ -56,3 +56,14 @@ fn diagnostics() {
     assert_eq!(result_of(&w::diagnose_script("")), json!([]));
     assert_eq!(result_of(&w::diagnose_planner("# Week 1\n## Day 1\nSquat / 3x5\n")), json!([]));
 }
+
+#[test]
+fn format_planner_export() {
+    let r = result_of(&w::format_planner("Squat/3x5   100lb"));
+    assert_eq!(r, json!({"ok": true, "text": "Squat / 3x5 100lb\n", "changed": true}));
+    let r = result_of(&w::format_planner("Squat / 3x5 100lb\n"));
+    assert_eq!(r["changed"], false);
+    let r = result_of(&w::format_planner("Squat / 3x"));
+    assert_eq!(r["ok"], false);
+    assert!(!r["diagnostics"].as_array().unwrap().is_empty());
+}

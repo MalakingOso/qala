@@ -410,3 +410,41 @@ pub fn diagnose_planner(text: &str) -> ApiResult {
 pub fn diagnose_script(text: &str) -> ApiResult {
     guarded(|| ok(&script_diagnostics(text)))
 }
+
+// ---------------------------------------------------------------------------
+// fmt
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct FormatOk {
+    ok: bool,
+    text: String,
+    changed: bool,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct FormatRefused {
+    ok: bool,
+    reason: String,
+    diagnostics: Vec<Diagnostic>,
+}
+
+/// `format_planner(text)`: `text` is the raw program text. Result is `{ok: true, text, changed}`,
+/// or `{ok: false, reason, diagnostics}` when the text has syntax errors (nothing is
+/// formatted, `reason` is "syntax") or when formatting could not be proven safe (`reason`
+/// says why and `diagnostics` is empty).
+pub fn format_planner(text: &str) -> ApiResult {
+    guarded(|| match qala_lspp::fmt::format_planner(text) {
+        Ok(out) => {
+            let changed = out != text;
+            ok(&FormatOk { ok: true, text: out, changed })
+        }
+        Err(qala_lspp::fmt::FormatError::Syntax(diagnostics)) => {
+            ok(&FormatRefused { ok: false, reason: "syntax".to_string(), diagnostics })
+        }
+        Err(e @ qala_lspp::fmt::FormatError::Unsafe(_)) => {
+            ok(&FormatRefused { ok: false, reason: e.to_string(), diagnostics: vec![] })
+        }
+    })
+}

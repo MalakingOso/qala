@@ -164,6 +164,20 @@ fn diagnostics_use_utf16_offsets() {
 }
 
 #[test]
+fn format_planner_results() {
+    let r = result_of(&api::format_planner("# Week 1\n## Day 1\nSquat /3x5,  1x5+ 100lb\n").unwrap());
+    assert_eq!(r["ok"], true);
+    assert_eq!(r["text"], "# Week 1\n## Day 1\nSquat / 3x5, 1x5+ 100lb\n");
+    assert_eq!(r["changed"], true);
+    let again = result_of(&api::format_planner(r["text"].as_str().unwrap()).unwrap());
+    assert_eq!(again["changed"], false);
+    let bad = result_of(&api::format_planner("Squat / 3x").unwrap());
+    assert_eq!(bad["ok"], false);
+    assert_eq!(bad["reason"], "syntax");
+    assert_eq!(bad["diagnostics"][0]["line"], 1);
+}
+
+#[test]
 fn script_diagnostics() {
     assert_eq!(result_of(&api::diagnose_script("if (completedReps >= reps) { weights += 5lb }").unwrap()), json!([]));
     let bad = result_of(&api::diagnose_script("if (completedReps >= ) { weights += }").unwrap());

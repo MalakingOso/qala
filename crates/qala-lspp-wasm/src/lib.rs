@@ -62,3 +62,8 @@ pub fn diagnose_script(request: &str) -> String {
     api::envelope(api::diagnose_script(request))
 }
 
+#[wasm_bindgen(js_name = formatPlanner)]
+pub fn format_planner(request: &str) -> String {
+    api::envelope(api::format_planner(request))
+}
+
