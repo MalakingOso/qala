@@ -27,6 +27,8 @@ android {
 dependencies {
     // Foundation only. No Material 3: it fights the Beamer look (docs/android-native.md section 2).
     api(platform("androidx.compose:compose-bom:2026.09.00"))
+    // BackHandler lives in the day menu, so it composes after (and beats) a shell-level handler.
+    implementation("androidx.activity:activity-compose:1.13.0")
     api("androidx.compose.animation:animation-core")
     api("androidx.compose.foundation:foundation")
     api("androidx.compose.runtime:runtime")
