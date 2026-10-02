@@ -1,5 +1,7 @@
 # Research: GPS run recording, guided runs, maps, audio, heart rate
 
+> The Capacitor recommendation in this report is superseded by the native Kotlin app (DECISIONS S7, S15). The evidence on GPS, audio and heart rate still applies.
+
 Written 2026-09-13 for Qala (see PLAN.md). Scope: Runkeeper-style run recording (time, distance, current and average pace, splits with voice cues, route map with mile markers, pause/resume, optional HR strap) and guided running workouts with voice prompts.
 
 Tagging: `[verified: URL]` means I read the source (or a quoted excerpt of it) and it says what the sentence says. `[verified via search excerpt: URL]` means the source's own text as surfaced by a search tool, without reading the full page. `[unverified]` means inference, an engineering default, or a secondary source I couldn't confirm. Where a claim rests on a coordinator's reading of third-party code, it says so.
