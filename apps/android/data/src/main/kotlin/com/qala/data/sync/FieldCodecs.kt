@@ -54,7 +54,7 @@ internal interface FieldCodec<E> {
 internal const val DELETED = "deleted"
 
 /** A session row plus the value of its `entries` field. The typed child rows are derived from the entries. */
-internal data class LiftSessionBundle(val session: LiftSessionEntity, val entries: List<LiftEntryRecord>)
+data class LiftSessionBundle(val session: LiftSessionEntity, val entries: List<LiftEntryRecord>)
 
 internal object LiftSessionCodec : FieldCodec<LiftSessionBundle> {
     override val fields = listOf(
