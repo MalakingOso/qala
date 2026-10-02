@@ -14,9 +14,16 @@ import {
   useMemo,
   useState,
 } from "react";
-import type { SettingsModel, StageState, WorkoutExercise } from "./types.ts";
+import type {
+  Availability,
+  DaySkip,
+  SettingsModel,
+  StageState,
+  WorkoutExercise,
+} from "./types.ts";
 import {
   defaultSettings,
+  SAMPLE_TODAY,
   sampleEnvelopes,
   sampleExercises,
   sampleMemory,
@@ -135,6 +142,15 @@ interface QalaStore {
   sessions: SessionSummary[];
   setSessionNotes: (id: string, notes: string) => void;
   dismissSessionFlag: (id: string) => void;
+  /** Skipped days and the persistent training status (DESIGN 7.18).
+   * `todayKey` is the sample-world today until the samples go away. */
+  todayKey: string;
+  skips: DaySkip[];
+  availability: Availability;
+  skipDay: (skip: DaySkip) => void;
+  clearSkip: (date: string) => void;
+  setAvailability: (a: Availability) => void;
+  clearAvailability: () => void;
   outbox: QueuedOp[];
   queueOp: (kind: string, payload: unknown) => void;
   online: boolean;
@@ -156,6 +172,11 @@ export function QalaProvider({ children }: { children: ReactNode }) {
   );
   const [memory, setMemory] = useState<MemoryProposal[]>(sampleMemory);
   const [sessions, setSessions] = useState<SessionSummary[]>(sampleSessions);
+  const [skips, setSkips] = useState<DaySkip[]>([]);
+  const [availability, setAvailabilityState] = useState<Availability>({
+    status: "active",
+  });
+  const [todayKey] = useState<string>(SAMPLE_TODAY);
   const [outbox, setOutbox] = useState<QueuedOp[]>(() => loadOutbox());
   const [online, setOnline] = useState<boolean>(() =>
     typeof navigator === "undefined" ? true : navigator.onLine
@@ -203,6 +224,22 @@ export function QalaProvider({ children }: { children: ReactNode }) {
       },
     ]);
   }, []);
+  const skipDay = useCallback((skip: DaySkip) => {
+    setSkips((ss) => [...ss.filter((s) => s.date !== skip.date), skip]);
+    queueOp("skip-day", skip);
+  }, [queueOp]);
+  const clearSkip = useCallback((date: string) => {
+    setSkips((ss) => ss.filter((s) => s.date !== date));
+    queueOp("skip-clear", { date });
+  }, [queueOp]);
+  const setAvailability = useCallback((a: Availability) => {
+    setAvailabilityState(a);
+    queueOp("status-set", a);
+  }, [queueOp]);
+  const clearAvailability = useCallback(() => {
+    setAvailabilityState({ status: "active" });
+    queueOp("status-clear", {});
+  }, [queueOp]);
   const setSessionNotes = useCallback((id: string, notes: string) => {
     setSessions((ss) => ss.map((s) => (s.id === id ? { ...s, notes } : s)));
     queueOp("session-notes", { id, notes });
@@ -250,6 +287,13 @@ export function QalaProvider({ children }: { children: ReactNode }) {
       sessions,
       setSessionNotes,
       dismissSessionFlag,
+      todayKey,
+      skips,
+      availability,
+      skipDay,
+      clearSkip,
+      setAvailability,
+      clearAvailability,
       outbox,
       queueOp,
       online,
@@ -263,6 +307,13 @@ export function QalaProvider({ children }: { children: ReactNode }) {
       sessions,
       setSessionNotes,
       dismissSessionFlag,
+      todayKey,
+      skips,
+      availability,
+      skipDay,
+      clearSkip,
+      setAvailability,
+      clearAvailability,
       exercises,
       logSet,
       envelopes,

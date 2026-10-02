@@ -54,14 +54,29 @@ export function PrimaryButton({
   onClick,
   href,
   label,
+  disabled,
 }: {
   children: ReactNode;
   large?: boolean;
   onClick?: () => void;
   href?: string;
   label?: string;
+  disabled?: boolean;
 }) {
   const cls = large ? "btn-primary large" : "btn-primary";
+  if (disabled) {
+    return (
+      <button
+        type="button"
+        className={cls}
+        disabled
+        aria-label={label}
+        aria-disabled="true"
+      >
+        {children}
+      </button>
+    );
+  }
   if (href !== undefined) {
     return (
       <a className={cls} href={href} aria-label={label} onClick={onClick}>

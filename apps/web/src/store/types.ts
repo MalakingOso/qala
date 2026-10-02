@@ -7,6 +7,13 @@
  * sync layer is built (see the report). */
 
 import type { PlateEntry } from "../../../../packages/core/plates.ts";
+import type {
+  Availability,
+  DaySkip,
+  SkipReason,
+} from "../../../../packages/core/schema.ts";
+
+export type { Availability, DaySkip, SkipReason };
 
 export type DayStageId =
   | "checkin"

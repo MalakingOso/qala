@@ -2470,6 +2470,141 @@ label.field-head {
   margin-top: 24px;
 }
 
+/* Skipping a day and the training status (DESIGN 7.18). */
+.btn-primary:disabled {
+  background: var(--fg-faint);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+.plan-day-cta,
+.skip-cta {
+  display: grid;
+  gap: 10px;
+}
+.span-head {
+  margin-top: 24px;
+}
+.day-tabs .skipped .day-date {
+  color: var(--fg-faint);
+  text-decoration: line-through;
+}
+.status-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  background: var(--bg-surface);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-md);
+}
+.status-banner > svg {
+  flex-shrink: 0;
+}
+.status-banner p {
+  flex: 1;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--fg-secondary);
+}
+.status-banner .link-btn {
+  min-height: 0;
+  flex-shrink: 0;
+}
+.skip-reasons {
+  display: grid;
+  gap: 10px;
+  margin-top: 6px;
+}
+.reason-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 68px;
+  padding: 12px 14px;
+  background: var(--bg-surface);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-md);
+  text-align: left;
+  cursor: pointer;
+}
+.reason-row:hover {
+  border-color: var(--border-strong);
+}
+.reason-row:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.reason-row[aria-checked="true"] {
+  border-color: var(--fg);
+}
+.reason-icon {
+  flex-shrink: 0;
+  display: inline-flex;
+  color: var(--fg);
+}
+.reason-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.reason-text strong {
+  font-weight: 500;
+}
+.reason-dot {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: var(--border-width) solid var(--border-strong);
+}
+.reason-row[aria-checked="true"] .reason-dot {
+  background: var(--fg);
+  border-color: var(--fg);
+  box-shadow: inset 0 0 0 4px var(--bg-surface);
+}
+select.field {
+  min-height: 52px;
+}
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(15, 21, 42, 0.45);
+}
+.modal-card {
+  width: 100%;
+  max-width: 380px;
+  padding: 24px;
+  background: var(--bg-surface);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-modal);
+}
+.modal-card h2 {
+  margin: 0;
+  font-size: 24px;
+}
+.modal-card p {
+  margin: 8px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--fg-secondary);
+}
+.modal-actions {
+  display: grid;
+  gap: 10px;
+  margin-top: 20px;
+}
+
 .ex-row {
   display: flex;
   flex-direction: column;

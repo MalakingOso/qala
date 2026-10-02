@@ -17,6 +17,11 @@ import type {
 } from "./types.ts";
 import { bumperColorFor } from "../../../../packages/core/plates.ts";
 
+/** Sample-world today (Sunday, September 13 2026): the day the Today strip,
+ * the Plan week and the desktop Overview all call today. Skips and the
+ * training status resolve against this key until the samples go away. */
+export const SAMPLE_TODAY = "2026-09-13";
+
 export const sampleStages: StageState[] = [
   { id: "checkin", label: "Check-in", time: "4:30p", status: "done" },
   { id: "warmup", label: "Warm-up", time: "4:40p", status: "done" },

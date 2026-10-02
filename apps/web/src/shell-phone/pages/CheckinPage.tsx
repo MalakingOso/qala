@@ -4,6 +4,7 @@
  * a tracked stage. */
 
 import { useState } from "react";
+import { injuredOn } from "../../../../../packages/engine/availability.ts";
 import { useQala } from "../../store/qalaStore.tsx";
 import { Card, Chip, PrimaryButton, ScalePicker } from "../../shared/ui.tsx";
 import { ArrowRight, Sun } from "../../shared/icons.ts";
@@ -52,14 +53,21 @@ const TRAINED = [
 ];
 
 export function CheckinPage({ restDay = false }: { restDay?: boolean }) {
-  const { settings, queueOp } = useQala();
+  const { settings, queueOp, todayKey, skips, availability } = useQala();
   const isRest = restDay;
+  const hurt = injuredOn(todayKey, availability, skips);
   const [prs, setPrs] = useState(7);
-  const [sore, setSore] = useState<Record<string, number>>({ quads: 4 });
+  // Injured muscles walk in at soreness 4; the rest-day tip names them first.
+  const [sore, setSore] = useState<Record<string, number>>({
+    quads: 4,
+    ...Object.fromEntries(hurt.map((m) => [m, 4])),
+  });
   const [text, setText] = useState("");
   const [chips, setChips] = useState<string[]>(["Sleep 6 h"]);
 
-  const soreList = Object.entries(sore).filter(([, v]) => v >= 3);
+  const soreList = Object.entries(sore)
+    .filter(([, v]) => v >= 3)
+    .sort(([a], [b]) => Number(hurt.includes(b)) - Number(hurt.includes(a)));
   const tipMuscles = soreList.length > 0
     ? soreList.map(([m]) => m).join(" + ")
     : "hips";

@@ -1,6 +1,7 @@
 /* Settings (DESIGN 7.13), groups in order: Units; Bars and plates;
  * Equipment; Warm-up; Rest timer; Check-ins; Running; Coach; Appearance. */
 
+import { shiftsPlan } from "../../../../../packages/engine/availability.ts";
 import { useQala } from "../../store/qalaStore.tsx";
 import { GEAR_FOR, GearSlot } from "../../shared/gear.tsx";
 import {
@@ -8,15 +9,25 @@ import {
   GroupRow,
   PlateChips,
   ScalePicker,
+  SecondaryButton,
   Toggle,
 } from "../../shared/ui.tsx";
+import { StatusIcon, statusLine } from "../../shared/skipStatus.tsx";
 
 /** `embedded` drops the page title, for the desktop shell that supplies its own
  * header (DECISIONS U21). */
 export function SettingsPage({ embedded }: { embedded?: boolean } = {}) {
-  const { settings: s, updateSettings: u } = useQala();
+  const {
+    settings: s,
+    updateSettings: u,
+    todayKey,
+    skips,
+    availability,
+    clearAvailability,
+  } = useQala();
   const flipEq = (k: keyof typeof s.equipment) =>
     u((p) => ({ ...p, equipment: { ...p.equipment, [k]: !p.equipment[k] } }));
+  const status = statusLine(availability, skips, todayKey);
   return (
     <div>
       {embedded ? null : (
@@ -24,6 +35,40 @@ export function SettingsPage({ embedded }: { embedded?: boolean } = {}) {
           <h1 className="page-title title">Settings</h1>
         </div>
       )}
+      <Group
+        label="Training status"
+        action={
+          <a className="link-btn" href="#/phone/skip?day=today&ret=settings">
+            Change
+          </a>
+        }
+      >
+        <GroupRow>
+          <span className="eq-label">
+            <StatusIcon reason={status?.reason ?? "active"} />
+            <span>{status ? status.text : "Active."}</span>
+          </span>
+          <span className="kbd-hint">
+            {!status
+              ? "training as usual"
+              : status.reason === "injured"
+              ? "train around it"
+              : shiftsPlan(status.reason)
+              ? "plan shifts"
+              : "plan holds"}
+          </span>
+        </GroupRow>
+        {availability.status !== "active"
+          ? (
+            <GroupRow>
+              <span>Back to training</span>
+              <SecondaryButton small onClick={clearAvailability}>
+                Set active
+              </SecondaryButton>
+            </GroupRow>
+          )
+          : null}
+      </Group>
       <Group label="Units">
         <GroupRow>
           <span>Weight</span>

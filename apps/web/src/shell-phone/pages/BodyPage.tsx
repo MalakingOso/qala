@@ -3,7 +3,13 @@
  * front/back recovery map (liftosaur's artwork) with ready-time callouts;
  * until check-ins save soreness, the values here are samples. */
 
+import {
+  injuredOn,
+  normMuscle,
+} from "../../../../../packages/engine/availability.ts";
+import { useQala } from "../../store/qalaStore.tsx";
 import { Group, GroupRow, SecondaryButton } from "../../shared/ui.tsx";
+import { muscleLabel } from "../../shared/skipStatus.tsx";
 import { ReadinessLine } from "../../shared/charts/index.ts";
 import { RecoveryMap } from "../../shared/bodymap/RecoveryMap.tsx";
 import { sampleRecovery } from "../../store/sample.ts";
@@ -21,6 +27,8 @@ const SORENESS: { muscle: string; level: number }[] = [
 const WORDS = ["", "fresh", "a little", "sore", "still sore"];
 
 export function BodyPage() {
+  const { todayKey, skips, availability } = useQala();
+  const hurt = injuredOn(todayKey, availability, skips).map(normMuscle);
   return (
     <div>
       <div className="page-head">
@@ -39,24 +47,40 @@ export function BodyPage() {
       <section className="card flat-rest">
         <h2 className="card-title title">Soreness</h2>
         <ul className="sore-list">
-          {SORENESS.map((m) => (
-            <li key={m.muscle}>
-              <span className="sore-name">{m.muscle}</span>
-              <span
-                className={`sore-meter level-${m.level}`}
-                role="img"
-                aria-label={`${m.level} of 4`}
-              >
-                {[1, 2, 3, 4].map((n) => (
-                  <span key={n} className={n <= m.level ? "on" : undefined} />
-                ))}
-              </span>
-              <span className="kbd-hint">{WORDS[m.level]}</span>
-            </li>
-          ))}
+          {SORENESS.map((m) => {
+            const injured = hurt.includes(normMuscle(m.muscle));
+            const level = injured ? 4 : m.level;
+            return (
+              <li key={m.muscle}>
+                <span className="sore-name">{m.muscle}</span>
+                <span
+                  className={`sore-meter level-${level}`}
+                  role="img"
+                  aria-label={`${level} of 4`}
+                >
+                  {[1, 2, 3, 4].map((n) => (
+                    <span
+                      key={n}
+                      className={n <= level ? "on" : undefined}
+                    />
+                  ))}
+                </span>
+                <span className="kbd-hint">
+                  {injured ? "recovering · direct work off" : WORDS[level]}
+                </span>
+              </li>
+            );
+          })}
         </ul>
         <p className="kbd-hint footnote">
           From your check-ins, 1 to 4. Sample values for now.
+          {hurt.length
+            ? ` ${hurt.map(muscleLabel).join(", ")} ${
+              hurt.length === 1 ? "is" : "are"
+            } injured: direct work for ${
+              hurt.length === 1 ? "it" : "them"
+            } is off until it clears.`
+            : ""}
         </p>
       </section>
       <Group label="Deload">

@@ -8,6 +8,12 @@
 
 import { useState } from "react";
 import {
+  classifyDay,
+  reasonOn,
+  shiftsPlan,
+} from "../../../../../packages/engine/availability.ts";
+import { useQala } from "../../store/qalaStore.tsx";
+import {
   Card,
   Group,
   GroupRow,
@@ -15,6 +21,7 @@ import {
   SecondaryButton,
   SegmentedControl,
 } from "../../shared/ui.tsx";
+import { reasonWord } from "../../shared/skipStatus.tsx";
 import {
   Check,
   ChevronLeft,
@@ -22,6 +29,7 @@ import {
   Dumbbell,
   SportShoe,
   StickyNote,
+  Undo2,
 } from "../../shared/icons.ts";
 
 type Status = "done" | "missed" | "today" | "later";
@@ -139,6 +147,14 @@ function dateIn(week: number, date: number): string {
   return String(d.getDate());
 }
 
+/** The same day as a YYYY-MM-DD key, for skip resolution. */
+function keyIn(week: number, date: number): string {
+  const d = new Date(2026, 8, date + (week - THIS_WEEK) * 7);
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${d.getFullYear()}-${m}-${day}`;
+}
+
 function weekDays(week: number): PlanDay[] {
   if (week === THIS_WEEK) return DAYS;
   return DAYS.map((d) => ({
@@ -151,9 +167,33 @@ export function PlanPage() {
   const [day, setDay] = useState(6);
   const [view, setView] = useState<"overview" | "details">("overview");
   const [week, setWeek] = useState(THIS_WEEK);
+  const { skips, availability, clearSkip, clearAvailability } = useQala();
   const days = weekDays(week);
   const sel = days[day];
   const Glyph = sel.lift ? Dumbbell : SportShoe;
+  const selKey = keyIn(week, sel.date);
+  // A logged day stays logged: done wins over any skip or status span.
+  const selReason = sel.status === "done"
+    ? null
+    : reasonOn(selKey, availability, skips);
+  const undoSel = () => {
+    if (skips.some((s) => s.date === selKey)) clearSkip(selKey);
+    else clearAvailability();
+  };
+  const counts = days.reduce(
+    (acc, d) => {
+      if (d.status === "done") {
+        acc.done += 1;
+        return acc;
+      }
+      const cls = classifyDay(keyIn(week, d.date), availability, skips);
+      if (cls === "shift") acc.shifted += 1;
+      else if (cls === "rest") acc.skipped += 1;
+      else if (d.status === "missed") acc.skipped += 1;
+      return acc;
+    },
+    { done: 0, skipped: 0, shifted: 0 },
+  );
   return (
     <div>
       <div className="page-head">
@@ -215,16 +255,18 @@ export function PlanPage() {
       <div className="day-tabs" role="tablist" aria-label="Days">
         {days.map((d, i) => {
           const G = d.lift ? Dumbbell : SportShoe;
+          const skipped = d.status !== "done" &&
+            reasonOn(keyIn(week, d.date), availability, skips) !== null;
           return (
             <button
               key={d.d}
               type="button"
               role="tab"
-              className={d.status}
+              className={skipped ? "skipped" : d.status}
               aria-selected={i === day}
-              aria-label={`${d.d} ${
-                dateIn(week, d.date)
-              }, ${d.title}, ${d.status}`}
+              aria-label={`${d.d} ${dateIn(week, d.date)}, ${d.title}, ${
+                skipped ? "skipped" : d.status
+              }`}
               onClick={() => setDay(i)}
             >
               <span className="day-name">{d.d}</span>
@@ -238,7 +280,11 @@ export function PlanPage() {
       </div>
       <Card hero={sel.status === "today"}>
         <p className="group-label page-eyebrow plan-day-status">
-          {sel.status === "today"
+          {selReason
+            ? `${sel.d} · skipped, ${reasonWord(selReason)}${
+              shiftsPlan(selReason) ? " · shifts the plan" : ""
+            }`
+            : sel.status === "today"
             ? "Today"
             : sel.status === "done"
             ? `${sel.d} · done`
@@ -254,14 +300,25 @@ export function PlanPage() {
           {sel.lift && sel.run ? " · then a run" : ""}
         </p>
         <div className="plan-day-cta">
-          {sel.status === "today"
+          {selReason
             ? (
-              <PrimaryButton
-                large
-                href={sel.lift ? "#/phone/checkin" : "#/phone/run/start"}
-              >
-                Start workout
-              </PrimaryButton>
+              <SecondaryButton onClick={undoSel}>
+                <Undo2 size={18} /> Undo skip
+              </SecondaryButton>
+            )
+            : sel.status === "today"
+            ? (
+              <>
+                <PrimaryButton
+                  large
+                  href={sel.lift ? "#/phone/checkin" : "#/phone/run/start"}
+                >
+                  Start workout
+                </PrimaryButton>
+                <SecondaryButton href={`#/phone/skip?day=${selKey}&ret=plan`}>
+                  Skip this day
+                </SecondaryButton>
+              </>
             )
             : sel.status === "done"
             ? (
@@ -270,11 +327,16 @@ export function PlanPage() {
               </SecondaryButton>
             )
             : (
-              <SecondaryButton
-                href={sel.lift ? "#/phone/checkin" : "#/phone/run/start"}
-              >
-                Do this today instead
-              </SecondaryButton>
+              <>
+                <SecondaryButton
+                  href={sel.lift ? "#/phone/checkin" : "#/phone/run/start"}
+                >
+                  Do this today instead
+                </SecondaryButton>
+                <SecondaryButton href={`#/phone/skip?day=${selKey}&ret=plan`}>
+                  Skip this day
+                </SecondaryButton>
+              </>
             )}
         </div>
         <SegmentedControl
@@ -360,7 +422,11 @@ export function PlanPage() {
       <Group label="This week">
         <GroupRow>
           <span>4 lifts · 4 runs</span>
-          <span className="kbd-hint">5 done · 1 skipped · today</span>
+          <span className="kbd-hint">
+            {counts.done} done · {counts.skipped} skipped
+            {counts.shifted ? ` · ${counts.shifted} shifted` : ""}
+            {week === THIS_WEEK ? " · today" : ""}
+          </span>
         </GroupRow>
       </Group>
     </div>

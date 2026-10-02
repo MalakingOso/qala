@@ -4,11 +4,20 @@
  * completes. Rest days show check-in / recover / wind down (U10). */
 
 import { useEffect, useRef, useState } from "react";
+import {
+  reasonOn,
+  shiftsPlan,
+} from "../../../../../packages/engine/availability.ts";
 import { useQala } from "../../store/qalaStore.tsx";
 import { sampleWeekLoad } from "../../store/sample.ts";
 import { isRestDay } from "../../store/types.ts";
 import type { DayStageId } from "../../store/types.ts";
 import { Card, PrimaryButton, SecondaryButton } from "../../shared/ui.tsx";
+import {
+  reasonWord,
+  StatusIcon,
+  statusLine,
+} from "../../shared/skipStatus.tsx";
 import { ReadinessRing, WeeklyLoad } from "../../shared/charts/index.ts";
 import {
   ChevronDown,
@@ -19,6 +28,7 @@ import {
   Hourglass,
   Moon,
   SportShoe,
+  Undo2,
 } from "../../shared/icons.ts";
 
 const STAGE_ICON: Record<DayStageId, typeof Dumbbell> = {
@@ -33,7 +43,21 @@ const STAGE_ICON: Record<DayStageId, typeof Dumbbell> = {
 const SNAP_BACK_MS = 10_000;
 
 export function TodayPage() {
-  const { stages, setStageStatus } = useQala();
+  const {
+    stages,
+    setStageStatus,
+    todayKey,
+    skips,
+    availability,
+    clearSkip,
+    clearAvailability,
+  } = useQala();
+  const todayReason = reasonOn(todayKey, availability, skips);
+  const status = statusLine(availability, skips, todayKey);
+  const undoToday = () => {
+    if (skips.some((s) => s.date === todayKey)) clearSkip(todayKey);
+    else clearAvailability();
+  };
   const now = stages.find((s) => s.status === "now") ?? stages[0];
   const [viewing, setViewing] = useState<DayStageId>(now.id);
   const idle = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -62,6 +86,29 @@ export function TodayPage() {
           <h1 className="page-title title">Today</h1>
         </div>
       </div>
+      {status
+        ? (
+          <div className="status-banner" role="status">
+            <StatusIcon reason={status.reason} />
+            <p>
+              {status.text} {status.reason === "injured"
+                ? "Direct work for it is off."
+                : shiftsPlan(status.reason)
+                ? "The plan shifts out."
+                : status.reason === "scheduling"
+                ? "It did not fit today. The plan holds."
+                : "Rest up, the plan holds."}
+            </p>
+            <button
+              type="button"
+              className="link-btn"
+              onClick={undoToday}
+            >
+              <Undo2 size={16} aria-hidden="true" /> Undo
+            </button>
+          </div>
+        )
+        : null}
       <div className="rail">
         <div className="rail-nodes" role="tablist" aria-label="Day stages">
           {stages.map((s, i) => {
@@ -142,14 +189,39 @@ export function TodayPage() {
                     <Clock size={16} />
                     <span>10 min warm-up · 15 min lift</span>
                   </div>
-                  <PrimaryButton
-                    large
-                    href={viewed.id === "warmup"
-                      ? "#/phone/checkin"
-                      : "#/phone/warmup"}
-                  >
-                    <Flame size={22} /> Start warm-up
-                  </PrimaryButton>
+                  {todayReason
+                    ? (
+                      <>
+                        <p className="today-line">
+                          Lower A is skipped ({reasonWord(todayReason)}).
+                        </p>
+                        <PrimaryButton large href="#/phone/plan">
+                          See plan
+                        </PrimaryButton>
+                        <div className="today-actions">
+                          <SecondaryButton onClick={undoToday}>
+                            <Undo2 size={18} /> Undo skip
+                          </SecondaryButton>
+                        </div>
+                      </>
+                    )
+                    : (
+                      <>
+                        <PrimaryButton
+                          large
+                          href={viewed.id === "warmup"
+                            ? "#/phone/checkin"
+                            : "#/phone/warmup"}
+                        >
+                          <Flame size={22} /> Start warm-up
+                        </PrimaryButton>
+                        <div className="today-actions">
+                          <SecondaryButton href="#/phone/skip?day=today&ret=today">
+                            Skip today
+                          </SecondaryButton>
+                        </div>
+                      </>
+                    )}
                   <div className="today-next">
                     <SportShoe size={18} />
                     <p>
@@ -216,12 +288,37 @@ export function TodayPage() {
                 <>
                   <h2 className="title today-title">Easy run</h2>
                   <p className="today-exercise">3.0 mi · 6 pm</p>
-                  <p className="today-line">
-                    Conversational pace. Audio cue every half mile.
-                  </p>
-                  <PrimaryButton large href="#/phone/run/start">
-                    <SportShoe size={22} /> Start run
-                  </PrimaryButton>
+                  {todayReason
+                    ? (
+                      <>
+                        <p className="today-line">
+                          This run is skipped ({reasonWord(todayReason)}).
+                        </p>
+                        <PrimaryButton large href="#/phone/plan">
+                          See plan
+                        </PrimaryButton>
+                        <div className="today-actions">
+                          <SecondaryButton onClick={undoToday}>
+                            <Undo2 size={18} /> Undo skip
+                          </SecondaryButton>
+                        </div>
+                      </>
+                    )
+                    : (
+                      <>
+                        <p className="today-line">
+                          Conversational pace. Audio cue every half mile.
+                        </p>
+                        <PrimaryButton large href="#/phone/run/start">
+                          <SportShoe size={22} /> Start run
+                        </PrimaryButton>
+                        <div className="today-actions">
+                          <SecondaryButton href="#/phone/skip?day=today&ret=today">
+                            Skip today
+                          </SecondaryButton>
+                        </div>
+                      </>
+                    )}
                 </>
               )
               : viewed.id === "winddown"

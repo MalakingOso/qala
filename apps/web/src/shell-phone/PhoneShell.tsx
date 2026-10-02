@@ -2,10 +2,11 @@
  * Settings and history are header buttons. No Start tab: lifts and runs
  * start from Today or a Plan day. */
 
-import type { ReactNode } from "react";
+import { type ReactNode, useState } from "react";
 import { useQala } from "../store/qalaStore.tsx";
 import { isRestDay } from "../store/types.ts";
-import { OfflineBadge } from "../shared/ui.tsx";
+import { OfflineBadge, PrimaryButton, SecondaryButton } from "../shared/ui.tsx";
+import { shortDate, sickSince } from "../shared/skipStatus.tsx";
 import {
   Activity,
   CalendarRange,
@@ -17,6 +18,7 @@ import {
 } from "../shared/icons.ts";
 import { TodayPage } from "./pages/TodayPage.tsx";
 import { PlanPage } from "./pages/PlanPage.tsx";
+import { SkipPage } from "./pages/SkipPage.tsx";
 import { CheckinPage } from "./pages/CheckinPage.tsx";
 import { WarmupPage } from "./pages/WarmupPage.tsx";
 import { WorkoutPage } from "./pages/WorkoutPage.tsx";
@@ -56,6 +58,13 @@ function pageFor(
   switch (route) {
     case "/phone/plan":
       return { tab: "plan", node: <PlanPage /> };
+    case "/phone/skip": {
+      const ret = params.get("ret") ?? "today";
+      return {
+        tab: ret === "plan" ? "plan" : ret === "body" ? "body" : "today",
+        node: <SkipPage day={params.get("day") ?? "today"} ret={ret} />,
+      };
+    }
     case "/phone/checkin":
       return { tab: "today", node: <CheckinPage restDay={restDay} /> };
     case "/phone/warmup":
@@ -100,10 +109,55 @@ function pageFor(
 }
 
 export function PhoneShell({ route }: { route: string }) {
-  const { online, outbox, stages } = useQala();
+  const {
+    online,
+    outbox,
+    stages,
+    todayKey,
+    skips,
+    availability,
+    clearAvailability,
+  } = useQala();
   const { tab, node } = pageFor(route, isRestDay(stages));
+  // "Feeling better?" on entering the app while sick (DESIGN 7.18): from day
+  // two of the stretch, once per session, never on the skip sheet itself.
+  const [sickAsked, setSickAsked] = useState(false);
+  const since = sickSince(availability, skips, todayKey);
+  const askBetter = since !== null && since < todayKey && !sickAsked &&
+    !route.startsWith("/phone/skip");
   return (
     <div className="phone-shell">
+      {askBetter
+        ? (
+          <div className="modal-backdrop">
+            <div
+              className="modal-card"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="feel-better-title"
+            >
+              <h2 id="feel-better-title" className="title">Feeling better?</h2>
+              <p>
+                You have been marked sick since{" "}
+                {since ? shortDate(since) : "earlier"}. Back to training?
+              </p>
+              <div className="modal-actions">
+                <PrimaryButton
+                  onClick={() => {
+                    clearAvailability();
+                    setSickAsked(true);
+                  }}
+                >
+                  I am better
+                </PrimaryButton>
+                <SecondaryButton onClick={() => setSickAsked(true)}>
+                  Still sick
+                </SecondaryButton>
+              </div>
+            </div>
+          </div>
+        )
+        : null}
       <div className="page">
         <header className="phone-topbar">
           <a className="brand" href="#/phone/today" aria-label="Qala today">
