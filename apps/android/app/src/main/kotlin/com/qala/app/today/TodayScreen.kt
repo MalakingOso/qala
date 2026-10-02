@@ -311,6 +311,8 @@ private fun HeroContent(hero: Hero, onGo: (Destination) -> Unit) {
         Spacer(Modifier.height(8.dp))
         SecondaryButton(it.label, onClick = { onGo(it.to) })
     }
+    hero.note?.let { QalaText(it, Modifier.padding(top = 12.dp), QalaType.body.copy(fontSize = 12.sp, lineHeight = 17.sp), c.fgSecondary) }
+    hero.link?.let { LinkButton(it.label, onClick = { onGo(it.to) }) }
 }
 
 /**
@@ -374,10 +376,7 @@ private fun InfoContent(card: InfoCard, onGo: (Destination) -> Unit) {
     GroupLabel(card.kicker)
     QalaText(card.title, Modifier.padding(top = 4.dp).semantics { heading() }, QalaType.cardTitle)
     card.lines.forEach { QalaText(it, Modifier.padding(top = 6.dp), BodyStyle, c.fgSecondary) }
-    card.action?.let {
-        Spacer(Modifier.height(12.dp))
-        SecondaryButton(it.label, onClick = { onGo(it.to) }, small = true)
-    }
+    card.action?.let { LinkButton(it.label, onClick = { onGo(it.to) }, Modifier.padding(top = 4.dp)) }
 }
 
 @Composable
@@ -390,10 +389,7 @@ private fun WeekContent(card: WeekCard, onGo: (Destination) -> Unit) {
         card.cells.forEach { cell -> WeekDay(cell, scale, Modifier.weight(1f)) }
     }
     card.caption?.let { QalaText(it, Modifier.padding(top = 10.dp), BodyStyle, c.fgSecondary) }
-    card.action?.let {
-        Spacer(Modifier.height(12.dp))
-        SecondaryButton(it.label, onClick = { onGo(it.to) }, small = true)
-    }
+    card.action?.let { LinkButton(it.label, onClick = { onGo(it.to) }, Modifier.padding(top = 4.dp)) }
 }
 
 /**

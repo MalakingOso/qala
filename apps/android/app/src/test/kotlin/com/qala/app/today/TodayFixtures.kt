@@ -117,8 +117,11 @@ fun fullSnapshot(
     liftHero = hero,
 )
 
-/** What a release build shows before anything is written: no program, history, runs or weights. */
-fun emptySnapshot(plan: TodayPlan = liftPlan(programDay = null)) = EngineSnapshot(
+/**
+ * What a release build shows before anything is written: no program, history, runs or weights. On a training weekday
+ * that is the rest-day shape with the no-program note, as the deriver gives it.
+ */
+fun emptySnapshot(plan: TodayPlan = restPlan("2026-10-07", noProgram = true)) = EngineSnapshot(
     loaded = true,
     date = plan.date,
     readiness = readiness(score = 1.0, average = null, checkedIn = false, count = 0),

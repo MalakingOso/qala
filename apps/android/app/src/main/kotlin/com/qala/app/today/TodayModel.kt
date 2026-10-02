@@ -64,6 +64,9 @@ data class Hero(
     val ctaEnabled: Boolean = true,
     /** The quiet "Skip today" under the button, on the stage the day is on while nothing is skipped. */
     val skip: Cta? = null,
+    /** A line of small print under the button, and the link that goes with it: the empty state's pointer to Plan. */
+    val note: String? = null,
+    val link: Cta? = null,
     /** True when this is the stage the day is on, so the kicker reads in the accent colour. */
     val now: Boolean = false,
 )
@@ -194,6 +197,7 @@ fun headEyebrow(snapshot: EngineSnapshot, plan: TodayPlan): String {
         plan.liftDay && hero != null -> "$day · ${hero.programName} ${hero.dayName.replaceFirstChar { it.lowercase() }}"
         plan.liftDay && plan.programDay == null -> "$day · No program yet"
         plan.liftDay -> "$day · Lift day"
+        plan.noProgram -> "$day · No program yet"
         plan.skipReason != null -> "$day · Rest day, ${reasonWord(plan.skipReason!!)}"
         else -> "$day · Rest day"
     }
@@ -212,7 +216,7 @@ fun heroFor(snapshot: EngineSnapshot, plan: TodayPlan, viewing: Int, nowIndex: I
     val live = isNow
     val done = doneLine(stage, use24h)
     val hero = when (stage.id) {
-        StageId.CHECK_IN -> when (stage.state) {
+        StageId.CHECK_IN -> noProgramPointer(plan, when (stage.state) {
             StageState.DONE -> Hero(
                 stage.id, HeroLayout.CheckIn, kicker, "Checked in",
                 lines = listOfNotNull(done, readinessLine(snapshot.readiness, checkedIn = true)),
@@ -224,7 +228,7 @@ fun heroFor(snapshot: EngineSnapshot, plan: TodayPlan, viewing: Int, nowIndex: I
                 cta = Cta("Check in", Destination.CheckIn, CtaIcon.CircleCheck),
                 ctaEnabled = live,
             )
-        }
+        })
 
         StageId.WARM_UP -> when (stage.state) {
             StageState.DONE -> Hero(stage.id, HeroLayout.WarmUp, kicker, "Warm-up done", lines = listOfNotNull(done))
@@ -309,8 +313,19 @@ private fun noProgram(id: StageId, layout: HeroLayout, kicker: String, title: St
     ctaEnabled = live,
 )
 
+/**
+ * On a training day with no program the check-in is all there is to do, so its hero points to Plan underneath
+ * (mockups/m4-empty-states.html option A): a line of small print and a link, in every state of the check-in.
+ */
+private fun noProgramPointer(plan: TodayPlan, hero: Hero): Hero =
+    if (!plan.noProgram) hero else hero.copy(
+        note = "No program yet. Add one in Plan and Today shows your lift.",
+        link = Cta("Add a program", Destination.Plan),
+    )
+
 private fun checkInLine(plan: TodayPlan): String = when {
     plan.skipReason != null -> "Today is off (${reasonWord(plan.skipReason!!)}). Check in, then rest."
+    plan.noProgram -> "Two quick questions set your readiness for the day. It takes about a minute."
     !plan.liftDay -> "Rest day. Check in, then recover."
     plan.programDay == null -> "Check in to set today's readiness."
     else -> "Check in to set today's loads."
@@ -499,7 +514,7 @@ fun weekCard(snapshot: EngineSnapshot): WeekCard {
             title = "Nothing planned",
             cells = cells,
             caption = if (days.isEmpty()) "No training days are set. Pick them in Settings."
-            else "Your training days are ${joinWords(days)}. Change them in Settings.",
+            else "Dashed days are your training days: ${days.joinToString(", ")}. Change them in Settings.",
             action = Cta("Open Settings", Destination.Settings),
             empty = true,
         )

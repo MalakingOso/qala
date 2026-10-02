@@ -315,7 +315,7 @@ class TodayModelTest {
         val card = weekCard(emptySnapshot())
         assertTrue(card.empty)
         assertEquals("Nothing planned", card.title)
-        assertEquals("Your training days are Mon, Wed, Fri and Sat. Change them in Settings.", card.caption)
+        assertEquals("Dashed days are your training days: Mon, Wed, Fri, Sat. Change them in Settings.", card.caption)
         assertEquals(Destination.Settings, card.action!!.to)
         assertEquals(listOf(true, false, true, false, true, true, false), card.cells.map { it.training })
     }
@@ -384,7 +384,7 @@ class TodayModelTest {
         assertEquals(Destination.Plan, model.nextRun.action!!.to)
         assertEquals(Destination.Body, model.weight.action!!.to)
         assertTrue(model.week.empty)
-        assertEquals(6, model.stages.size)
+        assertEquals("no program, so no warm-up or lift to wait on", 3, model.stages.size)
         assertEquals("The day still opens with a check-in", 0, model.nowIndex)
         assertEquals("How are you walking in?", model.hero(0).title)
     }
