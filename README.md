@@ -26,7 +26,8 @@ the Nothing Phone, TTS ducking) still need the real phone (PLAN.md 14).
   TypeScript.
 - `apps/web/`: React PWA with the desktop author shell and the phone logger
   shell sharing one theme.
-- `apps/phone/`: Capacitor wrapper around the phone shell for background GPS.
+- `apps/android/`: native Kotlin and Jetpack Compose phone app (Gradle
+  project, `design` module for the tokens and components). In progress.
 - `server/`: Deno server on 127.0.0.1:8500. Sync, auth, tile and elevation
   serving, and the LLM proxy.
 - `deploy/`: systemd unit and Tailscale notes.
@@ -41,7 +42,6 @@ Prereqs: Deno 2, Node 22 + npm. First install the JS deps:
 
 ```sh
 npm --prefix apps/web install
-npm --prefix apps/phone install   # only for the Capacitor wrapper
 ```
 
 ```sh
@@ -49,6 +49,7 @@ deno task build    # typecheck + bundle the PWA into apps/web/dist
 deno task test     # every package's tests
 deno task dev      # server with watch on 127.0.0.1:8500, serves dist/
 deno task serve    # server without watch
+deno task build:android   # debug APK of apps/android; see docs/android-native.md 11
 ```
 
 The server listens on 127.0.0.1:8500 and is published on the tailnet with:

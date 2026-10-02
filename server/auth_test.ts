@@ -70,13 +70,22 @@ Deno.test("non-loopback binds are refused", () => {
   assert(isLoopbackHost("127.255.255.255"));
 });
 
-Deno.test("ws upgrade: Capacitor origin with header is accepted", () => {
+Deno.test("ws upgrade: localhost origin with header is accepted", () => {
   const { userId } = checkWsUpgrade(
     new Request("ws://127.0.0.1:8500/sync", {
       headers: {
         Origin: "https://localhost",
         "Tailscale-User-Login": "berkley",
       },
+    }),
+  );
+  assertEquals(userId, "berkley");
+});
+
+Deno.test("ws upgrade: no Origin with header is accepted (native client)", () => {
+  const { userId } = checkWsUpgrade(
+    new Request("ws://127.0.0.1:8500/sync", {
+      headers: { "Tailscale-User-Login": "berkley" },
     }),
   );
   assertEquals(userId, "berkley");

@@ -1,15 +1,12 @@
 // Auth for the Qala sync server (PLAN.md sections 3 and 7).
 //
 // Identity comes only from the `Tailscale-User-Login` header injected by
-// `tailscale serve`. Origin is never used for auth: the Capacitor app sends
-// `Origin: https://localhost`, browsers send the tailnet hostname, and both
-// are accepted when the identity header is present.
+// `tailscale serve`. Origin is ignored: browsers send the tailnet hostname,
+// the native Android client sends none, and all are accepted when the
+// identity header is present.
 
 /** Header injected by `tailscale serve` carrying the tailnet login. */
 export const IDENTITY_HEADER = "tailscale-user-login";
-
-/** Origin sent by the Capacitor phone shell (bundled WebView). */
-export const CAPACITOR_ORIGIN = "https://localhost";
 
 export class AuthError extends Error {
   status: number;
@@ -74,9 +71,9 @@ export function assertLoopbackBind(hostname: string): void {
 }
 
 /**
- * WebSocket upgrade policy. Auth is the identity header only, never Origin:
- * `Origin: https://localhost` with a header is accepted, and a request
- * without the header is rejected whatever its Origin is.
+ * WebSocket upgrade policy. Origin is ignored; identity comes from
+ * `Tailscale-User-Login`. A request with the header is accepted whatever its
+ * Origin (or none), and a request without it is rejected.
  */
 export function checkWsUpgrade(req: Request): { userId: string } {
   return { userId: requireUser(req) };

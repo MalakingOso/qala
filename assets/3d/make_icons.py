@@ -12,6 +12,13 @@ The chosen icon is Qk. `--ship DIR` writes the set the app serves into DIR (apps
 Up to 96 px the plate carries only the Q (Qh); from 192 px up it is Qk, with QALA over the top and
 45LB on each side. At 96 px and under the lettering is specks, and the Q has to carry the icon alone.
 
+`--android RES` writes the Android launcher icon into a res directory (apps/android/app/src/main/res):
+an adaptive icon with the lettered Qk as the foreground, the light ground as the background, and a
+single-colour Q as the monochrome layer that themed icons (Android 13+) tint. Only `icon_qk_both` is
+needed (`blender -b -P assets/3d/build_sprites.py -- --out DIR --icon --only icon_qk_both`):
+
+    python3 assets/3d/make_icons.py /tmp/qala-icons /tmp/qala-icons/out --android apps/android/app/src/main/res
+
 Each candidate is a full-bleed 1024 px square (no rounded corners: the OS masks it),
 with the plate scaled so every opaque pixel lies inside the maskable safe zone
 (W3C Web App Manifest: a circle at the centre with radius 40% of the icon's
@@ -84,7 +91,12 @@ def trimmed(path):
 
 def compose(render, bg, radius=SAFE_R * 0.99):
     """The render on a flat ground (or none), scaled so every opaque pixel is within `radius` of the centre."""
-    spr = trimmed(os.path.join(src, render + ".png"))
+    return fit(trimmed(os.path.join(src, render + ".png")), bg, radius)
+
+
+def fit(spr, bg, radius):
+    """`spr` (already trimmed to its bounding box) centred on a SIZE square, scaled so every opaque pixel is
+    within `radius` of the centre."""
     # centre by the bounding box, then shrink until every opaque pixel is inside the radius
     a = spr.getchannel("A").point(lambda v: 255 if v > 6 else 0)
     cx, cy = spr.width / 2, spr.height / 2
@@ -216,3 +228,75 @@ def ship(out):
 
 if "--ship" in sys.argv:
     ship(sys.argv[sys.argv.index("--ship") + 1])
+
+
+# -- the Android launcher icon ---------------------------------------------------------------------
+# An adaptive icon is a 108 dp canvas of which the launcher shows a mask-shaped window of about 72 dp, and
+# important content has to stay inside the central 66 dp circle (radius 33 dp) so no mask clips it.
+ADAPTIVE_DP, ADAPTIVE_SAFE_DP = 108, 66
+ANDROID_R = 0.99 * ADAPTIVE_SAFE_DP / 2 / ADAPTIVE_DP * SIZE
+DENSITIES = (("mdpi", 1), ("hdpi", 1.5), ("xhdpi", 2), ("xxhdpi", 3), ("xxxhdpi", 4))
+GLYPH_FONT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "Montserrat-ExtraBold.ttf")
+
+
+def counter_box(mask):
+    """Bounding box of the glyph's counter: the clear pixels the outside can't reach. Found by flooding the
+    outside from a corner, so whatever stays clear is enclosed."""
+    flooded = mask.copy()
+    ImageDraw.floodfill(flooded, (0, 0), 128)
+    return flooded.point(lambda v: 255 if v == 0 else 0).getbbox()
+
+
+def monochrome_q():
+    """The Q as a single-colour silhouette (the themed-icon layer), drawn from the same Montserrat ExtraBold glyph
+    as the 3D icon and stretched the same way so its counter is round."""
+    big = 1600
+    f = ImageFont.truetype(GLYPH_FONT, big)
+    box = f.getbbox("Q")
+    pad = 40
+    mask = Image.new("L", (box[2] - box[0] + 2 * pad, box[3] - box[1] + 2 * pad), 0)
+    ImageDraw.Draw(mask).text((pad - box[0], pad - box[1]), "Q", font=f, fill=255)
+    x0, y0, x1, y1 = counter_box(mask)
+    a, b = (x1 - x0) / 2, (y1 - y0) / 2
+    if abs(a / b - 1) <= 0.08:            # the 3D Q stretches only a few percent, and keeps the shape past 8%
+        mask = mask.resize((round(mask.width * b / a), mask.height), Image.LANCZOS)
+    spr = Image.new("RGBA", mask.size, (0, 0, 0, 0))
+    spr.putalpha(mask)
+    return spr.crop(mask.point(lambda v: 255 if v > 6 else 0).getbbox())
+
+
+def android(res):
+    """Write the adaptive launcher icon into the res directory: foreground and monochrome PNGs at every density,
+    the background colour, and the adaptive-icon XML."""
+    foreground = compose(BIG, None, ANDROID_R)
+    mono = fit(monochrome_q(), None, ANDROID_R)
+    for name, scale in DENSITIES:
+        px = round(ADAPTIVE_DP * scale)
+        d = os.path.join(res, "mipmap-" + name)
+        os.makedirs(d, exist_ok=True)
+        foreground.resize((px, px), Image.LANCZOS).save(os.path.join(d, "ic_launcher_foreground.png"), optimize=True)
+        mono.resize((px, px), Image.LANCZOS).save(os.path.join(d, "ic_launcher_monochrome.png"), optimize=True)
+        print(f"mipmap-{name}: {px} px foreground and monochrome")
+    os.makedirs(os.path.join(res, "values"), exist_ok=True)
+    with open(os.path.join(res, "values", "ic_launcher_background.xml"), "w") as f:
+        f.write(f"""<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="ic_launcher_background">#{LIGHT[0]:02x}{LIGHT[1]:02x}{LIGHT[2]:02x}</color>
+</resources>
+""")
+    os.makedirs(os.path.join(res, "mipmap-anydpi"), exist_ok=True)
+    adaptive = """<?xml version="1.0" encoding="utf-8"?>
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@color/ic_launcher_background" />
+    <foreground android:drawable="@mipmap/ic_launcher_foreground" />
+    <monochrome android:drawable="@mipmap/ic_launcher_monochrome" />
+</adaptive-icon>
+"""
+    for name in ("ic_launcher", "ic_launcher_round"):       # minSdk 34: no -v26 qualifier, no legacy PNGs
+        with open(os.path.join(res, "mipmap-anydpi", name + ".xml"), "w") as f:
+            f.write(adaptive)
+    print("values/ic_launcher_background.xml, mipmap-anydpi/ic_launcher.xml and ic_launcher_round.xml")
+
+
+if "--android" in sys.argv:
+    android(sys.argv[sys.argv.index("--android") + 1])

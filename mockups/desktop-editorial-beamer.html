@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Qala desktop: week in review, lede options</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #e8eaf0; color: #0f152a; padding: 32px 24px 80px; }
+  .page-intro { max-width: 1180px; margin: 0 auto 28px; }
+  .page-intro h1 { font-family: Georgia, serif; font-size: 30px; margin-bottom: 8px; }
+  .page-intro p { font-size: 14px; color: #4a5578; max-width: 70ch; line-height: 1.6; }
+  .direction { max-width: 1180px; margin: 0 auto; }
+  .direction-label { display: flex; align-items: baseline; gap: 12px; margin-bottom: 12px; }
+  .direction-label .tag { font-size: 12px; font-weight: 700; background: #0f152a; color: #fff; padding: 3px 10px; border-radius: 4px; }
+  .direction-label h2 { font-family: Georgia, serif; font-size: 22px; }
+  .direction-label p { font-size: 13px; color: #4a5578; }
+  .frame { border: 2px solid #0f152a; border-radius: 8px; overflow: hidden; box-shadow: 6px 8px 0 rgba(15,21,42,.18); }
+
+  .eb { display: grid; grid-template-columns: 210px 1fr; background: #f5f5f7; font-size: 13px; }
+  .eb-side { background: #fff; border-right: 2px solid rgba(15,21,42,.12); padding: 22px 14px; display: flex; flex-direction: column; gap: 2px; }
+  .eb-brand { font-family: Georgia, serif; font-weight: 700; font-size: 26px; padding: 0 10px; }
+  .eb-brand em { font-style: normal; color: #c2410c; }
+  .eb-brand-sub { font-size: 11px; color: #64708b; font-style: italic; font-family: Georgia, serif; padding: 0 10px; margin-bottom: 18px; }
+  .eb-group { font-size: 10px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: #64708b; padding: 12px 10px 6px; }
+  .eb-nav { display: flex; align-items: baseline; gap: 10px; padding: 9px 10px; border-radius: 6px; color: #4a5578; text-decoration: none; }
+  .eb-nav .no { font-size: 10px; color: #94a0b8; font-variant-numeric: tabular-nums; }
+  .eb-nav.active { background: rgba(194,65,12,.1); color: #c2410c; font-weight: 600; box-shadow: inset 3px 0 0 #c2410c; }
+  .eb-nav.active .no { color: #c2410c; }
+  .eb-foot { margin-top: auto; padding: 14px 10px 0; border-top: 2px solid rgba(15,21,42,.1); color: #64708b; font-size: 12px; display: flex; align-items: center; gap: 8px; }
+  .eb-live { width: 8px; height: 8px; background: #15803d; border-radius: 2px; }
+  .eb-main { min-width: 0; }
+  .eb-bar { display: flex; align-items: center; gap: 12px; background: #fff; border-bottom: 2px solid rgba(15,21,42,.12); padding: 10px 24px; }
+  .eb-search { flex: 1; max-width: 340px; display: flex; align-items: center; gap: 8px; background: #f1f3f9; border: 2px solid rgba(15,21,42,.1); border-radius: 6px; padding: 7px 12px; color: #64708b; font-size: 12px; }
+  .eb-search kbd { margin-left: auto; font-family: inherit; font-size: 11px; background: #fff; border: 1px solid rgba(15,21,42,.15); border-radius: 4px; padding: 1px 6px; }
+  .eb-week { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; }
+  .eb-week button { width: 28px; height: 28px; border: 2px solid rgba(15,21,42,.12); background: #fff; border-radius: 6px; cursor: pointer; }
+  .eb-avatar { width: 32px; height: 32px; border-radius: 50%; background: #0f152a; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; margin-left: auto; }
+  .eb-body { padding: 24px; }
+  .eb-card { background: #fff; border: 2px solid rgba(15,21,42,.14); border-radius: 6px; padding: 30px 32px; box-shadow: 2px 3px 0 rgba(15,21,42,.08); margin-bottom: 14px; }
+  .eb-kicker { font-size: 11px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: #64708b; margin-bottom: 8px; }
+  .eb-title { font-family: Georgia, serif; font-size: 40px; font-weight: 700; line-height: 1.05; margin-bottom: 22px; }
+  .eb-rule { border: none; border-top: 2px solid #0f152a; margin: 0 0 24px; }
+  .eb-opt { display: flex; align-items: baseline; gap: 10px; margin-bottom: 14px; }
+  .eb-opt .tag { font-size: 11px; font-weight: 700; background: #0f152a; color: #fff; padding: 2px 8px; border-radius: 4px; }
+  .eb-opt .nm { font-family: Georgia, serif; font-size: 16px; font-weight: 700; }
+  .eb-opt .ds { font-size: 12px; color: #64708b; }
+  .eb-lede { display: grid; grid-template-columns: 1.15fr 1fr; gap: 36px; align-items: end; padding-bottom: 26px; margin-bottom: 26px; border-bottom: 1px solid rgba(15,21,42,.12); }
+  .eb-lede:last-child { padding-bottom: 0; margin-bottom: 0; border-bottom: none; }
+  .eb-weekbars { display: flex; align-items: stretch; gap: 12px; height: 128px; }
+  .eb-weekbars .d { flex: 1; text-align: center; display: flex; flex-direction: column; justify-content: flex-end; }
+  .eb-weekbars .bar { width: 100%; margin-bottom: 6px; border-radius: 3px 3px 0 0; }
+  .eb-weekbars .bar.done { background: #08a49c; }
+  .eb-weekbars .bar.today { background: #fff; border: 2px solid #c2410c; }
+  .eb-weekbars .bar.rest { background: transparent; border: 2px dashed rgba(15,21,42,.2); }
+  .eb-weekbars .dl { font-size: 10px; color: #64708b; }
+  .eb-bigweek { font-family: Georgia, serif; font-size: 56px; line-height: 1; font-weight: 700; }
+  .eb-bigweek small { font-size: 20px; font-weight: 400; color: #4a5578; }
+  .eb-block { font-size: 13px; font-weight: 600; margin-top: 6px; }
+  .eb-block span { color: #64708b; font-weight: 400; }
+  .eb-segs { display: flex; gap: 6px; margin: 12px 0; }
+  .eb-segs i { flex: 1; height: 10px; border-radius: 2px; background: #e3e6ee; font-style: normal; }
+  .eb-segs i.done { background: #0a8078; }
+  .eb-segs i.now { background: #c2410c; }
+  .eb-bunch { display: flex; gap: 18px; font-size: 12px; color: #4a5578; }
+  .eb-bunch b { display: block; font-family: Georgia, serif; font-size: 22px; color: #0f152a; font-weight: 700; }
+  .eb-bunch .u { color: #15803d; font-size: 11px; }
+  .eb-minirow { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid rgba(15,21,42,.09); font-size: 12px; }
+  .eb-minirow:last-child { border-bottom: none; }
+  .eb-type { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; padding: 2px 7px; border-radius: 3px; }
+  .eb-type.lift { background: rgba(194,65,12,.12); color: #9a3412; }
+  .eb-type.run { background: rgba(72,92,199,.12); color: #3a4a9f; }
+  .eb-minirow .dt { color: #64708b; min-width: 44px; }
+  .eb-minirow .what { flex: 1; }
+  .eb-minirow .what b { font-weight: 600; }
+  .eb-minirow .n { font-variant-numeric: tabular-nums; color: #4a5578; }
+  .eb-delta { display: flex; align-items: baseline; gap: 10px; padding: 9px 0; border-bottom: 1px solid rgba(15,21,42,.09); font-size: 12px; }
+  .eb-delta:last-child { border-bottom: none; }
+  .eb-delta .v { font-family: Georgia, serif; font-size: 24px; font-weight: 700; min-width: 110px; }
+  .eb-delta .w { flex: 1; color: #4a5578; }
+  .eb-delta .t { color: #64708b; font-size: 11px; }
+  .up { color: #15803d; }
+  .eb-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 14px; }
+  .eb-h { font-family: Georgia, serif; font-size: 19px; font-weight: 700; margin-bottom: 6px; padding-bottom: 10px; border-bottom: 2px solid #0f152a; }
+  .eb-h a { float: right; font-family: -apple-system, sans-serif; font-size: 11px; font-weight: 400; color: #64708b; text-decoration: none; margin-top: 7px; }
+  .eb-filters { display: flex; gap: 6px; margin: 12px 0 4px; }
+  .eb-chip { font-size: 10px; font-weight: 600; padding: 4px 10px; border-radius: 20px; background: #e8ebf4; color: #4a5578; border: none; cursor: pointer; }
+  .eb-chip.on { background: #0f152a; color: #fff; }
+  .eb-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .eb-table th { text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: #64708b; padding: 8px; border-bottom: 2px solid rgba(15,21,42,.12); }
+  .eb-table td { padding: 9px 8px; border-bottom: 1px solid rgba(15,21,42,.08); }
+  .eb-table tr:last-child td { border-bottom: none; }
+  .eb-table tbody tr:hover { background: #f1f3f9; }
+  .eb-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+  .eb-row { display: flex; align-items: baseline; gap: 10px; padding: 10px 0; border-bottom: 1px solid rgba(15,21,42,.09); font-size: 12px; }
+  .eb-row:last-child { border-bottom: none; }
+  .eb-row .what { flex: 1; }
+  .eb-row .what b { font-weight: 600; }
+  .eb-row .n { font-variant-numeric: tabular-nums; color: #4a5578; }
+  .eb-row .pr { font-size: 10px; font-weight: 700; color: #c2410c; text-transform: uppercase; letter-spacing: .06em; }
+  .eb-quote { font-family: Georgia, serif; font-style: italic; font-size: 14px; line-height: 1.6; color: #4a5578; border-left: 3px solid #c2410c; padding-left: 14px; margin-top: 16px; }
+</style>
+</head>
+<body>
+<div class="page-intro">
+  <h1>Week in review, lede options</h1>
+  <p>Editorial composition in the Beamer refined theme. The hero anchors the week inside its block with the week stats bunched underneath, no vanity volume metric. Sessions below take the dense console treatment: filter chips, type badges, compact columns.</p>
+</div>
+
+<div class="direction">
+  <div class="direction-label"><span class="tag">Final</span><h2>Week in review</h2><p>Block position lede, dense sessions.</p></div>
+  <div class="frame"><div class="eb">
+    <div class="eb-side">
+      <div class="eb-brand">Qala<em>.</em></div>
+      <div class="eb-brand-sub">training record</div>
+      <div class="eb-group">Training</div>
+      <a class="eb-nav active"><span class="no">01</span> Overview</a>
+      <a class="eb-nav"><span class="no">02</span> Lifts</a>
+      <a class="eb-nav"><span class="no">03</span> Running</a>
+      <a class="eb-nav"><span class="no">04</span> Body</a>
+      <a class="eb-nav"><span class="no">05</span> History</a>
+      <div class="eb-group">Workspace</div>
+      <a class="eb-nav"><span class="no">06</span> Programs</a>
+      <a class="eb-nav"><span class="no">07</span> Exercises</a>
+      <a class="eb-nav"><span class="no">08</span> Calibration</a>
+      <div class="eb-foot"><span class="eb-live"></span> Synced 2 min ago</div>
+    </div>
+    <div class="eb-main">
+      <div class="eb-bar">
+        <div class="eb-search">&#8981; Search lifts, runs, exercises <kbd>Cmd K</kbd></div>
+        <div class="eb-week"><button>&larr;</button> Sep 7&ndash;13 <button>&rarr;</button></div>
+        <div class="eb-avatar">B</div>
+      </div>
+      <div class="eb-body">
+        <div class="eb-card">
+          <div class="eb-kicker">Sunday, September 13 &middot; Lower A complete</div>
+          <div class="eb-title">Week in review</div>
+          <hr class="eb-rule">
+
+          <div class="eb-lede">
+            <div>
+              <div class="eb-bigweek">Week 3 <small>of 6</small></div>
+              <div class="eb-block">Strength B2 <span>&middot; Lower focus &middot; deload next week</span></div>
+              <div class="eb-segs"><i class="done"></i><i class="done"></i><i class="now"></i><i></i><i></i><i></i></div>
+              <div class="eb-bunch">
+                <div><b>6</b>4 lifts &middot; 2 runs</div>
+                <div><b>72</b>readiness <span class="u">+8 clear</span></div>
+                <div><b>11.0</b>miles <span class="u">+1.5 vs plan</span></div>
+                <div><b>40.5</b>VDOT <span class="u">+2.0</span></div>
+              </div>
+            </div>
+            <div class="eb-weekbars">
+              <div class="d"><div class="bar done" style="height:62%"></div><div class="dl">Mon</div></div>
+              <div class="d"><div class="bar done" style="height:46%"></div><div class="dl">Tue</div></div>
+              <div class="d"><div class="bar done" style="height:54%"></div><div class="dl">Wed</div></div>
+              <div class="d"><div class="bar rest" style="height:22%"></div><div class="dl">Thu</div></div>
+              <div class="d"><div class="bar done" style="height:66%"></div><div class="dl">Fri</div></div>
+              <div class="d"><div class="bar done" style="height:38%"></div><div class="dl">Sat</div></div>
+              <div class="d"><div class="bar today" style="height:92%"></div><div class="dl" style="color:#c2410c;font-weight:700">Sun</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="eb-grid">
+          <div class="eb-card">
+            <div class="eb-h">Sessions <a href="#">full history</a></div>
+            <div class="eb-filters"><button class="eb-chip on">All</button><button class="eb-chip">Lifts</button><button class="eb-chip">Runs</button><button class="eb-chip">PRs only</button></div>
+            <table class="eb-table">
+              <tr><th></th><th>Date</th><th>Session</th><th style="text-align:right">Load</th><th style="text-align:right">sRPE</th></tr>
+              <tr><td><span class="eb-type lift">lift</span></td><td>Sep 13</td><td><b>Lower A</b> &middot; Squat 3&times;4 @ 245</td><td class="num">20,420 lb</td><td class="num">8</td></tr>
+              <tr><td><span class="eb-type run">run</span></td><td>Sep 12</td><td><b>Long run</b> &middot; 7.0 mi @ 9:04</td><td class="num">&mdash;</td><td class="num">7</td></tr>
+              <tr><td><span class="eb-type lift">lift</span></td><td>Sep 11</td><td><b>Upper B</b> &middot; Bench 4&times;5 @ 225</td><td class="num">14,110 lb</td><td class="num">7</td></tr>
+              <tr><td><span class="eb-type lift">lift</span></td><td>Sep 9</td><td><b>Lower B</b> &middot; Deadlift 3&times;3 @ 315</td><td class="num">18,940 lb</td><td class="num">8</td></tr>
+              <tr><td><span class="eb-type run">run</span></td><td>Sep 8</td><td><b>Easy run</b> &middot; 4.0 mi @ 9:31</td><td class="num">&mdash;</td><td class="num">4</td></tr>
+            </table>
+          </div>
+          <div class="eb-card">
+            <div class="eb-h">Estimated 1RMs <a href="#">all lifts</a></div>
+            <div class="eb-row"><span class="what"><b>Squat</b></span><span class="n">283 lb</span><span class="pr">+4%</span></div>
+            <div class="eb-row"><span class="what"><b>Bench</b></span><span class="n">245 lb</span><span class="n">+2%</span></div>
+            <div class="eb-row"><span class="what"><b>Deadlift</b></span><span class="n">320 lb</span><span class="n">+3%</span></div>
+            <div class="eb-row"><span class="what"><b>Press</b></span><span class="n">155 lb</span><span class="n">+1%</span></div>
+            <div class="eb-quote">A little under your average, so squat holds at 245 next week.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div></div>
+</div>
+
+</body>
+</html>

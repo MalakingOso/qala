@@ -1,6 +1,6 @@
 // @qala/run: GPS run-recording pipeline. Pure TypeScript, no DOM, no
-// Capacitor imports. The phone app injects fixes from the background
-// geolocation plugin; every function also accepts fixture arrays.
+// platform imports. The caller injects fixes from the phone's location
+// provider; every function also accepts fixture arrays.
 //
 // Full pipeline: filterFixes -> computePauses -> splits + pace (+ guided).
 

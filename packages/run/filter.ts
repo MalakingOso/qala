@@ -1,8 +1,8 @@
 // GPS fix filter: dedupe, accuracy gate, speed gate with re-anchor,
 // constant-velocity Kalman filter, Vincenty distance.
 //
-// Pure TypeScript: no DOM, no Capacitor imports. The fix source (Capacitor
-// plugin on the phone, fixture arrays in tests) is injected by the caller.
+// Pure TypeScript: no DOM, no platform imports. The fix source (the phone's
+// location provider, fixture arrays in tests) is injected by the caller.
 //
 // Pipeline order per fix, in timestamp order (RESEARCH-run-tracking.md 3):
 //  1. Dedupe by timestamp: drop t <= highest timestamp seen so far. One

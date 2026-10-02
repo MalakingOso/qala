@@ -7,4 +7,4 @@ export ANDROID_NDK_HOME="$ANDROID_HOME/ndk/29.0.14206865"
 export GRADLE_HOME="$HOME/.local/gradle-9.8.0"
 # Keep Gradle's daemon from taking the machine down (see memory note on the cargo OOM).
 export GRADLE_OPTS="${GRADLE_OPTS:--Xmx2g}"
-export PATH="$JAVA_HOME/bin:$GRADLE_HOME/bin:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$HOME/.cargo/bin:$PATH"
+export PATH="$JAVA_HOME/bin:$GRADLE_HOME/bin:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$HOME/.cargo/bin:$PATH"

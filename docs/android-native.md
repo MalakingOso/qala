@@ -1,12 +1,12 @@
 # Native Android app: plan
 
-Status: **proposed**, 2026-09-30. Nothing here is built or approved. This replaces the Capacitor wrapper (`apps/phone`, DECISIONS S2). The shared logic comes from the Rust core in `docs/rust-core.md`; what was and wasn't verified is in `docs/rust-core-spike.md`. Open questions you can answer later are in `docs/rust-core-open-questions.md`. Decision rows are DECISIONS S6 to S17. Revised 2026-09-30: sync is records over HTTP (no Automerge), and liftoscript is ported to Rust (no quickjs).
+Status: the Kotlin direction (DECISIONS S7) is **decided** as of 2026-10-01, and `apps/android` exists and builds: a Gradle project with an `app` and a `design` module, the generated design tokens, fonts and icons, and a navigation shell around a stub Today screen. Everything below that point is still proposed. This replaced the Capacitor wrapper (`apps/phone`, DECISIONS S2), which has been deleted. The shared logic comes from the Rust core in `docs/rust-core.md`; what was and wasn't verified is in `docs/rust-core-spike.md`. Open questions you can answer later are in `docs/rust-core-open-questions.md`. Decision rows are DECISIONS S6 to S17. Revised 2026-09-30: sync is records over HTTP (no Automerge), and liftoscript is ported to Rust (no quickjs).
 
 ## 1. Where things stand
 
 The phone shell is a prototype. `apps/web/src/shell-phone` (about 3,300 lines of pages, plus about 2,300 of shared UI and charts) runs entirely on `store/sample.ts`. It calls one `packages/*` module (`core/plates.ts`). There is no `fetch`, `WebSocket` or IndexedDB anywhere in `apps/web/src`, the offline outbox in `localStorage` is write-only, and the run pages are stubs on a fake `setInterval` ticker.
 
-The Android side is thinner still. `AndroidManifest.xml` declares `com.qala.app.RunRecordingService`, but that class doesn't exist. `MainActivity.java` is an empty `BridgeActivity`. `apps/phone/src/native/*.ts` are wrappers that no page calls. No Gradle project is checked in.
+The Android side was thinner still. The Capacitor wrapper's `AndroidManifest.xml` declared `com.qala.app.RunRecordingService`, but that class never existed. `MainActivity.java` was an empty `BridgeActivity`. `apps/phone/src/native/*.ts` were wrappers that no page called. No Gradle project was checked in. The wrapper has been removed; git history keeps the tracked files, and its manifest settings that still matter are in section 5.
 
 So the rewrite is mostly new work on both sides. The React pages are a design reference, not code to transliterate.
 
@@ -16,9 +16,10 @@ So the rewrite is mostly new work on both sides. The React pages are a design re
 |---|---|---|
 | Device | Nothing Phone (4a) Pro, Android 16 (API 36), Nothing OS 4.1. Sideloaded. | Shipped March 2026. Nothing OS 5.0 on Android 17 is in open beta for it, stable expected from October. |
 | minSdk | 34 | One device. Android 14 has the foreground-service type rules the recorder depends on. 33 also works; 34 removes a branch. |
+| compileSdk | 37 | Compose 1.12.1 (BOM 2026.09.00) requires it. `compileSdk { version = release(37) }` resolves to the installed `android-37.0` platform. |
 | targetSdk | 36 now, 37 after retesting | Sideloaded apps aren't bound by Play's rules (the August 2026 deadline requires API 36 for Play). Android 17 hardens background audio, so test the foreground service and ducking on the Nothing OS 5.0 beta before moving up. |
 | Language and UI | Kotlin, Jetpack Compose on Foundation | No Material 3 defaults. PLAN 3 already says "no component kit"; M3 fights the Beamer look. |
-| ABI | `arm64-v8a` only | One phone. Cuts the Rust and MapLibre `.so` sizes. Add x86_64 only if you want an emulator. |
+| ABI | `arm64-v8a` only | One phone. Cuts the Rust and MapLibre `.so` sizes. Compose ships a small native library (`libandroidx.graphics.path.so`), so even the empty app is arm64 only and won't install on an x86_64 emulator. `-Pqala.abi=x86_64` builds one that will. |
 
 ## 3. Module layout
 
@@ -35,16 +36,16 @@ apps/android/
 
 KMP and Compose Multiplatform would keep iOS open (PLAN 3 says iOS waits for a friend who wants runs). I'm not adopting it. The structure keeps `core/`, `data/` and `run/` free of Compose imports, which is the cheap part of keeping the door open.
 
-Dependency injection: constructor injection through a hand-written `AppContainer` until it hurts. Navigation: Navigation Compose; check Navigation 3 status at A0 before choosing. Both unverified for September 2026.
+Only `app` and `design` exist so far. Dependency injection: constructor injection through a hand-written `AppContainer` until it hurts; it isn't introduced yet. Navigation: the A1 shell has no navigation library. A sealed `Route` held in `rememberSaveable` plus a `BackHandler` covers five tabs and two pushed screens. Navigation Compose versus Navigation 3 stays open until A4, where real back stacks and arguments appear. Both are still unverified for September 2026.
 
 ## 4. Design system
 
 The design lives in token values: border width, shadow shape, radii (DECISIONS L8; the visual-refinement pass that softened these was reverted). Port the values exactly and generate them.
 
-- `scripts/tokens_to_kotlin.ts` reads `apps/web/src/theme/tokens.css` and emits `Tokens.kt` (light and dark, zone colors, plate colors). One source of truth. The existing WCAG contrast test (`themeContrast.test.ts`) runs against the same file.
-- Beamer surface: `Modifier.beamerSurface()` draws the 2px border, 4/6/8 radii and the hard offset shadow with `drawBehind`. No elevation, no blur.
-- Fonts need TTF or OTF, not woff2. Qala Test TTFs are already in `assets/fonts/` (`QalaTest-Medium.ttf`, `QalaTestV2-Bold.ttf`). A Faustina variable TTF is in `assets/fonts/qala-test/work/`. DM Mono only has woff2 in the repo: convert with fonttools or fetch from Google Fonts. Both are OFL; read `DMMono-OFL.txt` for reserved-name terms before renaming anything.
-- Icons: Lucide as Compose `ImageVector`s, generated from the Lucide SVG paths for only the icons DESIGN 4 lists. Runs use `sport-shoe`.
+- `scripts/tokens_to_kotlin.ts` reads `apps/web/src/theme/tokens.css` and emits `design/.../Tokens.kt`: a light and a dark `QalaPalette` (dark is light with the dark overrides applied), zone, recovery and chart colors, shadows as data, radii, spacing and motion. Plate colors are not in it, because they are sprites and not `tokens.css` values. One source of truth. The WCAG contrast test (`themeContrast.test.ts`) runs against the same file and a staleness test (`tokensKotlin.test.ts`) fails when the checked-in `Tokens.kt` drifts, so `deno task test` is the gate. `ContrastTest.kt` repeats the 24 pairs on the generated Kotlin.
+- Beamer surface: `Modifier.beamerSurface()` draws the 2px border, 4/6/8 radii and the hard offset shadow with `drawBehind`. No elevation, no blur. Built, along with `Card`, `Group`, buttons, the tab bar and the top bar.
+- Fonts need TTF or OTF, not woff2. Qala Test (700 and 500) and DM Mono (400 and 500) are bundled in `design/src/main/res/font/`. The DM Mono TTFs were converted from the repo woff2 with `scripts/woff2_to_ttf.py` (lossless, no rename needed). Faustina waits for the title-font toggle, which arrives with Settings. Qala Test V2's internal family name is "Qala Test V2", so fonts are resource lookups (`Font(R.font.x, weight)`), never by name. Compose line boxes differ from CSS: DM Mono matches the web exactly, and Qala Test titles come out 3 to 4 dp taller because Compose keeps the font's own ascent above the first line.
+- Icons: Lucide as Compose `ImageVector`s, generated by `scripts/lucide_to_kotlin.ts` from the Lucide SVG paths for only the icons DESIGN 4 lists (41; `table-2` waits for A5). Runs use `sport-shoe`.
 - Tabs: Today, Plan, Body, Progress, Coach (DECISIONS U2).
 
 ## 5. Run recorder
@@ -54,7 +55,9 @@ This is the hardest part and the owner's original reason for going native, so it
 | Concern | Design |
 |---|---|
 | Service | `RunRecordingService`, `foregroundServiceType="location|connectedDevice"`, `START_STICKY`, persistent notification. Started from the visible activity on the Start button, never from the background. |
-| Permissions | At first run start, in this order: fine location, `POST_NOTIFICATIONS`, then background location last (it sends the user to Settings). Declare `FOREGROUND_SERVICE_LOCATION`, `FOREGROUND_SERVICE_CONNECTED_DEVICE`, `BLUETOOTH_SCAN` (`neverForLocation`), `BLUETOOTH_CONNECT`. |
+| Permissions | At first run start, in this order: fine location, `POST_NOTIFICATIONS`, then background location last (it sends the user to Settings). Declare `ACCESS_FINE_LOCATION` and `ACCESS_COARSE_LOCATION` (Android 12+ shows the approximate-location choice and both must be declared), `ACCESS_BACKGROUND_LOCATION`, the base `FOREGROUND_SERVICE` plus `FOREGROUND_SERVICE_LOCATION` and `FOREGROUND_SERVICE_CONNECTED_DEVICE`, `BLUETOOTH_SCAN` (`neverForLocation`), `BLUETOOTH_CONNECT`, and `<uses-feature android:name="android.hardware.bluetooth_le" android:required="false" />` so the strap stays optional. |
+| Activity | `launchMode="singleTask"`, so tapping the notification returns to the running activity instead of stacking a second one. |
+| Notification | Title "Qala is recording your run", text "GPS active. Thanks for leaving the screen locked." |
 | Location | `FusedLocationProviderClient`, `PRIORITY_HIGH_ACCURACY`, 1000 ms, no `setMaxUpdateDelayMillis`. One position stream only (PLAN 8a rule 2). A `LocationManager` `GPS_PROVIDER` implementation sits behind the same `FixSource` interface as a fallback. Fixes are timed by `elapsedRealtimeNanos`, not by callback time. |
 | Persistence | Each fix is one Room insert, `INSERT OR IGNORE` on `(runId, fixTimeMs)`, on a dedicated single-thread dispatcher. WAL survives process death; at most the last uncommitted row is lost. |
 | Pipeline | Fix goes to Room, then to the Rust `RunRecorder.push_fix`, which returns live numbers and cue events. A process-wide `RunRepository` exposes `StateFlow<RunState>` to Compose. No bound service. |
@@ -120,13 +123,15 @@ Sizes are relative (S, M, L), not calendar estimates, except where a research re
 |---|---|---|---|
 | A0 | Provision the Android toolchain (below). Run the five spike checks in `rust-core-spike.md`. Run the Vico and Canvas run-series spike. Run the L5 check. | All five spike checks pass, or the documented exit is taken. | M |
 | A1 | Design system, tokens generator, fonts, icons, navigation shell on sample data. In parallel with A2. | Contrast test passes on generated tokens; screenshots of Settings and a stub Today against DESIGN. | M |
+
+A1 status, 2026-10-01: the tokens generator, fonts, icons, design components and navigation shell are built, and the first gate is met. The second is half met: the stub Today was compared against the web at 390 dp on an x86_64 emulator, and it matches in fonts, spacing, shadows and colors. Settings, All exercises and History are titled stubs, not screens, and nothing has run on the owner's phone yet.
 | A2 | `qala-core` R0 and R1 (run), recorder service, Room, live and summary screens, HR, cues. | The four gates in section 5. | L |
 | A3 | `schemaVersion` migration (tracks out), Room records with HLC, `POST /api/sync` and blob routes on the server (both with `requireUser`), web and Kotlin clients. | Phone and desktop converge on edits made offline on both; a conflicting field edit resolves to the higher HLC; airplane-mode session syncs on reconnect (PLAN 14). | L |
 | R5 (parallel with A2 and A3) | The Rust liftoscript port, oracle first (rust-core.md section 8). Not an Android phase; it must land before A4. | 60 built-ins and the GZCLP progression match the oracle. | L |
 | A4 | R2 and R3 (math, engine), lifting screens wired to the Rust evaluator. | Golden vectors pass on-device; check-in to workout end to end with no network. | L |
 | A5 | Charts, map, stats screens. | Charts have table views and TalkBack labels; map works with the radio off. | M |
 | A6 | Coach route and screen, release signing, sideload build. | Coach offline state; signed APK installs. | S |
-| A7 | Retire `apps/phone` and the Capacitor dependencies. Freeze the React phone shell as a PWA (S13). | Native run gate passed on the phone. | S |
+| A7 | Retire `apps/phone` and the Capacitor dependencies. Freeze the React phone shell as a PWA (S13). | Done 2026-10-01, ahead of the native run gate, at the owner's request. | S |
 
 ## 10. Server changes
 
@@ -149,21 +154,22 @@ Installed 2026-10-01, all under the home directory with no system-wide changes. 
 | Android SDK | platforms 36 and 37.0, build-tools 36.1.0, platform-tools 37.0.1 (adb), cmdline-tools 16111833 | `~/Android/Sdk` |
 | NDK | r29 (29.0.14206865) | `~/Android/Sdk/ndk/` |
 | Rust target and tool | `aarch64-linux-android`, `cargo-ndk` 4.1.2 | `~/.cargo` |
+| Emulator | 37.2.12, system image `android-36` default `x86_64`, AVD `qala-test` (Pixel 8) | `~/Android/Sdk/emulator`, `~/.android/avd` |
 
-Verified: Gradle 9.8.0 reports Kotlin 2.4.10; `cargo ndk -t arm64-v8a build -p qala-lspp-ffi --release` produces a 1.8 MB stripped `.so` (771 KB gzipped) whose LOAD segments are 16 KB aligned (spike check 1, size and alignment; call latency still untested). Not verified: an Android app build. A throwaway Compose app was started and abandoned at the owner's request.
+Verified: Gradle 9.8.0 reports Kotlin 2.4.10; `cargo ndk -t arm64-v8a build -p qala-lspp-ffi --release` produces a 1.8 MB stripped `.so` (771 KB gzipped) whose LOAD segments are 16 KB aligned (spike check 1, size and alignment; call latency still untested). The first app build, also 2026-10-01: AGP 9.4.1, Gradle 9.8.0, the Compose BOM 2026.09.00, the Kotlin Compose plugin 2.4.20 and `compileSdk 37` build `apps/android` with `assembleDebug`, `lintDebug` and `testDebugUnitTest` all green and no patches (the debug APK is about 24 MB). The abandoned smoke project failed because it used `compileSdk 36`. `android.builder.sdkDownload=false` is set, so a build can't quietly fetch a platform; `release(37)` found the installed `android-37.0` and nothing downloaded. Two lint warnings are switched off on purpose (`OldTargetApi`, `ChromeOsAbiSupport`), both decisions recorded above.
 
 Version notes found on the way, so the real project starts right: Compose BOM 2026.09.00 (Compose 1.12.1) requires Android Gradle Plugin 9.1 or newer, which needs Gradle 9.x. AGP 9.4.1 has built-in Kotlin, so do not apply `org.jetbrains.kotlin.android`; the `org.jetbrains.kotlin.plugin.compose` plugin is still needed (latest Kotlin plugin 2.4.20). AGP 8.13.2 works only with an older Compose BOM.
 
-Still manual, needs sudo: adb access to the phone over USB. No Nothing phone is attached now and no android udev rules exist. Run `sudo apt install android-sdk-platform-tools-common` (it ships the udev rules), replug the phone, enable USB debugging, and check `adb devices`. Wireless debugging is the alternative.
+Still manual, needs sudo: adb access to the phone over USB. Wireless debugging (`adb pair`, no udev rules or sudo) is the other route and hasn't been tried here. No Nothing phone is attached now and no android udev rules exist. Run `sudo apt install android-sdk-platform-tools-common` (it ships the udev rules), replug the phone, enable USB debugging, and check `adb devices`. Wireless debugging is the alternative.
 
-Decisions: the Gradle wrapper jar will be checked in once `apps/android` exists (the old "no Gradle binaries in the repo" rule costs more than it saves). The signing keystore stays outside the repo. The `build:android` task in `deno.json` still assumes the Capacitor flow and is replaced when `apps/android` is created. An x86_64 emulator with KVM may work on this machine; untested.
+Decisions: the Gradle wrapper jar is checked in (the old "no Gradle binaries in the repo" rule cost more than it saved). The signing keystore stays outside the repo. The `build:android` task in `deno.json` used to run the Capacitor flow; it now runs `assembleDebug` for `apps/android`. An x86_64 emulator with KVM works on this machine: `source scripts/android-env.sh`, then `emulator -avd qala-test -no-window -gpu swiftshader_indirect`, build with `-Pqala.abi=x86_64`, and install with `adb install -r`. For a layout that matches the web at 390 dp, `adb shell wm size 1024x2200` and `wm density 420`.
 
 ## 12. Testing
 
 - Rust: `cargo test` over the golden vectors, plus differential fuzz against Deno.
 - Kotlin unit tests for ViewModels and repositories.
 - Instrumented tests on the phone for golden vectors through the FFI, and for a 2 h track replay through the recorder.
-- Compose UI tests for the logging flow. Pick a screenshot tool at A1.
+- Compose UI tests for the logging flow. The screenshot tool is still open after the A1 start: Roborazzi needs Robolectric and Paparazzi needs layoutlib, both tend to trail the newest SDK, and this project is on `compileSdk 37`. A1 used one-off emulator screenshots (`adb exec-out screencap -p`) instead.
 - Device gates are manual and listed in section 5 and PLAN 14.
 
 ## 13. Risks

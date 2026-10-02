@@ -33,7 +33,7 @@ Counts are from `find` and `grep` over `packages/` on 2026-09-30. "Tests" counts
 | `core` | 1,290 | 321 | 22 | Yes. Types, units, rounding, plates, migrations. | `schema.ts` is types only. `plates.ts` is the one module the phone UI already calls. |
 | `engine` | 2,552 | 1,227 | 62 | Yes. `state.ts` says "no DOM, no automerge". | Date arithmetic (`daysBetween`, decay). `JSON.parse(JSON.stringify(s))` clone idiom. |
 | `generator` | 2,645 | 1,109 | 41 | Yes. Emits liftoscript text. | Its tests parse and evaluate the output with liftoscript, so evaluation stays a TS check. |
-| `run` | 1,534 | 612 | 28 | Yes. No DOM, no Capacitor. | The pipeline is batch (`filterFixes`, `computePauses`, `computeSplits` take the whole array). Only `GuidedRun` is stateful. Live use needs a new incremental recorder. `gpx.ts`, `tcx.ts`, `xml.ts` are exporters with no phone caller. |
+| `run` | 1,534 | 612 | 28 | Yes. No DOM, no platform imports. | The pipeline is batch (`filterFixes`, `computePauses`, `computeSplits` take the whole array). Only `GuidedRun` is stateful. Live use needs a new incremental recorder. `gpx.ts`, `tcx.ts`, `xml.ts` are exporters with no phone caller. |
 | `llm` | 940 | 324 | 8 | Yes. Prompt builders and response validation. | `valibot`. Not in the port list; see section 7, R6. |
 | `liftoscript` | 24,344 | 568 | 10 | Mostly. Vendored from liftosaur, upstream file names kept. | `@lezer/*` parser (the thing a Rust parser replaces). `Dialog_*` and `Storage_*` are stubs. Tests read built-ins through `Deno.readDirSync`. Large planner and mutator surface beyond `parser.ts` and the evaluator. |
 
