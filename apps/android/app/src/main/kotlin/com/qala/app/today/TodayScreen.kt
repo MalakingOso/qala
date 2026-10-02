@@ -37,25 +37,34 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import com.qala.app.LocalAppContainer
 import com.qala.app.skip.SkipSheetState
+import com.qala.app.skip.apply
+import com.qala.app.skip.skipIcon
+import com.qala.app.skip.undoWrites
 import com.qala.design.Card
 import com.qala.design.CardNotch
 import com.qala.design.DayMenu
 import com.qala.design.DayRail
 import com.qala.design.DmMonoFamily
 import com.qala.design.GroupLabel
+import com.qala.design.IconTile
+import com.qala.design.LinkButton
 import com.qala.design.PreviewBar
 import com.qala.design.PrimaryButton
 import com.qala.design.Qala
@@ -67,6 +76,7 @@ import com.qala.design.QalaType
 import com.qala.design.SecondaryButton
 import com.qala.design.beamerSurface
 import com.qala.design.nextStage
+import kotlinx.coroutines.launch
 import com.qala.design.rememberCardNotch
 import com.qala.design.trackNotch
 import com.qala.data.today.DayKind
@@ -165,6 +175,7 @@ fun TodayScreen(
                     } else {
                         val notchBand = { band.value }
                         val hero = model.hero(viewing)
+                        model.status?.let { card -> RailCard(rememberCardNotch(notchBand)) { StatusContent(card, model, ui) } }
                         RailCard(rememberCardNotch(notchBand)) { HeroContent(hero, onGo) }
                         RailCard(rememberCardNotch(notchBand)) { InfoContent(model.nextRun, onGo) }
                         RailCard(rememberCardNotch(notchBand)) { InfoContent(model.readiness, onGo) }
@@ -302,6 +313,61 @@ private fun HeroContent(hero: Hero, onGo: (Destination) -> Unit) {
     }
 }
 
+/**
+ * The status card (mockups/m4-status-banner.html option B, with the question inline): the reason, how long, what it means
+ * for the plan, Undo and Change. From a sick span's second day the "Feeling better?" question sits under them, once per
+ * session. The head is a polite live region, so a status appearing, changing or ending is spoken.
+ */
+@Composable
+private fun StatusContent(card: StatusCard, model: TodayModel, ui: TodayUiState) {
+    val c = Qala.colors
+    val container = LocalAppContainer.current
+    val status = model.dayStatus ?: return
+    val date = model.plan.date
+    val ask = feelingBetterDue(card, container.feelingBetterAsked)
+    // Writes run on the container's scope: the card goes away when the snapshot catches up, and a Room write must not be cancelled with it.
+    fun end() = container.scope.launch { container.availability.apply(undoWrites(status, date)) }
+
+    Column(Modifier.semantics(mergeDescendants = true) { liveRegion = LiveRegionMode.Polite; contentDescription = card.announcement }) {
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
+            IconTile(skipIcon(card.reason))
+            Column {
+                QalaText(card.head, Modifier.semantics { heading() }, QalaType.cardTitle)
+                QalaText(card.whenLine, style = QalaType.hint, color = c.fgMuted)
+            }
+        }
+        QalaText(card.line, Modifier.padding(top = 10.dp), BodyStyle, c.fgSecondary)
+        card.note?.let { QalaText("Note: $it", Modifier.padding(top = 4.dp), QalaType.hint, c.fgMuted) }
+    }
+    Row(Modifier.padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+        SecondaryButton(
+            "Undo",
+            onClick = { end() },
+            modifier = Modifier.semantics { contentDescription = card.undoDescription },
+            small = true,
+            icon = QalaIcons.Undo2,
+        )
+        LinkButton("Change", onClick = { ui.skip.show(model.skip) }, Modifier.semantics { contentDescription = "Change today's status" }.padding(horizontal = 10.dp))
+    }
+    if (ask) {
+        val rule = c.border
+        Column(
+            Modifier
+                .padding(top = 12.dp)
+                .fillMaxWidth()
+                .drawBehind { drawRect(rule, Offset.Zero, Size(size.width, QalaTokens.borderWidth.toPx())) }
+                .padding(top = 12.dp + QalaTokens.borderWidth),
+        ) {
+            QalaText("Feeling better?", Modifier.semantics { heading() }, QalaType.bodyStrong, c.fg)
+            QalaText(card.ask!!.text, Modifier.padding(top = 2.dp), BodyStyle, c.fgSecondary)
+            Row(Modifier.padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                PrimaryButton("I am better", onClick = { container.feelingBetterAsked = true; end() }, modifier = Modifier.weight(1f))
+                SecondaryButton("Still sick", onClick = { container.feelingBetterAsked = true }, modifier = Modifier.weight(1f))
+            }
+        }
+    }
+}
+
 @Composable
 private fun InfoContent(card: InfoCard, onGo: (Destination) -> Unit) {
     val c = Qala.colors
@@ -343,6 +409,7 @@ private fun WeekDay(cell: WeekCell, scale: Double, modifier: Modifier) {
         append(cell.dayName)
         append(if (cell.training) ", lift day" else if (cell.kind == DayKind.RUN) ", run day" else ", rest day")
         if (size > 0) append(", ${loadUnits(cell.planned)} planned, ${loadUnits(cell.done)} done")
+        if (cell.reason != null) append(", skipped, ${reasonWord(cell.reason)}")
         if (cell.today) append(", today")
     }
     Column(modifier.semantics(mergeDescendants = true) { contentDescription = spoken }, horizontalAlignment = Alignment.CenterHorizontally) {
@@ -379,12 +446,19 @@ private fun WeekDay(cell: WeekCell, scale: Double, modifier: Modifier) {
                     }
                 },
         )
-        QalaText(cell.letter, Modifier.padding(top = 4.dp), QalaType.tabLabel, if (cell.today) c.accent else c.fgMuted, maxLines = 1)
+        QalaText(
+            cell.letter,
+            Modifier.padding(top = 4.dp),
+            if (cell.reason != null) QalaType.tabLabel.copy(textDecoration = TextDecoration.LineThrough) else QalaType.tabLabel,
+            if (cell.today) c.accent else c.fgMuted,
+            maxLines = 1,
+        )
         QalaIcon(
-            when (cell.kind) {
-                DayKind.LIFT -> QalaIcons.Dumbbell
-                DayKind.RUN -> QalaIcons.SportShoe
-                DayKind.REST -> QalaIcons.Bed
+            when {
+                cell.reason != null -> skipIcon(cell.reason)
+                cell.kind == DayKind.LIFT -> QalaIcons.Dumbbell
+                cell.kind == DayKind.RUN -> QalaIcons.SportShoe
+                else -> QalaIcons.Bed
             },
             null,
             Modifier.padding(top = 3.dp),

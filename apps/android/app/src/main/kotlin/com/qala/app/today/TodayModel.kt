@@ -8,8 +8,10 @@ import com.qala.data.core.ReadinessSummary
 import com.qala.data.core.TrendDirection
 import com.qala.data.engine.EngineSnapshot
 import com.qala.data.model.RunZone
+import com.qala.data.model.SkipReason
 import com.qala.data.model.WeightUnit
 import com.qala.data.today.DayKind
+import com.qala.data.today.DayStatus
 import com.qala.data.today.DayStage
 import com.qala.data.today.StageId
 import com.qala.data.today.StageState
@@ -84,6 +86,8 @@ class WeekCell(
     val planned: Double,
     val done: Double,
     val today: Boolean,
+    /** Why a day that would have trained is off (a skip or a status); null for every other day. */
+    val reason: SkipReason? = null,
 ) {
     val training: Boolean get() = kind == DayKind.LIFT
 }
@@ -127,6 +131,12 @@ class TodayModel(private val snapshot: EngineSnapshot, val plan: TodayPlan, priv
 
     /** What the check-in screen asks about today. */
     val checkIn: CheckInPlan = checkInPlan(snapshot, plan)
+
+    /** What is on today (a skip or a status), as the card at the top of Today says it; null when nothing is. */
+    val status: StatusCard? = statusCard(snapshot.status, snapshot.date)
+
+    /** The records behind [status], for Undo and "I am better" to act on. */
+    val dayStatus: DayStatus? = snapshot.status
 
     /** What the skip sheet opens with: a new skip, or a change of the status already on today. */
     val skip: SkipRequest = skipRequest(snapshot.date, snapshot.status)
@@ -324,7 +334,10 @@ private fun liftHero(snapshot: EngineSnapshot, plan: TodayPlan, kicker: String, 
         } else {
             HeroFigure("Your top set", trimNumber(top.weight!!), unitName(top.unit), trimNumber(top.reps) + if (top.amrap) "+" else "")
         },
-        lines = listOfNotNull(readinessLine(snapshot.readiness, checkedIn = snapshot.readiness?.checkedInToday == true)),
+        lines = listOfNotNull(
+            snapshot.injured.firstOrNull()?.let { "Adjusted around your ${muscleName(it)}. Direct work for it is off." },
+            readinessLine(snapshot.readiness, checkedIn = snapshot.readiness?.checkedInToday == true),
+        ),
         detail = "${plural(hero.exerciseCount, "exercise")} · ${plural(hero.setCount, "set")}",
         cta = Cta("Start workout", Destination.Workout, CtaIcon.Dumbbell),
         ctaEnabled = live,
@@ -474,6 +487,7 @@ fun weekCard(snapshot: EngineSnapshot): WeekCard {
             planned = load?.planned?.getOrNull(i) ?: 0.0,
             done = load?.done?.getOrNull(i) ?: 0.0,
             today = day != null && day.date == snapshot.date,
+            reason = day?.reason,
         )
     }
     val planned = cells.sumOf { it.planned }
@@ -496,8 +510,11 @@ fun weekCard(snapshot: EngineSnapshot): WeekCard {
         title = if (planned <= 0.0) "${loadUnits(done)} load done" else "${loadUnits(done)} of ${loadUnits(planned)} load done",
         cells = cells,
         caption = today?.let {
-            if (it.planned <= 0.0 && it.done <= 0.0) "Today is a rest day."
-            else "Today: ${loadUnits(it.planned)} planned, ${loadUnits(it.done)} done."
+            when {
+                it.reason != null -> "Today is skipped (${reasonWord(it.reason)}). ${if (snapshot.status?.shifts == true) "The plan shifts out." else "The plan holds."}"
+                it.planned <= 0.0 && it.done <= 0.0 -> "Today is a rest day."
+                else -> "Today: ${loadUnits(it.planned)} planned, ${loadUnits(it.done)} done."
+            }
         },
     )
 }

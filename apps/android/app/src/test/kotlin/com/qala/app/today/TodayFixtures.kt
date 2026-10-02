@@ -61,9 +61,9 @@ fun liftPlan(
     return TodayPlan(date, true, null, programDay, list, list.firstOrNull { it.state == StageState.NOW }?.id)
 }
 
-fun restPlan(date: String = "2026-10-06", done: Map<StageId, Int> = emptyMap(), reason: SkipReason? = null): TodayPlan {
+fun restPlan(date: String = "2026-10-06", done: Map<StageId, Int> = emptyMap(), reason: SkipReason? = null, noProgram: Boolean = false): TodayPlan {
     val list = stages(RestIds, date, done)
-    return TodayPlan(date, false, reason, null, list, list.firstOrNull { it.state == StageState.NOW }?.id)
+    return TodayPlan(date, false, reason, null, list, list.firstOrNull { it.state == StageState.NOW }?.id, noProgram)
 }
 
 val gzclpHero = LiftHero(
