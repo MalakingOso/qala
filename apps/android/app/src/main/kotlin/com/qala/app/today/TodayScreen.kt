@@ -33,6 +33,7 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
@@ -133,6 +134,7 @@ fun TodayScreen(
                         .offset { IntOffset(0, (scroll.value - topBarPx).coerceAtLeast(0)) }
                         .onSizeChanged { headPx = it.height }
                         .background(c.bg)
+                        .pointerInput(Unit) { }          // the head is opaque to touches too: a button scrolled under it is not pressed through it
                         .drawBehind {
                             // The edge appears as content starts sliding under the head, not while it still rests under the bar.
                             val stuck = ((scroll.value - topBarPx) / rampPx).coerceIn(0f, 1f)
