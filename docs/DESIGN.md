@@ -218,7 +218,7 @@ Code lives in `apps/web/src/shared/charts/`. The plate drawing and the readiness
 | Chart | Where | Form | Library |
 |---|---|---|---|
 | This week | Today hero, landing | seven-day strip: one bar per day, height the day's load, fill the part done; done teal, today ember on an `--accent-subtle` band, later outlined, rest a dash; a lift/run/both/rest glyph and the day letter under each; a caption naming the tapped, hovered or focused day (today by default) and a week total line (U13) | HTML/CSS, no plotting library |
-| Load zoom | desktop Overview | one chart that zooms Day, Week, 3 weeks and Block (U27), flat on the lede card and opening at 3 weeks. A day stacks teal lift load under muted steel-blue run load (U25); the planned part is a tint inside a hairline, the part done is filled, a week still to come is hatched with nothing filled, rest is a dash. One y-scale from Day to 3 weeks; Block rescales to the largest week. No glyphs, no wash columns, no inspector headline, no week totals: today reads through a frosted chip over its column and its letter reversed out of an ember square, and hovering (or tapping, which pins) a slot lifts its bar and shows a frosted tooltip naming the type with labeled numbers. A ruler of week names and dates sits above and its names move the focus; the focus week is at full strength while the others go quiet at 3 weeks. Bars are 24px at most and 15px at 3 weeks. The picker sits on the Overview title row and the title names the view. The table view follows the level. Motion in 6.5 | hand-built SVG on `Plot`, HTML overlay for the glass |
+| Load zoom | desktop Overview | one chart that zooms Day, Week, Month and Block (U27), flat on the lede card and opening at Month, which is four whole weeks: the one before the focus week, the focus week and the two after. A day stacks teal lift load under muted steel-blue run load (U25); the planned part is a tint inside a hairline, the part done is filled, a week still to come is hatched with nothing filled, rest is a dash. One y-scale from Day to Month; Block rescales to the largest week. No glyphs, no wash columns, no inspector headline, no week totals: today reads through a frosted chip over its column and its letter reversed out of an ember square, and hovering (or tapping, which pins) a slot lifts its bar and shows a frosted tooltip naming the type with labeled numbers. A ruler of week names and dates sits above and its names move the focus; the focus week is at full strength while the others go quiet at Month. Bars are 48px at most at Day and Block, 28px at Week and 18px at Month (wider than 6.2's 24px, which left a lone day or six columns sparse). The picker sits on the Overview title row and the title names the view. The table view follows the level. Motion in 6.5 | hand-built SVG on `Plot`, HTML overlay for the glass |
 | Readiness ring | Today hero | ring meter out of 100 with average and low markers (6.4) | visx `Arc` |
 | Readiness, last 7 days | Body | line with markers by weekday, today's value as a headline, average and low as hairlines | visx |
 | Where the time went | Session complete | one stacked horizontal bar, categorical | visx |
@@ -241,13 +241,13 @@ Code lives in `apps/web/src/shared/charts/`. The plate drawing and the readiness
 
 The camera is `{z, anchor}`: z is continuous from 0 (Day) to 3 (Block) and every frame is a pure function of the block's 42 days and the camera (`frame()` in `logic/loadZoom.ts`), so there is no path interpolation and piece keys stay stable. A day is up to two pieces, lift under run, and a piece keeps its key from Day to Block.
 
-- **Pieces move, they do not turn into other things.** 0 to 1: a day's lift and run pieces sit 96px apart, slide together and the run rises onto the lift. 1 to 2: the window widens from 7 to 21 days and nothing changes height. 2 to 3: the window widens to 42 days, each week's lift pieces rise into a stack (Monday at the bottom) and its run pieces into a stack above all of that week's lift, and the y-scale grows with them so the stack always fits. Then the stacks slide into the week's column and crossfade into the week's two pieces in the last 10%. A week's column is literally its days added up by type. Pieces rise first and slide second, so no two pieces overlap in flight (a test samples the whole zoom).
+- **Pieces move, they do not turn into other things.** 0 to 1: a day's lift and run pieces sit 96px apart, slide together and the run rises onto the lift. 1 to 2: the window widens from 7 to 28 days and nothing changes height. 2 to 3: the window widens to 42 days, each week's lift pieces rise into a stack (Monday at the bottom) and its run pieces into a stack above all of that week's lift, and the y-scale grows with them so the stack always fits. Then the stacks slide into the week's column and crossfade into the week's two pieces in the last 10%. A week's column is literally its days added up by type. Pieces rise first and slide second, so no two pieces overlap in flight (a test samples the whole zoom).
 - **Top edge.** A piece's top hairline and rounded corners fade out as another piece covers it, so a stack has one rounded top.
 - **Glass.** Today's chip and the tooltip are HTML over the SVG (backdrop-filter needs an element). The chip hides when today's week is not the focus week and fades before an edge instead of being clipped. The tooltip aligns to an edge it would otherwise leave.
 - **Picker.** About 380 ms per level crossed, 900 ms at most from Day to Block; a jump passes through the levels in between. Easing is `easeOutQuart`, `1 - (1 - t)^4`, which `--ease` (`cubic-bezier(0.25, 1, 0.5, 1)`) closely matches, so JS and CSS motion feel the same. The title changes at once and fades in over 160 ms; it never crossfades, so the heading the page is labelled by is never two things.
 - **Gestures.** z follows the fingers with no easing and eases to the nearest level in 240 ms on release. A pinch maps the distance ratio to z (1.8x per level). A retarget mid-tween starts from the current z.
 - **Reduced motion.** The global rule in `index.css` does not reach a requestAnimationFrame tween, so the hook asks `matchMedia("(prefers-reduced-motion: reduce)")` itself; with it on, the picker and a pinch snap to a level with no tween. The hover lift, the tooltip and the title fade turn off in CSS.
-- **Input.** Two pointers pinch, one pointer swiping horizontally pans (a step is a day at Day, a week at Week and 3 weeks, fixed at Block), ctrl-wheel or a trackpad pinch zooms, shift-wheel or horizontal wheel pans, and a plain wheel is never taken. The plot is one focusable stop: left and right move the inspected day (a week at Block), `-` and `+` change level, Escape unpins. The toolbar's week switcher and the ruler's week names move the focus through all six weeks.
+- **Input.** Two pointers pinch, one pointer swiping horizontally pans (a step is a day at Day, a week at Week and Month, fixed at Block), ctrl-wheel or a trackpad pinch zooms, shift-wheel or horizontal wheel pans, and a plain wheel is never taken. The plot is one focusable stop: left and right move the inspected day (a week at Block), `-` and `+` change level, Escape unpins. The toolbar's week switcher and the ruler's week names move the focus through all six weeks.
 - **Screen readers.** The chart's `aria-live` line updates only when a level settles or the inspected slot changes, never per frame.
 
 ## 7. Screens
@@ -368,7 +368,7 @@ The toolbar holds a search that jumps to a page, lift, exercise or session (Ctrl
 
 Every page opens on a lede card: a kicker line, the title in Qala Test, an ink rule (2px, `--fg`), then whatever leads the page. Cards below use a serif heading over the same ink rule. Cards are white on the off-white ground with the Beamer border and a resting `--shadow-card`; tokens.css is untouched and every color is a token, so dark mode comes with it. Tables are dense: 10px uppercase headers, 12px cells, a LIFT or RUN tag, DM Mono numerals right-aligned, and PR and note pills; a session's coach flag and note sit under its row.
 
-- Overview opens on the load zoom (6.3, 6.5), which takes the lede at the card's full width and opens at 3 weeks. Where the block stands (the date, the block name, week 3 of 6, deload in week 6) is the kicker, the Day / Week / 3 wk / Block picker sits at the right of the title row, and the title names the view: Today, This week, Weeks 2 to 4, or the block's name. Below it the sessions with filter chips and the estimated 1RMs.
+- Overview opens on the load zoom (6.3, 6.5), which fills the lede card and opens at Month. The kicker is the day and date at the left, with the block name and week ("Strength B2 · Week 3 of 6", just the week at Block) quietly at the right; the deload week is not shown. The Day / Week / Month / Block picker sits at the right of the title row as a soft pill track with a sliding ink thumb (left and right step it), and the title names the view: Today, This week, the month's name (September: the month holding most of the focus week), or the block's name. A day's lift and run share an edge with no gap, and the join is a gentle arc (the lift domes up into the run by about 14% of the bar's width, 5px at most) instead of a flat line. The estimated 1RMs sit in a card beside the lede (a 320px column that stacks under it below 1100px) with no readiness line, which lives on the phone and the body page, and the sessions with filter chips run full width below.
 - Lifts leads with the average e1RM gain and a ranked gain bar per lift, then one card per lift.
 - Running leads with VDOT and its trend, then the runs and the latest run's splits against its own average (U17).
 - Body leads with the recovery map, front and back side by side with the selected muscle's fatigue curve under them, then readiness by weekday, sets by muscle and the deload status.
@@ -417,10 +417,19 @@ moves, a short "no black box" note on the training literature behind it, Open
 Qala and How it decides, and a device morph on the right: one frame that
 loops phone, laptop, desktop and then the bare app card
 (`shared/DeviceMorph.tsx`, CSS keyframes only, static laptop under reduced
-motion), to show where Qala runs. Three sections explain the readable program
-language, the shared fitness-fatigue engine, and the explained adjustments.
-Open Qala enters the desktop workspace on wide screens and Today on phones.
-AGPL and liftosaur credit remain in the footer.
+motion), to show where Qala runs.
+
+"Grounded in the literature" (U28) follows, in two halves. First, what the
+engine is built from: seven cards covering the fitness-fatigue model, the
+Kalman e1RM estimate, the check-in readiness measures, autoregulation,
+per-muscle recovery, concurrent running and lifting, and deload triggers,
+each with its key citations. Second, what you can do with it: seven rows,
+each pairing a sentence with a real capture of the app screen
+(`shared/landing/*.webp`, taken from the built PWA — Today, Overview,
+Workout, Body, Running, Programs, Coach). Rows alternate the capture left and
+right on wide screens and stack on phones. Open Qala enters the desktop
+workspace on wide screens and Today on phones. AGPL and liftosaur credit
+remain in the footer.
 
 ### 7.18 Skipping a day and the training status (U24)
 

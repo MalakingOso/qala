@@ -15,6 +15,7 @@
  * pins it. Vertical page scroll and a plain wheel are never taken. */
 
 import {
+  type CSSProperties,
   type KeyboardEvent as ReactKeyboardEvent,
   type MouseEvent as ReactMouseEvent,
   type PointerEvent as ReactPointerEvent,
@@ -57,7 +58,6 @@ import {
   zFromPinch,
 } from "../../logic/loadZoom.ts";
 import type { WeekLoad } from "../../store/types.ts";
-import { ScalePicker } from "../ui.tsx";
 import { ChartShell } from "./ChartShell.tsx";
 import { Plot } from "./Plot.tsx";
 
@@ -80,18 +80,46 @@ const LEVEL_OPTIONS = LEVEL_LABELS.map((label, i) => ({
   label,
 }));
 
-/** The Day / Week / 3 wk / Block picker. The page places it (on the title row
- * of the Overview lede); the chart takes the level as a prop. */
+/** The Day / Week / Month / Block picker. The page places it (on the title row
+ * of the Overview lede); the chart takes the level as a prop. A sliding ink
+ * thumb marks the level; left and right step it. */
 export function ZoomPicker(
   { level, onLevel }: { level: Level; onLevel: (level: Level) => void },
 ) {
+  const last = LEVEL_OPTIONS.length - 1;
+  const onKeyDown = (e: ReactKeyboardEvent<HTMLDivElement>) => {
+    const step = e.key === "ArrowRight" || e.key === "ArrowDown"
+      ? 1
+      : e.key === "ArrowLeft" || e.key === "ArrowUp"
+      ? -1
+      : 0;
+    if (!step) return;
+    e.preventDefault();
+    const next = clamp(level + step, 0, last) as Level;
+    onLevel(next);
+    e.currentTarget.querySelectorAll("button")[next]?.focus();
+  };
   return (
-    <ScalePicker<Level>
-      label="Zoom level"
-      options={LEVEL_OPTIONS}
-      value={level}
-      onPick={onLevel}
-    />
+    <div
+      className="lz-picker"
+      role="radiogroup"
+      aria-label="Zoom level"
+      style={{ "--i": level } as CSSProperties}
+      onKeyDown={onKeyDown}
+    >
+      {LEVEL_OPTIONS.map((o) => (
+        <button
+          key={o.value}
+          type="button"
+          role="radio"
+          aria-checked={o.value === level}
+          tabIndex={o.value === level ? 0 : -1}
+          onClick={() => onLevel(o.value)}
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
   );
 }
 
@@ -212,9 +240,7 @@ function useZoomTween(level: Level, anchor: number, count: number) {
  * baseline, hatched instead when its week is still to come. A piece resting on
  * another loses its bottom pixel to a surface-coloured seam; `cap` is how much
  * of the top hairline and rounded corners shows. */
-function PieceMark(
-  { bar, plotH, hatch }: { bar: Bar; plotH: number; hatch: string },
-) {
+function PieceMark({ bar, hatch }: { bar: Bar; hatch: string }) {
   const x = Math.round(bar.x);
   const w = Math.max(1, Math.round(bar.x + bar.w) - x);
   if (bar.kind === "rest") {
@@ -222,16 +248,35 @@ function PieceMark(
       <rect className="lz-rest" x={x} y={bar.y} width={w} height={bar.h} />
     );
   }
-  const seam = bar.y + bar.h < plotH - 0.5 ? 1 : 0;
-  const y = bar.y;
-  const bottom = bar.y + bar.h - seam;
+  // Stacked pieces share an edge, so snap both edges to whole pixels: a
+  // fractional edge lets the page show through as a faint line between them.
+  const y = Math.round(bar.y);
+  const bottom = Math.round(bar.y + bar.h);
   const h = bottom - y;
   if (h < 1) return null;
   const r = Math.min(3, w / 2, h / 2) * bar.cap;
-  const shape = `M${x},${bottom} V${y + r} Q${x},${y} ${x + r},${y} H${
-    x + w - r
-  } Q${x + w},${y} ${x + w},${y + r} V${bottom} Z`;
+  // A day's lift domes up into its run, whose bottom is hollowed to match: one
+  // gentle curve between the two. `sag` is how far the middle moves, and it
+  // can't be more than the piece can spare.
+  const sag = Math.min(bar.joint, h / 2);
+  const mid = x + w / 2;
+  const domed = bar.kind === "lift" && sag > 0.1;
+  const hollow = bar.kind === "run" && sag > 0.1;
+  const top = domed
+    ? `V${y} Q${mid},${y - 2 * sag} ${x + w},${y}`
+    : `V${y + r} Q${x},${y} ${x + r},${y} H${x + w - r} Q${x + w},${y} ${
+      x + w
+    },${y + r}`;
+  const foot = hollow ? `Q${mid},${bottom - 2 * sag} ${x},${bottom}` : "";
+  const shape = `M${x},${bottom} ${top} V${bottom} ${foot} Z`;
   const fh = Math.min(bar.fillH, h);
+  // A run part-done fills from its hollow up, so it never fills less than the
+  // hollow is deep.
+  const partial = hollow
+    ? `M${x},${bottom} Q${mid},${bottom - 2 * sag} ${x + w},${bottom} V${
+      bottom - Math.max(fh, sag)
+    } H${x} Z`
+    : `M${x},${bottom} V${bottom - fh} H${x + w} V${bottom} Z`;
   return (
     <>
       <path
@@ -243,9 +288,7 @@ function PieceMark(
         ? (
           <path
             className="lz-fill"
-            d={fh >= h - 0.5
-              ? shape
-              : `M${x},${bottom} V${bottom - fh} H${x + w} V${bottom} Z`}
+            d={fh >= h - 0.5 ? shape : partial}
           />
         )
         : null}
@@ -275,7 +318,7 @@ function PieceMark(
 function TextMark({ label, plotH }: { label: Label; plotH: number }) {
   const cls = `${label.today ? " today" : ""}${label.muted ? " muted" : ""}${
     label.knockout ? " knockout" : ""
-  }`;
+  }${label.session ? " session" : ""}`;
   return (
     <g opacity={label.opacity}>
       {label.knockout
@@ -621,6 +664,9 @@ export function LoadZoom(
             const [chipDay, chipSession] = chip
               ? chip.text.split(" · ")
               : ["", ""];
+            // The workout leads the chip, the day is the small word after it.
+            const chipLead = chipSession || chipDay;
+            const chipTail = chipSession ? chipDay : "";
             return (
               <>
                 <svg
@@ -693,7 +739,7 @@ export function LoadZoom(
                         }${lifted(b) ? " lifted" : ""}`}
                         opacity={b.opacity}
                       >
-                        <PieceMark bar={b} plotH={height} hatch={hatch} />
+                        <PieceMark bar={b} hatch={hatch} />
                       </g>
                     ))}
                     {f.labels.filter((l) => l.row === "text").map((l) => (
@@ -742,8 +788,8 @@ export function LoadZoom(
                         }}
                       >
                         <i />
-                        {chipDay}
-                        {chipSession ? <small>{chipSession}</small> : null}
+                        {chipLead}
+                        {chipTail ? <small>{chipTail}</small> : null}
                       </div>
                     )
                     : null}
