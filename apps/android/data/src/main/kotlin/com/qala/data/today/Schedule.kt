@@ -29,6 +29,13 @@ class RustDayRules(private val availability: Availability, private val skips: Li
     override fun shiftsPlan(reason: SkipReason): Boolean = QalaCore.shiftsPlan(reason)
 }
 
+/**
+ * The reason that takes [date] off training, or null when it trains. An injury is not one: it trains around the muscle,
+ * so an injured training day is still a lift day (the injured-muscle guard cuts or halves the work that leans on it,
+ * DESIGN 7.18). Everything that decides whether a day lifts reads this, not [DayRules.reasonOn].
+ */
+internal fun DayRules.offReasonOn(date: String): SkipReason? = reasonOn(date)?.takeIf { it != SkipReason.Injured }
+
 /** The logged rows the schedule and the stage deriver read (live rows only: tombstones are filtered upstream). */
 class DayRecords(
     val liftSessions: List<LiftSessionEntity> = emptyList(),
@@ -62,8 +69,9 @@ class WeekPlan(val weekStart: String, val days: List<DayPlan>) {
  * The program rotates over `dayCount` days. The day after a logged lift is `last % dayCount + 1`, and a
  * lift that is never logged is simply done again (a miss is not a skip, nothing moves). Skips move the plan
  * by [DayRules.shiftsPlan]: a vacation or sick day pushes the lift out, so the next training day takes the
- * same program day; a break, scheduling or injured day on a training weekday spends its slot, so the
- * rotation moves one day on without a session. A lift logged on a day wins over any skip that covers it.
+ * same program day; a break or scheduling day on a training weekday spends its slot, so the rotation moves
+ * one day on without a session. An injured day is a lift day (see [offReasonOn]): the lift runs around the
+ * muscle and the rotation moves on as usual. A lift logged on a day wins over any skip that covers it.
  *
  * Stub records count like real ones for sequencing, except a warm-up stub: the warm-up is not the lift.
  */
@@ -100,7 +108,7 @@ class Schedule(
         var d = IsoTime.addDays(afterDate, 1)
         while (d < beforeDate) {
             if (isTrainingWeekday(d)) {
-                val reason = rules.reasonOn(d)
+                val reason = rules.offReasonOn(d)
                 if (reason != null && !rules.shiftsPlan(reason)) spent += 1
             }
             d = IsoTime.addDays(d, 1)
@@ -124,7 +132,7 @@ class Schedule(
         val days = (0..6).map { i ->
             val date = IsoTime.addDays(weekStart, i.toLong())
             val lifted = liftedOn(date)
-            val reason = rules.reasonOn(date)
+            val reason = rules.offReasonOn(date)
             val ranOn = runs.any { IsoTime.localDateKey(it.startedAtMs, it.offsetMin) == date }
             val runDay = runPlan.on(i)
             when {
@@ -159,7 +167,7 @@ class Schedule(
         for (offset in 0L..13L) {
             val date = IsoTime.addDays(today, offset)
             val plan = runPlan.on(IsoTime.weekdayIndex(date)) ?: continue
-            if (rules.reasonOn(date) != null) continue
+            if (rules.offReasonOn(date) != null) continue
             val ranOn = runs.any { IsoTime.localDateKey(it.startedAtMs, it.offsetMin) == date }
             if (ranOn) continue
             return NextRun(date, plan)

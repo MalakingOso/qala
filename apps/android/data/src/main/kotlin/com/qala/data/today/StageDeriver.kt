@@ -45,13 +45,15 @@ data class TodayPlan(
     val date: String,
     /** True on a lift day: six stages. A rest day has three. */
     val liftDay: Boolean,
-    /** Why a training weekday is a rest day today (a skip or status), null otherwise. */
+    /** Why a training weekday is a rest day today (a skip or status), null otherwise. An injury is not one. */
     val skipReason: SkipReason?,
     /** The 1-based LS++ program day to lift today, null on a rest day. */
     val programDay: Int?,
     val stages: List<DayStage>,
     /** The first stage that is not done or skipped and not passive; null when the day's work is done. */
     val now: StageId?,
+    /** A training weekday with nothing to lift because there is no program: three stages, and the hero says so. */
+    val noProgram: Boolean = false,
 )
 
 /** Everything the deriver reads. The caller computes [today] from its clock and zone. */
@@ -71,9 +73,12 @@ class TodayInput(
  * Today's kind, day and stages, mirroring `StageState` in `apps/web/src/store/types.ts` plus the passive
  * interludes (docs/PLAN-m2-room-data.md, Today's day and stages). Pure: no clock, no storage.
  *
- * - A lift day is a training weekday that is not skipped (or any day with a lift already logged, since a
- *   logged day stays logged). It has six stages: check-in, warm-up, lift, run, recover, wind down. Every
- *   other day is a rest day with three: check-in, recover, wind down.
+ * - A lift day is a training weekday that is not skipped and has a program to lift (or any day with a lift
+ *   already logged, since a logged day stays logged). It has six stages: check-in, warm-up, lift, run, recover,
+ *   wind down. Every other day is a rest day with three: check-in, recover, wind down. An injury does not
+ *   skip the day, it trains around the muscle ([offReasonOn]). With no program a training weekday has no
+ *   warm-up or lift to do, so it takes the rest-day shape too (a "now" parked on a stage nothing can complete
+ *   would be a dead end) and [TodayPlan.noProgram] tells the hero why.
  * - A stage is done when a record of its kind exists today. Check-in: a check-in. Warm-up: a warm-up stub,
  *   or a real session (which includes it). Lift: a real session or a lift stub. Run: a run, stub or real.
  * - A check-in, warm-up or lift that is not done while a later one of the three is done was skipped. The run
@@ -87,10 +92,12 @@ object StageDeriver {
     fun derive(input: TodayInput): TodayPlan {
         val schedule = Schedule(input.trainingWeekdays, input.dayCount, input.records.liftSessions, input.rules)
         val date = input.today
-        val reason = input.rules.reasonOn(date)
+        val reason = input.rules.offReasonOn(date)
         val liftedToday = lifts(input, date)
-        val liftDay = liftedToday.isNotEmpty() || (schedule.isTrainingWeekday(date) && reason == null)
+        val trains = schedule.isTrainingWeekday(date) && reason == null
+        val liftDay = liftedToday.isNotEmpty() || (trains && input.dayCount > 0)
         val skipReason = if (!liftDay && schedule.isTrainingWeekday(date)) reason else null
+        val noProgram = !liftDay && trains
 
         val ids = if (liftDay) {
             listOf(StageId.CHECK_IN, StageId.WARM_UP, StageId.LIFT, StageId.RUN, StageId.RECOVER, StageId.WIND_DOWN)
@@ -135,7 +142,7 @@ object StageDeriver {
         } else {
             null
         }
-        return TodayPlan(date, liftDay, skipReason, programDay, stages, nowAssigned)
+        return TodayPlan(date, liftDay, skipReason, programDay, stages, nowAssigned, noProgram)
     }
 
     private fun lifts(input: TodayInput, date: String): List<LiftSessionEntity> =

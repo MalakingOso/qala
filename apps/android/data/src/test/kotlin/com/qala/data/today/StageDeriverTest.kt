@@ -225,10 +225,32 @@ class StageDeriverTest {
     }
 
     @Test
-    fun withoutAProgramThereIsNoProgramDay() {
+    fun withoutAProgramATrainingWeekdayTakesTheRestDayShape() {
+        // Warm-up and lift have nothing to do, so a "now" would park on a stage that cannot be completed.
         val plan = derive(mon, dayCount = 0)
-        assertTrue(plan.liftDay)
+        assertFalse(plan.liftDay)
         assertNull(plan.programDay)
+        assertEquals(listOf(StageId.CHECK_IN, StageId.RECOVER, StageId.WIND_DOWN), plan.stages.map { it.id })
+        assertEquals(StageId.CHECK_IN, plan.now)
+        assertTrue("the hero can say why", plan.noProgram)
+        assertNull("it is not a skip", plan.skipReason)
+        assertFalse("an ordinary rest day is not a missing program", derive(tue, dayCount = 0).noProgram)
+        assertFalse(derive(mon).noProgram)
+    }
+
+    @Test
+    fun aLiftAlreadyLoggedMakesItALiftDayEvenWithNoProgram() {
+        val plan = derive(mon, DayRecords(liftSessions = listOf(liftStub(mon, day = null))), dayCount = 0)
+        assertTrue(plan.liftDay)
+        assertFalse(plan.noProgram)
+    }
+
+    @Test
+    fun anInjuryDoesNotSkipTheDay() {
+        val plan = derive(mon, rules = FakeRules(mapOf(mon to SkipReason.Injured)))
+        assertTrue("an injured training day is still a lift day", plan.liftDay)
+        assertNull(plan.skipReason)
+        assertEquals(6, plan.stages.size)
     }
 
     @Test

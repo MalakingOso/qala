@@ -6,6 +6,8 @@ import com.qala.data.model.DayClass
 import com.qala.data.model.DaySkip
 import com.qala.data.model.SkipReason
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.nullable
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.JsonArray
@@ -19,6 +21,8 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import uniffi.qala_ffi.buildEngineState as ffiBuildEngineState
 import uniffi.qala_ffi.classifyDay as ffiClassifyDay
+import uniffi.qala_ffi.exerciseMuscles as ffiExerciseMuscles
+import uniffi.qala_ffi.injuredOn as ffiInjuredOn
 import uniffi.qala_ffi.forceEvaluateText as ffiForceEvaluateText
 import uniffi.qala_ffi.getDay as ffiGetDay
 import uniffi.qala_ffi.nextHistoryEntry as ffiNextHistoryEntry
@@ -79,6 +83,34 @@ fun QalaCore.reasonOn(date: String, availability: Availability, skips: List<DayS
 fun QalaCore.shiftsPlan(reason: SkipReason): Boolean = call(
     ShiftsRequest.serializer(), Boolean.serializer(), ShiftsRequest(reason), ::ffiShiftsPlan,
 )
+
+/** The muscle ids an injury guards on a local day (at most one: the skip's target wins, else the status target). */
+fun QalaCore.injuredOn(date: String, availability: Availability, skips: List<DaySkip>): List<String> = call(
+    DayRequest.serializer(), ListSerializer(String.serializer()), DayRequest(date, availability, skips), ::ffiInjuredOn,
+)
+
+// ---- muscles (qala-core muscles.rs) ----
+
+@Serializable
+private data class MusclesRequest(val exerciseIds: List<String>)
+
+/** The engine muscle ids of each liftosaur exercise id; an id the library does not know maps to null. */
+fun QalaCore.exerciseMuscles(exerciseIds: List<String>): Map<String, ExerciseMuscles?> =
+    if (exerciseIds.isEmpty()) emptyMap() else call(
+        MusclesRequest.serializer(),
+        MapSerializer(String.serializer(), ExerciseMuscles.serializer().nullable),
+        MusclesRequest(exerciseIds.distinct()),
+        ::ffiExerciseMuscles,
+    )
+
+/**
+ * The distinct primary muscles of a session's exercises, in first-seen order: what the check-in lists and what
+ * readiness reads as the session's muscles. Targets only; synergists are left to the engine's own bookkeeping.
+ */
+fun QalaCore.sessionMuscles(exerciseIds: List<String>): List<String> {
+    val byExercise = exerciseMuscles(exerciseIds)
+    return exerciseIds.flatMap { byExercise[it]?.targets.orEmpty() }.distinct()
+}
 
 // ---- LS++ (qala-lspp-json) ----
 // Programs, settings and history entries are LS++'s own large structures. They stay as JSON values and go

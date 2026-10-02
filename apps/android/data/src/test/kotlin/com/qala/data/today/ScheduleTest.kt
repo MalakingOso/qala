@@ -57,7 +57,22 @@ class ScheduleTest {
     fun aNonShiftingSkipSpendsItsSlot() {
         assertEquals("break rests in place", 4, afterSkip(SkipReason.Break))
         assertEquals("a scheduling conflict rests in place", 4, afterSkip(SkipReason.Scheduling))
-        assertEquals("an injured day rests in place", 4, afterSkip(SkipReason.Injured))
+    }
+
+    @Test
+    fun anInjuredDayTrainsAroundTheMuscleSoItIsNeitherShiftedNorSpent() {
+        assertEquals("the rotation moves on as for any lift day", 3, afterSkip(SkipReason.Injured))
+        val w = week(mon, lifts = listOf(lift(prevSat, day = 4)), rules = FakeRules(mapOf(mon to SkipReason.Injured)))
+        assertEquals(listOf(1, null, 2, null, 3, 4, null), w.days.map { it.programDay })
+        assertEquals(DayKind.LIFT, w.days[0].kind)
+        assertNull("it is a lift day, not a skipped one", w.days[0].reason)
+    }
+
+    @Test
+    fun anInjuredRunDayStillHasItsRun() {
+        val s = schedule(rules = FakeRules(mapOf("2026-10-06" to SkipReason.Injured)))
+        assertEquals("2026-10-06", s.nextRun("2026-10-06", runPlan, emptyList())!!.date)
+        assertEquals(DayKind.RUN, week(wed, rules = FakeRules(mapOf("2026-10-06" to SkipReason.Injured))).days[1].kind)
     }
 
     @Test

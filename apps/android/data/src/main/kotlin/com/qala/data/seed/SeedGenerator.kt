@@ -4,12 +4,12 @@ import com.qala.data.IsoTime
 import com.qala.data.QalaJson
 import com.qala.data.core.QalaCore
 import com.qala.data.core.finishDay
+import com.qala.data.core.sessionMuscles
 import com.qala.data.db.BodyWeightEntity
 import com.qala.data.db.CheckInEntity
 import com.qala.data.db.DaySkipEntity
 import com.qala.data.db.LiftSessionEntity
 import com.qala.data.db.RunSessionEntity
-import com.qala.data.engine.ExerciseMuscles
 import com.qala.data.model.LiftEntryRecord
 import com.qala.data.model.LiftSetRecord
 import com.qala.data.model.RunPlan
@@ -106,7 +106,7 @@ class SeedGenerator(private val programs: ProgramEngine = ProgramEngine()) {
                     program = programs.evaluate(text, GzclpProgram.NAME, unit, exerciseData)
                     day = fd.nextDay
 
-                    liftMuscles = ExerciseMuscles.targetsOf(used.map { it.exerciseId })
+                    liftMuscles = QalaCore.sessionMuscles(used.map { it.exerciseId })
                     soreness = liftMuscles.mapIndexed { i, m -> m to SORENESS[(k + i) % SORENESS.size] }.toMap()
                     checkInAt = lifted.bundle.session.startedAtMs - 45 * 60_000L
                     recovery = RECOVERY[k % RECOVERY.size]

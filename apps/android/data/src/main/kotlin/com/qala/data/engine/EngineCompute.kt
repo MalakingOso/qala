@@ -12,7 +12,12 @@ import com.qala.data.core.WeekLoadResult
 import com.qala.data.core.WeightTrend
 import com.qala.data.core.WeightTrendRequest
 import com.qala.data.core.buildEngineState
+import com.qala.data.core.exerciseMuscles
+import com.qala.data.core.injuredOn
+import com.qala.data.core.reasonOn
+import com.qala.data.core.shiftsPlan
 import com.qala.data.core.readinessSummary
+import com.qala.data.core.sessionMuscles
 import com.qala.data.core.stateView
 import com.qala.data.core.weekLoad
 import com.qala.data.core.weightTrend
@@ -34,6 +39,8 @@ import com.qala.data.program.LiftHero
 import com.qala.data.program.ProgramEngine
 import com.qala.data.today.DayKind
 import com.qala.data.today.DayRecords
+import com.qala.data.today.DayStatus
+import com.qala.data.today.DayStatuses
 import com.qala.data.today.NextRun
 import com.qala.data.today.RustDayRules
 import com.qala.data.today.Schedule
@@ -93,6 +100,14 @@ data class EngineSnapshot(
     val latestWeight: LatestWeight? = null,
     /** Today's day heading, main lift and top set; null on a rest day, with no program, or without a usable day. */
     val liftHero: LiftHero? = null,
+    /** Why today is off or adjusted, and how it was set (what the banner, Undo and Change act on); null when nothing covers it. */
+    val status: DayStatus? = null,
+    /** The muscle an injury guards today (`injured_on`): at most one. The check-in walks them in at soreness 4. */
+    val injured: List<String> = emptyList(),
+    /** The engine muscle ids today's program day trains (targets, first-seen order); empty on a rest day or with no program. */
+    val sessionMuscles: List<String> = emptyList(),
+    /** The local day each muscle was last trained in the last two weeks, from real sessions. */
+    val lastTrained: Map<String, String> = emptyMap(),
     /** Set when the build failed; the other fields are then empty. */
     val error: String? = null,
 )
@@ -114,7 +129,8 @@ class EngineCompute(private val programs: ProgramEngine = ProgramEngine()) {
         val evaluated: EvaluatedProgram? = input.program?.let {
             programs.evaluate(it.text, it.name, input.settings.unit, input.exerciseData)
         }
-        val rules = RustDayRules(input.availability, input.skips.map { it.toModel() })
+        val daySkips = input.skips.map { it.toModel() }
+        val rules = RustDayRules(input.availability, daySkips)
         val dayCount = evaluated?.dayCount ?: 0
         val weekdays = input.settings.trainingWeekdays.toSet()
         val dayRecords = DayRecords(input.liftSessions.map { it.session }, input.runs, input.checkIns)
@@ -124,9 +140,9 @@ class EngineCompute(private val programs: ProgramEngine = ProgramEngine()) {
         val week = schedule.week(today, input.runPlan, input.runs)
 
         val todaysExercises = if (evaluated != null && plan.programDay != null) programs.usedExercises(evaluated, plan.programDay) else emptyList()
-        val sessionMuscles = ExerciseMuscles.targetsOf(todaysExercises.map { it.exerciseId }).ifEmpty { null }
+        val sessionMuscles = QalaCore.sessionMuscles(todaysExercises.map { it.exerciseId })
         val readiness = QalaCore.readinessSummary(
-            ReadinessSummaryRequest(records, checkins, input.settings, IsoTime.format(nowMs, offset), offset, sessionMuscles),
+            ReadinessSummaryRequest(records, checkins, input.settings, IsoTime.format(nowMs, offset), offset, sessionMuscles.ifEmpty { null }),
         )
 
         val planned = week.days.map { day ->
@@ -141,6 +157,11 @@ class EngineCompute(private val programs: ProgramEngine = ProgramEngine()) {
         }
         val load = QalaCore.weekLoad(WeekLoadRequest(planned, records, input.settings, week.weekStart))
         val trend = QalaCore.weightTrend(WeightTrendRequest(input.weights.map { it.toRecord() }, today))
+
+        val reason = QalaCore.reasonOn(today, input.availability, daySkips)
+        val injured = QalaCore.injuredOn(today, input.availability, daySkips)
+        val status = DayStatuses.of(today, input.availability, daySkips, reason, injured, reason?.let { QalaCore.shiftsPlan(it) } ?: false)
+        val trained = QalaCore.exerciseMuscles(recentExerciseIds(input.liftSessions, today))
 
         return EngineSnapshot(
             loaded = true,
@@ -157,6 +178,10 @@ class EngineCompute(private val programs: ProgramEngine = ProgramEngine()) {
             nextRun = schedule.nextRun(today, input.runPlan, input.runs),
             unit = input.settings.unit,
             latestWeight = input.weights.maxByOrNull { it.date }?.let { LatestWeight(it.date, it.kg) },
+            status = status,
+            injured = injured,
+            sessionMuscles = sessionMuscles,
+            lastTrained = lastTrained(input.liftSessions, today, trained),
             liftHero = if (evaluated != null && input.program != null && plan.liftDay && plan.programDay != null) {
                 programs.liftHero(evaluated, plan.programDay, input.settings.mainLifts, input.program.name)
             } else {

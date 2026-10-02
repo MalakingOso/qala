@@ -162,3 +162,10 @@ data class WeightTrend(
     /** Consecutive days the 7-day mean has moved in [direction]; 0 when flat. */
     val runDays: Int,
 )
+
+/** The engine muscle ids of one library exercise (`exercise_muscles`): targets first, synergists never repeat a target. */
+@Serializable
+data class ExerciseMuscles(
+    val targets: List<String> = emptyList(),
+    val synergists: List<String> = emptyList(),
+)

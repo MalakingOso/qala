@@ -48,9 +48,13 @@ class EngineComputeTest {
         assertNull("no program, no hero", snapshot.liftHero)
         assertNull(snapshot.latestWeight)
         val plan = snapshot.today!!
-        assertTrue("Monday is a training day even with no program", plan.liftDay)
-        assertNull("but there is no program day to lift", plan.programDay)
-        assertEquals(6, plan.stages.size)
+        assertFalse("with no program there is no lift to do", plan.liftDay)
+        assertTrue(plan.noProgram)
+        assertNull(plan.programDay)
+        assertEquals(listOf(StageId.CHECK_IN, StageId.RECOVER, StageId.WIND_DOWN), plan.stages.map { it.id })
+        assertNull(snapshot.status)
+        assertEquals(emptyList<String>(), snapshot.sessionMuscles)
+        assertEquals(DayKind.LIFT, snapshot.week!!.days[0].kind)    // the week still shows the training days
     }
 
     @Test
@@ -109,19 +113,83 @@ class EngineComputeTest {
     @Test
     fun todayIsTheLocalDayNotTheUtcOne() {
         // 22:30 on Monday in New York is 02:30 UTC on Tuesday.
-        val late = compute.compute(EngineInput(), ms("2026-10-05", 22, 30), zone)
+        val program = EngineInput(program = ProgramEntity("p", GzclpProgram.NAME, GzclpProgram.TEXT, false), exerciseData = SeedOneRepMax.ExerciseData)
+        val late = compute.compute(program, ms("2026-10-05", 22, 30), zone)
         assertEquals("2026-10-05", late.date)
         assertTrue(late.today!!.liftDay)
-        val utc = compute.compute(EngineInput(), ms("2026-10-05", 22, 30), ZoneId.of("UTC"))
+        val utc = compute.compute(program, ms("2026-10-05", 22, 30), ZoneId.of("UTC"))
         assertEquals("2026-10-06", utc.date)
     }
 
     @Test
     fun aCheckInTodayIsSeenByTheReadinessAndTheStages() {
-        val input = EngineInput(checkIns = listOf(checkIn("2026-10-05", hour = 8)))
+        val input = EngineInput(
+            checkIns = listOf(checkIn("2026-10-05", hour = 8)),
+            program = ProgramEntity("p", GzclpProgram.NAME, GzclpProgram.TEXT, false),
+            exerciseData = SeedOneRepMax.ExerciseData,
+        )
         val snapshot = compute.compute(input, ms("2026-10-05", 12), zone)
         assertTrue(snapshot.readiness!!.checkedInToday)
         assertEquals(StageId.WARM_UP, snapshot.today!!.now)
         assertNotNull(snapshot.readiness.average28d)
+    }
+}
+
+// ---- the status, the check-in's muscles and what was last trained ----
+
+class EngineComputeStatusTest {
+    private val zone = ZoneId.of("America/New_York")
+    private val compute = EngineCompute()
+    private val program = ProgramEntity("p", GzclpProgram.NAME, GzclpProgram.TEXT, false)
+
+    private fun ms(date: String, hour: Int) = LocalDate.parse(date).atTime(hour, 0).atZone(zone).toInstant().toEpochMilli()
+
+    private fun input(
+        availability: Availability = Availability(),
+        skips: List<com.qala.data.db.DaySkipEntity> = emptyList(),
+    ) = EngineInput(program = program, exerciseData = SeedOneRepMax.ExerciseData, availability = availability, skips = skips)
+
+    @Test
+    fun aOneDaySkipIsTheStatusAndTheDayTakesTheRestShape() {
+        val skip = com.qala.data.db.DaySkipEntity("skip-2026-10-05", "2026-10-05", "sick", null, "flu", false)
+        val s = compute.compute(input(skips = listOf(skip)), ms("2026-10-05", 12), zone)
+        val status = s.status!!
+        assertEquals(com.qala.data.model.SkipReason.Sick, status.reason)
+        assertEquals(com.qala.data.today.StatusSpan.OneDay, status.span)
+        assertEquals("flu", status.note)
+        assertTrue("sick shifts the plan out", status.shifts)
+        assertFalse(s.today!!.liftDay)
+        assertEquals(com.qala.data.model.SkipReason.Sick, s.today.skipReason)
+        assertEquals("a skipped day trains nothing", emptyList<String>(), s.sessionMuscles)
+        assertNull(s.liftHero)
+    }
+
+    @Test
+    fun anInjuredStatusNamesTheMuscleAndTheLiftStillRuns() {
+        val a = Availability(AvailabilityStatus.Injured, since = "2026-10-05", until = "2026-10-11", muscle = "quads")
+        val s = compute.compute(input(availability = a), ms("2026-10-05", 12), zone)
+        val status = s.status!!
+        assertEquals(com.qala.data.model.SkipReason.Injured, status.reason)
+        assertEquals("quads", status.muscle)
+        assertEquals(com.qala.data.today.StatusSpan.Range("2026-10-05", "2026-10-11"), status.span)
+        assertFalse("an injury does not shift the plan", status.shifts)
+        assertEquals(listOf("quads"), s.injured)
+        assertTrue(s.today!!.liftDay)
+        assertEquals(6, s.today.stages.size)
+        assertNotNull("the hero is still there", s.liftHero)
+    }
+
+    @Test
+    fun aLiftDaysSessionMusclesComeFromTheProgramDaysExercisesThroughTheCore() {
+        val s = compute.compute(input(), ms("2026-10-05", 12), zone)
+        assertTrue("GZCLP day 1 trains something", s.sessionMuscles.isNotEmpty())
+        assertEquals(s.sessionMuscles.distinct(), s.sessionMuscles)
+        assertTrue("a squat day loads the quads", "quads" in s.sessionMuscles)
+    }
+
+    @Test
+    fun aStatusThatEndedYesterdayDoesNotCoverToday() {
+        val a = Availability(AvailabilityStatus.Sick, since = "2026-10-01", until = "2026-10-04")
+        assertNull(compute.compute(input(availability = a), ms("2026-10-05", 12), zone).status)
     }
 }
