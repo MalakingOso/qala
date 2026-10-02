@@ -7,11 +7,11 @@ plugins {
 }
 
 // Rust side (docs/PLAN-m1-rust-core.md, Build). The repo root is two levels up from apps/android.
-val repoRoot: File = rootProject.projectDir.parentFile.parentFile
+val rustRoot: File = rootProject.projectDir.parentFile.parentFile
 val rustProfile: String = providers.gradleProperty("qala.rustProfile").getOrElse("android-dev")
-val abi: String = providers.gradleProperty("qala.abi").getOrElse("arm64-v8a")
+val targetAbi: String = providers.gradleProperty("qala.abi").getOrElse("arm64-v8a")
 
-fun rustSources() = fileTree(repoRoot) {
+fun rustSources() = fileTree(rustRoot) {
     include("Cargo.toml", "Cargo.lock", "rust-toolchain.toml", "crates/**/*.rs", "crates/**/Cargo.toml", "crates/**/data/**")
     exclude("**/target/**")
 }
@@ -79,20 +79,20 @@ abstract class CargoNdkBuild : DefaultTask() {
 }
 
 val cargoHostBuild = tasks.register<CargoHostBuild>("cargoHostBuild") {
-    this.repoRoot.set(project.provider { repoRoot })
+    this.repoRoot.set(project.provider { rustRoot })
     sources.from(rustSources())
-    library.set(File(repoRoot, "target/debug/libqala_ffi.so"))
+    library.set(File(rustRoot, "target/debug/libqala_ffi.so"))
 }
 
 val generateUniffi = tasks.register<GenerateUniffi>("generateUniffiKotlin") {
-    this.repoRoot.set(project.provider { repoRoot })
+    this.repoRoot.set(project.provider { rustRoot })
     library.set(cargoHostBuild.flatMap { it.library })
     outDir.set(layout.buildDirectory.dir("generated/uniffi/kotlin"))
 }
 
 val cargoNdkBuild = tasks.register<CargoNdkBuild>("cargoNdkBuild") {
-    this.repoRoot.set(project.provider { repoRoot })
-    this.abi.set(abi)
+    this.repoRoot.set(project.provider { rustRoot })
+    this.abi.set(targetAbi)
     this.profile.set(rustProfile)
     sources.from(rustSources())
     jniLibs.set(layout.buildDirectory.dir("generated/rustJniLibs"))
@@ -108,7 +108,7 @@ androidComponents {
 // JVM unit tests load the host library through JNA.
 tasks.withType<Test>().configureEach {
     dependsOn(cargoHostBuild)
-    systemProperty("jna.library.path", File(repoRoot, "target/debug").absolutePath)
+    systemProperty("jna.library.path", File(rustRoot, "target/debug").absolutePath)
 }
 
 android {
@@ -125,11 +125,12 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "0.1.0"
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         ndk {
             // One phone, arm64 only. Compose ships a small native library, so an x86_64 emulator needs
             // ./gradlew assembleDebug -Pqala.abi=x86_64
-            abiFilters += abi
+            abiFilters += targetAbi
         }
     }
 
@@ -164,4 +165,7 @@ dependencies {
     testImplementation("net.java.dev.jna:jna:5.17.0")
     // The Android SDK stubs org.json in unit tests; the real one keeps the FFI tests readable.
     testImplementation("org.json:json:20250517")
+
+    androidTestImplementation("androidx.test.ext:junit:1.3.0")
+    androidTestImplementation("androidx.test:runner:1.7.0")
 }

@@ -11,7 +11,7 @@ import uniffi.qala_ffi.predictReadiness
 /**
  * Calls the Rust core through UniFFI on the JVM, with the host build of libqala_ffi (see the
  * cargoHostBuild task in app/build.gradle.kts). Proves the binding, the JSON envelope and the readiness
- * path end to end. The emulator run of the same call is in EngineFfiInstrumentedTest.
+ * path end to end. The on-device run of the same call is EngineFfiInstrumentedTest.
  */
 class EngineFfiTest {
     @Test
