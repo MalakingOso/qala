@@ -16,7 +16,7 @@ Exit gate: `scripts/cargo-test-safe.sh -p qala-core` and `-p qala-ffi` green (ne
 
 These come from `docs/rust-core.md` section 3 and the plan. They are not suggestions.
 
-- `js_round(x) = (x + 0.5).floor()` wherever TS uses `Math.round`. `f64` only, no `mul_add`, no `rayon`.
+- `js_round` (`crates/qala-core/src/js.rs`) wherever TS uses `Math.round`; it is not `(x + 0.5).floor()`, see `docs/rust-core.md` section 3. `f64` only, no `mul_add`, no `rayon`.
 - No clock, no `HashMap` in any output. Use `BTreeMap` or `Vec`. `serde_json` with `float_roundtrip`.
 - Instants cross the boundary as ISO 8601 strings with an explicit offset (`2026-10-02T17:30:00-04:00`). The core parses them to epoch ms (`time.rs`); engine state keeps the date strings exactly as given, like TS does. Skip dates and availability spans are local `YYYY-MM-DD` keys and are compared as strings.
 - Every exported function takes a JSON request string and returns `{"v":1,"result":...}` or an error. No panics in exported paths (release is `panic = "abort"`), non-finite numbers are an error.

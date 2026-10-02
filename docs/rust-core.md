@@ -72,7 +72,7 @@ crates/
 
 **Hard rules for the core.** These are rules, not notes.
 
-1. `js_round(x) = (x + 0.5).floor()` everywhere TS uses `Math.round`. Rust's `f64::round` rounds half away from zero and diverges for negative halves; the spike hit it on -6.25.
+1. `js_round` everywhere TS uses `Math.round`: halves round toward +infinity, computed as `floor(x)` plus one when `x - floor(x) >= 0.5`. Rust's `f64::round` rounds half away from zero and diverges for negative halves (the spike hit it on -6.25). Do not write it as `(x + 0.5).floor()`: the addition rounds up for `0.49999999999999994` and for odd integers at or above 2^52, where `Math.round` does not.
 2. Time enters as `i64` epoch milliseconds plus a UTC offset in minutes. The core never constructs a date or reads a clock. Day boundaries and DST are computed from the offset the caller supplies.
 3. No `HashMap` iteration order in any output. Use `BTreeMap` or `Vec`.
 4. `f64` only, no `f32`. Never `mul_add`. No `rayon`.
