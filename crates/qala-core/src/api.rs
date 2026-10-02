@@ -59,10 +59,6 @@ pub fn ok(result: Value) -> ApiResult {
     Ok(serde_json::json!({ "v": VERSION, "result": result }).to_string())
 }
 
-pub(crate) fn todo(name: &str) -> ApiResult {
-    Err(ApiError::Internal(format!("{name}: not implemented yet")))
-}
-
 
 
 // ---------------------------------------------------------------------------
@@ -264,6 +260,9 @@ pub fn hlc_merge_field(request: &str) -> ApiResult {
     respond(&hlc::merge_field(&r.local, &r.remote))
 }
 
+// Adapter and derived numbers live in derived_api.rs.
+pub use crate::derived_api::{build_engine_state, readiness_summary, week_load, weight_trend};
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -337,5 +336,3 @@ mod tests {
     }
 }
 
-// Adapter and derived numbers live in derived_api.rs.
-pub use crate::derived_api::{build_engine_state, readiness_summary, week_load, weight_trend};
