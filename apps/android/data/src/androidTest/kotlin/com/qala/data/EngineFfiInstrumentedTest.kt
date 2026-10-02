@@ -1,4 +1,4 @@
-package com.qala.app
+package com.qala.data
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.json.JSONObject
