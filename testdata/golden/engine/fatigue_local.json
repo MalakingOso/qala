@@ -1,0 +1,25 @@
+{
+ "fn": "fatigue_local",
+ "version": 1,
+ "oracle": "ts",
+ "cases": [
+  {"name":"gm -5","input":{"gm":-5},"expected":0,"tolerance":1e-9},
+  {"name":"gm -0.0001","input":{"gm":-0.0001},"expected":0,"tolerance":1e-9},
+  {"name":"gm 0","input":{"gm":0},"expected":0,"tolerance":1e-9},
+  {"name":"gm 0.001","input":{"gm":0.001},"expected":0.000125,"tolerance":1e-9},
+  {"name":"gm 0.4","input":{"gm":0.4},"expected":0.05,"tolerance":1e-9},
+  {"name":"gm 1","input":{"gm":1},"expected":0.125,"tolerance":1e-9},
+  {"name":"gm 2","input":{"gm":2},"expected":0.25,"tolerance":1e-9},
+  {"name":"gm 4","input":{"gm":4},"expected":0.5,"tolerance":1e-9},
+  {"name":"gm 6.5","input":{"gm":6.5},"expected":0.8125,"tolerance":1e-9},
+  {"name":"gm 7.99","input":{"gm":7.99},"expected":0.99875,"tolerance":1e-9},
+  {"name":"gm 8","input":{"gm":8},"expected":1,"tolerance":1e-9},
+  {"name":"gm 8.001","input":{"gm":8.001},"expected":1,"tolerance":1e-9},
+  {"name":"gm 12","input":{"gm":12},"expected":1,"tolerance":1e-9},
+  {"name":"gm 100","input":{"gm":100},"expected":1,"tolerance":1e-9},
+  {"name":"gm 1000000","input":{"gm":1000000},"expected":1,"tolerance":1e-9},
+  {"name":"nonfinite: NaN propagates (Math.max / Math.min)","input":{"gm":"NaN"},"expected":"NaN","tolerance":1e-9},
+  {"name":"nonfinite: Infinity clamps to 1","input":{"gm":"Infinity"},"expected":1,"tolerance":1e-9},
+  {"name":"nonfinite: -Infinity clamps to 0","input":{"gm":"-Infinity"},"expected":0,"tolerance":1e-9}
+ ]
+}
