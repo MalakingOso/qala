@@ -11,11 +11,15 @@ import type { ReactNode } from "react";
 export function PageHeader({
   kicker,
   title,
+  action,
   children,
   ruleless,
 }: {
   kicker?: ReactNode;
   title: string;
+  /** Sits at the right of the title row (the Overview's zoom picker). When
+   * the title changes under it, the new one fades in. */
+  action?: ReactNode;
   children?: ReactNode;
   /** Skip the ink rule for headers with nothing under them. */
   ruleless?: boolean;
@@ -26,7 +30,16 @@ export function PageHeader({
       aria-labelledby="page-title"
     >
       {kicker ? <div className="kicker">{kicker}</div> : null}
-      <h1 className="page-title title" id="page-title">{title}</h1>
+      {action
+        ? (
+          <div className="lede-title-row">
+            <h1 className="page-title title" id="page-title">
+              <span key={title} className="lede-title-text">{title}</span>
+            </h1>
+            {action}
+          </div>
+        )
+        : <h1 className="page-title title" id="page-title">{title}</h1>}
       {ruleless ? null : <hr className="ink-rule" />}
       {children}
     </section>

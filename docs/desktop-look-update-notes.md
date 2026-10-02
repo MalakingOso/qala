@@ -22,11 +22,11 @@ Written 2026-10-01 night, after implementing the refined desktop look on `main`.
 
 1. **Which sans?** I used a system stack (`--font-ui`, first line of `desktop.css`), the same stack Muse's mockups used. It will look different on every OS. Pick a face and it is a one-line change plus a font file. Titles and big figures use Qala Test (Muse's Georgia was a stand-in for it).
 2. **Chip shape.** Muse's filter chips were pills. L1 says no pill radius anywhere, so mine are 4px rounded. Say if you want the pills.
-3. **No avatar.** Qala has no accounts, so I left out the round "B". The toolbar search and week switcher are new behavior, not in the app before. Search only navigates (pages, lifts, exercises, sessions; Ctrl or Cmd K). The week switcher only moves the focus among the three loaded weeks.
+3. **No avatar.** Qala has no accounts, so I left out the round "B". The toolbar search and week switcher are new behavior, not in the app before. Search only navigates (pages, lifts, exercises, sessions; Ctrl or Cmd K). The week switcher only moves the focus among the block's six weeks.
 4. **Past versus future look.** You said weeks 2 and 4 should read clearly. I read week 2 as past and week 4 as the plan, so week 4 is dashed rather than "past". Week 4 was "behind" in your words; if you meant both flanks as history, that is a different treatment.
 5. **Deload in week 6.** Muse's copy said "deload next week". Body's existing text says "Next planned: week 6", so I used week 6 everywhere. The block bar shows it as the outlined cell.
 6. **Muse's numbers I did not use.** "+1.5 vs plan", run paces, and the "holds at 245 next week" quote are not in the app's data. Overview uses the data (6 sessions, readiness +8 clear, 11.0 miles, VDOT +2.0) and the phone's own coach sentence.
-7. **Chart title kept in the ribbon.** The week ribbon still carries its "Weekly load" title and Table toggle (the shared chart shell). Easy to hide if it reads as clutter.
+7. **Chart title kept in the load zoom.** The load zoom (it replaced the ribbon, U27) carries a "Workouts" title and the Table toggle (the shared chart shell) under the page title. Easy to hide if it reads as clutter.
 
 ## Sample data I changed, and conflicts I found
 

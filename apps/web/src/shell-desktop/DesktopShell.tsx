@@ -48,7 +48,7 @@ function NavGroup(
 }
 
 /** Previous / next week and the range in view. It moves the focus the
- * Overview ribbon follows; on other pages it only reads. */
+ * Overview load zoom follows; on other pages it only reads. */
 function WeekSwitcher() {
   const { focus, step, canStep } = useWeekFocus();
   return (
