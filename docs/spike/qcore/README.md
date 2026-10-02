@@ -1,6 +1,6 @@
 # qcore spike (throwaway)
 
-Proves one crate can build to wasm32 and native from feature-gated shims, load in Deno, and generate Kotlin through UniFFI. The real crates are written fresh in `crates/qala-core` (see `docs/rust-core.md`). Results and what wasn't tested are in `docs/rust-core-spike.md`.
+Proves one crate can build to wasm32 and native from feature-gated shims, load in Deno, and generate Kotlin through UniFFI. The real crates are written fresh in `crates/` (see `docs/rust-core.md`). Results and what wasn't tested are in `docs/rust-core.md` appendix A.
 
 Toolchain: rustc 1.98.1, wasm-bindgen CLI 0.2.129 (must match `Cargo.lock`), uniffi 0.32.2.
 

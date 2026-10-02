@@ -1,4 +1,4 @@
-// PLAN.md section 14, look gate: every text/background token pair in
+// docs/PLAN.md section 14, look gate: every text/background token pair in
 // tokens.css must meet WCAG contrast (4.5 for text; current tokens all
 // qualify as text, so large-figure 3.0 needs no separate allowance).
 // --fg-faint is decorative-only by design and is excluded by name.

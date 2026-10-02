@@ -1,4 +1,4 @@
-// Deterministic liftoscript program text (PLAN.md 12: output is planner text
+// Deterministic liftoscript program text (docs/PLAN.md 12: output is planner text
 // with progress: scripts, double progression by default, so it opens in the
 // editor as a normal program). Deterministic: exercises sorted, fixed number
 // formatting, no randomness, no dates except meet-taper sessions.

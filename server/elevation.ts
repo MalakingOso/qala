@@ -1,4 +1,4 @@
-// Server-side elevation (PLAN.md section 8a): Copernicus GLO-30 lookup for
+// Server-side elevation (docs/PLAN.md section 8a): Copernicus GLO-30 lookup for
 // the filtered run track (GPS altitude is never used), with a 3 m hysteresis
 // band for gain so barometer-style noise does not inflate climbing.
 

@@ -1,4 +1,4 @@
-// Re-vendor liftoscript sources from upstream liftosaur (PLAN.md section 5).
+// Re-vendor liftoscript sources from upstream liftosaur (docs/PLAN.md section 5).
 //
 //   deno run --allow-all scripts/vendor_liftosaur.ts --check        # offline: verify the mapped set exists locally
 //   deno run --allow-all scripts/vendor_liftosaur.ts [--src DIR] [--ref REF]
@@ -11,7 +11,7 @@
 // After copying, reapply the documented local patches (the script lists them
 // and exits nonzero until you confirm with --patched):
 //   - src/parser.ts: stub `rollbar` and `utils/dialog` imports
-//   - src/liftoscriptFns.ts: engine bindings (see docs/liftoscript-extensions.md)
+//   - src/liftoscriptFns.ts: engine bindings (see docs/ls-plus-plus.md 7)
 
 import { join } from "node:path";
 
@@ -64,7 +64,7 @@ const PROGRAMS_DIR = "programs/builtin";
 
 const PATCHES = [
   "src/parser.ts: stub `rollbar` and `utils/dialog` imports",
-  "src/liftoscriptFns.ts: engine bindings (docs/liftoscript-extensions.md)",
+  "src/liftoscriptFns.ts: engine bindings (docs/ls-plus-plus.md 7)",
 ];
 
 function arg(name: string, def?: string): string | undefined {

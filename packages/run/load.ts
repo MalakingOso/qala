@@ -1,7 +1,7 @@
 // Grade-adjusted pace and run load: GAP factor, NGP, IF, rTSS, plus the
 // VDOT and Riegel helpers the engine conventions share.
 //
-// Sources: RESEARCH-running.md sections 3 and 5. Everything is SI (metres,
+// Sources: docs/research/RESEARCH-running.md sections 3 and 5. Everything is SI (metres,
 // seconds, m/s); threshold pace is a speed in m/s. Critical speed (CS) is
 // the threshold once three qualifying efforts exist; before that it comes
 // from a recent race time via Riegel.

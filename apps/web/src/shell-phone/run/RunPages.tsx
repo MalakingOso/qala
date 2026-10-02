@@ -302,7 +302,7 @@ export function RunSummaryPage() {
     liveRunStore.getLast,
   );
   // Heart rate, effort load, and elevation aren't tracked by the demo
-  // ticker yet (PLAN.md 14: real GPS/HR need the phone build).
+  // ticker yet (docs/PLAN.md 14: real GPS/HR need the phone build).
   const stats = [
     { v: last ? formatElapsed(last.elapsedSec) : "—", l: "time" },
     { v: last ? last.miles.toFixed(2) : "—", l: "miles" },

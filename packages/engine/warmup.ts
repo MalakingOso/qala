@@ -1,4 +1,4 @@
-// Warm-up generator (PLAN 6.7, RESEARCH-rest-and-warmup.md part 2).
+// Warm-up generator (PLAN 6.7, docs/research/RESEARCH-rest-and-warmup.md part 2).
 // Blocks: general, soft tissue, dynamic mobility, ramp sets.
 
 import type { Approach } from "./state.ts";

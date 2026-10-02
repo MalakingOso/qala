@@ -13,7 +13,7 @@ const icons = JSON.parse(fs.readFileSync(process.env.LUCIDE_JSON, "utf8"));
 const fontDir = path.join(here, "..", "assets", "fonts", "qala-test");
 const b64 = (f) => fs.readFileSync(path.join(fontDir, f)).toString("base64");
 
-// ---------- design system (PLAN.md section 9) ----------
+// ---------- design system (docs/PLAN.md section 9) ----------
 const FONTS = `<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&amp;family=Faustina:wght@500;700&amp;display=swap">`;
 const FACES = `
 @font-face { font-family: "Qala Test"; src: url(data:font/woff2;base64,${b64("QalaTestV2-Bold.woff2")}) format("woff2"); font-weight: 700; font-style: normal; }
@@ -148,7 +148,7 @@ const tabBar = (items, active) =>
 const nav = (activeA, activeB = activeA) =>
   `<sc-if value="{{ navA }}" hint-placeholder-val="{{ true }}">${tabBar(TABS_A, activeA)}</sc-if><sc-if value="{{ navB }}" hint-placeholder-val="{{ false }}">${tabBar(TABS_B, activeB)}</sc-if>`;
 
-// ---------- plates (PLAN.md section 6.8) ----------
+// ---------- plates (docs/PLAN.md section 6.8) ----------
 const PLATE = {
   55: { c: "#d64541", ink: "#ffffff", h: 1.0, w: 30 },
   45: { c: "#2f6bd1", ink: "#ffffff", h: 1.0, w: 28 },
@@ -337,7 +337,7 @@ ${workoutTop}
 </div>
 `);
 
-// ---- Session complete: graphical summary (PLAN.md section 8) ----
+// ---- Session complete: graphical summary (docs/PLAN.md section 8) ----
 const timeSeg = [["Warm-up", 14, "--viz1"], ["Lifting", 27, "--viz2"], ["Rest", 17, "--viz3"]];
 const totalMin = timeSeg.reduce((a, s) => a + s[1], 0);
 const muscleVol = [["Quads", 6, 3], ["Hamstrings", 3, 7], ["Glutes", 4, 5], ["Calves", 4, 4], ["Abs", 2, 3]];

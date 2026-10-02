@@ -32,7 +32,7 @@ private fun qalaIcon(name: String, vararg paths: String): ImageVector =
         }
     }.build()
 
-/** The icons DESIGN.md section 4 lists. Built on first use. */
+/** The icons docs/DESIGN.md section 4 lists. Built on first use. */
 object QalaIcons {
     /** Lucide `sun`. */
     val Sun: ImageVector by lazy {

@@ -1,4 +1,4 @@
-// Sync storage for the Qala server (PLAN.md section 7): one automerge
+// Sync storage for the Qala server (docs/PLAN.md section 7): one automerge
 // document per user, persisted under `data/users/<login>/`.
 //
 // The primary store is automerge-repo's `NodeFSStorageAdapter` running under

@@ -1,4 +1,4 @@
-// Volume rules (PLAN.md 6.3): fractional band inside RP caps, +2/week ramp in
+// Volume rules (docs/PLAN.md 6.3): fractional band inside RP caps, +2/week ramp in
 // hypertrophy blocks only, strength holds, deload x0.5, time fit.
 
 import {
@@ -67,7 +67,7 @@ function mkEx(
   } as PlannedExercise;
 }
 
-Deno.test("RP rows and owner bands match PLAN.md 6.3", () => {
+Deno.test("RP rows and owner bands match docs/PLAN.md 6.3", () => {
   assert(rpRow("chest").mev.join() === "4,6", "chest MEV 4-6");
   assert(rpRow("back").mev.join() === "12,14", "back MEV 12-14");
   assert(rpRow("hamstrings").mrv.join() === "8,14", "hamstrings MRV 8-14");

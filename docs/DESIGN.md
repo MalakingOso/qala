@@ -1,10 +1,10 @@
 # Qala: design system and screens
 
-The single reference for how Qala looks and behaves on screen. The owner's choices behind it are in `DECISIONS.md` (codes like L4 or U3 below point there). Engine rules the screens display are in `PLAN.md` section 6. The review canvas that shows all of this is `mockups/qala-app-mockups.html` (section 8 below).
+The single reference for how Qala looks and behaves on screen. The owner's choices behind it are in `docs/DECISIONS.md` (codes like L4 or U3 below point there). Engine rules the screens display are in `docs/PLAN.md` section 6. The review canvas that shows all of this is `mockups/qala-app-mockups.html` (section 8 below).
 
-Visual refinement, 2026-09-13: a smoothing pass (`docs/visual-refinement.md`)
-gave the app responsive charts, consistent controls, a full-height desktop
-workspace and a recomposed Today and Plan. Those stay. Its surface treatment
+Visual refinement, 2026-09-13: a smoothing pass gave the app responsive
+charts, consistent controls, a full-height desktop workspace and a
+recomposed Today and Plan. Those stay. Its surface treatment
 (1px borders, blurred shadows, 6/10/12px radii, a logo tile) made Qala read as
 a generic app rather than a Beamer sibling, and the owner had it reverted the
 same day (L8). The review canvas predates both passes.
@@ -28,7 +28,7 @@ below; the decisions are L9 to L11 and U14 to U19.
 
 ## 2. Tokens
 
-Implemented in `apps/web/src/theme/tokens.css`, shared by both shells. Beamer's token names and structure (Beamer `assets/styles.css` lines 13-56), ember in place of Beamer's indigo, borders and shadows derived from the neutral ink. Contrast ratios are WCAG against `--bg`; the calculations and the Runkeeper color study behind them are in `RESEARCH-design-and-programming.md` part A (A4 for contrast).
+Implemented in `apps/web/src/theme/tokens.css`, shared by both shells. Beamer's token names and structure (Beamer `assets/styles.css` lines 13-56), ember in place of Beamer's indigo, borders and shadows derived from the neutral ink. Contrast ratios are WCAG against `--bg`; the calculations and the Runkeeper color study behind them are in `docs/research/RESEARCH-design-and-programming.md` part A (A4 for contrast).
 
 ```css
 :root {
@@ -88,7 +88,7 @@ Mirror the dark block under `@media (prefers-color-scheme: dark)` for `theme: 's
 | Ticking number: rest countdown, "of 3:45", workout clock, live run numbers, warm-up timers | Qala Test | 700, 500 for "of 3:45" | 22-150 | `font-variant-numeric: lining-nums tabular-nums` |
 | Body, buttons, controls, set rows, table cells | DM Mono | 400, 500 for labels and emphasis | 13-15 / 13-14 | DM Mono's own |
 | Desktop shell UI text: nav, labels, table cells, body copy, buttons (L16) | a proportional sans (`--font-ui` in `theme/desktop.css`, a system stack until the owner picks a face) | 400, 500, 600 for emphasis | 12-13 | tabular for numerals |
-| Desktop numerals, chart ticks, code: load and distance columns, axis ticks, times, liftoscript | DM Mono | 400, 500 | 10-13 | DM Mono's own, tabular |
+| Desktop numerals, chart ticks, code: load and distance columns, axis ticks, times, LS++ | DM Mono | 400, 500 | 10-13 | DM Mono's own, tabular |
 | Group labels (uppercase band) | DM Mono | 500, letter-spacing .09em | 11 | |
 | Chart text: axis ticks, direct labels, legends | DM Mono | 400, 500 for the labeled value | 10-12 | tabular in axis ticks |
 
@@ -218,7 +218,7 @@ Code lives in `apps/web/src/shared/charts/`. The plate drawing and the readiness
 | Chart | Where | Form | Library |
 |---|---|---|---|
 | This week | Today hero, desktop Overview, landing | seven-day strip: one bar per day, height the day's load, fill the part done; done teal, today ember on an `--accent-subtle` band, later outlined, rest a dash; a lift/run/both/rest glyph and the day letter under each; a caption naming the tapped, hovered or focused day (today by default) and a week total line (U13) | HTML/CSS, no plotting library |
-| Week ribbon | desktop Overview | three weeks side by side with one in focus (U20): the same bars and glyphs as the strip, with everything behind today on a gray wash, today on an ember wash with an ember day letter, the week still to come dashed (a plan, not a record), a ruler of week names and date ranges above, an inspector headline under the chart naming one day with the focus week's totals beneath it, and the focus week at full strength while the other two go quiet. The toolbar's week switcher and the ruler both move the focus | HTML/CSS, no plotting library |
+| Week ribbon | desktop Overview | three weeks side by side with one in focus (U20), flat on the lede card. Each bar stacks teal lift load under muted steel-blue run load (U25); fill is the part done, the week still to come is dashed (a plan, not a record), rest days are a dash. No glyphs, no wash columns, no inspector: today reads through a frosted chip above its bar and its letter reversed out of an ember square, and hovering (or tapping, which pins) a day lifts its bar and shows a frosted tooltip naming the type with labeled numbers. A ruler of week names and date ranges sits above, and the focus week is at full strength while the other two go quiet. The toolbar's week switcher and the ruler both move the focus | HTML/CSS, no plotting library |
 | Readiness ring | Today hero | ring meter out of 100 with average and low markers (6.4) | visx `Arc` |
 | Readiness, last 7 days | Body | line with markers by weekday, today's value as a headline, average and low as hairlines | visx |
 | Where the time went | Session complete | one stacked horizontal bar, categorical | visx |
@@ -277,7 +277,7 @@ Build, 2026-09-30: each day carries its own exercises (the cards used to repeat 
 
 ### 7.3 Check-in
 
-Title "How are you walking in?". Recovery 0-10 as a row of buttons with anchors. Soreness 1-4 for each muscle today's session trains, with when it was last trained and the four meanings. A free-text line; the coach turns it into removable chips ("Sleep 6 h", "Left knee: watch"). On a rest day, the card also surfaces a suggested mobility/recovery line (foam roller, Theragun, stretching) drawn from soreness answers and owned equipment — a tip, not a tracked stage (DECISIONS U10; see CONTEXT.md's "mobility" entry for how this differs from the warm-up's mobility block). Continue to warm-up.
+Title "How are you walking in?". Recovery 0-10 as a row of buttons with anchors. Soreness 1-4 for each muscle today's session trains, with when it was last trained and the four meanings. A free-text line; the coach turns it into removable chips ("Sleep 6 h", "Left knee: watch"). On a rest day, the card also surfaces a suggested mobility/recovery line (foam roller, Theragun, stretching) drawn from soreness answers and owned equipment — a tip, not a tracked stage (DECISIONS U10; see docs/CONTEXT.md's "mobility" entry for how this differs from the warm-up's mobility block). Continue to warm-up.
 
 Build, 2026-09-30: recovery and soreness use the scale picker; each muscle shows the meaning of the picked value in place of a hover title. On a rest day the button saves the check-in and returns to Today instead of opening the warm-up.
 
@@ -359,7 +359,7 @@ Every page opens on a lede card: a kicker line, the title in Qala Test, an ink r
 - Lifts leads with the average e1RM gain and a ranked gain bar per lift, then one card per lift.
 - Running leads with VDOT and its trend, then the runs and the latest run's splits against its own average (U17).
 - Body leads with the recovery map, front and back side by side with the selected muscle's fatigue curve under them, then readiness by weekday, sets by muscle and the deload status.
-- History is one filterable table. Programs shows the block, the single ember action (generate the next block), the liftoscript source and the week preview. Exercises has search, an equipment filter and a Hide action per row. Coach memory shows proposals with Accept and Reject, the profile and the log. Calibration shows observations against the 20 that free theta, the parameters and the squat residuals. Settings flows the phone's groups into two columns.
+- History is one filterable table. Programs shows the block, the single ember action (generate the next block), the LS++ source and the week preview. Exercises has search, an equipment filter and a Hide action per row. Coach memory shows proposals with Accept and Reject, the profile and the log. Calibration shows observations against the 20 that free theta, the parameters and the squat residuals. Settings flows the phone's groups into two columns.
 
 Below 1100px the two-column rows stack; below 760px the sidebar becomes a menu and the toolbar wraps. Program source and its week preview share a split view. Run detail uses three separate plots for pace, heart rate, and elevation, with synchronized time windows and cursors.
 
@@ -369,7 +369,27 @@ Dated, sourced facts with Accept / Reject for pending ones, the profile the coac
 
 ### 7.17 Landing page (U7)
 
-For people reaching Qala on the tailnet: a wide editorial hero, "Train with the
+For people reaching Qala on the tailnet. The page opens with the intro (U26):
+a 3.2 s clip, 1080 x 720 at 30 fps, in which the red Qk bumper plate drops
+spinning, slaps flat, hops once, wobbles like an Euler's disk and settles with
+the Q upright, kicking up a thin sheet of dust at the slap that drifts and
+settles by frame 85. It is rendered in Blender (`assets/3d/build_intro.py`,
+the plate from `build_sprites.py --icon`) and composited on each theme's
+`--bg` by `assets/3d/encode_intro.sh` (H.264 and AV1, with the last frame as
+a WebP poster), so the clip has no visible edge on the page; the files live in
+`shared/intro/` so Vite hashes them. `IntroHero` picks the clip for the
+current theme, plays it once, muted and inline, capped at its own 1080 px, and
+fades "Qala." in over the band above the plate (positions from `intro.json`,
+sized in container units) once the plate has settled at 2.2 s. Reduced motion
+or a refused autoplay shows the poster with the wordmark at once. Two guards
+keep the clip invisible as a rectangle: its edges are feathered with a mask,
+and because 8-bit limited-range video cannot hold every colour and each
+browser's decoder rounds its own way (Chrome lands two levels off on the dark
+page), the encode also writes `cal-{light,dark}` clips of the bare page colour
+through the same chain, which `IntroHero` reads back from a hidden video and
+cancels with a colour matrix on the intro. The header is the Qk icon beside
+"Qala." (the desktop lockup, without "training record").
+Below it: a wide editorial hero, "Train with the
 whole picture.", concise supporting copy, Open Qala and How it decides, and a
 device morph on the right: one frame that loops phone, laptop, desktop and
 then the bare app card (`shared/DeviceMorph.tsx`, CSS keyframes only, static
@@ -378,6 +398,41 @@ sections explain planning, adaptation, and progress. Open Qala enters the
 desktop workspace on wide screens and Today on phones. AGPL and liftosaur
 credit remain in the footer.
 
+### 7.18 Skipping a day and the training status (U24)
+
+Five reasons, one per skipped day: On a Break (`sunset`, "Taking a few days
+off to recover."), On Vacation (`tree-palm`, "Away from training. The plan
+shifts out."), Sick (`thermometer`, "Resting to get well. The plan shifts
+out."), Injured (`bandage`, "Training around it."), Scheduling
+(`calendar-off`, "Could not fit it in today."). Vacation and sick shift the
+plan out; a break or a scheduling conflict rests in place; an injured day
+names one muscle and trains around it. A skipped day is never a miss: the
+copy says what happens (rests, shifts, guards) and nothing counts against
+the user.
+
+The skip sheet (`#/phone/skip`) opens from Today ("Skip today" under the
+lift and run heroes) and from any unlogged Plan day ("Skip this day"). It
+shows the day, the four reason rows (2px bordered, the picked radio filled
+with ink), a muscle picker for injuries, an optional one-line note, and a
+span picker (This day only, 3 days, 7 days, Until I say so). One day writes
+a `DaySkip`; anything longer sets the persistent `Availability` status
+(`packages/core/schema.ts`, resolved by `packages/engine/availability.ts`).
+
+Today shows a status banner naming the reason and what it means, with Undo;
+the lift and run heroes trade their Start buttons for a skipped line, a See
+plan action and Undo. Plan strikes skipped days like missed ones, labels the
+reason and whether the plan shifts, and counts done, skipped and shifted in
+the week summary. Settings leads with a Training status group showing the
+current state with Change and, while away, Set active. An injured muscle
+reads as recovering on Body (soreness pinned to 4, direct work off),
+checks in at soreness 4, and leads the rest-day tip; the engine blocks its
+direct work and halves synergist work (`INJURED_SKIP`, `INJURED_HALVE`).
+
+From day two of a sick stretch, entering the phone app pops "Feeling
+better?", naming when the stretch started, with I am better (clears the
+status) and Still sick (dismisses for the session). Day one never asks: the
+user just said they were sick.
+
 ## 8. Mockups
 
-`mockups/build.mjs` generates `mockups/qala-app-mockups.html`, published at https://claude.ai/code/artifact/250bf70f-3bed-4593-ad17-afc44bb14a0c (version 5, 2026-09-13; made private 2026-09-13, `DECISIONS.md` section 7). Pages: Today (your pick), Today options (round 3), Phone, Desktop and web, Foundations. Regenerate with `LUCIDE_JSON=<extracted Lucide paths> node mockups/build.mjs`, then assemble and republish with the design canvas tool. The mockups are hand-drawn HTML and SVG with sample data: they do not use visx or uPlot. Runs show `sport-shoe` since version 5.
+`mockups/build.mjs` generates `mockups/qala-app-mockups.html`, published at https://claude.ai/code/artifact/250bf70f-3bed-4593-ad17-afc44bb14a0c (version 5, 2026-09-13; made private 2026-09-13, `docs/DECISIONS.md` section 7). Pages: Today (your pick), Today options (round 3), Phone, Desktop and web, Foundations. Regenerate with `LUCIDE_JSON=<extracted Lucide paths> node mockups/build.mjs`, then assemble and republish with the design canvas tool. The mockups are hand-drawn HTML and SVG with sample data: they do not use visx or uPlot. Runs show `sport-shoe` since version 5.

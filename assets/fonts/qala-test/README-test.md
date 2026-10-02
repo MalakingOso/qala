@@ -1,15 +1,10 @@
-# Qala Test v1 (test family, NOT for the app)
+# Qala Test v1 notes
 
 Renamed fork of Faustina (OFL, no reserved name) for trying a
-Scala/Quadraat intersection at Qala title sizes. Nothing here is wired
-into the app.
-
-## Files
-
-- QalaTest-Medium.ttf / .woff2 (static 500)
-- QalaTest-Bold.ttf / .woff2 (static 700)
-- OFL.txt (Faustina license, applies to this fork)
-- work/ : sources, build_v1.py, check_v1.py, reference statics
+Scala/Quadraat intersection at Qala title sizes. The built faces moved
+up to `assets/fonts/` (v1 Medium and V2 Bold ship in the app); only
+`work/` (sources, build_v1.py, check_v1.py, reference statics) and this
+file remain here.
 
 ## v1 changes vs Faustina
 

@@ -1,4 +1,4 @@
-// Running plans (PLAN.md 12): easy share, quality count, growth caps, down
+// Running plans (docs/PLAN.md 12): easy share, quality count, growth caps, down
 // weeks, race taper.
 
 import {

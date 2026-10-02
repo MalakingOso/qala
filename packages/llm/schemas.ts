@@ -1,4 +1,4 @@
-// JSON schemas for the seven PLAN.md section 11 features.
+// JSON schemas for the seven docs/PLAN.md section 11 features.
 // Passed to chat(messages, schema) as response_format json_schema.
 
 import type { JsonSchema } from "./prompts.ts";

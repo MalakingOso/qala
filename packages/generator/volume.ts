@@ -1,4 +1,4 @@
-// Volume rules (PLAN.md 6.3, evidence in RESEARCH-design-and-programming.md B4).
+// Volume rules (docs/PLAN.md 6.3, evidence in docs/research/RESEARCH-design-and-programming.md B4).
 // Copied here with citation because packages/engine owns the runtime counting;
 // the generator must plan against the same numbers. Do not retune one copy
 // without the other.
@@ -15,7 +15,7 @@
 //   Back starts at 14.
 // - Block start fracSets = max(band lo, MEV hi + indirect credit), +2/week,
 //   capped. The ramp applies only in hypertrophy blocks; strength and peaking
-//   hold volume and move intensity/RPE (DECISIONS.md T5). Deload x0.5.
+//   hold volume and move intensity/RPE (docs/DECISIONS.md T5). Deload x0.5.
 // - Strength blocks: MEV to about 10 fractional sets per muscle (1RM gains
 //   flatten beyond ~5, Pelland 2026); time goes to intensity and practice.
 
@@ -36,7 +36,7 @@ export interface RpRow {
   mrv: [number, number];
 }
 
-// PLAN.md 6.3 table, intermediate lifters, sets/week. See module comment.
+// docs/PLAN.md 6.3 table, intermediate lifters, sets/week. See module comment.
 export const RP_TABLE: Record<string, RpRow> = {
   chest: { mv: [2, 4], mev: [4, 6], mav: [6, 16], mrv: [16, 24] },
   back: { mv: [10, 12], mev: [12, 14], mav: [16, 22], mrv: [22, 30] },
@@ -146,7 +146,7 @@ export function strengthFracTarget(
 
 export const DELOAD_FACTOR = 0.5;
 
-// Hard-set rule (PLAN.md 6.3, RESEARCH B5): a completed work set with target
+// Hard-set rule (docs/PLAN.md 6.3, RESEARCH B5): a completed work set with target
 // RPE >= 7 counts. Main-lift work sets also need load >= 50% of reference 1RM.
 export function isHardSet(ex: PlannedExercise, referenceRm?: number): boolean {
   if (ex.rpe < 7) return false;
@@ -197,7 +197,7 @@ export function countWeekSets(
   return out;
 }
 
-// Time model (PLAN.md 12, costs from 6.6): per work set, base rest B plus 40 s
+// Time model (docs/PLAN.md 12, costs from 6.6): per work set, base rest B plus 40 s
 // of set time for hypertrophy/maintenance or 30 s for strength, plus the 6.7
 // warm-up (default 8 min, 15 min when the first main lift tops >= 85%).
 export function baseRestSec(approach: Approach, klass: ExerciseClass): number {

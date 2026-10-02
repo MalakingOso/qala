@@ -1,4 +1,4 @@
-// Map tile serving (PLAN.md section 8a): self-hosted Protomaps PMTiles for
+// Map tile serving (docs/PLAN.md section 8a): self-hosted Protomaps PMTiles for
 // the owner's region, plus the unpacked `z/x/y` fallback the phone app
 // pre-caches (a service worker cannot cache 206 responses). Full Range
 // support, since MapLibre and the PMTiles client fetch by byte range.

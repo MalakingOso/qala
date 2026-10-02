@@ -2,7 +2,7 @@
 
 Tags: [RCT] randomised trial, [obs] observational/cohort, [model] modelling study, [expert] expert opinion/coach practice, [secondary] number taken from a review, blog or calculator, not the primary source, [weak] thin or contradictory evidence, [derived] number computed in this report from the named anchors; the derivation is shown next to it.
 
-Context: the engine in PLAN.md section 6 has per-muscle fatigue G_m (tau 2-2.5 d, input RPE-weighted set counts), systemic fatigue G_s (tau 10 d, input sRPE x minutes / 100), per-lift fitness F_l (tau 45 d), a Kalman-corrected e1RM observation, RP soreness/performance check-ins and PRS readiness. This report asks what running should add to each of those.
+Context: the engine in docs/PLAN.md section 6 has per-muscle fatigue G_m (tau 2-2.5 d, input RPE-weighted set counts), systemic fatigue G_s (tau 10 d, input sRPE x minutes / 100), per-lift fitness F_l (tau 45 d), a Kalman-corrected e1RM observation, RP soreness/performance check-ins and PRS readiness. This report asks what running should add to each of those.
 
 ## 1. Concurrent training interference
 
@@ -176,7 +176,7 @@ Coach practice:
 
 Recommended default: stack stress (expert). Put intervals or tempo on lower-body days, lifting first and the run 6 h or more later, and keep easy runs on upper-body or rest days. Swap a planned hard run to easy when the previous 24 h held 8 or more quad set-equivalents of lifting. Hold lower-body load progression while running-derived quad or calf fatigue exceeds one normal session. After a half marathon wait 48 h before heavy lower-body work; after a marathon wait 5 days, then deload lower body 50%.
 
-## 8. Proposed engine changes (for PLAN.md section 6)
+## 8. Proposed engine changes (for docs/PLAN.md section 6)
 
 All numbers below come from the recommended defaults above; [derived] items are marked there. The running inputs are scaled by knee-extensor force loss against a scored squat session, so a running set-equivalent sits on the same scale as a lifting one. That is what lets the lifting-fitted Kalman theta stay valid when running fatigue is added to `G_weighted`; do not rescale q on its own.
 

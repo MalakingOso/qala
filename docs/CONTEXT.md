@@ -1,6 +1,6 @@
 # Qala
 
-Qala is a self-hosted app that plans and records both lifting and running from one adaptive engine. This file is the glossary. Decisions live in `DECISIONS.md`, the screen-by-screen spec in `DESIGN.md`, the build plan in `PLAN.md`.
+Qala is a self-hosted app that plans and records both lifting and running from one adaptive engine. This file is the glossary. Decisions live in `docs/DECISIONS.md`, the screen-by-screen spec in `docs/DESIGN.md`, the build plan in `docs/PLAN.md`.
 
 ## Language
 
@@ -17,9 +17,28 @@ _Avoid_: Phase, cycle, program
 **Macrocycle**:
 A sequence of blocks toward a long-term goal or a race/meet date.
 
+### Program language
+
+**LS++ (Liftoscript++)**:
+Qala's program language: liftosaur's liftoscript plus additive extensions, file extension `.lspp`. The name covers the language, not one codebase: `packages/liftoscript` is the vendored TypeScript oracle and the desktop authoring runtime, `crates/qala-lspp` is the Rust port behind wasm (web, server) and UniFFI (Android).
+_Avoid_: liftoscript for new programs (that name means liftosaur's language or the TS package)
+
 **Reference 1RM**:
 The 1RM a block's percentage-based loads are computed against, fixed for the whole block so intensity-zone counts don't drift as the live e1RM estimate moves. Updates only at block boundaries or on a new tested 1RM.
 _Avoid_: Training max, e1RM (e1RM is the live Kalman estimate; reference 1RM is the block-frozen value derived from it)
+
+### Time off
+
+**Skip**:
+One training day off with a reason (break, vacation, sick, injured, scheduling). A skip is rest, never a miss.
+_Avoid_: Miss (a day with no log and no reason)
+
+**Shift**:
+What vacation and sick days do to the plan: the scheduled work pushes out instead of being absorbed as rest. Breaks and scheduling conflicts rest in place; injuries train around the hurt muscle.
+
+**Training status**:
+The persistent version of a skip reason. Stays on from its start day until its end day, or until the user sets Active again. A one-day skip wins over the status for its own day.
+_Avoid_: Status alone (too vague; the coach and sync have their own)
 
 ### Engine state
 
@@ -46,7 +65,7 @@ The Today screen's left-edge timeline of the day's stages. Flicks between stage 
 ### Coach
 
 **Coach**:
-The conversational tab backed by the local Gemma model. Open-ended within fitness/training/health/recovery topics — it declines requests outside that persona — but any actionable suggestion it makes still resolves to one of PLAN.md 11's features and passes through the same clamped envelope as every other Gemma-touched number in the app. See `docs/adr/0001-coach-open-chat.md`.
+The conversational tab backed by the local Gemma model. Open-ended within fitness/training/health/recovery topics — it declines requests outside that persona — but any actionable suggestion it makes still resolves to one of docs/PLAN.md 11's features and passes through the same clamped envelope as every other Gemma-touched number in the app. See `docs/adr/0001-coach-open-chat.md`.
 _Avoid_: Assistant, chatbot (both imply unbounded actions, which Coach doesn't have)
 
 **Mobility (warm-up)** vs **mobility (check-in)**:

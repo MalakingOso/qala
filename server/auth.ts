@@ -1,4 +1,4 @@
-// Auth for the Qala sync server (PLAN.md sections 3 and 7).
+// Auth for the Qala sync server (docs/PLAN.md sections 3 and 7).
 //
 // Identity comes only from the `Tailscale-User-Login` header injected by
 // `tailscale serve`. Origin is ignored: browsers send the tailnet hostname,

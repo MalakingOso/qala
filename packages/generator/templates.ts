@@ -1,6 +1,6 @@
-// Loading templates (PLAN.md 12, RESEARCH-design-and-programming.md B2-B4).
+// Loading templates (docs/PLAN.md 12, docs/research/RESEARCH-design-and-programming.md B2-B4).
 // Linear and DUP tables are % of the block reference 1RM (fixed for the block
-// per PLAN.md 6.3, so zone counts do not drift). Hypertrophy loads come from
+// per docs/PLAN.md 6.3, so zone counts do not drift). Hypertrophy loads come from
 // inverse Epley on the effective max, within 1.5 pts of the NSCA chart.
 // Meet taper offsets follow Pritchard 2016 / Travis 2020-2021: step taper,
 // volume -40 to -50%, intensity held >= 85% until the last heavy session.
@@ -14,7 +14,7 @@ export interface LinearWeek {
   deload?: boolean;
 }
 
-// PLAN.md 12 linear strength template, squat and bench.
+// docs/PLAN.md 12 linear strength template, squat and bench.
 export const LINEAR_TABLE: LinearWeek[] = [
   { week: 1, sets: 4, reps: 5, pct: 80, nl85: 0 },
   { week: 2, sets: 4, reps: 4, pct: 83, nl85: 0 },
@@ -66,7 +66,7 @@ export interface DupWeek {
   deload?: boolean;
 }
 
-// PLAN.md 12 DUP template per main lift, HPS day order (Zourdos 2016). The
+// docs/PLAN.md 12 DUP template per main lift, HPS day order (Zourdos 2016). The
 // strength day is RPE-capped, a Qala change from Zourdos's max-reps protocol.
 export const DUP_TABLE: DupWeek[] = [
   {
@@ -146,7 +146,7 @@ export function altDupWeek(week: number): Array<AltDupDay & { pct: number }> {
 
 export interface HyperWeek {
   week: number;
-  fracDelta: number; // +2 ramp, capped (PLAN.md 6.3)
+  fracDelta: number; // +2 ramp, capped (docs/PLAN.md 6.3)
   rirCompound: [number, number];
   rirIsolation: [number, number];
   compoundReps: [number, number];
@@ -155,7 +155,7 @@ export interface HyperWeek {
   deload?: boolean;
 }
 
-// PLAN.md 12 hypertrophy template (owner 8-15 band: compounds 8-12,
+// docs/PLAN.md 12 hypertrophy template (owner 8-15 band: compounds 8-12,
 // isolation 12-15; loads from inverse Epley, B2).
 export const HYPERTROPHY_TABLE: HyperWeek[] = [
   {
@@ -307,7 +307,7 @@ export function taperSchedule(meetDateISO: string): TaperSession[] {
 }
 
 // Round a prescribed weight to the user's barbell plate step (default 5 lb,
-// PLAN.md 6.3 ACSM increments; same inventory rule as core plates).
+// docs/PLAN.md 6.3 ACSM increments; same inventory rule as core plates).
 export function roundToPlates(weight: number, step = 5): number {
   return Math.round(weight / step) * step;
 }

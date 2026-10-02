@@ -2,7 +2,7 @@
 
 Tags: [RCT] randomised allocation or order stated in the abstract, or PubMed type Randomized Controlled Trial (crossovers included), [obs] observational, non-randomised, counterbalanced-only or unstated-order study, [meta] meta-analysis or systematic review, [model] modelling study, [expert] expert opinion or coach practice, [secondary] number taken from a review or another paper, not the primary source, [weak] thin or contradictory evidence, [derived] computed or chosen here, with the working shown.
 
-Scope: both features sit on the data model in PLAN.md sections 3, 6.2-6.4 and 12. Per set: weight, reps, RPE. Check-in: RP soreness 1-4 per muscle, PRS 0-10. Engine bindings already defined in PLAN M1: `prs`, `soreness` (max over target muscles, 1-4), `fatigueLocal` (0-1), `readiness` (0-1). Program `approach`: strength (1-6 reps at 80-95%), hypertrophy (8-15 reps at 60-80%), maintenance (6-10 reps). Plates: barbell and dumbbell 5 lb steps.
+Scope: both features sit on the data model in docs/PLAN.md sections 3, 6.2-6.4 and 12. Per set: weight, reps, RPE. Check-in: RP soreness 1-4 per muscle, PRS 0-10. Engine bindings already defined in PLAN M1: `prs`, `soreness` (max over target muscles, 1-4), `fatigueLocal` (0-1), `readiness` (0-1). Program `approach`: strength (1-6 reps at 80-95%), hypertrophy (8-15 reps at 60-80%), maintenance (6-10 reps). Plates: barbell and dumbbell 5 lb steps.
 
 # Part 1. Automatic rest timer
 

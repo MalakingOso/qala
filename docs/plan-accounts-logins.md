@@ -14,7 +14,7 @@ publishing; OWASP argon2id floor and the Capacitor/WebView WebAuthn limit
 confirmed via web sources. Everything else is grounded in inspected repo
 files (ADR 0002, server/auth.ts, server/mod.ts, server/sync.ts, server/llm.ts,
 server/deno.json, deploy/qala.service, deploy/tailscale-serve.md,
-DECISIONS.md S3/S9/S11, docs/rust-core.md sections 4-5, apps/web shells).
+docs/DECISIONS.md S3/S9/S11, docs/rust-core.md sections 4-5, apps/web shells).
 No library API is asserted from memory. Section 13 lists what is closed and
 the three items still genuinely open (U6/U7/U9).
 
@@ -567,7 +567,7 @@ Fact: `/api/llm/chat` (server/llm.ts) proxies to llama-server on
 `http://127.0.0.1:8080` (callisto-local, model `gemma-4-E4B_q4_0-it`,
 60 s timeout, degrade-gracefully 502 + `{degraded:true}`).
 With no tailnet the VPS cannot reach callisto, so that proxy target is
-dead on arrival (ADR 0002 open question; PLAN.md llama-server is a
+dead on arrival (ADR 0002 open question; docs/PLAN.md llama-server is a
 callisto systemd user unit, not portable by config).
 
 Options from ADR 0002: (a) CPU inference of a small model on the VPS, or
@@ -622,7 +622,7 @@ removal, in this order (each step keeps the tree green):
    cases -> cookie-present vs cookie-absent cases. No test may send the
    Tailscale header afterward (grep gate: `tailscale-user-login` appears
    nowhere except this plan + ADR history).
-8. Docs sweep: PLAN.md auth-v1 row, DECISIONS.md S3 intent line
+8. Docs sweep: docs/PLAN.md auth-v1 row, docs/DECISIONS.md S3 intent line
    ("Tailscale identity"), docs/rust-core.md sections 4-5 auth sentences,
    docs/android-native.md `requireUser` notes: all change "Tailscale
    identity through requireUser" to "session cookie through requireUser".

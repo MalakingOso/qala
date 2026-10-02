@@ -2,7 +2,7 @@
 
 > The Capacitor recommendation in this report is superseded by the native Kotlin app (DECISIONS S7, S15). The evidence on GPS, audio and heart rate still applies.
 
-Written 2026-09-13 for Qala (see PLAN.md). Scope: Runkeeper-style run recording (time, distance, current and average pace, splits with voice cues, route map with mile markers, pause/resume, optional HR strap) and guided running workouts with voice prompts.
+Written 2026-09-13 for Qala (see docs/PLAN.md). Scope: Runkeeper-style run recording (time, distance, current and average pace, splits with voice cues, route map with mile markers, pause/resume, optional HR strap) and guided running workouts with voice prompts.
 
 Tagging: `[verified: URL]` means I read the source (or a quoted excerpt of it) and it says what the sentence says. `[verified via search excerpt: URL]` means the source's own text as surfaced by a search tool, without reading the full page. `[unverified]` means inference, an engineering default, or a secondary source I couldn't confirm. Where a claim rests on a coordinator's reading of third-party code, it says so.
 
@@ -12,7 +12,7 @@ Tagging: `[verified: URL]` means I read the source (or a quoted excerpt of it) a
 
 **Screen-on PWA is possible but poor.** With the Screen Wake Lock API holding the screen on, the page stays visible and `watchPosition` keeps delivering. On Android that works today. On iOS the Wake Lock only started working in Home Screen web apps with iOS 18.4 (31 March 2025) [verified: https://bugs.webkit.org/show_bug.cgi?id=254545]. The costs: two hours of screen-on battery drain, pocket touches, and one accidental press of the power button ends GPS delivery until the user unlocks. It's a demo mode, not a run tracker.
 
-**Recommendation:** go native for the run recorder, which is exactly the case PLAN.md reserved Capacitor for. Build the phone shell as a Capacitor 8 app with the Preact bundle inside the APK, background GPS from a plugin backed by an Android foreground service, native TTS, and native BLE for heart rate. Sideload the APK onto the owner's Nothing Phone (no Play Store, no fees). The PWA stays as the desktop shell and as a fallback phone logger for lifting. For iOS friends later, the same Capacitor project builds for iOS, but distributing it needs the $99/year Apple Developer Program and TestFlight. Details in section 2.
+**Recommendation:** go native for the run recorder, which is exactly the case docs/PLAN.md reserved Capacitor for. Build the phone shell as a Capacitor 8 app with the Preact bundle inside the APK, background GPS from a plugin backed by an Android foreground service, native TTS, and native BLE for heart rate. Sideload the APK onto the owner's Nothing Phone (no Play Store, no fees). The PWA stays as the desktop shell and as a fallback phone logger for lifting. For iOS friends later, the same Capacitor project builds for iOS, but distributing it needs the $99/year Apple Developer Program and TestFlight. Details in section 2.
 
 An outside data point agrees: jara (GPL-3.0 Flutter running app, https://github.com/jakobbjelver/jara) went native for background GPS, using an Android foreground service with `foregroundServiceType="location"` and a persistent "Tracking your run" notification, and iOS `UIBackgroundModes` location [coordinator's reading of the jara source; not independently checked].
 

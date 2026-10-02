@@ -480,7 +480,7 @@ function buildTrainingWeek(
   if (approach !== "maintenance") {
     fitAccessoryVolume(days, input, weekIdx, reasonCodes);
   }
-  // Fit every day to the time budget (PLAN.md 12: scaled by priority, fitted
+  // Fit every day to the time budget (docs/PLAN.md 12: scaled by priority, fitted
   // to the time budget). The time fit only trims accessories, main lifts are
   // never cut. Afterwards floors are re-checked: a floor broken by trimming
   // is restored while the day stays within 10% of the budget.
@@ -624,10 +624,10 @@ function buildTaperWeek(meetDate: string, input: GeneratorInput): DayPlan[] {
 
 export function generateBlock(input: GeneratorInput): BlockDef {
   if (input.daysPerWeek < 2 || input.daysPerWeek > 6) {
-    throw new Error("daysPerWeek must be 2-6 (PLAN.md 12 splits)");
+    throw new Error("daysPerWeek must be 2-6 (docs/PLAN.md 12 splits)");
   }
   if (input.blockWeeks < 2 || input.blockWeeks > 7) {
-    throw new Error("blockWeeks must be 2-7 (PLAN.md 12 block length)");
+    throw new Error("blockWeeks must be 2-7 (docs/PLAN.md 12 block length)");
   }
   if (input.goal === "meetPrep" && !input.meetDate) {
     throw new Error("meetPrep requires meetDate");

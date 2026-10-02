@@ -1,6 +1,6 @@
 # Qala research: Runkeeper-flavoured design language, and strength/hypertrophy programming for the generator
 
-Written 2026-09-13 as input to PLAN.md (sections 3 "Look", 9, 12). Part A covers the visual system and information architecture. Part B covers the programming parameters for the generator in `packages/generator` and the metrics for the desktop graphs.
+Written 2026-09-13 as input to docs/PLAN.md (sections 3 "Look", 9, 12). Part A covers the visual system and information architecture. Part B covers the programming parameters for the generator in `packages/generator` and the metrics for the desktop graphs.
 
 Each number says where it came from. "CSS" means read from Runkeeper's shipped stylesheet or from computed styles in headless Chromium. "Pixel" means a median colour sampled from an official screenshot. "Unverified" means I couldn't get it from a primary source.
 
@@ -146,7 +146,7 @@ Radii in the stylesheet cluster at 0, 0.25rem, 0.5rem, 1rem, 1.5rem and 50%. The
 - Radii of 4/6/8px on everything except the pill CTA.
 - The CTA press behaviour: shadow disappears and the element shifts 1px/2px.
 
-**Accent recommendation: keep ember `#C2410C` as the single action accent. Add Runkeeper's navy as display ink and periwinkle/teal as data colours. PLAN.md's "ember accent" line stands; the Look row gains navy ink, the pill CTA and full-axis Recursive.**
+**Accent recommendation: keep ember `#C2410C` as the single action accent. Add Runkeeper's navy as display ink and periwinkle/teal as data colours. docs/PLAN.md's "ember accent" line stands; the Look row gains navy ink, the pill CTA and full-axis Recursive.**
 
 Reasons:
 1. **Contrast doesn't decide it.** White on ember is 5.18:1 and white on `#485CC7` is 5.78:1. Both pass AA for 14px bold and larger.
@@ -412,7 +412,7 @@ Settings sit behind a gear, as in Runkeeper. The lift post-session sheet borrows
 
 The owner's strength band of 1-6 reps at 80-95% corresponds to roughly RPE 7-9 in this table.
 
-**RIR scale** (Zourdos 2016, JSCR 30:267): RPE 10 = 0 RIR, 9 = 1, 8 = 2, 7 = 3. PLAN.md already treats reported RIR above 3 as unreliable.
+**RIR scale** (Zourdos 2016, JSCR 30:267): RPE 10 = 0 RIR, 9 = 1, 8 = 2, 7 = 3. docs/PLAN.md already treats reported RIR above 3 as unreliable.
 
 **NSCA training load chart** (adapted from Landers 1984), %1RM for an n-rep max: 1 = 100, 2 = 95, 3 = 93, 4 = 90, 5 = 87, 6 = 85, 7 = 83, 8 = 80, 9 = 77, 10 = 75, 12 = 70.
 
@@ -497,7 +497,7 @@ Sets to failure at 85-95% aren't something to generate for unsupervised users, s
 | 6 deload | 2x8 @ 65% | 3x1 @ 75% | 2x3 @ 80% | 0 |
 
 - **Deadlift:** S day only, plus one variation (RDL or deficit) on the H day at 3x6 @ RPE 7.
-- **Autoregulation:** if the S-day top set comes in more than 0.5 RPE off target, adjust the next S day by 2% per 0.5 RPE (PLAN.md 6.3, Helms 2018). Helms 2018 (Front Physiol 9:247) found RPE-based loading at least as good as fixed percentages in trained men (squat ES 0.50 favouring RPE, not significant).
+- **Autoregulation:** if the S-day top set comes in more than 0.5 RPE off target, adjust the next S day by 2% per 0.5 RPE (docs/PLAN.md 6.3, Helms 2018). Helms 2018 (Front Physiol 9:247) found RPE-based loading at least as good as fixed percentages in trained men (squat ES 0.50 favouring RPE, not significant).
 - **Alternative DUP (5s/3s/1s),** for users who want heavier weekly exposure:
 
   | Day | Scheme | Weekly change |
@@ -560,7 +560,7 @@ Last-session timing, counted back from meet day:
 - Complete rest for the final 2-3 days.
 - The typical final-session schemes in Travis 2021 are squat 3x2, bench 3x3, deadlift 3x1.
 
-PLAN.md section 12 currently says "deadlift 7-10 d, squat 4-7 d, bench 2-4 d before the date". That mixes last heavy session with last session. Replace it with the table above.
+docs/PLAN.md section 12 currently says "deadlift 7-10 d, squat 4-7 d, bench 2-4 d before the date". That mixes last heavy session with last session. Replace it with the table above.
 
 ## B4. Hypertrophy / bodybuilding
 
@@ -579,20 +579,20 @@ PLAN.md section 12 currently says "deadlift 7-10 d, squat 4-7 d, bench 2-4 d bef
 
 **Reconciling the owner's 10-20 sets/week with RP's landmarks.**
 
-The two numbers count different things. The RP table in PLAN.md (e.g. chest MEV 4-6, MRV 16-24) comes from RP's practitioner articles (the chest numbers match RP's "Complete Chest Training Guide", 2024), not from a meta-analysis. RP counts **direct** sets and assumes intermediate lifters. It keeps some landmarks low because compound work already hits those muscles, and hamstrings, triceps and quads are low for exactly that reason. The 10-20 band comes from studies counting sets per muscle. Pelland shows the evidence fits best when indirect work counts as half. So the generator tracks two numbers per muscle per week:
+The two numbers count different things. The RP table in docs/PLAN.md (e.g. chest MEV 4-6, MRV 16-24) comes from RP's practitioner articles (the chest numbers match RP's "Complete Chest Training Guide", 2024), not from a meta-analysis. RP counts **direct** sets and assumes intermediate lifters. It keeps some landmarks low because compound work already hits those muscles, and hamstrings, triceps and quads are low for exactly that reason. The 10-20 band comes from studies counting sets per muscle. Pelland shows the evidence fits best when indirect work counts as half. So the generator tracks two numbers per muscle per week:
 
 - `D_m` = direct hard sets (exercise lists the muscle as a target).
-- `F_m` = `D_m` + 0.5 x indirect hard sets (muscle is a synergist). This is the same weighting PLAN.md 6.2 already uses for fatigue input.
+- `F_m` = `D_m` + 0.5 x indirect hard sets (muscle is a synergist). This is the same weighting docs/PLAN.md 6.2 already uses for fatigue input.
 
 Rules:
 1. **The owner's band constrains `F_m`.** Grow: `F_m` in [10, 20]. Emphasise: [14, 20]. Maintain: `D_m` in [MV_hi, MEV_hi], with no F floor.
 2. **RP landmarks constrain `D_m`.** `D_m` >= MEV_lo when the muscle is trained at all, and `D_m` <= MRV_lo.
 3. **Start of block:** `F_start = max(band_lo, MEV_hi + indirect credit)`.
-4. **Ramp:** +2 F per week (RP example 12 -> 14 -> 16 -> 18 -> 20). The engine's per-muscle rule (PLAN.md 6.3: +2 / +1 / hold / reactive deload) can slow or hold it but can't push past the caps.
+4. **Ramp:** +2 F per week (RP example 12 -> 14 -> 16 -> 18 -> 20). The engine's per-muscle rule (docs/PLAN.md 6.3: +2 / +1 / hold / reactive deload) can slow or hold it but can't push past the caps.
 5. **Conflicts.** The RP ceiling wins over the owner's floor, because it's a recovery guard. The owner's ceiling of 20 wins over RP's MAV and MRV, because evidence above 20 is thin (Baz-Valle, with triceps as the exception) and Pelland's returns keep diminishing.
    - Hamstrings: MRV_lo is 8 direct, so F can reach 10 only with hinge and squat credit. If it can't, plan fewer and log reason code `VOLUME_CAPPED_BY_MRV`.
    - Back: MEV_lo is 12, so it starts at 14, not 10.
-6. **Deload week:** `F` x 0.5, RIR 4, load -10%. This matches PLAN.md's Bell 2023 deload.
+6. **Deload week:** `F` x 0.5, RIR 4, load -10%. This matches docs/PLAN.md's Bell 2023 deload.
 
 Worked examples (grow priority, 5 weeks plus deload):
 
@@ -615,14 +615,14 @@ Worked examples (grow priority, 5 weeks plus deload):
 | 5 | +2, capped | 1 (9) | 0-1 (9-10) | 8-12 (70-77%) | 12-15 (65-71%) |
 | 6 deload | x0.5 | 4 (6) | 4 (6) | same reps, load -10% | same |
 
-This replaces PLAN.md section 12's "hypertrophy 6-12 and 12-20 for isolation" with the owner's 8-15. Compounds use 8-12 and isolation 12-15. Heavy compounds may drop to 6-8 in an emphasise block; Lopez 2021 says the load range doesn't matter for growth.
+This replaces docs/PLAN.md section 12's "hypertrophy 6-12 and 12-20 for isolation" with the owner's 8-15. Compounds use 8-12 and isolation 12-15. Heavy compounds may drop to 6-8 in an emphasise block; Lopez 2021 says the load range doesn't matter for growth.
 
-**Load progression** follows PLAN.md 6.3 (double progression): when every work set hits the top of the rep range at or below target RPE on two consecutive exposures, add +2.5% or one plate step for upper body and +5% for lower body, then drop to the bottom of the range. Isolation exercises that can't move by a 5 lb step add reps up to 15, then 20, before adding load.
+**Load progression** follows docs/PLAN.md 6.3 (double progression): when every work set hits the top of the rep range at or below target RPE on two consecutive exposures, add +2.5% or one plate step for upper body and +5% for lower body, then drop to the bottom of the range. Isolation exercises that can't move by a 5 lb step add reps up to 15, then 20, before adding load.
 
 ## B5. Volume counting rules (both goals)
 
 1. **Work set.** Completed, not marked warm-up. For main lifts, load must also be at least 50% of the reference 1RM.
-2. **Hard set (hypertrophy counting).** A work set with logged RPE >= 7 (RIR <= 3). If RPE isn't logged, use the program's target RPE when that is >= 7. Sets further from failure don't count toward `F_m`. That follows PLAN.md's RIR>3 reliability rule and Robinson 2024's proximity finding.
+2. **Hard set (hypertrophy counting).** A work set with logged RPE >= 7 (RIR <= 3). If RPE isn't logged, use the program's target RPE when that is >= 7. Sets further from failure don't count toward `F_m`. That follows docs/PLAN.md's RIR>3 reliability rule and Robinson 2024's proximity finding.
 3. **Direct and fractional sets per muscle per week.**
    - `D_m = sum(hard sets where m is a target muscle)`.
    - `F_m = D_m + 0.5 x sum(hard sets where m is a synergist)`.
@@ -665,7 +665,7 @@ Epley tracks the RPE table more closely from 2 to 10 reps. Brzycki runs away abo
 3. RPE not logged and reps <= 10: `e1RM = load x (1 + (reps + RIR_est) / 30)`. `RIR_est` is `10 - target RPE` if the program set one, else 0, which is conservative. Special case: if reps + RIR_est = 1, then e1RM = load. The formula would return 1.033 x load for a true single, which overstates it. Don't fix this by switching to `(reps + RIR - 1) / 30`; that version drifts to about -3.9% against the RTS table at 10 reps.
 4. Reps > 10 (most 12-15 rep hypertrophy sets): **no e1RM.** Track rep-range PRs instead.
 
-**PLAN.md 6.2 change.** The Kalman observation currently uses "Epley e1RM of the best completed set". Keep Epley, apply rules 1-4 above, and exclude sets over 10 reps from the observation.
+**docs/PLAN.md 6.2 change.** The Kalman observation currently uses "Epley e1RM of the best completed set". Keep Epley, apply rules 1-4 above, and exclude sets over 10 reps from the observation.
 
 **Strength display (desktop graphs; phone Me tab):**
 - **e1RM chart per main lift.**
@@ -678,7 +678,7 @@ Epley tracks the RPE table more closely from 2 to 10 reps. Brzycki runs away abo
 - **Total** = sum of the current e1RM for squat, bench and deadlift, plus the sum of tested 1RMs when all three exist within the same 7 days.
 
 **Hypertrophy display:**
-- **Weekly `F_m` per muscle** as bars against the target band (10-20, shaded) with RP's MEV and MRV ticks for direct sets. This is the "sets per muscle vs landmarks" graph PLAN.md section 9 already names.
+- **Weekly `F_m` per muscle** as bars against the target band (10-20, shaded) with RP's MEV and MRV ticks for direct sets. This is the "sets per muscle vs landmarks" graph docs/PLAN.md section 9 already names.
 - **Volume load per muscle** (`VL_m`), weekly, with a 4-week least-squares slope reported as %/week.
 - **Reps at load.** Per exercise, reps in the first work set at the most frequently used load, compared with the last exposure at that load: "3x10 @ 135 -> 3x12 @ 135".
 - **Rep-range PR table** per exercise: best load for 8, 10, 12 and 15 reps, plus e1RM from sets of 10 reps or fewer.
@@ -692,7 +692,7 @@ Epley tracks the RPE table more closely from 2 to 10 reps. Brzycki runs away abo
 | Reps and intensity | 1-6 reps @ 80-95% (RPE 7-9); power day 1-2 @ 80-90% at RPE <= 7 | 8-12 compound, 12-15 isolation, 60-80% (RIR 3 -> 0-1) |
 | Weekly volume per muscle | MEV to ~10 F (strength plateaus beyond ~5 F) | F in [10, 20] grow, [14, 20] emphasise; D in [MEV, MRV] |
 | Main-lift floor | >= 3-6 sets of 1-5 reps above 80% per lift per week | n/a |
-| Block | 5 weeks + deload (PLAN.md 4-6) | 5 weeks + deload |
+| Block | 5 weeks + deload (docs/PLAN.md 4-6) | 5 weeks + deload |
 | Progression | Weekly % steps (B3); S-day RPE autoregulation +/-2% per 0.5 RPE | Double progression; +2 F per week, capped |
 | Key metrics | e1RM trend + tested 1RM; NL, T, NL85, T85, ARI per lift | F_m and D_m vs bands; VL_m slope; reps at load; rep PRs |
 | Taper | 7-10 day step, volume -40 to -50%, intensity >= 85% to last heavy session; last heavy DL 8-10 d, SQ 7-9 d, BP 5-7 d; last session DL 6, SQ 4-5, BP 3-4; 2-3 d full rest | n/a |

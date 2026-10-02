@@ -1,6 +1,6 @@
 // Envelope validation for Gemma numeric adjustments.
 //
-// PLAN.md section 11 + DECISIONS.md P3: Gemma may nudge the engine
+// docs/PLAN.md section 11 + docs/DECISIONS.md P3: Gemma may nudge the engine
 // recommendation inside a fixed envelope (weight -10% to +2.5%,
 // sets -2 to +1). Adjusted and engine values are both shown, one tap
 // reverts, every adjustment is logged with the model's one-sentence

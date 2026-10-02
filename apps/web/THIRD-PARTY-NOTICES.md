@@ -1,7 +1,7 @@
 # Third-party notices (web shells)
 
 Font binaries and OFL texts ship in `public/fonts/` (copied at scaffold
-time; checksums in DESIGN.md 3.2):
+time; checksums in docs/DESIGN.md 3.2):
 
 - Qala Test (Bold V2 + Medium): the owner's face, an OFL 1.1 fork of
   Faustina with no Reserved Font Name. See `public/fonts/QalaTest-OFL.txt`.

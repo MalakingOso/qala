@@ -1,4 +1,4 @@
-// Running plans (PLAN.md 12, evidence RESEARCH-running.md 6).
+// Running plans (docs/PLAN.md 12, evidence docs/research/RESEARCH-running.md 6).
 // Rules: most running easy (below 0.78 CS; default ~80% of time easy); one
 // quality session/week at 3 runs/wk, two at 4+ (tempo near CS, intervals above
 // CS, surges as the entry workout); the long run never exceeds 1.10x the
@@ -41,7 +41,7 @@ function riegelPredict(
 }
 
 // Threshold pace before CS exists: Riegel-convert a recent race to a ~10 km
-// equivalent and use its pace (assumption, PLAN.md 6.4).
+// equivalent and use its pace (assumption, docs/PLAN.md 6.4).
 export function thresholdPaceMps(input: RunPlanInput): number | undefined {
   if (input.criticalSpeedMps) return input.criticalSpeedMps;
   if (input.recentRace) {
@@ -192,7 +192,7 @@ export function generateRunPlan(input: RunPlanInput): RunPlan {
     const longIdx = input.runsPerWeek - 1;
     const qualIdxs = new Set<number>();
     if (input.runsPerWeek >= 2) qualIdxs.add(1);
-    // NOTE (see DECISIONS.md / report): at runsPerWeek === 4, longIdx is 3,
+    // NOTE (see docs/DECISIONS.md / report): at runsPerWeek === 4, longIdx is 3,
     // the same slot this would use for a second quality session, so the
     // `.delete(longIdx)` below silently drops back to one quality session
     // here even though `qualityCount(4)` says two. Moving the second

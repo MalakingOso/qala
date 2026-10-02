@@ -1,6 +1,6 @@
 # Native Android app: plan
 
-Status: the Kotlin direction (DECISIONS S7) is **decided** as of 2026-10-01, and `apps/android` exists and builds: a Gradle project with an `app` and a `design` module, the generated design tokens, fonts and icons, and a navigation shell around a stub Today screen. Everything below that point is still proposed. This replaced the Capacitor wrapper (`apps/phone`, DECISIONS S2), which has been deleted. The shared logic comes from the Rust core in `docs/rust-core.md`; what was and wasn't verified is in `docs/rust-core-spike.md`. Open questions you can answer later are in `docs/rust-core-open-questions.md`. Decision rows are DECISIONS S6 to S17. Revised 2026-09-30: sync is records over HTTP (no Automerge), and liftoscript is ported to Rust (no quickjs).
+Status: the Kotlin direction (DECISIONS S7) is **decided** as of 2026-10-01, and `apps/android` exists and builds: a Gradle project with an `app` and a `design` module, the generated design tokens, fonts and icons, and a navigation shell around a stub Today screen. Everything below that point is still proposed. This replaced the Capacitor wrapper (`apps/phone`, DECISIONS S2), which has been deleted. The shared logic comes from the Rust core in `docs/rust-core.md`; what was and wasn't verified is in its appendix A, and the open questions are in appendix B. Decision rows are DECISIONS S6 to S17, plus S18 to S21 for LS++ and S22 for accounts. Revised 2026-09-30: sync is records over HTTP (no Automerge), and LS++ is the Rust port (no quickjs).
 
 ## 1. Where things stand
 
@@ -29,7 +29,7 @@ Few modules. One developer, one device.
 apps/android/
   app/         MainActivity, navigation, screens, ViewModels
   design/      tokens (generated), fonts, icons, Beamer surface modifiers, chart canvases
-  core/        UniFFI bindings (qala-ffi: run, math, engine, liftoscript), golden-vector tests
+  core/        UniFFI bindings (qala-ffi: run, math, engine, LS++), golden-vector tests
   data/        Room (records, fixes), HLC and merge, HTTP sync client, blob upload, repositories
   run/         RunRecordingService, FixSource, HR client, CuePlayer, RunRepository
 ```
@@ -81,8 +81,8 @@ Don't put recording in WorkManager or JobScheduler; Android 16 tightened their r
 - **Engine state.** A derived cache rebuilt from history on the device. Not synced.
 - **Tracks.** Room per fix, then content-addressed blob upload (rust-core.md section 5).
 - **Sync.** `POST /api/sync` over HTTPS to `https://callisto.taila63f23.ts.net:8443`, one round trip sending local changes and receiving everything past the cursor. Runs on app open, run end and workout end. No background sync in v1. The web's `offlineQueue.ts` shape (enqueue, acknowledge, backoff 1 s doubling to 60 s) becomes a Room outbox table plus a WorkManager job for blob uploads.
-- **Workout flow owner.** A `WorkoutPlanner` in `data/` runs PLAN 10 on the phone: read the check-in, call Rust `predict_readiness`, build the engine bindings, call the Rust liftoscript evaluator for today's program, then map the result to screen state and call Rust `recommend_next_session` for the numbers. Phase A4 builds it; nothing else owns the sequence.
-- **Hot path.** Rust calls are synchronous and cheap per call. Engine and liftoscript calls happen at workout start, set logged, session end and check-in, not per frame, so a JSON boundary is fine. Plates and clock formatting are the only per-render calls and are pure Rust or plain Kotlin.
+- **Workout flow owner.** A `WorkoutPlanner` in `data/` runs PLAN 10 on the phone: read the check-in, call Rust `predict_readiness`, build the engine bindings, call the Rust LS++ evaluator for today's program, then map the result to screen state and call Rust `recommend_next_session` for the numbers. Phase A4 builds it; nothing else owns the sequence.
+- **Hot path.** Rust calls are synchronous and cheap per call. Engine and LS++ calls happen at workout start, set logged, session end and check-in, not per frame, so a JSON boundary is fine. Plates and clock formatting are the only per-render calls and are pure Rust or plain Kotlin.
 - **Coach.** A server route builds the prompt and validates the response (S14); the phone sends context and gets a validated, enveloped suggestion. Needs the network, so offline behavior is "coach offline", as PLAN 14 already says.
 
 ## 7. Charts and map
@@ -121,13 +121,13 @@ Sizes are relative (S, M, L), not calendar estimates, except where a research re
 
 | Phase | Work | Gate | Size |
 |---|---|---|---|
-| A0 | Provision the Android toolchain (below). Run the five spike checks in `rust-core-spike.md`. Run the Vico and Canvas run-series spike. Run the L5 check. | All five spike checks pass, or the documented exit is taken. | M |
+| A0 | Provision the Android toolchain (below). Run the five spike checks in `rust-core.md` appendix A. Run the Vico and Canvas run-series spike. Run the L5 check. | All five spike checks pass, or the documented exit is taken. | M |
 | A1 | Design system, tokens generator, fonts, icons, navigation shell on sample data. In parallel with A2. | Contrast test passes on generated tokens; screenshots of Settings and a stub Today against DESIGN. | M |
 
 A1 status, 2026-10-01: the tokens generator, fonts, icons, design components and navigation shell are built, and the first gate is met. The second is half met: the stub Today was compared against the web at 390 dp on an x86_64 emulator, and it matches in fonts, spacing, shadows and colors. Settings, All exercises and History are titled stubs, not screens, and nothing has run on the owner's phone yet.
 | A2 | `qala-core` R0 and R1 (run), recorder service, Room, live and summary screens, HR, cues. | The four gates in section 5. | L |
 | A3 | `schemaVersion` migration (tracks out), Room records with HLC, `POST /api/sync` and blob routes on the server (both with `requireUser`), web and Kotlin clients. | Phone and desktop converge on edits made offline on both; a conflicting field edit resolves to the higher HLC; airplane-mode session syncs on reconnect (PLAN 14). | L |
-| R5 (parallel with A2 and A3) | The Rust liftoscript port, oracle first (rust-core.md section 8). Not an Android phase; it must land before A4. | 60 built-ins and the GZCLP progression match the oracle. | L |
+| R5 (parallel with A2 and A3) | The Rust LS++ port, oracle first (rust-core.md section 8). Not an Android phase; it must land before A4. | 60 built-ins and the GZCLP progression match the oracle. Landed 2026-10-01, merged; A4 consumes it through `qala-lspp-ffi`. | L |
 | A4 | R2 and R3 (math, engine), lifting screens wired to the Rust evaluator. | Golden vectors pass on-device; check-in to workout end to end with no network. | L |
 | A5 | Charts, map, stats screens. | Charts have table views and TalkBack labels; map works with the radio off. | M |
 | A6 | Coach route and screen, release signing, sideload build. | Coach offline state; signed APK installs. | S |
@@ -176,7 +176,7 @@ Decisions: the Gradle wrapper jar is checked in (the old "no Gradle binaries in 
 
 | Risk | Mitigation |
 |---|---|
-| The Rust liftoscript port is the largest item and A4 waits on it | Oracle first, start in parallel with A2 and A3; a quickjs-kt stopgap only if the schedule forces it. |
+| R2 and R3 (math, engine) slip and A4 waits on them | Golden vectors first, in parallel with A2 and A3. The LS++ port already landed ahead of A4, so no stopgap is needed for it. |
 | Concurrent edits to one field lose a write | Acceptable for one person; add a history table later if it matters. |
 | Spotify ignores or inconsistently honors ducking, especially over Bluetooth | Test early; tones plus the same focus request as fallback. |
 | Android 17 changes background audio and foreground-service behavior | Test on Nothing OS 5.0 beta now and again after the October stable release. |

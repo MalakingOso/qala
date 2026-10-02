@@ -1,4 +1,4 @@
-// RTS/Tuchscherer %1RM by reps and RPE (PLAN 6.2, RESEARCH-design-and-programming.md B2).
+// RTS/Tuchscherer %1RM by reps and RPE (PLAN 6.2, docs/research/RESEARCH-design-and-programming.md B2).
 //
 // PROVENANCE WARNING (PLAN 6.2 rule): this table is a third-party reproduction
 // (via a vbtcoach reproduction) NOT checked against RTS's original. Its

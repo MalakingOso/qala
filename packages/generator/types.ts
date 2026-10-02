@@ -1,8 +1,8 @@
 // Shared input/output types for the program generator.
 // NOTE: packages/core and packages/engine are built by sibling workers. To stay
 // runnable standalone, this package defines the small slice it needs and cites
-// the source: goal/approach/periodization vocab from PLAN.md 3/12, RunWorkout
-// shape from PLAN.md 7, volume landmarks from PLAN.md 6.3. If core later exports
+// the source: goal/approach/periodization vocab from docs/PLAN.md 3/12, RunWorkout
+// shape from docs/PLAN.md 7, volume landmarks from docs/PLAN.md 6.3. If core later exports
 // these, re-export from there instead of duplicating.
 
 export type GoalKind =
@@ -13,7 +13,7 @@ export type GoalKind =
 
 export type Experience = "beginner" | "intermediate" | "advanced";
 
-// PLAN.md 12: advanced lifters may pick high-frequency (3-5x, lower per-session
+// docs/PLAN.md 12: advanced lifters may pick high-frequency (3-5x, lower per-session
 // volume) or low-frequency (1-2x, higher per-session volume) alternatives.
 export type AdvancedFrequency = "default" | "high" | "low";
 
@@ -25,7 +25,7 @@ export type Periodization = "linear" | "dup" | "block";
 
 export type DupScheme = "hps" | "5-3-1";
 
-// Canonical volume muscles from PLAN.md 6.3. Muscles without an RP row
+// Canonical volume muscles from docs/PLAN.md 6.3. Muscles without an RP row
 // (frontDelts, rearDelts, abs, lowerBack, forearms, ... ) use chest's numbers.
 export type MuscleGroup =
   | "chest"
@@ -43,7 +43,7 @@ export type MuscleGroup =
   | "lowerBack"
   | "forearms";
 
-// PLAN.md 12 slot programming types (Evolve structure, expert/product practice).
+// docs/PLAN.md 12 slot programming types (Evolve structure, expert/product practice).
 export type SlotKind = "strength" | "accessoryLow" | "accessoryHigh";
 
 export type ExerciseClass = "main" | "secondary" | "isolation";
@@ -66,7 +66,7 @@ export interface CatalogExercise {
 }
 
 // Minimal tagged exercise DB. The full 422-entry liftosaur seed lives in
-// packages/core (PLAN.md 5/9); this catalog carries the lifts the generator
+// packages/core (docs/PLAN.md 5/9); this catalog carries the lifts the generator
 // plans so volume counting has target/synergist tags without that dependency.
 export const EXERCISE_CATALOG: CatalogExercise[] = [
   {
@@ -136,7 +136,7 @@ export const EXERCISE_CATALOG: CatalogExercise[] = [
     id: "rdl",
     name: "Romanian Deadlift",
     equipment: ["barbell"],
-    // Dual prime movers (PLAN.md 6.3 counts direct sets per target muscle;
+    // Dual prime movers (docs/PLAN.md 6.3 counts direct sets per target muscle;
     // the hinge credits both, which is also what lifts glutes to MEV).
     muscles: { target: ["hamstrings", "glutes"], synergist: ["lowerBack"] },
     klass: "secondary",
@@ -261,7 +261,7 @@ export interface GeneratorInput {
   priorities: Partial<Record<MuscleGroup, Priority>>;
   exclusions: string[]; // exercise ids or injury tags to skip
   blockWeeks: number; // 4-6, last week is a deload
-  referenceRm: Record<string, number>; // exerciseId -> block reference 1RM (PLAN.md 6.3)
+  referenceRm: Record<string, number>; // exerciseId -> block reference 1RM (docs/PLAN.md 6.3)
   meetDate?: string; // ISO date, required for meetPrep
   periodization?: Periodization; // user override; default chosen by goal/experience
   dupScheme?: DupScheme;
@@ -300,7 +300,7 @@ export interface BlockWeek {
   days: DayPlan[];
 }
 
-// Reason codes are enumerated so the LLM/UI can narrate them (PLAN.md 6.3).
+// Reason codes are enumerated so the LLM/UI can narrate them (docs/PLAN.md 6.3).
 export const VOLUME_CAPPED_BY_MRV = "VOLUME_CAPPED_BY_MRV";
 
 export interface BlockDef {
@@ -313,8 +313,8 @@ export interface BlockDef {
   reasonCodes: string[];
 }
 
-// Typed run plan entries. Shape mirrors the runPlans doc schema in PLAN.md 7;
-// runs are never liftoscript (PLAN.md 3, Run plan representation).
+// Typed run plan entries. Shape mirrors the runPlans doc schema in docs/PLAN.md 7;
+// runs are never liftoscript (docs/PLAN.md 3, Run plan representation).
 export type RunWorkoutType =
   | "easy"
   | "long"

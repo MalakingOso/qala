@@ -1,5 +1,5 @@
-// Running in the engine (PLAN 6.4, RESEARCH-running.md). SI units in/out.
-// All set-equivalent weights are derived assumptions (docs/engine.md).
+// Running in the engine (PLAN 6.4, docs/research/RESEARCH-running.md). SI units in/out.
+// All set-equivalent weights are derived assumptions (docs/PLAN.md 6.4).
 
 /** Minetti 2002 energy-cost polynomial, i = grade fraction. */
 export function minettiCost(grade: number): number {

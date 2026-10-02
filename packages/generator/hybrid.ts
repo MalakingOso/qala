@@ -1,4 +1,4 @@
-// Hybrid scheduler (PLAN.md 12, spacing rules from the 6.4 table).
+// Hybrid scheduler (docs/PLAN.md 12, spacing rules from the 6.4 table).
 // Takes the lifting days and the run plan for the same week and places runs
 // against lifting days. When the week cannot satisfy every constraint, the
 // user's stated priority (lifting or running) wins and the violated rule is
@@ -29,7 +29,7 @@ export interface HybridWeek {
   traded: TradeReason[];
 }
 
-// Rule ids (each emits a ReasonCode-style reason, PLAN.md 6.4).
+// Rule ids (each emits a ReasonCode-style reason, docs/PLAN.md 6.4).
 export const RULE_QUALITY_ON_LOWER = "QUALITY_ON_LOWER_DAY";
 export const RULE_GAP_6H = "GAP_6H_LIFT_THEN_RUN";
 export const RULE_GAP_24H_STRENGTH = "GAP_24H_WHEN_STRENGTH";

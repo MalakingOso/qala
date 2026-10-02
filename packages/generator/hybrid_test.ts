@@ -1,4 +1,4 @@
-// Hybrid scheduler (PLAN.md 12, spacing rules from the 6.4 table): runs land
+// Hybrid scheduler (docs/PLAN.md 12, spacing rules from the 6.4 table): runs land
 // on compatible days, and whatever cannot fit is reported as a traded rule
 // with the priority that won.
 

@@ -90,7 +90,7 @@ Deno.test("3-week validation: fatigue spikes week 3, decays on rest, fitness mon
   assert(spikeS > 0 && spikeG > 0, "week 3 heavy load produced fatigue");
 });
 
-Deno.test("a tested 1RM writes referenceRm (CONTEXT.md: block boundary or new tested 1RM)", () => {
+Deno.test("a tested 1RM writes referenceRm (docs/CONTEXT.md: block boundary or new tested 1RM)", () => {
   let s = initialState();
   s.mainLifts = ["squat"];
   const tested: LiftWorkout = {

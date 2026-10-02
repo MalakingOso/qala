@@ -1,4 +1,4 @@
-// Qala server (PLAN.md section 7): one Deno 2 process on 127.0.0.1:8500.
+// Qala server (docs/PLAN.md section 7): one Deno 2 process on 127.0.0.1:8500.
 // Automerge-repo sync over WebSocket, /api/llm proxy to llama-server,
 // self-hosted map tiles, DEM elevation, and the built PWA.
 

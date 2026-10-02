@@ -1,5 +1,5 @@
 // Generate the Android icon set from Lucide (docs/android-native.md section 4).
-// The icons are the ones DESIGN.md section 4 lists, as 24 dp ImageVectors.
+// The icons are the ones docs/DESIGN.md section 4 lists, as 24 dp ImageVectors.
 //
 //   deno task gen:android                                         # this script plus tokens_to_kotlin.ts
 //   deno run --allow-all scripts/lucide_to_kotlin.ts              # write Icons.kt
@@ -34,7 +34,7 @@ const DEFAULT_OUT = new URL(
   import.meta.url,
 ).pathname;
 
-// DESIGN.md section 4, in table order, repeats dropped. `table-2` (the week
+// docs/DESIGN.md section 4, in table order, repeats dropped. `table-2` (the week
 // strip's table view) is not listed there and waits for the stats screens.
 export const ICONS = [
   "sun",
@@ -380,7 +380,7 @@ private fun qalaIcon(name: String, vararg paths: String): ImageVector =
         }
     }.build()
 
-/** The icons DESIGN.md section 4 lists. Built on first use. */
+/** The icons docs/DESIGN.md section 4 lists. Built on first use. */
 object QalaIcons {
 ${members.join("\n\n")}
 }

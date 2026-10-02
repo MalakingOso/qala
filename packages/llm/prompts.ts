@@ -1,4 +1,4 @@
-// Prompt builders for the seven PLAN.md section 11 features.
+// Prompt builders for the seven docs/PLAN.md section 11 features.
 //
 // Every builder injects the same context block: coach memory, the
 // computed profile, the last-4-weeks summary, today's engine output,

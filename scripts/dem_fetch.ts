@@ -1,4 +1,4 @@
-// Fetch Copernicus GLO-30 DEM tiles covering a bbox (PLAN.md section 8a).
+// Fetch Copernicus GLO-30 DEM tiles covering a bbox (docs/PLAN.md section 8a).
 //
 //   deno run --allow-all scripts/dem_fetch.ts \
 //     --bbox "-84.6,42.6,-83.5,43.4" --out server/tiles/dem \

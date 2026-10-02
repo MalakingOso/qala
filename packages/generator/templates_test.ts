@@ -1,4 +1,4 @@
-// Loading templates (PLAN.md 12, RESEARCH B2-B4) and the meet taper table.
+// Loading templates (docs/PLAN.md 12, RESEARCH B2-B4) and the meet taper table.
 
 import {
   ALT_DUP_DAYS,
@@ -29,7 +29,7 @@ function approx(a: number, b: number, msg: string, eps = 1e-9): void {
   }
 }
 
-Deno.test("linear table matches PLAN.md 12 (squat and bench)", () => {
+Deno.test("linear table matches docs/PLAN.md 12 (squat and bench)", () => {
   const byWeek = new Map(LINEAR_TABLE.map((r) => [r.week, r]));
   const w1 = byWeek.get(1)!;
   assert(
@@ -61,7 +61,7 @@ Deno.test("linear table matches PLAN.md 12 (squat and bench)", () => {
   );
 });
 
-Deno.test("DUP table matches PLAN.md 12 (HPS order, RPE-capped strength day)", () => {
+Deno.test("DUP table matches docs/PLAN.md 12 (HPS order, RPE-capped strength day)", () => {
   const byWeek = new Map(DUP_TABLE.map((r) => [r.week, r]));
   const w1 = byWeek.get(1)!;
   assert(
@@ -117,7 +117,7 @@ Deno.test("alternative DUP 5-3-1 with weekly +2%", () => {
   );
 });
 
-Deno.test("hypertrophy RIR ramp matches PLAN.md 12", () => {
+Deno.test("hypertrophy RIR ramp matches docs/PLAN.md 12", () => {
   const byWeek = new Map(HYPERTROPHY_TABLE.map((r) => [r.week, r]));
   const w1 = byWeek.get(1)!;
   assert(

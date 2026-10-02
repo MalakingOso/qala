@@ -1,5 +1,5 @@
 // Extract the owner's map region from a Protomaps source archive
-// (PLAN.md section 8a: `pmtiles extract --bbox --maxzoom 15`, then unpack to
+// (docs/PLAN.md section 8a: `pmtiles extract --bbox --maxzoom 15`, then unpack to
 // z/x/y because a service worker cannot cache 206 responses).
 //
 //   deno run --allow-all scripts/tiles_extract.ts \

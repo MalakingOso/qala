@@ -1,6 +1,6 @@
 # qala-lspp
 
-The liftoscript evaluation path in Rust (DECISIONS S12). The TypeScript package `packages/liftoscript` is the oracle. Plan and status: `docs/rust-core.md`.
+LS++ (Liftoscript++): the program evaluation path in Rust (DECISIONS S12, S18). The TypeScript package `packages/liftoscript` is the oracle. Plan and status: `docs/ls-plus-plus.md`, port history in `docs/rust-core.md`.
 
 ## Tests
 

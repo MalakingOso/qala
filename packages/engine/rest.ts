@@ -1,4 +1,4 @@
-// Automatic rest timer (PLAN 6.6, RESEARCH-rest-and-warmup.md part 1).
+// Automatic rest timer (PLAN 6.6, docs/research/RESEARCH-rest-and-warmup.md part 1).
 // Tags in research: [meta]/[RCT]/[obs] sourced; [derived] assumed to tune.
 
 import type { Approach } from "./state.ts";

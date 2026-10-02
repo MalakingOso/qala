@@ -1,4 +1,4 @@
-// Split choice and main-lift frequency (PLAN.md 12).
+// Split choice and main-lift frequency (docs/PLAN.md 12).
 
 import {
   advancedFrequencyAlternatives,

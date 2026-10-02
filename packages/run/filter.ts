@@ -4,7 +4,7 @@
 // Pure TypeScript: no DOM, no platform imports. The fix source (the phone's
 // location provider, fixture arrays in tests) is injected by the caller.
 //
-// Pipeline order per fix, in timestamp order (RESEARCH-run-tracking.md 3):
+// Pipeline order per fix, in timestamp order (docs/research/RESEARCH-run-tracking.md 3):
 //  1. Dedupe by timestamp: drop t <= highest timestamp seen so far. One
 //     owner of location, never two merged streams.
 //  2. Accuracy gate: drop fixes with horizontal accuracy > 25 m.
@@ -111,7 +111,7 @@ export function vincentyM(
 }
 
 /** Spherical fallback in metres. Stored distance uses Vincenty; the ~0.3%
- *  systematic error is why haversine is fallback-only (RESEARCH-run-tracking.md 3). */
+ *  systematic error is why haversine is fallback-only (docs/research/RESEARCH-run-tracking.md 3). */
 export function haversineM(
   lat1: number,
   lon1: number,

@@ -1,4 +1,4 @@
-// Split choice and main-lift frequency (PLAN.md 12, Evolve split/block practice).
+// Split choice and main-lift frequency (docs/PLAN.md 12, Evolve split/block practice).
 // Rules: 2-3 days full body, 4 upper/lower, 5-6 push/pull/legs. Main-lift
 // frequency (lift or close variation, times/week): beginner 2-3x, intermediate
 // 2-4x, advanced same as intermediate by default with high (3-5x, lower
@@ -30,7 +30,7 @@ export interface SplitDef {
 
 const MAIN_LIFTS = ["squat", "bench", "deadlift", "ohp"];
 
-// Close variations count toward a lift's weekly frequency (PLAN.md 12: times
+// Close variations count toward a lift's weekly frequency (docs/PLAN.md 12: times
 // per week a lift or close variation is trained). Keyed by accessory id.
 const FAMILY_CREDIT: Record<string, string> = {
   pauseSquat: "squat",

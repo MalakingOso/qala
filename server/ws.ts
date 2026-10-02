@@ -1,4 +1,4 @@
-// WebSocket transport for automerge-repo on Deno (PLAN.md section 7).
+// WebSocket transport for automerge-repo on Deno (docs/PLAN.md section 7).
 //
 // The bundled `WebSocketServerAdapter` assumes a Node `ws` server, so this
 // module provides `DenoWebSocketServerAdapter`: the same join/peer/message

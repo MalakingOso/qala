@@ -1,4 +1,4 @@
-// LLM proxy (PLAN.md section 11). Forwards chat completions to the shared
+// LLM proxy (docs/PLAN.md section 11). Forwards chat completions to the shared
 // llama-server on 127.0.0.1:8080 and degrades gracefully when it is absent:
 // every feature works without the model, so a down backend is a 502 with a
 // `degraded: true` body, never a hung request or a 500.

@@ -1,6 +1,6 @@
 // Shared types for @qala/run. Pure TypeScript: no DOM, no platform imports.
 //
-// Conventions (PLAN.md sections 6.4, 7, 8a):
+// Conventions (docs/PLAN.md sections 6.4, 7, 8a):
 // - Distances in metres, times in seconds, speeds in m/s. The UI converts to
 //   miles and min/mi from settings.units.distance.
 // - Fix.t is seconds on a monotonic clock owned by the fix source (the
@@ -60,7 +60,7 @@ export type RunWorkoutType =
   | "recovery"
   | "race";
 
-/** Typed run workout. Lives in runPlans, never in liftoscript (PLAN.md 3). */
+/** Typed run workout. Lives in runPlans, never in liftoscript (docs/PLAN.md 3). */
 export interface RunWorkout {
   type: RunWorkoutType;
   steps: WorkoutStep[];
