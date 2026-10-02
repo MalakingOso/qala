@@ -18,3 +18,4 @@ rootProject.name = "qala-android"
 
 include(":app")
 include(":design")
+include(":data")
