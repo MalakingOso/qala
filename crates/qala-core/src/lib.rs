@@ -1,0 +1,13 @@
+//! Pure Qala logic (docs/PLAN-m1-rust-core.md). No I/O, no clock, no threads.
+//! Every JSON entry point lives in `api`; the other modules are plain Rust.
+
+pub mod adapter;
+pub mod api;
+pub mod availability;
+pub mod derived;
+pub mod engine;
+pub mod hlc;
+pub mod js;
+pub mod muscles;
+pub mod records;
+pub mod time;

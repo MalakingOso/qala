@@ -335,6 +335,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "qala-core"
+version = "0.1.0"
+dependencies = [
+ "qala-lspp",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "qala-lspp"
 version = "0.1.0"
 dependencies = [
