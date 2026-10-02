@@ -95,7 +95,7 @@ Why: Automerge is built for many writers merging freely. You are one person on t
 
 **Protocol.** `POST /api/sync` with `{ since, changes: [...] }` returns `{ cursor, changes: [...] }`. The client sends its local changes and receives everything newer than its cursor in one round trip. The server assigns a monotonically increasing sequence number per user; applying a change is idempotent on `(recordId, field, hlc)`, so retries are safe. Auth is the existing Tailscale identity header through `requireUser`; Origin is ignored. The server stores per user in SQLite (check that `node:sqlite` is solid in Deno 2.9, otherwise an append-only file).
 
-**Clients.** Room on Android; IndexedDB on the web (replacing the `localStorage` outbox, `offlineQueue.ts` becomes the upload queue's shape). The merge rule is one comparison per field and is implemented natively on each side. The Rust core doesn't own it, but HLC ordering and merge get golden vectors so the three implementations agree.
+**Clients.** Room on Android; IndexedDB on the web (replacing the `localStorage` outbox, `offlineQueue.ts` becomes the upload queue's shape). HLC compare, tick, receive and field merge live in `qala-core` (`hlc.rs`) with golden vectors in `testdata/golden/hlc/`. Kotlin calls them through UniFFI; the web and the server replay the same vectors when the sync endpoint is built (DECISIONS S11).
 
 **Clock skew.** HLC keeps the clock monotonic per device. The server rejects a write whose wall time is more than a day ahead of server time, so a bad phone clock can't win every future conflict.
 

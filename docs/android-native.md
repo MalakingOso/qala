@@ -30,7 +30,7 @@ apps/android/
   app/         MainActivity, navigation, screens, ViewModels
   design/      tokens (generated), fonts, icons, Beamer surface modifiers, chart canvases
   core/        UniFFI bindings (qala-ffi: run, math, engine, LS++), golden-vector tests
-  data/        Room (records, fixes), HLC and merge, HTTP sync client, blob upload, repositories
+  data/        Room (records, fixes), HLC clock state (compare and merge run in `qala-core`), HTTP sync client, blob upload, repositories
   run/         RunRecordingService, FixSource, HR client, CuePlayer, RunRepository
 ```
 
@@ -77,10 +77,10 @@ Don't put recording in WorkManager or JobScheduler; Android 16 tightened their r
 
 ## 6. Data layer
 
-- **Records.** Room holds synced records (sessions, sets, runs, notes, settings) with a hybrid logical clock per field, merged by "higher HLC wins" (rust-core.md section 4). Repositories expose typed reads as `Flow`s. The engine call needs JSON, which the repository builds straight from rows; there is no document to hydrate.
+- **Records.** Room holds synced records (sessions, sets, runs, notes, settings) with a hybrid logical clock per field, merged by "higher HLC wins" with the compare and merge in Rust (`qala-core` `hlc.rs`, DECISIONS S11; rust-core.md section 4). Repositories expose typed reads as `Flow`s. The engine call needs JSON, which the repository builds straight from rows; there is no document to hydrate.
 - **Engine state.** A derived cache rebuilt from history on the device. Not synced.
 - **Tracks.** Room per fix, then content-addressed blob upload (rust-core.md section 5).
-- **Sync.** `POST /api/sync` over HTTPS to `https://callisto.taila63f23.ts.net:8443`, one round trip sending local changes and receiving everything past the cursor. Runs on app open, run end and workout end. No background sync in v1. The web's `offlineQueue.ts` shape (enqueue, acknowledge, backoff 1 s doubling to 60 s) becomes a Room outbox table plus a WorkManager job for blob uploads.
+- **Sync.** `POST /api/sync` over HTTPS to the Qala server on the owner's VPS (DECISIONS S22, no Tailscale; the base URL is a setting, not hard-coded), one round trip sending local changes and receiving everything past the cursor. Runs on app open, run end and workout end. No background sync in v1. The web's `offlineQueue.ts` shape (enqueue, acknowledge, backoff 1 s doubling to 60 s) becomes a Room outbox table plus a WorkManager job for blob uploads.
 - **Workout flow owner.** A `WorkoutPlanner` in `data/` runs PLAN 10 on the phone: read the check-in, call Rust `predict_readiness`, build the engine bindings, call the Rust LS++ evaluator for today's program, then map the result to screen state and call Rust `recommend_next_session` for the numbers. Phase A4 builds it; nothing else owns the sequence.
 - **Hot path.** Rust calls are synchronous and cheap per call. Engine and LS++ calls happen at workout start, set logged, session end and check-in, not per frame, so a JSON boundary is fine. Plates and clock formatting are the only per-render calls and are pure Rust or plain Kotlin.
 - **Coach.** A server route builds the prompt and validates the response (S14); the phone sends context and gets a validated, enveloped suggestion. Needs the network, so offline behavior is "coach offline", as PLAN 14 already says.
