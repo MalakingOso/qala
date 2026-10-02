@@ -90,7 +90,7 @@ class TodayRouteTest {
         railSays("Day stages: check-in now, 0 of 6 done")
 
         rule.onNodeWithText("Check in").performClick()
-        rule.onNodeWithText("Save").performClick()
+        rule.onNodeWithText("Save check-in").performClick()
         railSays("Day stages: warm-up now, 1 of 6 done")
 
         rule.onNodeWithText("Start warm-up").performClick()
@@ -103,19 +103,30 @@ class TodayRouteTest {
     }
 
     @Test
-    fun systemBackAndTheInAppBackBothLeaveAStubForToday() {
+    fun systemBackAndTheInAppBackBothLeaveAScreenForToday() {
         showApp(container())
         railSays("Day stages: check-in now, 0 of 6 done")
 
+        rule.onNodeWithText("Start warm-up").assertDoesNotExist()
         rule.onNodeWithText("Check in").performClick()
-        rule.onNodeWithText("Stand-in screen".uppercase()).assertExists()
+        rule.onNodeWithText("Save check-in").assertExists()
         rule.runOnUiThread { rule.activity.onBackPressedDispatcher.onBackPressed() }
-        rule.onNodeWithText("How are you walking in?").assertExists()
+        rule.onNodeWithText("Check in").assertExists()
+        rule.onNodeWithText("Save check-in").assertDoesNotExist()
 
         rule.onNodeWithText("Check in").performClick()
         rule.onNodeWithContentDescription("Back").performClick()
-        rule.onNodeWithText("How are you walking in?").assertExists()
+        rule.onNodeWithText("Check in").assertExists()
         railSays("Day stages: check-in now, 0 of 6 done")
+
+        // A stage stub has the same two ways home.
+        rule.onNodeWithText("Check in").performClick()
+        rule.onNodeWithText("Save check-in").performClick()
+        railSays("Day stages: warm-up now, 1 of 6 done")
+        rule.onNodeWithText("Start warm-up").performClick()
+        rule.onNodeWithText("Stand-in screen".uppercase()).assertExists()
+        rule.runOnUiThread { rule.activity.onBackPressedDispatcher.onBackPressed() }
+        rule.onNodeWithText("Start warm-up").assertExists()
     }
 
     @Test

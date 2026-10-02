@@ -27,6 +27,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.hideFromAccessibility
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.zIndex
 import com.qala.app.skip.SkipSheet
 import com.qala.app.today.Destination
@@ -87,7 +89,8 @@ fun QalaApp() {
                 Modifier
                     .widthIn(max = ContentMaxWidth)
                     .fillMaxSize()
-                    .then(if (nav.route == Route.CheckIn) Modifier.imePadding() else Modifier),      // the note field stays above the keyboard
+                    .then(if (nav.route == Route.CheckIn) Modifier.imePadding() else Modifier)      // the note field stays above the keyboard
+                    .semantics { if (ui.skip.open) hideFromAccessibility() },                        // the skip sheet is modal: the screen behind it is not reachable
             ) {
                 key(nav.route) {       // each screen keeps its own scroll position
                     val scroll = rememberScrollState()

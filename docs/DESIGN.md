@@ -473,6 +473,16 @@ better?", naming when the stretch started, with I am better (clears the
 status) and Still sick (dismisses for the session). Day one never asks: the
 user just said they were sick.
 
+Build, 2026-10-02 (native phone): the skip sheet is a bottom sheet over Today
+with a live "what happens" line, and the status is a notched card at the top of
+Today with Undo and Change. "Feeling better?" sits inside that card from the
+second sick day, once per app session (an in-memory flag, forgotten with the
+process), so it never blocks the screen. An injured day stays a lift day and
+trains around the muscle; every other reason gives the rest-day shape. Undo
+ends a one-day skip, or ends a longer status the day before it, so the days
+already marked keep their mark. A training weekday with no program also takes
+the rest-day shape, since there is no warm-up or lift to wait on.
+
 ## 8. Mockups
 
 `mockups/build.mjs` generates `mockups/qala-app-mockups.html`, published at https://claude.ai/code/artifact/250bf70f-3bed-4593-ad17-afc44bb14a0c (version 5, 2026-09-13; made private 2026-09-13, `docs/DECISIONS.md` section 7). Pages: Today (your pick), Today options (round 3), Phone, Desktop and web, Foundations. Regenerate with `LUCIDE_JSON=<extracted Lucide paths> node mockups/build.mjs`, then assemble and republish with the design canvas tool. The mockups are hand-drawn HTML and SVG with sample data: they do not use visx or uPlot. Runs show `sport-shoe` since version 5.
