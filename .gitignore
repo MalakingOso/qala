@@ -21,3 +21,6 @@ testdata/golden/liftoscript/lezer_trees/
 crates/qala-lspp/testdata/unit/cases_*.json
 # Build output from the wasm and FFI crates.
 target/wasm-out/
+
+# Playwright MCP session logs and snapshots
+.playwright-mcp/

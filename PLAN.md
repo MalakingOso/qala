@@ -528,5 +528,7 @@ Taken from `stride-design-document.md` after checking it against this plan. Not 
 
 ## 16b. Roadmap: bar renders (added 2026-10-01)
 
+Status 2026-10-01: the EZ-curl bar is rendered and `PlateDrawing` can draw it (`bar="ez"`, DESIGN 5.8a, DECISIONS L13). The EZ bar's weight is 25 lb (`settings.ezBar`) and the plate calculator's picker offers it (a choice local to that screen). Still open: a per-exercise bar so an EZ-curl exercise plans with it, the trap bar, and densities for the Android app. The `.blend` question below is settled: the scenes are scripts, there are no `.blend` files.
+
 Add Blender renders of the bars, starting with the EZ-curl bar, for the plate calculator and the bar picker. Today the plate drawing is vector art (`PlateDrawing`, PLAN 6.8, DESIGN 5.8) and the bar inventory in `settings.plates.bars` already allows an EZ bar and a trap bar whose weights are still to be entered (PLAN 6.8). The owner wants the plates to look like real bumpers, so rendered bars should match that look. Open before it starts: the other bars to render (straight barbell, trap bar, others), render size and format for web and the Android app (PNG or WebP at a fixed set of densities), how a rendered bar lines up with the per-side plate drawing, and where the `.blend` sources live (they are binary, so likely outside the repo or in git LFS). Not in v1. `DECISIONS.md` L9.
 
