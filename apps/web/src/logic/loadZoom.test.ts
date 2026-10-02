@@ -14,7 +14,9 @@ import {
   hitAt,
   inspectDay,
   type Level,
+  LEVEL_BAR_MAX,
   MAX_BAR,
+  monthOf,
   panAnchor,
   panStep,
   parseZ,
@@ -69,7 +71,7 @@ Deno.test("the block has six weeks, 42 days and a deload at half of week 5", () 
   assertEquals(model.weeks[5].deload, true);
   assertEquals(model.maxDay, 790);
   assertEquals(model.maxWeek, 2940);
-  // Weeks 2 to 4 are the ribbon's three weeks.
+  // Weeks 2 to 4 are the old ribbon's three weeks.
   assertEquals(sampleBlockWeeks.slice(1, 4).map((w) => w.id), [
     "w2",
     "w3",
@@ -112,29 +114,28 @@ Deno.test("Week level stacks each day: lift under run, fill shares match describ
   assertEquals(f.today?.opacity, 1);
 });
 
-Deno.test("3 weeks draws the U25 ribbon: hatched future week, quiet flanks, thin bars", () => {
+Deno.test("Month draws the U25 ribbon over four whole weeks: hatched future, quiet flanks, slim bars", () => {
   const f = frame(model, { z: 2, anchor: TODAY }, box);
   assertEquals(f.window.start, 7);
-  assertEquals(f.window.days, 21);
-  for (let abs = 7; abs < 28; abs++) {
+  assertEquals(f.window.days, 28);
+  for (let abs = 7; abs < 35; abs++) {
     const week = Math.floor(abs / 7);
     for (const p of pieces(f, abs)) {
       assertEquals(p.future, rail[week].relation === "future", `${p.key}`);
       assertAlmostEquals(p.opacity, week === 2 ? 1 : QUIET, 1e-9);
-      assert(p.w <= 15, `${p.key} is ${p.w}px`);
+      assert(p.w <= LEVEL_BAR_MAX[2], `${p.key} is ${p.w}px`);
       if (p.future) assertEquals(p.fillH, 0);
     }
   }
   // Done fills are the part done of each kind.
   const mon = pieces(f, 14)[0];
   assertAlmostEquals(mon.fillH / mon.h, 1, 1e-9);
-  // Two week rules, the ruler names the three weeks.
-  assertEquals(f.dividers.length, 2);
+  // Three week rules, the ruler names the four weeks.
+  assertEquals(f.dividers.length, 3);
   const ruler = f.labels.filter((l) => l.row === "ruler").map((l) => l.text);
-  assert(
-    ruler.includes("Week 2") && ruler.includes("Week 3") &&
-      ruler.includes("Week 4"),
-  );
+  for (const name of ["Week 2", "Week 3", "Week 4", "Week 5"]) {
+    assert(ruler.includes(name), name);
+  }
   // Today's letter is knocked out, and no glyph rows remain.
   const knock = f.labels.filter((l) => l.knockout && l.opacity > 0);
   assertEquals(knock.map((l) => l.text), ["S"]);
@@ -163,8 +164,10 @@ Deno.test("Day level draws a lift piece and a run piece, SESSION_GAP apart", () 
   );
   assertAlmostEquals(bars[0].h, 510 * ppl(model.maxDay), 1e-9);
   assertAlmostEquals(bars[1].h, 240 * ppl(model.maxDay), 1e-9);
-  // Both sit on the baseline with a full cap, and nothing is done yet.
+  // Both sit on the baseline with a full cap, and nothing is done yet. A lone
+  // day is wide, so its bars are the thickest a level allows.
   for (const b of bars) {
+    assertEquals(b.w, LEVEL_BAR_MAX[0]);
     assertAlmostEquals(b.y + b.h, box.height, 1e-9);
     assertEquals(b.cap, 1);
     assertEquals(b.fillH, 0);
@@ -335,7 +338,7 @@ Deno.test("no two pieces overlap at any point of the Day to Block zoom", () => {
   }
 });
 
-Deno.test("limits: bars stay at most 24px and nothing is NaN, at any zoom", () => {
+Deno.test("limits: bars stay within their level's cap and nothing is NaN, at any zoom", () => {
   const empty: WeekLoad = {
     id: "w7",
     name: "Week 7",
@@ -461,7 +464,7 @@ Deno.test("captions at each level", () => {
     describeInspected(model, 1, 14, TODAY).text,
     "Monday · Upper A · 420 done",
   );
-  // Another week's day names its week at 3 weeks.
+  // Another week's day names its week at Month.
   assertEquals(
     describeInspected(model, 2, 21, TODAY).text,
     "Week 4 · Monday · Upper A · 430 planned",
@@ -486,11 +489,11 @@ Deno.test("the table matches the level: days, then weeks for Block", () => {
   const rows = (level: Level) => tableFor(model, level, TODAY);
   assertEquals(rows(0).rows.length, 1);
   assertEquals(rows(1).rows.length, 7);
-  assertEquals(rows(2).rows.length, 21);
+  assertEquals(rows(2).rows.length, 28);
   assertEquals(rows(3).rows.length, 6);
   assertEquals(rows(1).rows[6][0], "Week 3 (today)");
   assertEquals(rows(3).head[0], "Week");
-  assertEquals(restWindow(model, 2, TODAY), { start: 7, days: 21 });
+  assertEquals(restWindow(model, 2, TODAY), { start: 7, days: 28 });
 });
 
 Deno.test("snap and pinch mapping", () => {
@@ -539,7 +542,7 @@ Deno.test("pan steps and clamping", () => {
   assertEquals(parseZ(""), null);
 });
 
-Deno.test("the 3-week window clamps at the block's ends", () => {
+Deno.test("the Month window clamps at the block's ends", () => {
   const first = frame(model, { z: 2, anchor: 0 }, box);
   assertEquals(first.window.start, 0);
   const anchorWeek = first.bars.filter((b) => b.layer === "day" && b.slot < 7);
@@ -549,9 +552,11 @@ Deno.test("the 3-week window clamps at the block's ends", () => {
     b.slot < 21
   );
   assert(second.every((b) => Math.abs(b.opacity - QUIET) < 1e-9));
-  assertEquals(frame(model, { z: 2, anchor: 41 }, box).window.start, 21);
+  assertEquals(frame(model, { z: 2, anchor: 41 }, box).window.start, 14);
   assertEquals(frame(model, { z: 2, anchor: 13 }, box).window.start, 0);
-  assertEquals(frame(model, { z: 2, anchor: 34 }, box).window.start, 21);
+  assertEquals(frame(model, { z: 2, anchor: 34 }, box).window.start, 14);
+  // In between, the week before the focus week leads.
+  assertEquals(frame(model, { z: 2, anchor: 20 }, box).window.start, 7);
   // Day and Week follow the anchor exactly.
   assertEquals(frame(model, { z: 0, anchor: 41 }, box).window.start, 41);
   assertEquals(frame(model, { z: 1, anchor: 41 }, box).window.start, 35);
@@ -609,13 +614,22 @@ Deno.test("the title follows the zoom", () => {
   assertEquals(t(1, 21), "Next week");
   assertEquals(t(1, 35), "Week 6");
   assertEquals(t(1, 0), "Week 1");
-  assertEquals(t(2, TODAY), "Weeks 2 to 4");
-  assertEquals(t(2, 0), "Weeks 1 to 3");
-  assertEquals(t(2, 41), "Weeks 4 to 6");
+  // Month names the focus week's month, not the weeks it shows.
+  assertEquals(t(2, TODAY), "September");
+  assertEquals(t(2, 0), "August");
+  assertEquals(t(2, 41), "October");
   assertEquals(t(3, TODAY), name);
-  // A block shorter than three weeks names the weeks it has.
   const one = blockModel([sampleBlockWeeks[1]]);
-  assertEquals(zoomTitle(one, 2, 0, name), "Week 1");
+  assertEquals(zoomTitle(one, 2, 0, name), "September");
+});
+
+Deno.test("a week belongs to the month holding most of its days", () => {
+  assertEquals(monthOf("Sep 7-13"), "September");
+  assertEquals(monthOf("Aug 31-Sep 6"), "September");
+  assertEquals(monthOf("Aug 25-31"), "August");
+  assertEquals(monthOf("Sep 28-Oct 4"), "October");
+  assertEquals(monthOf("Sep 27-Oct 3"), "September");
+  assertEquals(monthOf("soon"), null);
 });
 
 Deno.test("tooltips name the session and label the numbers", () => {

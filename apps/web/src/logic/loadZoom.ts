@@ -1,15 +1,16 @@
 /* Load zoom (DESIGN 6.3, 6.5, DECISIONS U27): one workouts chart that zooms
- * Day, Week, 3 weeks and Block, drawn in the U25 look. Everything here is pure:
+ * Day, Week, Month and Block, drawn in the U25 look. Everything here is pure:
  * the model is the block's 42 days, a camera is {z, anchor, offset}, and
  * `frame` turns the two into pieces, labels and hit slots in pixels. The
  * component only draws and moves the camera.
  *
  * A day is up to two pieces, lift under run (U25), and a piece keeps its key
- * from Day to Block. z runs 0 Day, 1 Week, 2 3 weeks, 3 Block:
+ * from Day to Block. z runs 0 Day, 1 Week, 2 Month, 3 Block:
  *   0 to 1: a day's lift and run pieces slide together and the run rises onto
  *           the lift.
- *   1 to 2: the window widens from 7 to 21 days, nothing changes height.
- *   2 to 3: the window widens to 42 days. Each week's lift pieces rise into a
+ *   1 to 2: the window widens from 7 to 28 days (four whole weeks), nothing
+ *           changes height.
+ *   2 to 3: the window widens to the whole block (42 days). Each week's lift pieces rise into a
  *           stack, its run pieces into a stack above all of its lift, the
  *           y-scale grows from the largest day to the largest week, the stacks
  *           slide into the week's column and crossfade into the week's two
@@ -31,22 +32,27 @@ const DAY_NAMES = [
 
 export const DAYS_PER_WEEK = 7;
 export type Level = 0 | 1 | 2 | 3;
-export const LEVEL_LABELS = ["Day", "Week", "3 wk", "Block"] as const;
-export const LEVEL_NAMES = ["Day", "Week", "3 weeks", "Block"] as const;
+export const LEVEL_LABELS = ["Day", "Week", "Month", "Block"] as const;
+export const LEVEL_NAMES = ["Day", "Week", "Month", "Block"] as const;
 
-/** Bars are at most 24px thick (DESIGN 6.2) with a gap to the next slot; the
- * 3-week level keeps U25's slimmer 15px. */
-export const MAX_BAR = 24;
-export const LEVEL_BAR_MAX = [24, 24, 15, 24] as const;
+/** How thick a bar may be at each level: thick where a slot is wide (a single
+ * day, a whole week of the block), slimmer where many days share the chart. */
+export const LEVEL_BAR_MAX = [48, 28, 18, 48] as const;
+/** The thickest any level allows. */
+export const MAX_BAR = 48;
 export const MIN_BAR = 3;
 export const BAR_GAP = 6;
 export const REST_H = 4;
-/** Weeks other than the one in focus go quiet at the 3-week level (U25). */
+/** Weeks other than the one in focus go quiet at the Month level (U25). */
 export const QUIET = 0.55;
 /** Where in a transition the stacked pieces crossfade into the week's pieces. */
 const CROSSFADE_FROM = 0.9;
 /** Day level: how far apart a day's lift and run pieces sit, in pixels. */
-export const SESSION_GAP = 96;
+export const SESSION_GAP = 104;
+/** A lift-run join bulges by this share of the bar's width, at most
+ * JOINT_MAX px: a little more curve than flat. */
+const JOINT_SHARE = 0.14;
+const JOINT_MAX = 5;
 
 export const PINCH_PER_LEVEL = 1.8;
 export const TWEEN_MS_PER_LEVEL = 380;
@@ -438,7 +444,7 @@ export function defaultAnchor(model: BlockModel) {
   return model.today >= 0 ? model.today : 0;
 }
 
-/** Keyboard: the inspected day one step on. A day at Day, Week and 3 weeks; a
+/** Keyboard: the inspected day one step on. A day at Day, Week and Month; a
  * whole week at Block. */
 export function stepInspect(
   model: BlockModel,
@@ -463,9 +469,9 @@ export function anchorFor(
   return weekOf(abs) === weekOf(anchor) ? anchor : clampDay(model, abs);
 }
 
-/** The window's width in days at each level: 1, 7, 21 and the whole block. */
+/** The window's width in days at each level: 1, 7, 28 and the whole block. */
 function levelDays(count: number) {
-  return [1, Math.min(7, count), Math.min(21, count), count];
+  return [1, Math.min(7, count), Math.min(28, count), count];
 }
 
 /** Window width in days, interpolated geometrically so a pinch zooms at an
@@ -483,7 +489,10 @@ export function windowDays(z: number, count: number) {
 function levelCenter(level: number, anchor: number, count: number) {
   if (level === 0) return anchor + 0.5;
   if (level === 3) return count / 2;
-  return weekStart(anchor) + DAYS_PER_WEEK / 2;
+  // Week: the focus week. Month: four whole weeks, the one before the focus
+  // week, the focus week and the two after it.
+  if (level === 1) return weekStart(anchor) + DAYS_PER_WEEK / 2;
+  return weekStart(anchor) + DAYS_PER_WEEK;
 }
 
 /** Where the window is centred, in days, at a camera that is not panning. */
@@ -541,6 +550,10 @@ export interface Bar {
   /** 0 to 1: how much of the top hairline and rounded corners shows. Falls to
    * 0 as another piece covers the top. */
   cap: number;
+  /** Px: how far the join to the neighbouring piece bulges. The lift's top
+   * domes up into the run, whose bottom hollows to match, so a day's two
+   * pieces meet along one gentle curve instead of a flat line. 0 is flat. */
+  joint: number;
   opacity: number;
 }
 
@@ -559,6 +572,9 @@ export interface Label {
   /** Today's letter is reversed out of an ember square (U25). */
   knockout: boolean;
   muted: boolean;
+  /** A workout's name under its bar; it leads the row (bigger and bolder than
+   * the day letters). */
+  session: boolean;
 }
 
 export interface Divider {
@@ -599,6 +615,11 @@ export interface Frame {
   yMax: number;
 }
 
+/** The join's bulge for a bar this wide over a run piece this tall. */
+function jointFor(width: number, runH: number) {
+  return Math.max(0, Math.min(JOINT_MAX, width * JOINT_SHARE, runH / 2));
+}
+
 /** Bar thickness for a slot width: the slot less a gap, at most `max`. */
 export function barWidth(slot: number, max = MAX_BAR) {
   return clamp(slot - BAR_GAP, MIN_BAR, max);
@@ -611,7 +632,13 @@ export function barMax(z: number) {
   return lerp(LEVEL_BAR_MAX[k], LEVEL_BAR_MAX[k + 1], zc - k);
 }
 
-const NO_LABEL = { sub: "", today: false, knockout: false, muted: false };
+const NO_LABEL = {
+  sub: "",
+  today: false,
+  knockout: false,
+  muted: false,
+  session: false,
+};
 
 export function frame(model: BlockModel, cam: Camera, box: Box): Frame {
   const count = model.days.length;
@@ -633,8 +660,10 @@ export function frame(model: BlockModel, cam: Camera, box: Box): Frame {
   const start = clamp(center - win / 2, 0, Math.max(0, count - win));
   const ppd = box.width / win;
   const mapX = (u: number) => (u - start) * ppd;
-  const onScreen = (cx: number) =>
-    cx > -(MAX_BAR + SESSION_GAP) && cx < box.width + MAX_BAR + SESSION_GAP;
+  // A column's pieces reach half the session gap and half a bar from its
+  // centre.
+  const reach = (MAX_BAR + SESSION_GAP) / 2;
+  const onScreen = (cx: number) => cx > -reach && cx < box.width + reach;
 
   // Stacking is two moves so pieces never overlap in flight: they rise to
   // their place in the stack beside each other (the y-scale grows with them,
@@ -653,7 +682,7 @@ export function frame(model: BlockModel, cam: Camera, box: Box): Frame {
   out.window = { start, days: win };
   out.yMax = yMax;
 
-  // The focused week at full strength, the others quiet at 3 weeks (U25).
+  // The focused week at full strength, the others quiet at Month (U25).
   const focusWeek = weekOf(anchor) + (cam.offset ?? 0) / DAYS_PER_WEEK;
   const quietAmt = z <= 2 ? ramp(z, 1, 2) : 1 - s;
   const weekOpacity = (w: number) =>
@@ -702,6 +731,7 @@ export function frame(model: BlockModel, cam: Camera, box: Box): Frame {
           fillH: 0,
           future: false,
           cap: 1,
+          joint: 0,
           opacity: op,
         });
       }
@@ -714,6 +744,7 @@ export function frame(model: BlockModel, cam: Camera, box: Box): Frame {
           opacity: sessionLabels * wo,
           text: "Rest",
           muted: true,
+          session: true,
         });
       }
     } else if (dayIn > 0) {
@@ -730,6 +761,9 @@ export function frame(model: BlockModel, cam: Camera, box: Box): Frame {
         const covered = kind === "lift" && day.runSize > 0 ? sessionSlide : 0;
         const top = topOfWeek[day.week];
         const isTop = top.kind === kind && top.abs === day.abs;
+        const joint = day.liftSize > 0 && day.runSize > 0
+          ? jointFor(dayBar, day.runSize * ppl) * sessionSlide * (1 - rise)
+          : 0;
         out.bars.push({
           key: `p${day.abs}-${kind}`,
           layer: "day",
@@ -743,6 +777,7 @@ export function frame(model: BlockModel, cam: Camera, box: Box): Frame {
           fillH: future || sess.size <= 0 ? 0 : (sess.done / sess.size) * h,
           future,
           cap: (1 - covered) * (isTop ? 1 : 1 - rise),
+          joint,
           opacity: dayIn * wo,
         });
         if (sessionLabels > 0) {
@@ -754,6 +789,7 @@ export function frame(model: BlockModel, cam: Camera, box: Box): Frame {
             opacity: sessionLabels * wo,
             text: sess.name,
             today: sess.state === "today",
+            session: true,
           });
         }
       });
@@ -801,6 +837,9 @@ export function frame(model: BlockModel, cam: Camera, box: Box): Frame {
           fillH: future || size <= 0 ? 0 : (done / size) * h,
           future,
           cap,
+          joint: week.liftSize > 0 && week.runSize > 0
+            ? jointFor(dayBar, week.runSize * ppl)
+            : 0,
           opacity: weekIn,
         });
       };
@@ -818,6 +857,7 @@ export function frame(model: BlockModel, cam: Camera, box: Box): Frame {
           fillH: 0,
           future: false,
           cap: 1,
+          joint: 0,
           opacity: weekIn,
         });
       } else {
@@ -869,7 +909,7 @@ export function frame(model: BlockModel, cam: Camera, box: Box): Frame {
     }
   }
 
-  // Week dividers: the 3-week level's rule between weeks, leaving as days stack.
+  // Week dividers: the Month level's rule between weeks, leaving as days stack.
   const dividerIn = ramp(z, 1, 2) * (1 - ramp(s, 0, 0.5));
   if (dividerIn > 0) {
     for (let k = 1; k < model.weeks.length; k++) {
@@ -1050,10 +1090,32 @@ export function zoomTitle(
     if (day.week === here + 1) return "Next week";
     return model.weeks[day.week].name;
   }
-  const { start, days } = restWindow(model, 2, at);
-  const first = weekOf(start) + 1;
-  const last = weekOf(start + days - 1) + 1;
-  return first === last ? `Week ${first}` : `Weeks ${first} to ${last}`;
+  return monthOf(model.weeks[day.week].range) ?? model.weeks[day.week].name;
+}
+
+const MONTHS: Record<string, string> = {
+  Jan: "January",
+  Feb: "February",
+  Mar: "March",
+  Apr: "April",
+  May: "May",
+  Jun: "June",
+  Jul: "July",
+  Aug: "August",
+  Sep: "September",
+  Oct: "October",
+  Nov: "November",
+  Dec: "December",
+};
+
+/** The month a week belongs to, from its range ("Sep 7-13", "Aug 31-Sep 6"):
+ * the month holding most of its seven days (so the one with its Thursday). */
+export function monthOf(range: string): string | null {
+  const m = /^([A-Z][a-z]{2}) \d+-(?:([A-Z][a-z]{2}) )?(\d+)$/.exec(range);
+  if (!m) return null;
+  const [, from, to, endDay] = m;
+  const month = to && 7 - Number(endDay) < 4 ? to : from;
+  return MONTHS[month] ?? null;
 }
 
 /** "lift + run", "lift" or "run": which kinds a slot carries. */
@@ -1139,7 +1201,7 @@ export function restWindow(model: BlockModel, level: Level, anchor: number) {
   };
 }
 
-/** Table view for a level: days for Day, Week and 3 weeks, weeks for Block. */
+/** Table view for a level: days for Day, Week and Month, weeks for Block. */
 export function tableFor(model: BlockModel, level: Level, anchor: number) {
   if (level === 3) {
     return {

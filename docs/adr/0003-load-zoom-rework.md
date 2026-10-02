@@ -96,7 +96,7 @@ Artifact boundary:
   (with the exported `ZoomPicker`). Removed: `shared/charts/WeekRibbon.tsx`.
   Kept: `logic/weekRibbon.ts` (the loadZoom logic imports it).
 - Changed: `shell-desktop/OverviewPage.tsx` (no left column, a new kicker,
-  the picker on the title row, a zoom-named title), `parts.tsx`
+  the picker on the title row, a zoom-named title, the Estimated 1RMs card beside the lede), `parts.tsx`
   (`PageHeader` takes an `action`), `weekFocus.tsx` (six weeks, an exact
   anchor day), `theme/desktop.css` (the `.ribbon*` rules become `.lz-*`),
   `store/sample.ts` and `store/types.ts` (`sampleBlockWeeks`, `runLabel`,
@@ -105,14 +105,19 @@ Artifact boundary:
 Done means:
 
 - `deno test src/logic/` and `tsc --noEmit` pass.
-- Every level (Day, Week, 3 weeks, Block) draws in the U25 look in light and
+- Every level (Day, Week, Month, Block) draws in the U25 look in light and
   dark, including mid-zoom frames (`?z=0.5`, `1.5`, `2.5` in a dev build).
 - The picker, ctrl-wheel pinch, shift-wheel pan, the keyboard, the ruler's
   week names and the toolbar's week switcher all move the chart and the
   title; reduced motion snaps; no console errors.
 - The phone Today strip is unchanged.
 
-Open for the owner to look at: 15px bars at 3 weeks across a chart about
-1,070px wide (the old column was about 660px), and the kicker dropping
+Follow-up the same day: the owner found Day and Block "super sparse" and
+asked for "day week month" with Block kept, and the Estimated 1RMs brought
+up beside the chart. 3 weeks became Month (four whole weeks), bars got
+thicker at Day and Block, and the chart shares the row with the 1RMs card
+(about 740px instead of 1,070px).
+
+Open for the owner to look at: the kicker dropping
 "Lower A complete" to stay on one line. `withRail` stays in
 `logic/loadZoom.ts` (unused by the app) only to keep its tests.
