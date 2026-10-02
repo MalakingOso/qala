@@ -6,21 +6,9 @@
 import { useState } from "react";
 import { useQala } from "../store/qalaStore.tsx";
 import { WeekRibbon } from "../shared/charts/index.ts";
-import {
-  sampleBlock,
-  sampleLifts,
-  sampleReadiness,
-  sampleVdot,
-} from "../store/sample.ts";
+import { sampleBlock, sampleLifts, sampleReadiness } from "../store/sample.ts";
 import { SessionsTable } from "./SessionsTable.tsx";
-import {
-  BlockBar,
-  Bunch,
-  FilterChips,
-  PageHeader,
-  Panel,
-  Pill,
-} from "./parts.tsx";
+import { BlockBar, FilterChips, PageHeader, Panel, Pill } from "./parts.tsx";
 import {
   filterSessions,
   SESSION_FILTERS,
@@ -33,12 +21,7 @@ export function OverviewPage() {
   const { weeks, focusId, setFocusId } = useWeekFocus();
   const [filter, setFilter] = useState<SessionFilter>("all");
 
-  const lifts = sessions.filter((s) => s.type === "lift").length;
-  const runs = sessions.filter((s) => s.type === "run").length;
-  const miles = sessions.reduce((n, s) => n + (s.run?.distanceMi ?? 0), 0);
   const readiness = sampleReadiness.values[sampleReadiness.values.length - 1];
-  const vdot = sampleVdot[sampleVdot.length - 1];
-  const vdotDelta = vdot - sampleVdot[0];
   const latest = sessions[0];
   const doneToday = latest && latest.date === sampleBlock.todayDate;
   const shown = filterSessions(sessions, filter).slice(0, 5);
@@ -66,25 +49,6 @@ export function OverviewPage() {
               week={sampleBlock.week}
               of={sampleBlock.of}
               deloadWeek={sampleBlock.deloadWeek}
-            />
-            <Bunch
-              items={[
-                {
-                  value: String(sessions.length),
-                  label: `${lifts} lifts · ${runs} runs`,
-                },
-                {
-                  value: String(readiness),
-                  label: "readiness",
-                  delta: `+${readiness - sampleReadiness.low} clear`,
-                },
-                { value: miles.toFixed(1), label: "miles" },
-                {
-                  value: vdot.toFixed(1),
-                  label: "VDOT",
-                  delta: `+${vdotDelta.toFixed(1)}`,
-                },
-              ]}
             />
           </div>
           <WeekRibbon

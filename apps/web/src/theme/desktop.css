@@ -400,18 +400,27 @@
 .bunch {
   display: flex;
   flex-wrap: wrap;
-  gap: 14px 22px;
+  gap: 8px;
   margin-top: 16px;
   font-size: 12px;
   color: var(--fg-secondary);
 }
+/* Each figure gets its own box: the bare row let 4-6 figures crowd and the
+ * labels wrapped into hieroglyphs. Boxes size to content and wrap to the
+ * next row instead. */
 .bunch > div {
   display: flex;
   flex-direction: column;
+  gap: 1px;
+  min-width: 84px;
+  padding: 8px 12px 9px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-recessed);
 }
 .bunch b {
-  font-size: 22px;
-  line-height: 1.15;
+  font-size: 20px;
+  line-height: 1.2;
   color: var(--fg);
 }
 .bunch-delta {
@@ -468,7 +477,13 @@
   margin-top: 6px;
 }
 
-/* ---------- Week ribbon ---------- */
+/* ---------- Week ribbon (teal stacks, knockout today: U25) ---------- */
+/* Flat on the lede card, no inner chrome. Each bar stacks the day's lift
+ * load under its run load; fill is the part done. No glyphs, no wash
+ * columns, no inspector: today reads through a frosted chip above its bar
+ * and its letter reversed out of an ember square, and hovering (or tapping,
+ * which pins) a day lifts its bar and shows a frosted tooltip naming the
+ * type with labeled numbers. */
 .ribbon {
   min-width: 0;
 }
@@ -481,14 +496,15 @@
   display: flex;
   flex-direction: column;
   gap: 1px;
-  padding: 0 6px 8px;
+  padding: 6px 6px 8px;
   border: 0;
   background: transparent;
   text-align: left;
   color: var(--fg-muted);
   cursor: pointer;
-  opacity: 0.72;
+  opacity: 0.65;
   min-width: 0;
+  font-family: var(--font-ui);
 }
 .ribbon-label:hover {
   opacity: 1;
@@ -514,7 +530,8 @@
   color: var(--fg-muted);
 }
 .ribbon-strip {
-  margin-top: 8px;
+  margin-top: 6px;
+  padding-top: 34px;
 }
 .ribbon-week {
   display: grid;
@@ -525,75 +542,227 @@
   border-left: 1px solid var(--soft);
 }
 .ribbon-week:not(.focus) {
-  opacity: 0.66;
+  opacity: 0.55;
+}
+.ribbon-week:not(.focus) .today-chip {
+  display: none;
 }
 .ribbon .week-day {
-  padding: 6px 0 4px;
-  border-radius: 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 0 3px;
+  border: 0;
+  border-radius: 4px;
+  color: var(--fg-muted);
+  font-family: var(--font-ui);
+  cursor: default;
 }
-.ribbon .week-day.t-past {
-  background: var(--wash);
-}
-.ribbon .week-day.t-past:hover,
-.ribbon .week-day[aria-pressed="true"] {
+.ribbon .week-day:hover {
   background: var(--bg-hover);
 }
-/* Today sits on the ember wash as part of its week, not fenced off by an
- * edge. The bar fill stays teal so fill always means done; today reads via
- * the wash, the ember day letter (base rule) and the ember caption. */
+/* No wash columns: today is marked by the chip and the knockout letter,
+ * never by a background. Beats the base .week-day.today rules. */
 .ribbon .week-day.today {
-  background: var(--accent-subtle);
-  color: var(--progress-fill);
+  background: transparent;
+  color: var(--fg-muted);
+}
+.ribbon .week-day.today:hover,
+.ribbon .week-day.today[aria-pressed="true"] {
+  background: var(--bg-hover);
+  box-shadow: none;
 }
 .ribbon .week-track {
-  height: 112px;
+  height: 120px;
   border-bottom: 1px solid var(--soft);
 }
 .ribbon .week-bar {
-  max-width: 22px;
+  max-width: 15px;
+  border-radius: 3px 3px 0 0;
+  transform-origin: bottom;
+  transition: transform 160ms ease, filter 160ms ease;
 }
-/* The week still to come is a plan: dashed, never filled. */
-.ribbon-week[data-relation="future"] .week-bar {
-  border-style: dashed;
+.ribbon .week-day:hover .week-bar,
+.ribbon .week-day:focus-visible .week-bar {
+  transform: translateY(-3px);
+  filter: brightness(1.07) saturate(1.08);
+}
+.ribbon .week-rest {
+  max-width: 15px;
+}
+/* Stacked type segments, flush with a 1px surface divider, hairline outline
+ * so the planned part reads crisp at ribbon size. Lift --progress, run
+ * --run: the same tokens every other chart uses. Named ribbon-seg, never
+ * seg: index.css already owns .seg for the segmented control, and its
+ * margin and border broke the stacks. */
+.ribbon .week-bar.stack {
+  border: 0;
   box-shadow: none;
+  overflow: visible;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
   background: transparent;
 }
-.ribbon-week[data-relation="future"] .week-day {
-  color: var(--fg-muted);
+.ribbon .ribbon-seg {
+  position: relative;
+  width: 100%;
+  border-left: 1px solid currentColor;
+  border-right: 1px solid currentColor;
+  background: color-mix(in srgb, currentColor 8%, transparent);
+}
+.ribbon .ribbon-seg.lift {
+  color: var(--progress);
+}
+.ribbon .ribbon-seg.run {
+  color: var(--run);
+}
+.ribbon .ribbon-seg.future {
+  color: var(--fg-faint);
+}
+.ribbon .ribbon-seg:first-child {
+  border-top: 1px solid currentColor;
+  border-radius: 3px 3px 0 0;
+  overflow: hidden;
+}
+.ribbon .ribbon-seg + .ribbon-seg {
+  border-top: 1px solid var(--bg-surface);
+}
+/* The week still to come is a plan, never a record: no fill, a diagonal
+ * hatch inside the same crisp hairline. Hatch, not the old dashed border,
+ * which dithered at this size. */
+.ribbon .ribbon-seg.future {
+  background: repeating-linear-gradient(
+    45deg,
+    color-mix(in srgb, currentColor 16%, transparent) 0 3px,
+    transparent 3px 7px
+  );
+}
+.ribbon .ribbon-seg.future .week-fill {
+  display: none;
 }
 .ribbon .week-letter {
   font-size: 10px;
-}
-/* Inspector headline under the ribbon: one day's load as a figure with its
- * context beside it. Today unless another day is hovered or pinned. */
-.day-focus {
-  display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: 4px 12px;
-  margin: 14px 0 0;
-  min-height: 36px;
-}
-.day-focus .figure {
-  font-size: 30px;
-  line-height: 1.2;
-}
-.day-focus .figure small {
-  font-family: var(--font-ui);
-  font-size: 14px;
-  font-weight: 400;
   color: var(--fg-muted);
 }
-.day-focus-label {
-  font-size: 13px;
-  color: var(--fg-secondary);
-}
-.day-focus-label strong {
-  color: var(--fg);
+/* Knockout today: the letter reversed out of an ember square. */
+.ribbon .week-day.today .week-letter {
+  display: inline-block;
+  background: var(--accent);
+  color: var(--on-accent);
+  padding: 1px 5px;
+  border-radius: 2px;
   font-weight: 600;
 }
-.day-focus-label .day-focus-today {
-  color: var(--accent);
+/* Frosted glass: the Today chip floating above today's bar, and the hover
+ * tooltip naming the type with labeled numbers. Hover (and keyboard focus)
+ * only; clicking a day does nothing. */
+.ribbon .today-chip,
+.ribbon .tip {
+  background: color-mix(in srgb, var(--bg-surface) 72%, transparent);
+  -webkit-backdrop-filter: blur(12px) saturate(1.35);
+  backdrop-filter: blur(12px) saturate(1.35);
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  box-shadow: var(--shadow-card);
+  white-space: nowrap;
+}
+.ribbon .today-chip {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  max-width: 190px;
+  padding: 5px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--fg);
+  z-index: 5;
+}
+.ribbon .today-chip i {
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+  background: var(--accent);
+  flex: none;
+}
+.ribbon .today-chip small {
+  font-weight: 400;
+  color: var(--fg-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ribbon .week-day:hover .today-chip {
+  opacity: 0;
+}
+.ribbon .tip {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  padding: 6px 10px;
+  font-size: 11px;
+  z-index: 6;
+  text-align: center;
+  line-height: 1.5;
+  color: var(--fg);
+  opacity: 0;
+  visibility: hidden;
+  transform: translate(-50%, 5px);
+  transition: opacity 160ms ease, transform 160ms ease, visibility 160ms;
+  pointer-events: none;
+}
+.ribbon .week-day:hover .tip,
+.ribbon .week-day:focus-visible .tip {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, 0);
+}
+.ribbon .tip b {
+  font-weight: 600;
+}
+.ribbon .tip span {
+  display: block;
+  font-family: "DM Mono", monospace;
+  font-size: 11px;
+  color: var(--fg-secondary);
+  font-variant-numeric: tabular-nums;
+}
+/* First/last columns would clip the glass, so nudge it inward. */
+.ribbon-week:first-child .week-day:first-child .tip,
+.ribbon-week:first-child .week-day:first-child .today-chip {
+  transform: translateX(-22%);
+}
+.ribbon-week:first-child .week-day:first-child .tip {
+  transform: translate(-22%, 5px);
+}
+.ribbon-week:first-child .week-day:first-child:hover .tip,
+.ribbon-week:first-child .week-day:first-child:focus-visible .tip,
+.ribbon-week:first-child .week-day:first-child.pinned .tip {
+  transform: translate(-22%, 0);
+}
+.ribbon-week:last-child .week-day:last-child .tip {
+  transform: translate(-78%, 5px);
+}
+.ribbon-week:last-child .week-day:last-child:hover .tip,
+.ribbon-week:last-child .week-day:last-child:focus-visible .tip,
+.ribbon-week:last-child .week-day:last-child.pinned .tip {
+  transform: translate(-78%, 0);
+}
+@media (prefers-reduced-motion: reduce) {
+  .ribbon .week-bar,
+  .ribbon .tip {
+    transition: none;
+  }
+  .ribbon .week-day:hover .week-bar,
+  .ribbon .week-day:focus-visible .week-bar {
+    transform: none;
+    filter: none;
+  }
 }
 
 /* ---------- Tables, tags, pills ---------- */

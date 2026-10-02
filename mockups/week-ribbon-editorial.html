@@ -1,0 +1,547 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mockup: weekly load, color pass</title>
+<style>
+  @font-face {
+    font-family: "Qala Test";
+    src: url(../assets/fonts/QalaTest-Medium.woff2) format("woff2");
+    font-weight: 500;
+  }
+  @font-face {
+    font-family: "Qala Test";
+    src: url(../assets/fonts/QalaTestV2-Bold.woff2) format("woff2");
+    font-weight: 700;
+  }
+  @font-face {
+    font-family: "DM Mono";
+    src: url(../assets/fonts/DMMono-Regular.woff2) format("woff2");
+    font-weight: 400;
+  }
+  @font-face {
+    font-family: "DM Mono";
+    src: url(../assets/fonts/DMMono-Medium.woff2) format("woff2");
+    font-weight: 500;
+  }
+
+  :root {
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --mono: "DM Mono", ui-monospace, monospace;
+    --serif: "Qala Test", Georgia, serif;
+    --bg: #f5f5f7;
+    --surface: #fff;
+    --fg: #0f152a;
+    --fg2: #4a5578;
+    --muted: #64708b;
+    --border: rgba(15,21,42,.14);
+    --soft: #e3e6ee;
+    --accent: #c2410c;
+    --teal: #08a49c;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--fg);
+    padding: 28px 24px 90px;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; }
+
+  /* Mockup notes header (not app UI). */
+  .notes {
+    background: var(--surface);
+    border: 2px solid var(--border);
+    border-radius: 6px;
+    padding: 18px 22px;
+    margin-bottom: 22px;
+    font-size: 13px;
+  }
+  .notes h1 { font-family: var(--serif); font-size: 24px; margin-bottom: 6px; }
+  .notes p { color: var(--fg2); line-height: 1.6; max-width: 90ch; }
+  .notes ul { margin: 10px 0 0 18px; color: var(--fg2); line-height: 1.7; }
+  .notes li::marker { color: var(--accent); }
+  .notes code {
+    font-family: var(--mono); font-size: 12px;
+    background: var(--bg); padding: 1px 5px; border-radius: 3px;
+  }
+
+  .section { margin: 34px 0 14px; }
+  .section:first-of-type { margin-top: 0; }
+  .section h2 { font-family: var(--serif); font-size: 26px; }
+  .section p { font-size: 13px; color: var(--fg2); margin-top: 4px; max-width: 100ch; }
+  .opt { margin-bottom: 30px; }
+  .opt:last-child { margin-bottom: 0; }
+  .opt-tag { display: flex; align-items: baseline; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+  .opt-tag .tag {
+    font-size: 12px; font-weight: 700; background: var(--fg); color: var(--bg);
+    padding: 3px 10px; border-radius: 4px; font-family: var(--mono);
+  }
+  .opt-tag h3 { font-family: var(--serif); font-size: 22px; }
+  .opt-tag p { font-size: 13px; color: var(--fg2); }
+
+  /* Lede card replica for context. */
+  .lede {
+    background: var(--surface);
+    border: 2px solid var(--border);
+    border-radius: 6px;
+    box-shadow: 2px 4px 0 rgba(15,21,42,.10);
+    padding: 26px 30px 30px;
+  }
+  .kicker {
+    font-size: 11px; font-weight: 600; letter-spacing: .12em;
+    text-transform: uppercase; color: var(--muted); margin-bottom: 6px;
+  }
+  .lede h2 { font-family: var(--serif); font-size: 38px; line-height: 1.05; }
+  .rule { border: none; border-top: 2px solid var(--fg); margin: 18px 0 22px; }
+  .lede-grid {
+    display: grid; grid-template-columns: 300px 1fr; gap: 34px;
+    align-items: start;
+  }
+  @media (max-width: 900px) { .lede-grid { grid-template-columns: 1fr; } }
+  .bigweek { font-family: var(--serif); font-size: 52px; line-height: 1; }
+  .bigweek small { font-size: 20px; color: var(--fg2); font-family: var(--sans); }
+  .block-line { font-size: 13px; font-weight: 600; margin-top: 8px; }
+  .block-line span { color: var(--muted); font-weight: 400; }
+  .blockbar { display: flex; gap: 5px; margin: 12px 0 16px; }
+  .blockbar i { flex: 1; height: 8px; border-radius: 2px; background: var(--soft); }
+  .blockbar i.done { background: var(--teal); }
+  .blockbar i.now { background: var(--accent); }
+  .bunch { display: flex; gap: 26px; }
+  .bunch b {
+    display: block; font-family: var(--mono); font-weight: 500;
+    font-size: 24px; font-variant-numeric: tabular-nums;
+  }
+  .bunch span { font-size: 11px; color: var(--muted); white-space: nowrap; }
+  .bunch em { display: block; font-style: normal; font-size: 11px; color: var(--teal); }
+
+  /* ---------- The editorial weekly-load card ---------- */
+  .load-card {
+    --paper: #f6f1e7;
+    --brown: #4a2e1b;
+    background: var(--paper);
+    border: 2px solid var(--brown);
+    border-radius: 8px;
+    box-shadow: 3px 5px 0 rgba(74,46,27,.28);
+    padding: 16px 16px 12px;
+    color: var(--fg);
+    --c-sec: #57534a;
+    --c-mut: #857a68;
+    --c-today: #c2410c;
+    --c-future: #a89c88;
+    --c-line: rgba(74,46,27,.16);
+    --c-base: rgba(74,46,27,.32);
+    --glass: rgba(255,253,247,.62);
+    --glass-line: rgba(74,46,27,.35);
+  }
+  /* One hue pair per colorway; every pair is matched for lightness so no
+   * type outweighs the other, and every neutral is warmed to the paper. */
+  .load-card[data-opt="A"] { --c-lift: #0a8078; --c-run: #485cc7; }
+  .load-card[data-opt="B"] { --c-lift: #5f7d3a; --c-run: #9c5f7f; }
+  .load-card[data-opt="C"] { --c-lift: #1c2333; --c-run: #8b867b; }
+  .load-card[data-opt="D"] { --c-one: #1c2333; }
+
+  .load-head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    padding-bottom: 10px; margin-bottom: 4px;
+    border-bottom: 2px solid var(--fg);
+  }
+  .load-head h3 { font-family: var(--serif); font-size: 18px; font-weight: 700; }
+  .load-head a { font-size: 12px; color: var(--c-sec); }
+  .ribbon-ruler, .ribbon-strip {
+    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .ribbon-label {
+    display: flex; flex-direction: column; gap: 1px;
+    padding: 6px 6px 8px; border: 0; background: transparent;
+    text-align: left; color: var(--c-mut); cursor: pointer;
+    opacity: .65; min-width: 0; font-family: var(--sans);
+  }
+  .ribbon-label:hover { opacity: 1; }
+  .ribbon-label.focus { opacity: 1; color: var(--fg); }
+  .ribbon-name { font-size: 12px; font-weight: 700; white-space: nowrap; }
+  .ribbon-label.current .ribbon-name { color: var(--c-today); }
+  .ribbon-range { margin-left: 8px; font-weight: 400; color: var(--c-mut); }
+  .ribbon-strip { margin-top: 6px; padding-top: 34px; }
+  .ribbon-week {
+    display: grid; grid-template-columns: repeat(7, minmax(0, 1fr));
+    min-width: 0;
+  }
+  .ribbon-week + .ribbon-week { border-left: 1px solid var(--c-line); }
+  .ribbon-week:not(.focus) { opacity: .55; }
+  .day {
+    position: relative;
+    display: flex; flex-direction: column; align-items: center; gap: 5px;
+    padding: 4px 0 3px; min-width: 0;
+    background: transparent; border: 0; border-radius: 4px;
+    color: var(--c-mut); cursor: pointer; font-family: var(--sans);
+  }
+  .day:hover { background: rgba(74,46,27,.06); }
+  .track {
+    position: relative;
+    display: flex; align-items: flex-end; justify-content: center;
+    width: 100%; height: 120px;
+    border-bottom: 1px solid var(--c-base);
+  }
+  .bar {
+    position: relative; display: block;
+    width: 100%; max-width: 15px;
+    border: 2px solid currentColor; border-bottom: 0;
+    border-radius: 3px 3px 0 0; overflow: hidden;
+    box-shadow: inset 0 -2px 0 0 currentColor;
+    transform-origin: bottom;
+    transition: transform 160ms ease, filter 160ms ease;
+  }
+  .day:hover .bar, .day:focus-visible .bar {
+    transform: translateY(-3px);
+    filter: brightness(1.07) saturate(1.08);
+  }
+  .fill {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    background: currentColor;
+  }
+  .rest-mark {
+    display: block; width: 100%; max-width: 15px; height: 4px;
+    background: var(--c-mut); opacity: .55;
+  }
+  /* Option D: one ink hue for every bar. */
+  .load-card[data-opt="D"] .day.done,
+  .load-card[data-opt="D"] .day.partial,
+  .load-card[data-opt="D"] .day.today { color: var(--c-one); }
+  .load-card[data-opt="D"] .day.partial .bar { background: rgba(28,35,51,.07); }
+  .ribbon-week[data-relation="future"] .day { color: var(--c-future); }
+  .ribbon-week[data-relation="future"] .bar {
+    border-style: dashed; box-shadow: none; background: transparent;
+  }
+
+  /* Stacked type segments, flush with a 1px paper divider. */
+  .bar.stack {
+    border: 0; box-shadow: none; overflow: visible;
+    display: flex; flex-direction: column; justify-content: flex-end;
+    background: transparent;
+  }
+  .seg { position: relative; width: 100%; }
+  .seg.lift { color: var(--c-lift); }
+  .seg.run { color: var(--c-run); }
+  .seg.future { color: var(--c-future); }
+  .seg {
+    border-left: 2px solid currentColor;
+    border-right: 2px solid currentColor;
+  }
+  .seg:first-child {
+    border-top: 2px solid currentColor;
+    border-radius: 3px 3px 0 0;
+    overflow: hidden;
+  }
+  .seg + .seg { border-top: 1px solid var(--paper); }
+  .seg.future, .seg.future:first-child { border-style: dashed; }
+  .seg .fill { position: absolute; left: 0; right: 0; bottom: 0; background: currentColor; }
+  .seg.future .fill { display: none; }
+
+  /* Today treatments. The frosted chip rides above in all of them; the bar
+   * itself is never outlined. */
+  .letter { font-family: var(--mono); font-size: 10px; color: var(--c-sec); }
+  .day.today .letter { color: var(--c-today); font-weight: 500; }
+  .load-card[data-t="knockout"] .day.today .letter {
+    display: inline-block;
+    background: var(--c-today); color: var(--paper);
+    padding: 1px 5px; border-radius: 2px; font-weight: 600;
+  }
+  .load-card[data-t="tick"] .day.today .track::after {
+    content: ""; position: absolute; bottom: -1px; left: 50%;
+    transform: translateX(-50%);
+    width: 15px; height: 4px;
+    background: var(--c-today); border-radius: 1px;
+  }
+  .load-card[data-t="cap"] .day.today .bar::after {
+    content: ""; position: absolute; top: 0; left: 0; right: 0;
+    height: 5px; background: var(--c-today);
+    border-radius: 2px 2px 0 0;
+  }
+
+  /* Frosted glass: the Today chip and the hover tooltips. */
+  .glass {
+    background: var(--glass);
+    -webkit-backdrop-filter: blur(12px) saturate(1.35);
+    backdrop-filter: blur(12px) saturate(1.35);
+    border: 1px solid var(--glass-line);
+    border-radius: 6px;
+    box-shadow: 2px 3px 0 rgba(74,46,27,.25);
+    white-space: nowrap;
+  }
+  .today-chip {
+    position: absolute; bottom: calc(100% + 8px); left: 50%;
+    transform: translateX(-50%);
+    display: flex; align-items: center; gap: 7px;
+    padding: 5px 10px; font-size: 11px; font-weight: 600;
+    color: var(--fg); z-index: 5;
+  }
+  .today-chip i {
+    width: 7px; height: 7px; border-radius: 2px;
+    background: var(--c-today); flex: none;
+  }
+  .today-chip small { font-weight: 400; color: var(--c-sec); }
+  .day:hover .today-chip { opacity: 0; }
+  .tip {
+    position: absolute; bottom: calc(100% + 8px); left: 50%;
+    padding: 6px 10px; font-size: 11px; z-index: 6;
+    text-align: center; line-height: 1.5; color: var(--fg);
+    opacity: 0; visibility: hidden;
+    transform: translate(-50%, 5px);
+    transition: opacity 160ms ease, transform 160ms ease, visibility 160ms;
+    pointer-events: none;
+  }
+  .day:hover .tip, .day:focus-visible .tip {
+    opacity: 1; visibility: visible;
+    transform: translate(-50%, 0);
+  }
+  .tip b { font-weight: 600; }
+  .tip span {
+    display: block; font-family: var(--mono); font-size: 11px;
+    color: var(--c-sec); font-variant-numeric: tabular-nums;
+  }
+  .tip span em { font-style: normal; color: var(--c-today); }
+  .ribbon-week:first-child .day:first-child .tip,
+  .ribbon-week:first-child .day:first-child .today-chip { transform: translateX(-22%); }
+  .ribbon-week:first-child .day:first-child .tip { transform: translate(-22%, 5px); }
+  .ribbon-week:first-child .day:first-child:hover .tip,
+  .ribbon-week:first-child .day:first-child:focus-visible .tip { transform: translate(-22%, 0); }
+  .ribbon-week:last-child .day:last-child .tip { transform: translate(-78%, 5px); }
+  .ribbon-week:last-child .day:last-child:hover .tip,
+  .ribbon-week:last-child .day:last-child:focus-visible .tip { transform: translate(-78%, 0); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .day .bar, .tip { transition: none; }
+    .day:hover .bar, .day:focus-visible .bar { transform: none; filter: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="notes">
+    <h1>Weekly load: color pass, take three</h1>
+    <p>Same sample numbers. The double rule under the title is replaced with the app's own 2px ink rule, the cheap outline around today is gone, and every hue was reworked from categorical-color principles: distinct hues at matched lightness so no category outweighs another (the ColorBrewer qualitative rule), a tiny count (two hues plus ember plus neutrals), and teal/blue/vermillion-style pairs that survive protan and deutan confusion (the Okabe-Ito precedent). The check that fell out: the app's own teal, periwinkle, and ember already sit at matched lightness (relative luminance 0.13&ndash;0.17), so Harbor reuses the app tokens and the other pairs were tuned to the same band. Every neutral is warmed to the paper; no cool gray touches it.</p>
+    <ul>
+      <li><b>A &middot; Harbor.</b> Type in the bars in the app's own hues: <code>#0a8078</code> lift, <code>#485cc7</code> run.</li>
+      <li><b>B &middot; Orchard.</b> Type in the bars, lightness-matched: <code>#5f7d3a</code> olive lift, <code>#9c5f7f</code> plum run.</li>
+      <li><b>C &middot; Newsprint.</b> Type in the bars as a value pair: <code>#1c2333</code> ink lift, <code>#8b867b</code> warm-gray run.</li>
+      <li><b>D &middot; Quiet.</b> No per-day type: one ink hue, type only in the tooltip.</li>
+      <li><b>E&ndash;G &middot; Today treatments</b> on the Harbor pair: knockout letter, baseline tick, ember cap. The frosted chip stays in all of them.</li>
+    </ul>
+  </div>
+
+  <div id="options"></div>
+
+</div>
+<script>
+"use strict";
+/* Sample data matching the app's current Overview figures. lift/run are
+ * [done, planned] load; doubles carry both. */
+const MAX = 750;
+const WEEKS = [
+  { name: "Week 2", relation: "past", days: [
+    { l: "M", name: "Monday", label: "Upper A", lift: [420, 420], run: [0, 0] },
+    { l: "T", name: "Tuesday", label: "Easy run", lift: [0, 0], run: [340, 340] },
+    { l: "W", name: "Wednesday", label: "Lower B", lift: [380, 380], run: [0, 0] },
+    { l: "T", name: "Thursday", label: "Easy run", lift: [0, 0], run: [120, 300] },
+    { l: "F", name: "Friday", label: "Upper B", lift: [460, 460], run: [0, 0] },
+    { l: "S", name: "Saturday", label: "Easy run", lift: [0, 0], run: [320, 320] },
+    { l: "S", name: "Sunday", label: "Lift + long run", lift: [420, 420], run: [220, 220] },
+  ] },
+  { name: "Week 3", relation: "current", days: [
+    { l: "M", name: "Monday", label: "Upper A", lift: [420, 420], run: [0, 0] },
+    { l: "T", name: "Tuesday", label: "Easy run", lift: [0, 0], run: [330, 330] },
+    { l: "W", name: "Wednesday", label: "Lower B", lift: [390, 390], run: [0, 0] },
+    { l: "T", name: "Thursday", label: "Rest", lift: [0, 0], run: [0, 0] },
+    { l: "F", name: "Friday", label: "Upper B", lift: [470, 470], run: [0, 0] },
+    { l: "S", name: "Saturday", label: "Tempo", lift: [0, 0], run: [260, 420] },
+    { l: "S", name: "Sunday", label: "Lower A + easy run", lift: [480, 480], run: [30, 270], today: true },
+  ] },
+  { name: "Week 4", relation: "future", days: [
+    { l: "M", name: "Monday", label: "Upper A", lift: [0, 420], run: [0, 0], future: true },
+    { l: "T", name: "Tuesday", label: "Easy run", lift: [0, 0], run: [0, 340], future: true },
+    { l: "W", name: "Wednesday", label: "Lower B", lift: [0, 380], run: [0, 0], future: true },
+    { l: "T", name: "Thursday", label: "Easy run", lift: [0, 0], run: [0, 260], future: true },
+    { l: "F", name: "Friday", label: "Upper B", lift: [0, 420], run: [0, 0], future: true },
+    { l: "S", name: "Saturday", label: "Easy run", lift: [0, 0], run: [0, 320], future: true },
+    { l: "S", name: "Sunday", label: "Lift + long run", lift: [0, 420], run: [0, 220], future: true },
+  ] },
+];
+const n = (v) => v.toLocaleString("en-US");
+const doneOf = (d) => d.lift[0] + d.run[0];
+const plannedOf = (d) => d.lift[1] + d.run[1];
+const kindOf = (d) =>
+  d.lift[1] + d.lift[0] > 0 && d.run[1] + d.run[0] > 0 ? "both"
+  : d.lift[1] + d.lift[0] > 0 ? "lift"
+  : d.run[1] + d.run[0] > 0 ? "run" : "rest";
+const typeWord = (d) =>
+  kindOf(d) === "both" ? "lift + run" : kindOf(d);
+
+function stateOf(d) {
+  const done = doneOf(d), planned = plannedOf(d);
+  if (kindOf(d) === "rest") return "rest";
+  if (d.today) return "today";
+  if (d.future || done === 0) return "later";
+  return done >= planned ? "done" : "partial";
+}
+
+/* No legend anywhere: the tooltip names the type and every figure is labeled. */
+function tipNumbers(d) {
+  const done = doneOf(d), planned = plannedOf(d);
+  if (kindOf(d) === "rest") return "no session";
+  const t = `<em>${typeWord(d)}</em> \u00B7 `;
+  if (d.future || done === 0) return `${t}${n(planned)} planned load`;
+  if (done >= planned) return `${t}${n(done)} load`;
+  return `${t}${n(done)} of ${n(planned)} load`;
+}
+function tipTitle(d) {
+  return d.today ? `Today \u00B7 ${d.label}` : `${d.name} \u00B7 ${d.label}`;
+}
+
+function singleBar(d) {
+  const size = Math.max(doneOf(d), plannedOf(d));
+  if (size === 0) return `<span class="track"><span class="rest-mark"></span></span>`;
+  const h = Math.max(6, (size / MAX) * 100);
+  const f = (doneOf(d) / size) * 100;
+  return `<span class="track"><span class="bar" style="height:${h}%">` +
+    `<span class="fill" style="height:${f}%"></span></span></span>`;
+}
+
+function stackBar(d) {
+  const size = Math.max(doneOf(d), plannedOf(d));
+  if (size === 0) return `<span class="track"><span class="rest-mark"></span></span>`;
+  const h = Math.max(6, (size / MAX) * 100);
+  const segs = [];
+  /* Run renders above lift: the first child draws the top of the column. */
+  if (d.run[1] > 0) {
+    segs.push(`<span class="seg run${d.future ? " future" : ""}" style="height:${(d.run[1] / size) * 100}%">` +
+      `<span class="fill" style="height:${d.run[1] ? (d.run[0] / d.run[1]) * 100 : 0}%"></span></span>`);
+  }
+  if (d.lift[1] > 0) {
+    segs.push(`<span class="seg lift${d.future ? " future" : ""}" style="height:${(d.lift[1] / size) * 100}%">` +
+      `<span class="fill" style="height:${d.lift[1] ? (d.lift[0] / d.lift[1]) * 100 : 0}%"></span></span>`);
+  }
+  return `<span class="track"><span class="bar stack" style="height:${h}%">` +
+    segs.join("") + `</span></span>`;
+}
+
+function dayHTML(d, mode) {
+  const st = stateOf(d);
+  const bar = mode === "stack" ? stackBar(d) : singleBar(d);
+  const chip = d.today
+    ? `<span class="today-chip glass" data-chip><i></i>Today <small>\u00B7 Lower A</small></span>` : "";
+  return `<button type="button" class="day ${st}" aria-label="${tipTitle(d)}, ${tipNumbers(d).replace(/<[^>]*>/g, "")}">` +
+    chip +
+    `<span class="tip glass"><b>${tipTitle(d)}</b><span>${tipNumbers(d)}</span></span>` +
+    bar +
+    `<span class="letter">${d.l}</span></button>`;
+}
+const SECTIONS = [
+  {
+    title: "Colorways",
+    sub: "Today is chip-only in all four, so hue is all you judge. Hover any day for its type and numbers.",
+    options: [
+      { id: "optA", tag: "A", name: "Harbor", desc: "The app's own hues: teal lift, periwinkle run.", opt: "A", today: "chip", mode: "stack" },
+      { id: "optB", tag: "B", name: "Orchard", desc: "Olive lift, plum run, lightness-matched.", opt: "B", today: "chip", mode: "stack" },
+      { id: "optC", tag: "C", name: "Newsprint", desc: "Ink lift, warm-gray run.", opt: "C", today: "chip", mode: "stack" },
+      { id: "optD", tag: "D", name: "Quiet", desc: "No per-day type: one ink hue.", opt: "D", today: "chip", mode: "single" },
+    ],
+  },
+  {
+    title: "Today treatments",
+    sub: "All three use the Harbor pair; the only change is how today marks itself. The frosted chip stays in every one.",
+    options: [
+      { id: "optE", tag: "E", name: "Knockout", desc: "Today's letter reversed out of an ember square.", opt: "A", today: "knockout", mode: "stack" },
+      { id: "optF", tag: "F", name: "Tick", desc: "An ember tick on the baseline under today.", opt: "A", today: "tick", mode: "stack" },
+      { id: "optG", tag: "G", name: "Cap", desc: "An ember cap across the top of today's bar.", opt: "A", today: "cap", mode: "stack" },
+    ],
+  },
+];
+
+const RULER = `
+  <button type="button" class="ribbon-label" data-week="0">
+    <span class="ribbon-name">Week 2<span class="ribbon-range">Aug 31&ndash;Sep 6</span></span>
+  </button>
+  <button type="button" class="ribbon-label current focus" data-week="1">
+    <span class="ribbon-name">Week 3<span class="ribbon-range">Sep 7&ndash;13</span></span>
+  </button>
+  <button type="button" class="ribbon-label" data-week="2">
+    <span class="ribbon-name">Week 4<span class="ribbon-range">Sep 14&ndash;20</span></span>
+  </button>`;
+
+const LEDE_LEFT = `
+  <div>
+    <div class="bigweek">Week 3 <small>of 6</small></div>
+    <div class="block-line">Strength B2 <span>&middot; Lower focus &middot; deload in week 6</span></div>
+    <div class="blockbar" aria-hidden="true">
+      <i class="done"></i><i class="done"></i><i class="now"></i><i></i><i></i><i></i>
+    </div>
+    <div class="bunch">
+      <div><b>6</b><span>4 lifts &middot; 2 runs</span></div>
+      <div><b>72</b><span>readiness</span><em>+8 clear</em></div>
+      <div><b>11.0</b><span>miles</span></div>
+      <div><b>40.5</b><span>VDOT</span><em>+2.0</em></div>
+    </div>
+  </div>`;
+
+function optionHTML(o) {
+  return `<div class="opt" id="${o.id}">
+    <div class="opt-tag">
+      <span class="tag">${o.tag}</span>
+      <h3>${o.name}</h3>
+      <p>${o.desc}</p>
+    </div>
+    <div class="lede">
+      <div class="kicker">Sunday, September 13 &middot; Lower A complete</div>
+      <h2>Week in review</h2>
+      <hr class="rule">
+      <div class="lede-grid">
+        ${LEDE_LEFT}
+        <div class="load-card" data-opt="${o.opt}" data-t="${o.today}">
+          <div class="load-head">
+            <h3>Weekly load</h3>
+            <a href="#" onclick="return false">Table</a>
+          </div>
+          <div class="ribbon-ruler">${RULER}</div>
+          <div class="ribbon-strip" data-strip></div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderCard(o) {
+  const root = document.getElementById(o.id);
+  const strip = root.querySelector("[data-strip]");
+  const labels = [...root.querySelectorAll(".ribbon-label")];
+  let focus = 1;
+  strip.innerHTML = WEEKS.map((w, wi) =>
+    `<div class="ribbon-week${wi === focus ? " focus" : ""}" data-relation="${w.relation}">` +
+    w.days.map((d) => dayHTML(d, o.mode)).join("") + `</div>`
+  ).join("");
+  function apply() {
+    labels.forEach((b, bi) => b.classList.toggle("focus", bi === focus));
+    strip.querySelectorAll(".ribbon-week").forEach((el, ei) =>
+      el.classList.toggle("focus", ei === focus));
+    strip.querySelectorAll("[data-chip]").forEach((c) => {
+      c.style.display = focus === 1 ? "" : "none";
+    });
+  }
+  labels.forEach((b) => b.addEventListener("click", () => {
+    focus = Number(b.dataset.week);
+    apply();
+  }));
+  apply();
+}
+
+document.getElementById("options").innerHTML = SECTIONS.map((s) =>
+  `<div class="section"><h2>${s.title}</h2><p>${s.sub}</p></div>` +
+  s.options.map(optionHTML).join("")
+).join("");
+SECTIONS.forEach((s) => s.options.forEach(renderCard));
+</script>
+</body>
+</html>

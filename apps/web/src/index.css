@@ -1158,7 +1158,7 @@ table.data tr.row-link a:focus-visible {
 /* Part done: the outline stays at the planned height, so the unfilled part
  * reads as what was left undone. */
 .week-day.partial .week-bar {
-  background: color-mix(in srgb, #3fb37f 9%, transparent);
+  background: color-mix(in srgb, var(--progress-fill) 9%, transparent);
 }
 .week-day.today {
   color: var(--accent);
