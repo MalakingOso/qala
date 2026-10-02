@@ -37,6 +37,7 @@ export const restDayStages: StageState[] = [
   { id: "winddown", label: "Wind down", time: "9:30p", status: "later" },
 ];
 
+/* The phone's seven-day strip (U13) keeps its own single-week series. */
 export const sampleWeekLoad: WeekLoadDay[] = [
   { day: "M", liftDone: 420, runDone: 0, liftPlanned: 420, runPlanned: 0 },
   { day: "T", liftDone: 0, runDone: 310, liftPlanned: 0, runPlanned: 310 },
@@ -55,11 +56,57 @@ export const sampleWeekLoad: WeekLoadDay[] = [
   },
 ];
 
-/* The desktop week ribbon shows three weeks with one in focus (U20). Week 3 is
- * the sample week with Lower A done (the session list already has it logged,
- * so Overview reads "Lower A complete"); weeks 2 and 4 are sample data until
- * the engine supplies the neighbouring weeks. */
-export const sampleWeeks: WeekLoad[] = [
+/** A week of the sample block from compact rows: [day, label, lift planned,
+ * run planned, lift done, run done]. */
+type DayRow = [string, string, number, number, number?, number?];
+
+function weekDays(rows: DayRow[]): WeekLoadDay[] {
+  return rows.map((
+    [day, label, liftPlanned, runPlanned, liftDone, runDone],
+  ) => ({
+    day,
+    label,
+    liftPlanned,
+    runPlanned,
+    liftDone: liftDone ?? 0,
+    runDone: runDone ?? 0,
+  }));
+}
+
+/* The training block's six weeks, Monday to Sunday (DESIGN 6.3, DECISIONS U24).
+ * One series feeds both shells: the phone Today hero opens it at Day, the
+ * desktop Overview at three weeks. Week 3 is the sample week with Lower A done
+ * (the session list already has it logged, so Overview reads "Lower A
+ * complete"); the phone takes today's done state from the timeline rail
+ * instead (`withRail` in logic/loadZoom.ts). Weeks 1 to 4 are sample data
+ * until the engine supplies them. Week 6 is the deload, half of week 5's
+ * planned load. */
+const week5Days = weekDays([
+  ["M", "Upper A", 440, 0],
+  ["T", "Easy run", 0, 330],
+  ["W", "Lower B", 400, 0],
+  ["T", "Run", 0, 200],
+  ["F", "Upper B", 470, 0],
+  ["S", "Long run", 0, 310],
+  ["S", "Lower A + run", 530, 260],
+]);
+
+export const sampleBlockWeeks: WeekLoad[] = [
+  {
+    id: "w1",
+    name: "Week 1",
+    range: "Aug 24-30",
+    relation: "past",
+    days: weekDays([
+      ["M", "Upper A", 380, 0, 380],
+      ["T", "Easy run", 0, 280, 0, 280],
+      ["W", "Lower B", 350, 0, 350],
+      ["T", "Run", 0, 170, 0, 170],
+      ["F", "Upper B", 420, 0, 420],
+      ["S", "Long run", 0, 260, 0, 240],
+      ["S", "Lower A + run", 450, 200, 450, 200],
+    ]),
+  },
   {
     id: "w2",
     name: "Week 2",
@@ -186,6 +233,7 @@ export const sampleWeeks: WeekLoad[] = [
         runPlanned: 240,
         today: true,
         label: "Lower A",
+        runLabel: "Easy run",
       },
     ],
   },
@@ -253,7 +301,29 @@ export const sampleWeeks: WeekLoad[] = [
       },
     ],
   },
+  {
+    id: "w5",
+    name: "Week 5",
+    range: "Sep 21-27",
+    relation: "future",
+    days: week5Days,
+  },
+  {
+    id: "w6",
+    name: "Week 6",
+    range: "Sep 28-Oct 4",
+    relation: "future",
+    deload: true,
+    days: week5Days.map((d) => ({
+      ...d,
+      liftPlanned: Math.round(d.liftPlanned * 0.5),
+      runPlanned: Math.round(d.runPlanned * 0.5),
+    })),
+  },
 ];
+
+/* The desktop ribbon's three weeks around week 3, the week in focus (U20). */
+export const sampleWeeks: WeekLoad[] = sampleBlockWeeks.slice(1, 4);
 
 /** Where the training block stands, for Overview's lede and the program page.
  * The deload is the last week of the block (Body's "Next planned: week 6"). */

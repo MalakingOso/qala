@@ -43,10 +43,13 @@ export interface WeekLoadDay {
   runPlanned: number;
   today?: boolean;
   label?: string;
+  /** The run's own name on a day that also lifts ("Easy run"); `label` names
+   * the lift then. */
+  runLabel?: string;
 }
 
-/** One calendar week of load for the desktop week ribbon: the focused week
- * sits between the one before and the one after (DESIGN 6.3, U20). `relation`
+/** One calendar week of load for the load zoom (DESIGN 6.3, U20, U24): the
+ * focused week sits between the one before and the one after. `relation`
  * is relative to today, not to the focus, so a past week stays "past" while it
  * is the one in view. */
 export interface WeekLoad {
@@ -56,6 +59,8 @@ export interface WeekLoad {
   /** "Sep 7-13", Monday to Sunday. */
   range: string;
   relation: "past" | "current" | "future";
+  /** The block's deload week. */
+  deload?: boolean;
   days: WeekLoadDay[];
 }
 

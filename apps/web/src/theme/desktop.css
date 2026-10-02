@@ -477,203 +477,157 @@
   margin-top: 6px;
 }
 
-/* ---------- Week ribbon (teal stacks, knockout today: U25) ---------- */
-/* Flat on the lede card, no inner chrome. Each bar stacks the day's lift
- * load under its run load; fill is the part done. No glyphs, no wash
- * columns, no inspector: today reads through a frosted chip above its bar
- * and its letter reversed out of an ember square, and hovering (or tapping,
- * which pins) a day lifts its bar and shows a frosted tooltip naming the
- * type with labeled numbers. */
-.ribbon {
-  min-width: 0;
-}
-.ribbon-ruler,
-.ribbon-strip {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-.ribbon-label {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  padding: 6px 6px 8px;
-  border: 0;
-  background: transparent;
-  text-align: left;
-  color: var(--fg-muted);
-  cursor: pointer;
-  opacity: 0.65;
-  min-width: 0;
-  font-family: var(--font-ui);
-}
-.ribbon-label:hover {
-  opacity: 1;
-}
-/* Focus reads through strength (full opacity, ink text), not a rule: the old
- * underline floated a gap above the bars and read as a stray line. The
- * current week keeps its ember name below as its one signal. */
-.ribbon-label.focus {
-  opacity: 1;
-  color: var(--fg);
-}
-.ribbon-name {
-  font-size: 12px;
-  font-weight: 700;
-  white-space: nowrap;
-}
-.ribbon-label.current .ribbon-name {
-  color: var(--accent);
-}
-.ribbon-range {
-  margin-left: 8px;
-  font-weight: 400;
-  color: var(--fg-muted);
-}
-.ribbon-strip {
-  margin-top: 6px;
-  padding-top: 34px;
-}
-.ribbon-week {
-  display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
-  min-width: 0;
-}
-.ribbon-week + .ribbon-week {
-  border-left: 1px solid var(--soft);
-}
-.ribbon-week:not(.focus) {
-  opacity: 0.55;
-}
-.ribbon-week:not(.focus) .today-chip {
-  display: none;
-}
-.ribbon .week-day {
+/* ---------- Load zoom (U25 look at every level: U27) ---------- */
+/* One chart, four levels. Each day stacks teal lift load under steel-blue run
+ * load; the planned part is a tint inside a hairline, the part done is filled,
+ * a week still to come is hatched with nothing filled, a rest day is a dash.
+ * No glyphs, no wash columns, no inspector headline, no week totals. Today
+ * reads through a frosted chip over its column and its letter reversed out of
+ * an ember square; hovering (or tapping, which pins) lifts the bar and shows a
+ * frosted tooltip naming the type with labeled numbers. The pieces are SVG;
+ * the chip, the tooltip and the week names are HTML in `.lz-overlay`, because
+ * backdrop-filter needs an element, not a shape. The week names stay buttons:
+ * pressing one moves the focus. */
+.page-desktop .load-zoom {
   position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 5px;
-  padding: 4px 0 3px;
-  border: 0;
+  min-width: 0;
+}
+.page-desktop .plot-frame .lz-svg {
+  overflow: hidden;
+  touch-action: pan-y;
+  user-select: none;
+}
+.page-desktop .lz-svg:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
   border-radius: 4px;
+}
+.page-desktop .lz-piece {
   color: var(--fg-muted);
-  font-family: var(--font-ui);
-  cursor: default;
-}
-.ribbon .week-day:hover {
-  background: var(--bg-hover);
-}
-/* No wash columns: today is marked by the chip and the knockout letter,
- * never by a background. Beats the base .week-day.today rules. */
-.ribbon .week-day.today {
-  background: transparent;
-  color: var(--fg-muted);
-}
-.ribbon .week-day.today:hover,
-.ribbon .week-day.today[aria-pressed="true"] {
-  background: var(--bg-hover);
-  box-shadow: none;
-}
-.ribbon .week-track {
-  height: 120px;
-  border-bottom: 1px solid var(--soft);
-}
-.ribbon .week-bar {
-  max-width: 15px;
-  border-radius: 3px 3px 0 0;
-  transform-origin: bottom;
   transition: transform 160ms ease, filter 160ms ease;
 }
-.ribbon .week-day:hover .week-bar,
-.ribbon .week-day:focus-visible .week-bar {
+.page-desktop .lz-piece.lift {
+  color: var(--progress);
+}
+.page-desktop .lz-piece.run {
+  color: var(--run);
+}
+.page-desktop .lz-piece.future {
+  color: var(--fg-faint);
+}
+.page-desktop .lz-piece.lifted {
   transform: translateY(-3px);
   filter: brightness(1.07) saturate(1.08);
 }
-.ribbon .week-rest {
-  max-width: 15px;
+.page-desktop .lz-tint:not(.future) {
+  fill: currentColor;
+  fill-opacity: 0.08;
 }
-/* Stacked type segments, flush with a 1px surface divider, hairline outline
- * so the planned part reads crisp at ribbon size. Lift --progress, run
- * --run: the same tokens every other chart uses. Named ribbon-seg, never
- * seg: index.css already owns .seg for the segmented control, and its
- * margin and border broke the stacks. */
-.ribbon .week-bar.stack {
-  border: 0;
-  box-shadow: none;
-  overflow: visible;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  background: transparent;
+.page-desktop .lz-fill {
+  fill: currentColor;
 }
-.ribbon .ribbon-seg {
-  position: relative;
-  width: 100%;
-  border-left: 1px solid currentColor;
-  border-right: 1px solid currentColor;
-  background: color-mix(in srgb, currentColor 8%, transparent);
+.page-desktop .lz-hair {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1;
 }
-.ribbon .ribbon-seg.lift {
-  color: var(--progress);
+/* Hatch, not a dashed border, which dithered at this size. */
+.page-desktop .lz-hatch {
+  fill: var(--fg-faint);
+  fill-opacity: 0.16;
 }
-.ribbon .ribbon-seg.run {
-  color: var(--run);
+.page-desktop .lz-rest {
+  fill: var(--border-strong);
 }
-.ribbon .ribbon-seg.future {
-  color: var(--fg-faint);
+.page-desktop .lz-pick {
+  fill: var(--bg-hover);
 }
-.ribbon .ribbon-seg:first-child {
-  border-top: 1px solid currentColor;
-  border-radius: 3px 3px 0 0;
-  overflow: hidden;
+.page-desktop .lz-divider,
+.page-desktop .lz-base {
+  stroke: var(--soft);
+  stroke-width: 1;
 }
-.ribbon .ribbon-seg + .ribbon-seg {
-  border-top: 1px solid var(--bg-surface);
+/* Specificity: index.css sets DM Mono on every chart's text. */
+.page-desktop .chart-wrap .lz-svg text {
+  font-family: var(--font-ui);
 }
-/* The week still to come is a plan, never a record: no fill, a diagonal
- * hatch inside the same crisp hairline. Hatch, not the old dashed border,
- * which dithered at this size. */
-.ribbon .ribbon-seg.future {
-  background: repeating-linear-gradient(
-    45deg,
-    color-mix(in srgb, currentColor 16%, transparent) 0 3px,
-    transparent 3px 7px
-  );
-}
-.ribbon .ribbon-seg.future .week-fill {
-  display: none;
-}
-.ribbon .week-letter {
+.page-desktop .lz-letter {
   font-size: 10px;
-  color: var(--fg-muted);
+  fill: var(--fg-muted);
 }
-/* Knockout today: the letter reversed out of an ember square. */
-.ribbon .week-day.today .week-letter {
-  display: inline-block;
-  background: var(--accent);
-  color: var(--on-accent);
-  padding: 1px 5px;
-  border-radius: 2px;
+.page-desktop .lz-letter.today {
+  fill: var(--fg);
   font-weight: 600;
 }
-/* Frosted glass: the Today chip floating above today's bar, and the hover
- * tooltip naming the type with labeled numbers. Hover (and keyboard focus)
- * only; clicking a day does nothing. */
-.ribbon .today-chip,
-.ribbon .tip {
+.page-desktop .lz-letter.muted {
+  fill: var(--fg-faint);
+}
+.page-desktop .lz-knock {
+  fill: var(--accent);
+}
+.page-desktop .lz-letter.knockout {
+  fill: var(--on-accent);
+  font-weight: 600;
+}
+.page-desktop .lz-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.page-desktop .lz-ruler {
+  position: absolute;
+  top: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 2px 6px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--fg-muted);
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.page-desktop .lz-ruler:hover {
+  color: var(--fg);
+  background: var(--bg-hover);
+}
+/* Focus reads through strength (ink text), not a rule. The current week keeps
+ * its ember name as its one signal. */
+.page-desktop .lz-ruler.focus {
+  color: var(--fg);
+}
+.page-desktop .lz-ruler.current .lz-ruler-name {
+  color: var(--accent);
+}
+.page-desktop .lz-ruler-range {
+  font-weight: 400;
+  color: var(--fg-muted);
+}
+/* Frosted glass: the Today chip over today's column and the hover tooltip. */
+.page-desktop .lz-glass {
+  position: absolute;
+  z-index: 5;
   background: color-mix(in srgb, var(--bg-surface) 72%, transparent);
   -webkit-backdrop-filter: blur(12px) saturate(1.35);
   backdrop-filter: blur(12px) saturate(1.35);
   border: 1px solid var(--border-strong);
   border-radius: 6px;
   box-shadow: var(--shadow-card);
+  color: var(--fg);
   white-space: nowrap;
+  transform: translate(-50%, -100%);
 }
-.ribbon .today-chip {
-  position: absolute;
-  bottom: calc(100% + 8px);
-  left: 50%;
-  transform: translateX(-50%);
+.page-desktop .lz-glass.start {
+  transform: translate(-22%, -100%);
+}
+.page-desktop .lz-glass.end {
+  transform: translate(-78%, -100%);
+}
+.page-desktop .lz-chip {
   display: flex;
   align-items: center;
   gap: 7px;
@@ -681,88 +635,95 @@
   padding: 5px 10px;
   font-size: 11px;
   font-weight: 600;
-  color: var(--fg);
-  z-index: 5;
 }
-.ribbon .today-chip i {
+.page-desktop .lz-chip i {
+  flex: none;
   width: 7px;
   height: 7px;
   border-radius: 2px;
   background: var(--accent);
-  flex: none;
 }
-.ribbon .today-chip small {
-  font-weight: 400;
-  color: var(--fg-secondary);
+.page-desktop .lz-chip small {
   overflow: hidden;
   text-overflow: ellipsis;
+  font-weight: 400;
+  color: var(--fg-secondary);
 }
-.ribbon .week-day:hover .today-chip {
-  opacity: 0;
-}
-.ribbon .tip {
-  position: absolute;
-  bottom: calc(100% + 8px);
-  left: 50%;
+.page-desktop .lz-tip {
+  z-index: 6;
   padding: 6px 10px;
   font-size: 11px;
-  z-index: 6;
-  text-align: center;
   line-height: 1.5;
-  color: var(--fg);
-  opacity: 0;
-  visibility: hidden;
-  transform: translate(-50%, 5px);
-  transition: opacity 160ms ease, transform 160ms ease, visibility 160ms;
-  pointer-events: none;
+  text-align: center;
+  animation: lz-tip-in 160ms ease both;
 }
-.ribbon .week-day:hover .tip,
-.ribbon .week-day:focus-visible .tip {
-  opacity: 1;
-  visibility: visible;
-  transform: translate(-50%, 0);
-}
-.ribbon .tip b {
+.page-desktop .lz-tip b {
   font-weight: 600;
 }
-.ribbon .tip span {
+.page-desktop .lz-tip span {
   display: block;
-  font-family: "DM Mono", monospace;
-  font-size: 11px;
+  font-family: var(--font-mono);
   color: var(--fg-secondary);
   font-variant-numeric: tabular-nums;
 }
-/* First/last columns would clip the glass, so nudge it inward. */
-.ribbon-week:first-child .week-day:first-child .tip,
-.ribbon-week:first-child .week-day:first-child .today-chip {
-  transform: translateX(-22%);
-}
-.ribbon-week:first-child .week-day:first-child .tip {
-  transform: translate(-22%, 5px);
-}
-.ribbon-week:first-child .week-day:first-child:hover .tip,
-.ribbon-week:first-child .week-day:first-child:focus-visible .tip,
-.ribbon-week:first-child .week-day:first-child.pinned .tip {
-  transform: translate(-22%, 0);
-}
-.ribbon-week:last-child .week-day:last-child .tip {
-  transform: translate(-78%, 5px);
-}
-.ribbon-week:last-child .week-day:last-child:hover .tip,
-.ribbon-week:last-child .week-day:last-child:focus-visible .tip,
-.ribbon-week:last-child .week-day:last-child.pinned .tip {
-  transform: translate(-78%, 0);
+@keyframes lz-tip-in {
+  from {
+    opacity: 0;
+    margin-top: 5px;
+  }
+  to {
+    opacity: 1;
+    margin-top: 0;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
-  .ribbon .week-bar,
-  .ribbon .tip {
+  .page-desktop .lz-piece,
+  .page-desktop .lz-tip,
+  .page-desktop .lede-title-text {
     transition: none;
+    animation: none;
   }
-  .ribbon .week-day:hover .week-bar,
-  .ribbon .week-day:focus-visible .week-bar {
+  .page-desktop .lz-piece.lifted {
     transform: none;
     filter: none;
   }
+}
+
+/* The Overview lede's title row: the title names the zoom, the picker sits
+ * at the right. The new title fades in; nothing crossfades, so the heading
+ * the page is labelled by is never two things at once. */
+.page-desktop .lede-title-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+.page-desktop .lede-title-row .page-title {
+  margin: 0;
+}
+.page-desktop .lede-title-text {
+  animation: lz-title-in 160ms ease both;
+}
+@keyframes lz-title-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.page-desktop .lede-title-row .scale {
+  flex: none;
+  margin: 0 0 4px;
+}
+.page-desktop .lede-title-row .scale-strip button {
+  flex: none;
+  min-height: 30px;
+  padding: 0 14px;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  white-space: nowrap;
 }
 
 /* ---------- Tables, tags, pills ---------- */
