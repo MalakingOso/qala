@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rail overlay: the runner behind an edge pill</title>
+<style>
+  @font-face { font-family: "Qala Test"; src: url(../apps/web/public/fonts/QalaTestV2-Bold.woff2) format("woff2"); font-weight: 700; }
+  @font-face { font-family: "DM Mono"; src: url(../apps/web/public/fonts/DMMono-Regular.woff2) format("woff2"); font-weight: 400; }
+  @font-face { font-family: "DM Mono"; src: url(../apps/web/public/fonts/DMMono-Medium.woff2) format("woff2"); font-weight: 500; }
+  @font-face { font-family: "UI Sans"; src: url(fonts/recursive-slnt-wght.woff2) format("woff2"); font-weight: 300 1000; font-style: oblique 0deg 15deg; }
+
+  :root {
+    --bg: #f5f5f7; --surface: #fff;
+    --fg: #0f152a; --fg-2: #4a5578; --muted: #64708b;
+    --accent: #c2410c; --teal: #08a49c;
+    --border: rgba(15,21,42,.14);
+    --shadow: 2px 4px 0 0 rgba(15,21,42,.10);
+    --serif: "Qala Test", Georgia, serif;
+    --sans: "UI Sans", system-ui, sans-serif;
+    --mono: "DM Mono", ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #e8eaf0; color: var(--fg); font-family: var(--sans); font-size: 14px; -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 560px; margin: 0 auto; padding: 36px 20px 70px; }
+  .wrap > h1 { font-family: var(--serif); font-size: 30px; margin: 0 0 4px; }
+  .wrap > p { color: var(--fg-2); font-size: 13px; margin: 0 0 18px; }
+  .wrap > p b { color: var(--fg); }
+
+  .phone { width: 390px; margin: 0 auto; border-radius: 28px; background: var(--bg); border: 2px solid var(--border); box-shadow: 4px 8px 0 0 rgba(15,21,42,.14); overflow: hidden; position: relative; }
+  .pscreen { padding: 18px 14px 22px; min-height: 640px; }
+  .eyebrow { font-size: 11px; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); margin: 0 4px 2px; }
+  .ptitle { font-family: var(--serif); font-size: 32px; margin: 0 4px 12px; line-height: 1.1; }
+  .pcard { background: var(--surface); border: 2px solid var(--border); border-radius: 8px; box-shadow: var(--shadow); padding: 16px; margin-bottom: 12px; }
+  .pcard h2 { font-size: 17px; font-weight: 600; margin: 0; }
+  .pcard .meta { font-size: 12.5px; color: var(--fg-2); margin: 1px 0 10px; }
+  .herofig { font-family: var(--serif); font-size: 46px; line-height: 1; font-variant-numeric: tabular-nums; text-align: center; margin: 4px 0; }
+  .herofig small { font-size: 13px; color: var(--muted); font-family: var(--sans); font-weight: 500; }
+  .pwhy { font-size: 13px; text-align: center; color: var(--fg-2); margin: 0 0 12px; }
+  .pcta { display: block; text-align: center; font-size: 15px; font-weight: 600; background: var(--accent); color: #fff; border-radius: 6px; padding: 14px; text-decoration: none; box-shadow: 2px 4px 0 0 #4a4a4a; margin-bottom: 10px; }
+  .previewbar { display: none; align-items: center; justify-content: space-between; gap: 8px; font-size: 12.5px; background: #f1f3f9; border: 2px solid var(--border); border-radius: 6px; padding: 8px 10px; margin-bottom: 12px; }
+  .previewbar.show { display: flex; }
+  .previewbar button { border: 0; background: var(--fg); color: #fff; border-radius: 6px; padding: 6px 12px; font: 600 12px var(--sans); cursor: pointer; }
+
+  /* BOOX-style edge pill */
+  .edgepill {
+    position: absolute; right: 0; top: 300px; z-index: 5;
+    width: 26px; padding: 12px 0; border: 2px solid var(--border); border-right: 0;
+    border-radius: 12px 0 0 12px; background: rgba(255,255,255,.92);
+    display: flex; flex-direction: column; align-items: center; gap: 7px;
+    cursor: pointer; box-shadow: -2px 4px 0 0 rgba(15,21,42,.08);
+  }
+  .edgepill i { width: 8px; height: 8px; border-radius: 50%; background: #dfe3ec; border: 1px solid rgba(15,21,42,.18); }
+  .edgepill i.done { background: var(--teal); border-color: var(--teal); }
+  .edgepill i.now { background: var(--accent); border-color: var(--accent); width: 10px; height: 10px; }
+  .edgepill .grip { width: 12px; height: 2px; border-radius: 1px; background: rgba(15,21,42,.25); margin-top: 3px; }
+
+  /* overlay */
+  .scrim { position: absolute; inset: 0; z-index: 10; background: rgba(15,21,42,.38); opacity: 0; pointer-events: none; transition: opacity .22s ease; }
+  .sheet {
+    position: absolute; z-index: 11; top: 0; right: 0; bottom: 0; width: 330px;
+    background: var(--surface); border-left: 2px solid var(--border);
+    box-shadow: -4px 0 0 0 rgba(15,21,42,.10);
+    transform: translateX(105%); transition: transform .28s cubic-bezier(.25,1,.5,1);
+    padding: 20px 18px; overflow-y: auto;
+  }
+  .open .scrim { opacity: 1; pointer-events: auto; }
+  .open .sheet { transform: translateX(0); }
+  .sheet .shead { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 2px; }
+  .sheet h3 { font-family: var(--serif); font-size: 22px; margin: 0; }
+  .sheet .x { border: 2px solid var(--border); background: #fff; border-radius: 6px; width: 34px; height: 34px; font-size: 16px; cursor: pointer; box-shadow: var(--shadow); }
+  .sheet .sub { font-size: 12px; color: var(--muted); margin: 0 0 8px; }
+  #dial { display: block; margin: 0 auto; }
+  #dial .node { cursor: pointer; }
+  #dial .node circle.ring { fill: #fff; stroke: rgba(15,21,42,.25); stroke-width: 2; }
+  #dial .node.done circle.ring { fill: var(--teal); stroke: var(--teal); }
+  #dial .node.now circle.ring { fill: var(--accent); stroke: var(--accent); }
+  #dial .node text { font-family: var(--sans); font-size: 9.5px; font-weight: 600; fill: var(--fg-2); text-anchor: middle; }
+  #dial .node.done text, #dial .node.now text { fill: #fff; }
+  #dial .tlabel { font-family: var(--sans); font-size: 9px; fill: var(--muted); text-anchor: middle; }
+  #dial .node.sel circle.ring { stroke: var(--fg); stroke-width: 3; }
+  .center-name { font-family: var(--serif); font-size: 19px; text-anchor: middle; }
+  .center-sub { font-family: var(--sans); font-size: 10.5px; fill: var(--muted); text-anchor: middle; }
+  .stagebtn { display: block; width: 100%; margin-top: 12px; border: 2px solid var(--border); background: #fff; border-radius: 6px; padding: 12px; font: 600 14px var(--sans); cursor: pointer; box-shadow: var(--shadow); }
+  .stagebtn.hot { background: var(--accent); border-color: var(--accent); color: #fff; box-shadow: 2px 4px 0 0 #4a4a4a; }
+  .legend { display: flex; gap: 12px; margin-top: 12px; font-size: 11.5px; color: var(--fg-2); }
+  .legend i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 4px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .scrim, .sheet { transition: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>The runner behind an edge pill</h1>
+  <p>The old rail is back, but it lives off-screen. A <b>BOOX-style pill</b> on the right edge shows the day's six stages as dots (teal done, ember now). <b>Swipe left anywhere</b> (or tap the pill) to slide in the overlay; <b>swipe right</b>, tap the scrim, or X to dismiss. The overlay content is the <b>drawboard circle</b>: the day as a ring you tap to preview or jump to. Selecting a stage flips the Today card behind into preview with a Back to now.</p>
+
+  <div class="phone" id="phone">
+    <div class="pscreen">
+      <p class="eyebrow">Sunday · Strength block 2, week 3</p>
+      <h2 class="ptitle">Today</h2>
+      <div class="previewbar" id="previewbar">
+        <span id="previewtext">Preview · Easy run</span>
+        <button id="backnow">Back to now</button>
+      </div>
+      <div class="pcard">
+        <p class="eyebrow" id="herokick">Now · lift</p>
+        <h2 id="herotitle">Lower A · Squat day</h2>
+        <p class="meta" id="herometa">Squat 3 × 4 at 245 · 6 exercises · 55 min</p>
+        <div class="herofig" id="herofig">245 <small>lb × 4</small></div>
+        <p class="pwhy" id="herowhy">A little under your average, so squat holds.</p>
+        <a class="pcta" href="#" id="herocta">Start warm-up</a>
+      </div>
+      <div class="pcard">
+        <p class="eyebrow">Then · 6 pm</p>
+        <h2>Easy run · 3.0 mi</h2>
+        <p class="meta">Conversational pace · cue every half mile</p>
+      </div>
+    </div>
+
+    <button class="edgepill" id="pill" aria-label="Open day runner">
+      <i class="done"></i><i class="done"></i><i class="now"></i><i></i><i></i><i></i>
+      <span class="grip"></span>
+    </button>
+
+    <div class="scrim" id="scrim"></div>
+    <aside class="sheet" id="sheet" aria-label="Day runner">
+      <div class="shead">
+        <h3>Sunday</h3>
+        <button class="x" id="close" aria-label="Close">✕</button>
+      </div>
+      <p class="sub">Six stages · tap one to preview it</p>
+      <svg id="dial" width="294" height="294" viewBox="0 0 300 300" role="group" aria-label="Day stages"></svg>
+      <button class="stagebtn hot" id="jump">Open lift</button>
+      <button class="stagebtn" id="backnow2">Back to now</button>
+      <div class="legend">
+        <span><i style="background:var(--teal)"></i>done</span>
+        <span><i style="background:var(--accent)"></i>now</span>
+        <span><i style="background:#fff;border:1px solid rgba(15,21,42,.3)"></i>later</span>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<script>
+  const stages = [
+    { id: 'checkin',  label: 'Check-in',  time: '6:52',  status: 'done', title: 'How are you walking in?', meta: 'Recovery 6 · quads 4 · readiness 72', fig: '72', unit: 'readiness', why: 'Checked in at 6:52 am.', cta: 'See check-in' },
+    { id: 'warmup',   label: 'Warm-up',   time: '7:00',  status: 'done', title: 'Warm-up · done', meta: 'Bike 10 · roller + Theragun · ramp to 215', fig: '10', unit: 'min', why: 'Finished at 7:12. Quads got the extra step.', cta: 'See warm-up' },
+    { id: 'lift',     label: 'Lift',      time: '7:15',  status: 'now',  title: 'Lower A · Squat day', meta: 'Squat 3 × 4 at 245 · 6 exercises · 55 min', fig: '245', unit: 'lb × 4', why: 'A little under your average, so squat holds.', cta: 'Start warm-up' },
+    { id: 'recover',  label: 'Recover',   time: '12:00', status: 'todo', title: 'Recovery window', meta: 'Eat well · legs recover before the run', fig: '3.0', unit: 'mi later', why: 'The easy run stays easy if you eat now.', cta: 'See plan' },
+    { id: 'run',      label: 'Run',       time: '6 pm',  status: 'todo', title: 'Easy run · 3.0 mi', meta: 'Conversational pace · cue every half mile', fig: '3.0', unit: 'mi', why: 'Legs lifted today, so keep it easy.', cta: 'Start run' },
+    { id: 'winddown', label: 'Wind down', time: '10:30', status: 'todo', title: 'Wind down', meta: 'Sleep target 8 h · helps Tuesday bench', fig: '8', unit: 'h sleep', why: 'Day complete when the run is saved.', cta: 'See day' },
+  ];
+  const NS = 'http://www.w3.org/2000/svg';
+  const dial = document.getElementById('dial');
+  const CX = 150, CY = 150, R = 102;
+  const nowIdx = stages.findIndex(s => s.status === 'now');
+  let sel = nowIdx;
+
+  // track + progress arc (teal through done stages)
+  const track = document.createElementNS(NS, 'circle');
+  track.setAttribute('cx', CX); track.setAttribute('cy', CY); track.setAttribute('r', R);
+  track.setAttribute('fill', 'none'); track.setAttribute('stroke', '#e8ebf4'); track.setAttribute('stroke-width', '6');
+  dial.appendChild(track);
+  const doneCount = stages.filter(s => s.status === 'done').length;
+  const frac = (doneCount + 0.5) / stages.length;
+  const arc = document.createElementNS(NS, 'circle');
+  arc.setAttribute('cx', CX); arc.setAttribute('cy', CY); arc.setAttribute('r', R);
+  arc.setAttribute('fill', 'none'); arc.setAttribute('stroke', '#08a49c'); arc.setAttribute('stroke-width', '6');
+  arc.setAttribute('stroke-linecap', 'round');
+  const C = 2 * Math.PI * R;
+  arc.setAttribute('stroke-dasharray', `${C * frac} ${C}`);
+  arc.setAttribute('transform', `rotate(-90 ${CX} ${CY})`);
+  dial.appendChild(arc);
+
+  const cname = document.createElementNS(NS, 'text');
+  cname.setAttribute('x', CX); cname.setAttribute('y', CY - 2); cname.setAttribute('class', 'center-name');
+  const csub = document.createElementNS(NS, 'text');
+  csub.setAttribute('x', CX); csub.setAttribute('y', CY + 18); csub.setAttribute('class', 'center-sub');
+  dial.appendChild(cname); dial.appendChild(csub);
+
+  const nodes = stages.map((s, i) => {
+    const a = -Math.PI / 2 + (i / stages.length) * Math.PI * 2;
+    const x = CX + R * Math.cos(a), y = CY + R * Math.sin(a);
+    const g = document.createElementNS(NS, 'g');
+    g.setAttribute('class', `node ${s.status}`);
+    g.setAttribute('role', 'button');
+    g.setAttribute('tabindex', '0');
+    g.setAttribute('aria-label', `${s.label} at ${s.time}, ${s.status}`);
+    const hit = document.createElementNS(NS, 'circle');
+    hit.setAttribute('cx', x); hit.setAttribute('cy', y); hit.setAttribute('r', 26); hit.setAttribute('fill', 'transparent');
+    const c = document.createElementNS(NS, 'circle');
+    c.setAttribute('cx', x); c.setAttribute('cy', y); c.setAttribute('r', s.status === 'now' ? 21 : 17);
+    c.setAttribute('class', 'ring');
+    const t = document.createElementNS(NS, 'text');
+    t.setAttribute('x', x); t.setAttribute('y', y + 3.5);
+    t.textContent = (i + 1);
+    const lt = document.createElementNS(NS, 'text');
+    lt.setAttribute('x', CX + (R + 38) * Math.cos(a));
+    lt.setAttribute('y', CY + (R + 38) * Math.sin(a) + 3);
+    lt.setAttribute('class', 'tlabel');
+    lt.textContent = s.time;
+    g.appendChild(hit); g.appendChild(c); g.appendChild(t); g.appendChild(lt);
+    g.addEventListener('click', () => select(i));
+    g.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); select(i); } });
+    dial.appendChild(g);
+    return g;
+  });
+
+  const phone = document.getElementById('phone');
+  const jump = document.getElementById('jump');
+  const previewbar = document.getElementById('previewbar');
+  function select(i) {
+    sel = i;
+    nodes.forEach((n, j) => n.classList.toggle('sel', j === i));
+    const s = stages[i];
+    cname.textContent = s.label;
+    csub.textContent = `${s.time} · ${s.status === 'now' ? 'happening now' : s.status}`;
+    jump.textContent = (i === nowIdx ? 'Open ' : 'Preview ') + s.label.toLowerCase();
+    // flip the hero card behind
+    document.getElementById('herokick').textContent = (i === nowIdx ? 'Now · ' : 'Preview · ') + s.label.toLowerCase();
+    document.getElementById('herotitle').textContent = s.title;
+    document.getElementById('herometa').textContent = s.meta;
+    document.getElementById('herofig').innerHTML = `${s.fig} <small>${s.unit}</small>`;
+    document.getElementById('herowhy').textContent = s.why;
+    document.getElementById('herocta').textContent = s.cta;
+    previewbar.classList.toggle('show', i !== nowIdx);
+    document.getElementById('previewtext').textContent = `Preview · ${s.label}`;
+  }
+  function backToNow() { select(nowIdx); }
+  document.getElementById('backnow').addEventListener('click', backToNow);
+  document.getElementById('backnow2').addEventListener('click', () => { backToNow(); closeSheet(); });
+  jump.addEventListener('click', closeSheet);
+
+  function openSheet() { phone.classList.add('open'); }
+  function closeSheet() { phone.classList.remove('open'); }
+  document.getElementById('pill').addEventListener('click', openSheet);
+  document.getElementById('close').addEventListener('click', closeSheet);
+  document.getElementById('scrim').addEventListener('click', closeSheet);
+
+  // swipe left to open, swipe right to close
+  let sx = null;
+  phone.addEventListener('touchstart', e => { sx = e.changedTouches[0].clientX; }, { passive: true });
+  phone.addEventListener('touchend', e => {
+    if (sx === null) return;
+    const dx = e.changedTouches[0].clientX - sx;
+    if (dx < -60) openSheet();
+    else if (dx > 60) closeSheet();
+    sx = null;
+  }, { passive: true });
+
+  select(nowIdx);
+</script>
+</body>
+</html>

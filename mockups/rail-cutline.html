@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rail: fixed mid-screen channel, cards morph under it</title>
+<style>
+  @font-face { font-family: "Qala Test"; src: url(../apps/web/public/fonts/QalaTestV2-Bold.woff2) format("woff2"); font-weight: 700; }
+  @font-face { font-family: "DM Mono"; src: url(../apps/web/public/fonts/DMMono-Regular.woff2) format("woff2"); font-weight: 400; }
+  @font-face { font-family: "DM Mono"; src: url(../apps/web/public/fonts/DMMono-Medium.woff2) format("woff2"); font-weight: 500; }
+  @font-face { font-family: "UI Sans"; src: url(fonts/recursive-slnt-wght.woff2) format("woff2"); font-weight: 300 1000; font-style: oblique 0deg 15deg; }
+
+  :root {
+    --bg: #f5f5f7; --surface: #fff;
+    --fg: #0f152a; --fg-2: #4a5578; --muted: #64708b;
+    --accent: #c2410c; --teal: #08a49c;
+    --bd: rgba(15,21,42,.16); --bd-s: rgba(15,21,42,.24);
+    --shadow: 2px 4px 0 0 rgba(15,21,42,.10);
+    --serif: "Qala Test", Georgia, serif;
+    --sans: "UI Sans", system-ui, sans-serif;
+    --mono: "DM Mono", ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #e8eaf0; color: var(--fg); font-family: var(--sans); font-size: 14px; -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 560px; margin: 0 auto; padding: 36px 20px 70px; }
+  .wrap > h1 { font-family: var(--serif); font-size: 30px; margin: 0 0 4px; }
+  .wrap > p { color: var(--fg-2); font-size: 13px; margin: 0 0 18px; }
+  .wrap > p b { color: var(--fg); }
+
+  .phone { width: 390px; height: 640px; margin: 0 auto; border-radius: 28px; background: var(--bg); border: 2px solid var(--bd); box-shadow: 4px 8px 0 0 rgba(15,21,42,.14); overflow: hidden; position: relative; }
+  .phead { position: absolute; top: 0; left: 0; right: 0; z-index: 5; background: var(--bg); border-bottom: 2px solid var(--bd); padding: 16px 14px 12px; }
+  .pscroll { position: absolute; top: 0; left: 0; right: 0; bottom: 0; overflow-y: auto; scrollbar-width: thin; padding: 168px 14px 20px; }
+  .eyebrow { font-size: 11px; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); margin: 0 4px 2px; }
+  .ptitle { font-family: var(--serif); font-size: 32px; margin: 0 4px 10px; line-height: 1.1; }
+  .pcard { background: var(--surface); border: 2px solid var(--bd); border-radius: 8px; box-shadow: var(--shadow); padding: 14px 14px 14px 44px; margin-bottom: 12px; }
+  .pcard h2 { font-size: 16px; font-weight: 600; margin: 0; }
+  .pcard .meta { font-size: 12px; color: var(--fg-2); margin: 1px 0 8px; }
+  .pcard p.body { font-size: 13px; margin: 0 0 6px; }
+  .herofig { font-family: var(--serif); font-size: 40px; line-height: 1; font-variant-numeric: tabular-nums; text-align: center; margin: 2px 0; }
+  .herofig small { font-size: 12px; color: var(--muted); font-family: var(--sans); font-weight: 500; }
+  .pwhy { font-size: 12.5px; text-align: center; color: var(--fg-2); margin: 0 0 10px; }
+  .plog { font-family: var(--mono); font-size: 11px; color: var(--fg-2); text-align: center; margin: 8px 0 0; }
+  .pcta { display: block; text-align: center; font-size: 14px; font-weight: 600; background: var(--accent); color: #fff; border-radius: 6px; padding: 13px; text-decoration: none; box-shadow: 2px 4px 0 0 #4a4a4a; }
+  .previewbar { display: none; align-items: center; justify-content: space-between; gap: 6px; font-size: 12.5px; background: rgba(255,255,255,.7); -webkit-backdrop-filter: blur(14px) saturate(1.6); backdrop-filter: blur(14px) saturate(1.6); border: 2px solid var(--bd); border-radius: 6px; padding: 8px 10px; box-shadow: var(--shadow); }
+  .previewbar.show { display: flex; }
+  .previewbar button { border: 0; background: var(--fg); color: #fff; border-radius: 6px; padding: 6px 12px; font: 600 12px var(--sans); cursor: pointer; white-space: nowrap; }
+
+  /* fixed channel: patch redraws card edges, strip floats in the pocket */
+  .seamfield { position: absolute; inset: 0; width: 390px; height: 640px; z-index: 4; pointer-events: none; }
+  .strip {
+    position: absolute; left: 0; top: 50%; transform: translateY(-50%); z-index: 5;
+    width: 28px; padding: 14px 0;
+    background: rgba(255,255,255,.62);
+    -webkit-backdrop-filter: blur(14px) saturate(1.6);
+    backdrop-filter: blur(14px) saturate(1.6);
+    border: 2px solid var(--bd-s); border-left: 0;
+    border-radius: 0 8px 8px 0;
+    box-shadow: 2px 4px 0 0 rgba(15,21,42,.10);
+    display: flex; flex-direction: column; align-items: center; gap: 9px;
+    cursor: pointer; touch-action: none; user-select: none; -webkit-user-select: none;
+    pointer-events: auto;
+  }
+  .strip i { width: 9px; height: 9px; border-radius: 50%; background: #dfe3ec; border: 1px solid rgba(15,21,42,.2); padding: 0; }
+  .strip i.done { background: var(--teal); border-color: var(--teal); }
+  .strip i.now { background: var(--accent); border-color: var(--accent); width: 11px; height: 11px; }
+  .strip i.sel { box-shadow: 0 0 0 2px rgba(255,255,255,.7), 0 0 0 3.5px var(--fg); }
+
+  .scrim { position: absolute; inset: 0; z-index: 8; background: rgba(15,21,42,.22); opacity: 0; pointer-events: none; transition: opacity .2s ease; }
+  .menu {
+    position: absolute; z-index: 9; top: 0; left: 0; bottom: 0; width: 252px;
+    background: var(--surface); border-right: 2px solid var(--bd-s);
+    box-shadow: 4px 0 0 0 rgba(15,21,42,.10);
+    transform: translateX(-105%); transition: transform .26s cubic-bezier(.25,1,.5,1);
+    padding: 20px 14px; display: flex; flex-direction: column;
+  }
+  .open .scrim { opacity: 1; pointer-events: auto; }
+  .open .menu { transform: translateX(0); }
+  .menu .mhead { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .menu h3 { font-family: var(--serif); font-size: 21px; margin: 0; }
+  .menu .x { border: 2px solid var(--bd); background: #fff; border-radius: 6px; width: 32px; height: 32px; font-size: 14px; cursor: pointer; box-shadow: var(--shadow); }
+  .mrows { list-style: none; margin: 0; padding: 0; }
+  .mrows button { display: flex; align-items: center; gap: 10px; width: 100%; border: 0; background: none; padding: 8px 6px; border-radius: 6px; cursor: pointer; text-align: left; font-family: var(--sans); }
+  .mrows .nd { flex: none; width: 28px; height: 28px; border-radius: 50%; background: #fff; border: 2px solid rgba(15,21,42,.3); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: var(--muted); }
+  .mrows li.done .nd { background: var(--teal); border-color: var(--teal); color: #fff; }
+  .mrows li.now .nd { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .mrows .tx b { display: block; font-size: 13.5px; font-weight: 600; line-height: 1.2; }
+  .mrows .tx span { font-size: 11px; color: var(--muted); }
+  .mrows li.sel button { background: var(--fg); }
+  .mrows li.sel .tx b { color: #fff; }
+  .mrows li.sel .tx span { color: rgba(255,255,255,.75); }
+  .menu .back { margin-top: auto; border: 2px solid var(--bd); background: #fff; border-radius: 6px; padding: 12px; font: 600 13.5px var(--sans); cursor: pointer; box-shadow: var(--shadow); }
+
+  /* implementation spec block */
+  .spec { background: var(--surface); border: 2px solid var(--bd-s); border-radius: 8px; box-shadow: var(--shadow); padding: 18px 20px; margin-top: 22px; }
+  .spec h2 { font-family: var(--serif); font-size: 21px; margin: 0 0 8px; }
+  .spec ol { margin: 0; padding-left: 20px; font-size: 12.5px; color: var(--fg-2); }
+  .spec li { margin-bottom: 7px; }
+  .spec li b { color: var(--fg); }
+  .spec code { font-family: var(--mono); font-size: 11.5px; background: #f1f3f9; padding: 1px 6px; border-radius: 5px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .scrim, .menu { transition: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Fixed channel, morphing cards</h1>
+  <p>The rail is <b>fixed at the middle of the screen</b>: six small dots in a frosted strip hugging the left edge. It never scrolls. The <b>boxes deform around it as you scroll</b>, like square text wrapping a tight box in Word: a rectangular notch with square 2px seams, wherever the channel crosses a card. Nothing ever intersects. <b>Scroll the phone</b> to watch the notch travel across cards. Tap the strip or swipe right for the full menu; swipe up and down on it to step between stages.</p>
+
+  <div class="phone" id="phone">
+    <div class="phead">
+      <p class="eyebrow">Sunday · Strength block 2, week 3</p>
+      <h2 class="ptitle">Today</h2>
+      <div class="previewbar" id="previewbar"><span id="previewtext">Preview</span><button id="backnow">Back to now</button></div>
+    </div>
+    <div class="pscroll" id="pscroll">
+      <div class="pcard">
+        <p class="eyebrow" id="herokick">Now · lift</p>
+        <h2 id="herotitle">Lower A · Squat day</h2>
+        <p class="meta" id="herometa">Squat 3 × 4 at 245 · 55 min</p>
+        <div class="herofig" id="herofig">245 <small>lb × 4</small></div>
+        <p class="pwhy" id="herowhy">A little under your average, so squat holds.</p>
+        <a class="pcta" href="#" id="herocta">Start warm-up</a>
+        <p class="plog">245 × 4 · 245 × 4 · 245 × 3</p>
+      </div>
+      <div class="pcard">
+        <p class="eyebrow">Then · 6 pm</p>
+        <h2>Easy run · 3.0 mi</h2>
+        <p class="meta">Conversational pace · cue every half mile</p>
+      </div>
+      <div class="pcard">
+        <p class="eyebrow">Readiness · 72 of 100</p>
+        <h2>A little under average</h2>
+        <p class="body">Squat holds at 245. Quads ready Wednesday, everything else is ready now.</p>
+      </div>
+      <div class="pcard">
+        <p class="eyebrow">Coach note</p>
+        <h2>Bar speed held up</h2>
+        <p class="body">Set 2 moved well. Keep 245 for the top set and brace harder out of the hole.</p>
+      </div>
+    </div>
+
+    <svg class="seamfield" viewBox="0 0 390 640" aria-hidden="true">
+      <path id="seamfill" style="fill:var(--bg)"/>
+      <path id="seamline" fill="none" stroke="rgba(15,21,42,.24)" stroke-width="2"/>
+    </svg>
+    <div class="strip" id="strip" role="button" tabindex="0" aria-label="Day stages. Activate to open the menu."></div>
+    <div class="scrim" id="scrim"></div>
+    <aside class="menu" id="menu" aria-label="Day stages">
+      <div class="mhead"><h3>Sunday</h3><button class="x" id="mx" aria-label="Close">✕</button></div>
+      <ol class="mrows" id="mrows"></ol>
+      <button class="back" id="mback">Back to now</button>
+    </aside>
+  </div>
+
+  <div class="spec">
+    <h2>Rail behavior spec (for implementation)</h2>
+    <ol>
+      <li><b>Fixed channel.</b> The rail never scrolls. It sits at <code>left: 0</code>, vertically centered on the phone viewport, above all content: a 28px frosted strip (<code>rgba(255,255,255,.62)</code> + 14px blur) with a 2px border on three sides and six 9px dots (11px for now).</li>
+      <li><b>Boxes deform, never intersect.</b> Wherever the fixed channel crosses a scrolling card, the card's edge hugs the strip's contour in a tight notch holding ~8px of whitespace, with small-radius inner corners echoing the strip. Think tight text wrap around a box in Word. The seam exists only where a card is: no permanent box, no floating lines. Scrolling moves cards under the fixed channel, so the notch appears to travel across them. This must hold for every card at every scroll offset: no card edge or text may pass behind the strip.</li>
+      <li><b>Text clearance.</b> Scrolling cards keep a 44px left inset so no glyph ever enters the notch zone; the implementation target is true tight wrap (lines in the band indent past the notch), with the uniform inset as the guaranteed minimum. Centered content (figures, buttons, logs) is unaffected.</li>
+      <li><b>Fixed header.</b> The title block and preview bar pin to the top and never scroll under the rail, so they need no bite.</li>
+      <li><b>Glance language.</b> Dots are status only: teal done, ember now (slightly larger), gray later. An ink ring marks the stage being previewed. Dots are not tap targets.</li>
+      <li><b>Gestures on the strip.</b> Tap or swipe right opens the full stage menu. Swipe up steps to the next stage, swipe down to the previous one; the hero previews each with Back to now. Swipe left, scrim tap, or X closes the menu.</li>
+      <li><b>Menu.</b> A 252px panel slides in from the left edge over a light scrim: Sunday header, six labeled rows (check, number, or ember now-node + label + time), selected row inverted to ink, Back to now pinned to the foot.</li>
+      <li><b>Motion.</b> Menu slides with <code>cubic-bezier(.25,1,.5,1)</code> over ~260ms; everything freezes under <code>prefers-reduced-motion</code>.</li>
+    </ol>
+  </div>
+</div>
+
+<script>
+  const stages = [
+    { label: 'Check-in',  time: '6:52',  status: 'done', title: 'How are you walking in?', meta: 'Recovery 6 · quads 4 · readiness 72', fig: '72', unit: 'readiness', why: 'Checked in at 6:52 am.', cta: 'See check-in' },
+    { label: 'Warm-up',   time: '7:00',  status: 'done', title: 'Warm-up · done', meta: 'Bike 10 · roller + ramp to 215', fig: '10', unit: 'min', why: 'Finished at 7:12.', cta: 'See warm-up' },
+    { label: 'Lift',      time: '7:15',  status: 'now',  title: 'Lower A · Squat day', meta: 'Squat 3 × 4 at 245 · 55 min', fig: '245', unit: 'lb × 4', why: 'A little under your average, so squat holds.', cta: 'Start warm-up' },
+    { label: 'Recover',   time: '12:00', status: 'todo', title: 'Recovery window', meta: 'Eat well before the run', fig: '3.0', unit: 'mi later', why: 'The easy run stays easy if you eat now.', cta: 'See plan' },
+    { label: 'Run',       time: '6 pm',  status: 'todo', title: 'Easy run · 3.0 mi', meta: 'Conversational pace', fig: '3.0', unit: 'mi', why: 'Legs lifted today, so keep it easy.', cta: 'Start run' },
+    { label: 'Wind down', time: '10:30', status: 'todo', title: 'Wind down', meta: 'Sleep target 8 h', fig: '8', unit: 'h sleep', why: 'Day complete when the run is saved.', cta: 'See day' },
+  ];
+  const nowIdx = 2;
+  const phone = document.getElementById('phone');
+  const strip = document.getElementById('strip');
+  const previewbar = document.getElementById('previewbar');
+  let sel = nowIdx;
+
+  const dots = stages.map(s => {
+    const i = document.createElement('i');
+    i.className = s.status;
+    strip.appendChild(i);
+    return i;
+  });
+  const rows = document.getElementById('mrows');
+  const items = stages.map((s, i) => {
+    const li = document.createElement('li');
+    li.className = s.status;
+    const b = document.createElement('button');
+    b.setAttribute('aria-label', `${s.label} at ${s.time}, ${s.status}`);
+    b.innerHTML = `<span class="nd">${s.status === 'done' ? '✓' : (i + 1)}</span><span class="tx"><b>${s.label}</b><span>${s.time}</span></span>`;
+    b.addEventListener('click', () => { select(i); });
+    li.appendChild(b);
+    rows.appendChild(li);
+    return li;
+  });
+
+  function select(i) {
+    sel = Math.max(0, Math.min(stages.length - 1, i));
+    dots.forEach((d, j) => d.classList.toggle('sel', j === sel));
+    items.forEach((li, j) => li.classList.toggle('sel', j === sel));
+    const s = stages[sel];
+    document.getElementById('herokick').textContent = (sel === nowIdx ? 'Now · ' : 'Preview · ') + s.label.toLowerCase();
+    document.getElementById('herotitle').textContent = s.title;
+    document.getElementById('herometa').textContent = s.meta;
+    document.getElementById('herofig').innerHTML = `${s.fig} <small>${s.unit}</small>`;
+    document.getElementById('herowhy').textContent = s.why;
+    document.getElementById('herocta').textContent = s.cta;
+    previewbar.classList.toggle('show', sel !== nowIdx);
+    document.getElementById('previewtext').textContent = `Preview · ${s.label}`;
+  }
+  function backToNow() { select(nowIdx); }
+  document.getElementById('backnow').addEventListener('click', backToNow);
+  document.getElementById('mback').addEventListener('click', () => { backToNow(); setOpen(false); });
+
+  function setOpen(v) { phone.classList.toggle('open', v); }
+  document.getElementById('mx').addEventListener('click', () => setOpen(false));
+  document.getElementById('scrim').addEventListener('click', () => setOpen(false));
+  strip.addEventListener('click', () => setOpen(true));
+  strip.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setOpen(true); } });
+
+  let sx = null, sy = null;
+  strip.addEventListener('touchstart', e => { const t = e.changedTouches[0]; sx = t.clientX; sy = t.clientY; }, { passive: true });
+  strip.addEventListener('touchmove', e => { e.preventDefault(); }, { passive: false });
+  strip.addEventListener('touchend', e => {
+    if (sx === null) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - sx, dy = t.clientY - sy;
+    if (Math.abs(dx) > Math.abs(dy)) {
+      if (dx > 40) setOpen(true);
+    } else {
+      if (dy < -32) select(sel + 1);
+      else if (dy > 32) select(sel - 1);
+    }
+    sx = sy = null;
+  });
+
+  // tight seam: redraw the notch from live card positions on every scroll
+  // frame, so seams only ever touch cards and hug the strip closely.
+  const pscroll = document.getElementById('pscroll');
+  const seamfill = document.getElementById('seamfill');
+  const seamline = document.getElementById('seamline');
+  function paintSeam() {
+    const phoneR = phone.getBoundingClientRect();
+    const sR = strip.getBoundingClientRect();
+    const y0 = sR.top - phoneR.top - 8;
+    const y1 = sR.bottom - phoneR.top + 8;
+    let fill = '', line = '';
+    document.querySelectorAll('#pscroll .pcard').forEach(card => {
+      const r = card.getBoundingClientRect();
+      const top = Math.max(y0, r.top - phoneR.top);
+      const bot = Math.min(y1, r.bottom - phoneR.top);
+      const h = bot - top;
+      if (h < 10) return;
+      const t = top.toFixed(1), b = bot.toFixed(1);
+      const cr = Math.min(8, h / 2 - 1).toFixed(1);
+      const cx = (36 - cr).toFixed(1);
+      fill += `M10,${t} H${cx} Q36,${t} 36,${(top + +cr).toFixed(1)} L36,${(bot - +cr).toFixed(1)} Q36,${b} ${cx},${b} H10 Z `;
+      line += `M13,${t} H${cx} Q36,${t} 36,${(top + +cr).toFixed(1)} L36,${(bot - +cr).toFixed(1)} Q36,${b} ${cx},${b} H13 `;
+    });
+    seamfill.setAttribute('d', fill);
+    seamline.setAttribute('d', line);
+  }
+  let seamTick = false;
+  pscroll.addEventListener('scroll', () => {
+    if (seamTick) return;
+    seamTick = true;
+    requestAnimationFrame(() => { paintSeam(); seamTick = false; });
+  }, { passive: true });
+  window.addEventListener('resize', paintSeam);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(paintSeam);
+
+  select(nowIdx);
+  paintSeam();
+</script>
+</body>
+</html>

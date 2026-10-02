@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Qala refresh: Rest</title>
+<link rel="stylesheet" href="phone-refresh-core.css">
+<style>
+  .rest-hero { text-align: center; color: #fff; padding: 46px 24px 8px; }
+  .rest-hero .kick {
+    font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
+    color: rgba(255,255,255,.85); font-weight: 500;
+    padding: 0 54px;
+  }
+  .rest-hero .big {
+    font-family: "Qala Test", Georgia, serif; font-weight: 700;
+    font-size: 108px; line-height: 1; margin: 2px 0;
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+  .rest-hero .of { font-size: 13px; color: rgba(255,255,255,.85); }
+  .timer-glass {
+    margin: 14px 16px 0; border-radius: 24px; padding: 14px 16px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .timer-glass .track { flex: 1; height: 10px; border-radius: 5px; background: rgba(255,255,255,.3); overflow: hidden; }
+  .timer-glass .track i { display: block; height: 100%; width: 62%; border-radius: 5px; background: #fff; transition: width 1s linear; }
+  .timer-glass button {
+    flex: none; border: 1px solid rgba(255,255,255,.5); background: rgba(255,255,255,.16);
+    color: #fff; border-radius: 14px; padding: 10px 14px; font-size: 13px; cursor: pointer;
+  }
+  .ledger { margin: 12px 0 4px; }
+  .ledger .row {
+    display: flex; justify-content: space-between; font-size: 13px;
+    padding: 7px 4px; border-bottom: 1px solid var(--grid); color: var(--fg-2);
+  }
+  .ledger .row:last-child { border-bottom: 0; color: var(--fg); font-weight: 500; }
+  .ledger .plus { color: var(--accent); }
+  .ledger .minus { color: var(--progress); }
+  .plate-strip { display: flex; gap: 6px; justify-content: center; margin: 10px 0 2px; }
+  .plate-strip i {
+    width: 34px; height: 44px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 500; color: #fff; font-style: normal;
+  }
+</style>
+</head>
+<body>
+<div class="opt">
+  <h1>Rest</h1>
+  <p><b>The countdown is the screen.</b> Same ember ground as the lift, the ticking figure huge and centered, a <b>frosted timer bar</b> with the progress track and +30 s floating over the ground. The white sheet below holds the next set and the Why ledger. It ticks live here; Ready early fills as time runs down.</p>
+  <div class="phone focus"><div class="screen">
+    <div class="notch"></div>
+    <div class="statusbar"><span>9:41</span><span>5G&nbsp;&nbsp;▮▮▮</span></div>
+
+    <div class="float-x">
+      <button aria-label="Back to workout"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+      <button aria-label="Plates"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2.5" fill="currentColor" stroke="none"/></svg></button>
+    </div>
+    <div class="rest-hero">
+      <div class="kick">Back squat · set 2 logged · 245 × 4 @ 9</div>
+      <div class="big ticking" id="clock">2:18</div>
+      <div class="of">of 3:45 · next is set 3, same plates</div>
+    </div>
+
+    <div class="timer-glass glass-deep">
+      <div class="track"><i id="trackfill"></i></div>
+      <button id="plus30">+30 s</button>
+    </div>
+
+    <div class="sheet" style="margin-top:14px">
+      <div class="row-head">
+        <span class="group-label">Next · set 3</span>
+        <span class="figure" style="font-size:22px">245 <small style="font-size:12px;color:var(--fg-muted)">lb</small> × 4</span>
+      </div>
+      <div class="plate-strip" aria-label="Plates per side: 45 45 5 2.5">
+        <i style="background:#374151">45</i><i style="background:#374151">45</i><i style="background:#6b7280">5</i><i style="background:#9aa1ad">2.5</i>
+      </div>
+      <p style="text-align:center;font-size:12px;color:var(--fg-muted);margin:6px 0 0">Same as last set, leave the plates on.</p>
+      <div class="divider" style="margin:14px 0 6px"></div>
+      <span class="group-label">Why 3:45</span>
+      <div class="ledger">
+        <div class="row"><span>Base for a heavy squat</span><span>3:00</span></div>
+        <div class="row"><span>Last set @ 9, grinding</span><span class="plus">+0:45</span></div>
+        <div class="row"><span>Moving fast between sets</span><span class="minus">−0:15</span></div>
+        <div class="row"><span>Readiness a touch under avg</span><span class="plus">+0:15</span></div>
+        <div class="row"><span>Rest</span><span>3:45</span></div>
+      </div>
+    </div>
+
+    <div class="page-pad"></div>
+    <div class="focus-bar glass-ember">
+      <div class="meta"><b id="barlabel">Set 3 · in 2:18</b><span>RDL 205 waits after squats</span></div>
+      <button class="go" aria-label="Ready early" style="font-size:15px;width:auto;padding:0 20px">Ready</button>
+    </div>
+  </div></div>
+</div>
+<script>
+  let left = 138, budget = 225;
+  const clock = document.getElementById('clock');
+  const fill = document.getElementById('trackfill');
+  const barlabel = document.getElementById('barlabel');
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function fmt(s) { return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
+  function paint() {
+    clock.textContent = fmt(left);
+    fill.style.width = (100 * left / budget) + '%';
+    barlabel.textContent = left === 0 ? 'Set 3 · go' : 'Set 3 · in ' + fmt(left);
+  }
+  if (!reduced) setInterval(() => { if (left > 0) { left--; paint(); } }, 1000);
+  document.getElementById('plus30').addEventListener('click', () => { left += 30; budget += 30; paint(); });
+  paint();
+</script>
+</body>
+</html>

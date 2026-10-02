@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Qala type levels: mixing the three faces</title>
+<style>
+  @font-face { font-family: "Qala Test"; src: url(../apps/web/public/fonts/QalaTestV2-Bold.woff2) format("woff2"); font-weight: 700; }
+  @font-face { font-family: "DM Mono"; src: url(../apps/web/public/fonts/DMMono-Regular.woff2) format("woff2"); font-weight: 400; }
+  @font-face { font-family: "DM Mono"; src: url(../apps/web/public/fonts/DMMono-Medium.woff2) format("woff2"); font-weight: 500; }
+  @font-face { font-family: "UI Recursive"; src: url(fonts/recursive-slnt-wght.woff2) format("woff2"); font-weight: 300 1000; font-style: oblique 0deg 15deg; }
+  @font-face { font-family: "UI Source"; src: url(fonts/source-sans-3.woff2) format("woff2"); font-weight: 200 900; }
+  @font-face { font-family: "UI Source"; src: url(fonts/source-sans-3-italic.woff2) format("woff2"); font-weight: 200 900; font-style: italic; }
+  @font-face { font-family: "UI Public"; src: url(fonts/public-sans.woff2) format("woff2"); font-weight: 100 900; }
+  @font-face { font-family: "UI Public"; src: url(fonts/public-sans-italic.woff2) format("woff2"); font-weight: 100 900; font-style: italic; }
+  @font-face { font-family: "UI Atkinson"; src: url(fonts/atkinson-next.woff2) format("woff2"); font-weight: 200 800; }
+  @font-face { font-family: "UI Atkinson"; src: url(fonts/atkinson-next-italic.woff2) format("woff2"); font-weight: 200 800; font-style: italic; }
+  @font-face { font-family: "UI Figtree"; src: url(fonts/figtree.woff2) format("woff2"); font-weight: 300 900; }
+  @font-face { font-family: "UI Figtree"; src: url(fonts/figtree-italic.woff2) format("woff2"); font-weight: 300 900; font-style: italic; }
+  @font-face { font-family: "UI Plex"; src: url(fonts/plex-400.woff2) format("woff2"); font-weight: 400; }
+  @font-face { font-family: "UI Plex"; src: url(fonts/plex-600.woff2) format("woff2"); font-weight: 600; }
+  @font-face { font-family: "UI Plex"; src: url(fonts/plex-400-italic.woff2) format("woff2"); font-weight: 400; font-style: italic; }
+
+  :root {
+    --bg: #f5f5f7; --surface: #fff;
+    --fg: #0f152a; --fg-2: #4a5578; --muted: #64708b;
+    --accent: #c2410c; --border: rgba(15,21,42,.14);
+    --shadow: 2px 4px 0 0 rgba(15,21,42,.10);
+    --serif: "Qala Test", Georgia, serif;
+    --mono: "DM Mono", ui-monospace, monospace;
+    --sans: "UI Recursive", system-ui, sans-serif;
+  }
+  body[data-sans="source"] { --sans: "UI Source", system-ui, sans-serif; }
+  body[data-sans="public"] { --sans: "UI Public", system-ui, sans-serif; }
+  body[data-sans="atkinson"] { --sans: "UI Atkinson", system-ui, sans-serif; }
+  body[data-sans="figtree"] { --sans: "UI Figtree", system-ui, sans-serif; }
+  body[data-sans="plex"] { --sans: "UI Plex", system-ui, sans-serif; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #e8eaf0; color: var(--fg); font-family: var(--sans); font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 1020px; margin: 0 auto; padding: 36px 20px 70px; }
+  .top h1 { font-family: var(--serif); font-size: 32px; margin: 0 0 4px; }
+  .top p { color: var(--fg-2); font-size: 13px; margin: 0 0 16px; max-width: 72ch; }
+  .top p b { color: var(--fg); }
+  .switch { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 20px; font-size: 13px; }
+  .switch button { border: 2px solid var(--border); background: #fff; border-radius: 8px; padding: 8px 16px; font: 500 13px var(--sans); cursor: pointer; box-shadow: var(--shadow); }
+  .switch button.on { background: var(--fg); color: #fff; border-color: var(--fg); }
+  .cols { display: grid; grid-template-columns: 1fr 390px; gap: 20px; align-items: start; }
+
+  /* ladder */
+  .ladder { background: var(--surface); border: 2px solid var(--border); border-radius: 8px; box-shadow: var(--shadow); overflow: hidden; }
+  .level { display: grid; grid-template-columns: 150px 1fr; gap: 12px; padding: 14px 18px; border-bottom: 2px solid var(--border); align-items: baseline; }
+  .level:last-child { border-bottom: 0; }
+  .level .tag { font-size: 11px; color: var(--muted); }
+  .level .tag b { display: block; color: var(--fg-2); font-size: 12px; }
+  .lv-page { font-family: var(--serif); font-size: 30px; }
+  .lv-card { font-size: 17px; font-weight: 600; }
+  .lv-body { font-size: 14.5px; }
+  .lv-hero { font-family: var(--serif); font-size: 44px; font-variant-numeric: tabular-nums; }
+  .lv-hero small { font-size: 14px; color: var(--muted); font-family: var(--sans); font-weight: 500; }
+  .lv-stat { font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .lv-log { font-family: var(--mono); font-size: 13px; }
+  .lv-btn { display: inline-block; font-size: 14px; font-weight: 600; background: var(--accent); color: #fff; border-radius: 6px; padding: 10px 20px; box-shadow: 2px 4px 0 0 #4a4a4a; }
+  .lv-label { font-size: 11px; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); }
+  .lv-hint { font-size: 13px; font-style: oblique 15deg; color: var(--fg-2); }
+  body[data-sans] .lv-hint { font-style: italic; }
+
+  /* phone */
+  .phone { width: 390px; border-radius: 28px; background: var(--bg); border: 2px solid var(--border); box-shadow: 4px 8px 0 0 rgba(15,21,42,.14); overflow: hidden; }
+  .pscreen { padding: 18px 14px 22px; }
+  .eyebrow { font-size: 11px; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); margin: 0 4px 2px; }
+  .ptitle { font-family: var(--serif); font-size: 32px; margin: 0 4px 12px; line-height: 1.1; }
+  .pcard { background: var(--surface); border: 2px solid var(--border); border-radius: 8px; box-shadow: var(--shadow); padding: 16px; margin-bottom: 12px; }
+  .pcard.flat { box-shadow: none; }
+  .pcard h2 { font-size: 17px; font-weight: 600; margin: 0; }
+  .pcard .meta { font-size: 12.5px; color: var(--fg-2); margin: 1px 0 10px; }
+  .pring { display: flex; gap: 14px; align-items: center; margin-bottom: 10px; }
+  .pring .fig { font-family: var(--serif); font-size: 52px; line-height: 1; font-variant-numeric: tabular-nums; }
+  .pring .fig small { font-size: 13px; color: var(--muted); font-family: var(--sans); font-weight: 500; }
+  .pring p { font-size: 13.5px; margin: 0; }
+  .pstats { display: flex; border-top: 2px solid var(--border); border-bottom: 2px solid var(--border); margin: 0 0 12px; }
+  .pstats div { flex: 1; text-align: center; padding: 8px 0; }
+  .pstats div + div { border-left: 2px solid var(--border); }
+  .pstats b { display: block; font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .pstats span { font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  .pcta { display: block; text-align: center; font-size: 15px; font-weight: 600; background: var(--accent); color: #fff; border-radius: 6px; padding: 14px; text-decoration: none; box-shadow: 2px 4px 0 0 #4a4a4a; margin-bottom: 10px; }
+  .plog { font-family: var(--mono); font-size: 12.5px; color: var(--fg-2); text-align: center; margin: 0 0 2px; }
+  .phint { font-size: 12.5px; color: var(--muted); text-align: center; margin: 0; font-style: oblique 12deg; }
+  body[data-sans] .phint { font-style: italic; }
+  .pweek { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 10px; }
+  .pweek i { display: block; height: 26px; border-radius: 4px; background: #eceff5; font-style: normal; font-size: 9px; color: var(--muted); text-align: center; line-height: 26px; font-weight: 600; }
+  .pweek i.f { background: #08a49c; color: #fff; }
+  .pweek i.t { background: var(--accent); color: #fff; }
+  .note { font-size: 12.5px; color: var(--fg-2); background: var(--surface); border: 2px solid var(--border); border-radius: 8px; padding: 12px 16px; margin-top: 20px; }
+  .note b { color: var(--fg); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <h1>Three faces, nine levels</h1>
+    <p>Qala Test owns the <b>brand moments</b> (page title, hero numerals). The new sans owns <b>everything UI</b> (card titles, body, stats, buttons, labels). DM Mono owns <b>data</b> (set logs, tables, code, ticks). Toggle the sans to judge the same mix in all six candidates; Qala Test and DM Mono levels never change. Surfaces here are Beamer-strict: 2px borders, hard shadows, small radii.</p>
+  </div>
+  <div class="switch" role="group" aria-label="Sans face">
+    <span>Body sans:</span>
+    <button data-face="" class="on">Recursive</button>
+    <button data-face="source">Source Sans 3</button>
+    <button data-face="public">Public Sans</button>
+    <button data-face="atkinson">Atkinson</button>
+    <button data-face="figtree">Figtree</button>
+    <button data-face="plex">Plex Sans</button>
+  </div>
+  <div class="cols">
+    <div class="ladder">
+      <div class="level"><div class="tag"><b>1 · Page title</b>Qala Test 700 · 30</div><div class="lv-page">Today</div></div>
+      <div class="level"><div class="tag"><b>2 · Card title</b>Sans 600 · 17</div><div class="lv-card">Back Squat</div></div>
+      <div class="level"><div class="tag"><b>3 · Body</b>Sans 400 · 14.5</div><div class="lv-body">A little under your average, so squat holds at 245. Quads ready Wednesday.</div></div>
+      <div class="level"><div class="tag"><b>4 · Hero numeral</b>Qala Test 700 · 44</div><div class="lv-hero">245 <small>lb × 4</small></div></div>
+      <div class="level"><div class="tag"><b>5 · Stat row</b>Sans 600 · tabular</div><div class="lv-stat">20,420 lb · +6% · 58 min · 1 PR</div></div>
+      <div class="level"><div class="tag"><b>6 · Set log</b>DM Mono · 13</div><div class="lv-log">245 × 4 @ 9 · 245 × 4 @ 8 · 245 × 3 @ 10</div></div>
+      <div class="level"><div class="tag"><b>7 · Button</b>Sans 600 · 14</div><div><span class="lv-btn">Start warm-up</span></div></div>
+      <div class="level"><div class="tag"><b>8 · Group label</b>Sans 600 · 11 caps</div><div class="lv-label">Now · warm-up, then lift</div></div>
+      <div class="level"><div class="tag"><b>9 · Hint</b>Sans italic · 13</div><div class="lv-hint">Same as last set, leave the plates on.</div></div>
+    </div>
+    <div class="phone"><div class="pscreen">
+      <p class="eyebrow">Sunday · Strength block 2, week 3</p>
+      <h2 class="ptitle">Today</h2>
+      <div class="pcard">
+        <h2>Readiness</h2>
+        <p class="meta">72 of 100 · your avg 76</p>
+        <div class="pring">
+          <div class="fig">72</div>
+          <p>A little under your average, so squat holds at 245.</p>
+        </div>
+        <div class="pweek"><i class="f">M</i><i class="f">T</i><i class="f">W</i><i class="f">T</i><i class="f">F</i><i class="f">S</i><i class="t">S</i></div>
+      </div>
+      <div class="pcard">
+        <p class="eyebrow">Now · warm-up, then lift</p>
+        <h2>Lower A · Squat day</h2>
+        <p class="meta">10 min warm-up · 6 exercises · 18 sets</p>
+        <div class="pstats">
+          <div><b>245</b><span>top lb</span></div>
+          <div><b>×4</b><span>reps</span></div>
+          <div><b>70</b><span>min</span></div>
+        </div>
+        <a class="pcta" href="#">Start warm-up</a>
+        <p class="plog">last time 245 × 4 · 245 × 4 · 245 × 3</p>
+        <p class="phint">Quads ready Wednesday.</p>
+      </div>
+    </div></div>
+  </div>
+  <div class="note"><b>The rule in one line:</b> if it is a sentence, a label, or a control, it is the sans; if it is the number you came to see, it is Qala Test; if it is a record (log, table, code, tick), it is DM Mono. Nothing else gets a face.</div>
+</div>
+<script>
+  const btns = [...document.querySelectorAll('.switch button')];
+  btns.forEach(b => b.addEventListener('click', () => {
+    const face = b.getAttribute('data-face');
+    if (face) document.body.setAttribute('data-sans', face);
+    else document.body.removeAttribute('data-sans');
+    btns.forEach(x => x.classList.toggle('on', x === b));
+  }));
+</script>
+</body>
+</html>

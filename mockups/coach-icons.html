@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Coach button: four icon options</title>
+<style>
+  @font-face { font-family: "Qala Test"; src: url(../apps/web/public/fonts/QalaTestV2-Bold.woff2) format("woff2"); font-weight: 700; }
+  @font-face { font-family: "DM Mono"; src: url(../apps/web/public/fonts/DMMono-Regular.woff2) format("woff2"); font-weight: 400; }
+  @font-face { font-family: "UI Sans"; src: url(fonts/recursive-slnt-wght.woff2) format("woff2"); font-weight: 300 1000; font-style: oblique 0deg 15deg; }
+
+  :root {
+    --bg: #f5f5f7; --surface: #fff;
+    --fg: #0f152a; --fg-2: #4a5578; --muted: #64708b;
+    --accent: #c2410c;
+    --bd: rgba(15,21,42,.16);
+    --shadow: 2px 4px 0 0 rgba(15,21,42,.10);
+    --serif: "Qala Test", Georgia, serif;
+    --sans: "UI Sans", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #e8eaf0; color: var(--fg); font-family: var(--sans); font-size: 14px; -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 920px; margin: 0 auto; padding: 36px 20px 70px; }
+  .wrap > h1 { font-family: var(--serif); font-size: 30px; margin: 0 0 4px; }
+  .wrap > p { color: var(--fg-2); font-size: 13px; margin: 0 0 6px; max-width: 78ch; }
+  .wrap > p b { color: var(--fg); }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 26px 20px; margin-top: 18px; }
+  .optcap { font-size: 12.5px; color: var(--fg-2); margin: 0 0 10px; max-width: 420px; }
+  .optcap b { color: var(--fg); font-size: 14px; }
+
+  .phone { width: 390px; border-radius: 28px; background: var(--bg); border: 2px solid var(--bd); box-shadow: 4px 8px 0 0 rgba(15,21,42,.14); overflow: hidden; position: relative; }
+  .pscreen { padding: 18px 14px 96px; }
+  .eyebrow { font-size: 11px; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); margin: 0 4px 2px; }
+  .ptitle { font-family: var(--serif); font-size: 28px; margin: 0 4px 10px; line-height: 1.1; }
+  .pcard { background: var(--surface); border: 2px solid var(--bd); border-radius: 8px; box-shadow: var(--shadow); padding: 14px; }
+  .pcard h2 { font-size: 16px; font-weight: 600; margin: 0; }
+  .pcard .meta { font-size: 12px; color: var(--fg-2); margin: 1px 0 8px; }
+  .herofig { font-family: var(--serif); font-size: 40px; line-height: 1; font-variant-numeric: tabular-nums; text-align: center; margin: 2px 0; }
+  .herofig small { font-size: 12px; color: var(--muted); font-family: var(--sans); font-weight: 500; }
+  .fab {
+    position: absolute; right: 16px; bottom: 20px;
+    width: 62px; height: 62px; border-radius: 50%;
+    background: var(--accent); border: 2px solid var(--accent); cursor: pointer;
+    display: flex; align-items: center; justify-content: center; color: #fff;
+    box-shadow: 2px 4px 0 0 #4a4a4a;
+  }
+  .fab:active { transform: translate(1px, 2px); box-shadow: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Coach button icons</h1>
+  <p>The mic is out. Four replacements on the same ember button over the same set card. The button opens the radial: voice commands, coach questions, notes, and workout changes. <b>A · Talk</b> says conversation. <b>B · Voice</b> says speak, without the mic cliché. <b>C · Whistle</b> is the coach metaphor, literal but ownable. <b>D · Ears</b> says the coach is listening in your ear, which is also the run-cue story.</p>
+
+  <div class="grid">
+    <div>
+      <p class="optcap"><b>A · Talk.</b> Speech bubble with lines. Clearest "ask the coach" read; weakest voice hint.</p>
+      <div class="phone"><div class="pscreen">
+        <p class="eyebrow">Lower A · Exercise 1 of 6</p>
+        <h2 class="ptitle">Back Squat</h2>
+        <div class="pcard"><p class="eyebrow">Set 3 of 3</p><div class="herofig">245 <small>lb × 4</small></div></div>
+      </div>
+      <button class="fab" aria-label="Coach actions">
+        <svg width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 9h8M8 12.5h5"/></svg>
+      </button></div>
+    </div>
+    <div>
+      <p class="optcap"><b>B · Voice.</b> Waveform bars. Says "talk to it" with no hardware metaphor. Abstract at small sizes.</p>
+      <div class="phone"><div class="pscreen">
+        <p class="eyebrow">Lower A · Exercise 1 of 6</p>
+        <h2 class="ptitle">Back Squat</h2>
+        <div class="pcard"><p class="eyebrow">Set 3 of 3</p><div class="herofig">245 <small>lb × 4</small></div></div>
+      </div>
+      <button class="fab" aria-label="Coach actions">
+        <svg width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 10v4M8.5 7v10M13 4v16M17.5 7v10M22 10v4"/></svg>
+      </button></div>
+    </div>
+    <div>
+      <p class="optcap"><b>C · Whistle.</b> A coach's whistle. The most character; the hardest to draw small without going blobby.</p>
+      <div class="phone"><div class="pscreen">
+        <p class="eyebrow">Lower A · Exercise 1 of 6</p>
+        <h2 class="ptitle">Back Squat</h2>
+        <div class="pcard"><p class="eyebrow">Set 3 of 3</p><div class="herofig">245 <small>lb × 4</small></div></div>
+      </div>
+      <button class="fab" aria-label="Coach actions">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 6.5 20 4v7l-5.5-2"/><circle cx="9.5" cy="14" r="5.5"/><circle cx="9.5" cy="14" r="1.4" fill="currentColor" stroke="none"/></svg>
+      </button></div>
+    </div>
+    <div>
+      <p class="optcap"><b>D · Ears.</b> Headphones. The coach in your ear; doubles as the run audio-cue mark.</p>
+      <div class="phone"><div class="pscreen">
+        <p class="eyebrow">Lower A · Exercise 1 of 6</p>
+        <h2 class="ptitle">Back Squat</h2>
+        <div class="pcard"><p class="eyebrow">Set 3 of 3</p><div class="herofig">245 <small>lb × 4</small></div></div>
+      </div>
+      <button class="fab" aria-label="Coach actions">
+        <svg width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="2.5" y="14" width="5" height="8" rx="2.2"/><rect x="16.5" y="14" width="5" height="8" rx="2.2"/></svg>
+      </button></div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

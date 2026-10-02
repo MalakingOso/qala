@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rail iterations: four cuts to compare</title>
+<style>
+  @font-face { font-family: "Qala Test"; src: url(../apps/web/public/fonts/QalaTestV2-Bold.woff2) format("woff2"); font-weight: 700; }
+  @font-face { font-family: "DM Mono"; src: url(../apps/web/public/fonts/DMMono-Regular.woff2) format("woff2"); font-weight: 400; }
+  @font-face { font-family: "DM Mono"; src: url(../apps/web/public/fonts/DMMono-Medium.woff2) format("woff2"); font-weight: 500; }
+  @font-face { font-family: "UI Sans"; src: url(fonts/recursive-slnt-wght.woff2) format("woff2"); font-weight: 300 1000; font-style: oblique 0deg 15deg; }
+
+  :root {
+    --bg: #f5f5f7; --surface: #fff;
+    --fg: #0f152a; --fg-2: #4a5578; --muted: #64708b;
+    --accent: #c2410c; --teal: #08a49c;
+    --bd: rgba(15,21,42,.16); --bd-s: rgba(15,21,42,.24);
+    --shadow: 2px 4px 0 0 rgba(15,21,42,.10);
+    --serif: "Qala Test", Georgia, serif;
+    --sans: "UI Sans", system-ui, sans-serif;
+    --mono: "DM Mono", ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #e8eaf0; color: var(--fg); font-family: var(--sans); font-size: 14px; -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 920px; margin: 0 auto; padding: 36px 20px 70px; }
+  .wrap > h1 { font-family: var(--serif); font-size: 30px; margin: 0 0 4px; }
+  .wrap > p { color: var(--fg-2); font-size: 13px; margin: 0 0 6px; max-width: 78ch; }
+  .wrap > p b { color: var(--fg); }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 26px 20px; margin-top: 18px; }
+  .optcap { font-size: 12.5px; color: var(--fg-2); margin: 0 0 10px; max-width: 420px; }
+  .optcap b { color: var(--fg); font-size: 14px; }
+
+  .phone { width: 390px; height: 600px; border-radius: 28px; background: var(--bg); border: 2px solid var(--bd); box-shadow: 4px 8px 0 0 rgba(15,21,42,.14); overflow: hidden; position: relative; }
+  .seam { position: absolute; inset: 0; width: 390px; height: 600px; z-index: 3; pointer-events: none; }
+  .sheet { position: absolute; inset: 0; z-index: 1; background: var(--surface); }
+  .sheet-inner { padding: 18px 14px 18px; }
+  .eyebrow { font-size: 10.5px; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); margin: 0 0 2px; }
+  .ptitle { font-family: var(--serif); font-size: 28px; margin: 0 0 10px; line-height: 1.1; }
+  .pcard { background: var(--surface); border: 2px solid var(--bd); border-radius: 8px; box-shadow: var(--shadow); padding: 12px; margin-bottom: 10px; }
+  .pcard h2 { font-size: 15px; font-weight: 600; margin: 0; }
+  .pcard .meta { font-size: 11.5px; color: var(--fg-2); margin: 1px 0 8px; }
+  .herofig { font-family: var(--serif); font-size: 36px; line-height: 1; font-variant-numeric: tabular-nums; text-align: center; margin: 2px 0; }
+  .herofig small { font-size: 11px; color: var(--muted); font-family: var(--sans); font-weight: 500; }
+  .pwhy { font-size: 11.5px; text-align: center; color: var(--fg-2); margin: 0 0 10px; }
+  .pcta { display: block; text-align: center; font-size: 13.5px; font-weight: 600; background: var(--accent); color: #fff; border-radius: 6px; padding: 12px; text-decoration: none; box-shadow: 2px 4px 0 0 #4a4a4a; }
+  .previewbar { display: none; align-items: center; justify-content: space-between; gap: 6px; font-size: 11.5px; background: rgba(255,255,255,.7); -webkit-backdrop-filter: blur(14px) saturate(1.6); backdrop-filter: blur(14px) saturate(1.6); border: 2px solid var(--bd); border-radius: 6px; padding: 7px 8px; margin-bottom: 10px; box-shadow: var(--shadow); }
+  .previewbar.show { display: flex; }
+  .previewbar button { border: 0; background: var(--fg); color: #fff; border-radius: 6px; padding: 6px 10px; font: 600 11px var(--sans); cursor: pointer; white-space: nowrap; }
+
+  .rail { position: absolute; inset: 0; z-index: 4; pointer-events: none; }
+  .rnode { position: absolute; display: flex; align-items: center; gap: 8px; border: 0; background: none; padding: 8px 6px; cursor: pointer; transform: translateY(-50%); pointer-events: auto; font-family: var(--sans); }
+  .rnode .nd { flex: none; width: 24px; height: 24px; border-radius: 50%; background: #fff; border: 2px solid rgba(15,21,42,.3); display: flex; align-items: center; justify-content: center; font-size: 10.5px; font-weight: 600; color: var(--muted); }
+  .rnode.done .nd { background: var(--teal); border-color: var(--teal); color: #fff; }
+  .rnode.now .nd { background: var(--accent); border-color: var(--accent); color: #fff; width: 28px; height: 28px; }
+  .rnode.sel .nd { box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--fg); }
+  .micro .nd { width: 12px; height: 12px; border-width: 2px; font-size: 0; }
+  .micro.now .nd { width: 14px; height: 14px; }
+
+  .tab { position: absolute; left: 8px; display: flex; align-items: center; gap: 7px; border: 2px solid var(--bd-s); background: #fff; border-radius: 0 8px 8px 0; border-left: 0; padding: 8px 10px 8px 8px; cursor: pointer; transform: translateY(-50%); pointer-events: auto; font-family: var(--sans); box-shadow: 2px 3px 0 0 rgba(15,21,42,.10); }
+  .tab .code { font-size: 11px; font-weight: 600; }
+  .tab.done { background: var(--teal); border-color: var(--teal); color: #fff; }
+  .tab.now { background: var(--accent); border-color: var(--accent); color: #fff; padding-right: 14px; box-shadow: 2px 3px 0 0 #4a4a4a; }
+  .tab .tm { font-size: 10px; opacity: .8; }
+  .tab.sel { box-shadow: 2px 3px 0 0 rgba(15,21,42,.10), 0 0 0 2px #fff, 0 0 0 4px var(--fg); }
+
+  /* dot strip cell (A): hero edge morphs around the strip, zero overlap */
+  .herowrap { position: relative; }
+  .bite { position: absolute; left: -4px; top: 50%; transform: translateY(-50%); width: 48px; height: 180px; z-index: 2; pointer-events: none; }
+  .dstrip {
+    position: absolute; left: -14px; top: 50%; transform: translateY(-50%); z-index: 3;
+    width: 28px; padding: 14px 0;
+    background: rgba(255,255,255,.62);
+    -webkit-backdrop-filter: blur(14px) saturate(1.6);
+    backdrop-filter: blur(14px) saturate(1.6);
+    border: 2px solid var(--bd-s); border-left: 0;
+    border-radius: 0 8px 8px 0;
+    box-shadow: var(--shadow);
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    touch-action: none; user-select: none; -webkit-user-select: none;
+  }
+  .ddot { border: 0; background: none; padding: 5px 8px; cursor: pointer; display: flex; }
+  .ddot i { width: 9px; height: 9px; border-radius: 50%; background: #dfe3ec; border: 1px solid rgba(15,21,42,.2); }
+  .ddot.done i { background: var(--teal); border-color: var(--teal); }
+  .ddot.now i { background: var(--accent); border-color: var(--accent); width: 11px; height: 11px; }
+  .ddot.sel i { box-shadow: 0 0 0 2px rgba(255,255,255,.7), 0 0 0 3.5px var(--fg); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Four rails to compare</h1>
+  <p><b>A · Dots</b> is the current direction: six tiny dots in a frosted strip hugging the left edge, vertically centered (menu demo in <a href="rail-cutline.html">rail-cutline.html</a>). <b>B · Angle</b> is the full-height cut with one straight diagonal seam. <b>C · Micro</b> shrinks the full-height rail to a dot strip. <b>D · Tabs</b> drops the rail panel entirely: notebook dividers jutting from the edge. Tap any node or tab to preview that stage; swipe up and down on the rail to step through them.</p>
+
+  <div class="grid">
+    <div>
+      <p class="optcap"><b>A · Dots.</b> Tiny frosted strip fixed mid-screen; boxes deform around it in a square notch as they scroll. Full demo + behavior spec in rail-cutline.</p>
+      <div class="phone" id="phA" style="background:var(--bg)">
+        <div class="sheet" id="sheetA" style="background:var(--bg)"><div class="sheet-inner" id="innerA" style="padding:18px 14px"></div></div>
+      </div>
+    </div>
+    <div>
+      <p class="optcap"><b>B · Angled seam.</b> Same idea, one straight diagonal: narrow at top, wide at the bottom. Sharper, simpler geometry.</p>
+      <div class="phone" id="phB">
+        <svg class="seam" viewBox="0 0 390 600"><path id="shB" fill="rgba(15,21,42,.12)" transform="translate(3,4)"/><path id="flB" fill="#fff" stroke="rgba(15,21,42,.24)" stroke-width="2" stroke-linejoin="round"/><path id="edB" fill="none" stroke="rgba(15,21,42,.24)" stroke-width="2"/></svg>
+        <div class="sheet" id="sheetB"><div class="sheet-inner" style="padding-left:122px" id="innerB"></div></div>
+        <div class="rail" id="railB"></div>
+      </div>
+    </div>
+    <div>
+      <p class="optcap"><b>C · Micro strip.</b> A 36px dot strip: status colors only, no numbers, smallest possible cut. Expands like A on swipe.</p>
+      <div class="phone" id="phC">
+        <svg class="seam" viewBox="0 0 390 600"><path id="shC" fill="rgba(15,21,42,.12)" transform="translate(3,4)"/><path id="flC" fill="#fff" stroke="rgba(15,21,42,.24)" stroke-width="2" stroke-linejoin="round"/><path id="edC" fill="none" stroke="rgba(15,21,42,.24)" stroke-width="2"/></svg>
+        <div class="sheet" id="sheetC"><div class="sheet-inner" style="padding-left:70px" id="innerC"></div></div>
+        <div class="rail" id="railC"></div>
+      </div>
+    </div>
+    <div>
+      <p class="optcap"><b>D · Divider tabs.</b> No panel at all: six tabs jut from the edge like notebook dividers. Nothing to open or close.</p>
+      <div class="phone" id="phD">
+        <div class="sheet" id="sheetD" style="inset:10px;border:2px solid var(--bd-s);border-radius:12px"><div class="sheet-inner" id="innerD" style="padding-left:78px"></div></div>
+        <div class="rail" id="railD"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const H = 600, GAP = 12, NPTS = 24;
+  const stages = [
+    { label: 'Check-in', code: 'CK', time: '6:52',  status: 'done', title: 'How are you walking in?', meta: 'Recovery 6 · quads 4 · 72', fig: '72', unit: 'readiness', why: 'Checked in at 6:52 am.', cta: 'See check-in' },
+    { label: 'Warm-up', code: 'WU', time: '7:00',  status: 'done', title: 'Warm-up · done', meta: 'Bike 10 · roller + ramp', fig: '10', unit: 'min', why: 'Finished at 7:12.', cta: 'See warm-up' },
+    { label: 'Lift', code: 'LF', time: '7:15',  status: 'now',  title: 'Lower A · Squat day', meta: 'Squat 3 × 4 at 245 · 55 min', fig: '245', unit: 'lb × 4', why: 'Under your average, so squat holds.', cta: 'Start warm-up' },
+    { label: 'Recover', code: 'RC', time: '12:00', status: 'todo', title: 'Recovery window', meta: 'Eat well before the run', fig: '3.0', unit: 'mi later', why: 'The easy run stays easy if you eat now.', cta: 'See plan' },
+    { label: 'Run', code: 'RN', time: '6 pm',  status: 'todo', title: 'Easy run · 3.0 mi', meta: 'Conversational pace', fig: '3.0', unit: 'mi', why: 'Legs lifted today, so keep it easy.', cta: 'Start run' },
+    { label: 'Wind down', code: 'WD', time: '10:30', status: 'todo', title: 'Wind down', meta: 'Sleep target 8 h', fig: '8', unit: 'h sleep', why: 'Day complete when the run is saved.', cta: 'See day' },
+  ];
+  const nowIdx = 2;
+  const YS = stages.map((_, i) => 110 + i * 78);
+
+  function heroHTML() {
+    return `<p class="eyebrow">Sunday · Block 2, wk 3</p>
+      <h2 class="ptitle">Today</h2>
+      <div class="previewbar"><span class="pvtext">Preview</span><button class="pvback">Back to now</button></div>
+      <div class="pcard">
+        <p class="eyebrow kick">Now · lift</p>
+        <h2 class="htitle">Lower A · Squat day</h2>
+        <p class="meta hmeta">Squat 3 × 4 at 245 · 55 min</p>
+        <div class="herofig hfig">245 <small>lb × 4</small></div>
+        <p class="pwhy hwhy">Under your average, so squat holds.</p>
+        <a class="pcta hcta" href="#">Start warm-up</a>
+      </div>`;
+  }
+
+  function wire(prefix, opts) {
+    const inner = document.getElementById('inner' + prefix);
+    inner.innerHTML = heroHTML();
+    const rail = document.getElementById('rail' + prefix);
+    let sel = nowIdx;
+    const items = stages.map((s, i) => {
+      let el;
+      if (opts.tabs) {
+        el = document.createElement('button');
+        el.className = 'tab ' + s.status;
+        el.innerHTML = `<span class="code">${s.code}</span><span class="tm">${s.time}</span>`;
+        el.style.top = YS[i] + 'px';
+      } else {
+        el = document.createElement('button');
+        el.className = 'rnode ' + s.status + (opts.micro ? ' micro' : '');
+        el.setAttribute('aria-label', `${s.label} at ${s.time}`);
+        el.innerHTML = `<span class="nd">${s.status === 'done' ? '✓' : (i + 1)}</span>`;
+        el.style.top = YS[i] + 'px';
+        el.style.left = opts.left(i) + 'px';
+      }
+      el.addEventListener('click', () => select(i));
+      rail.appendChild(el);
+      return el;
+    });
+    function select(i) {
+      sel = Math.max(0, Math.min(stages.length - 1, i));
+      items.forEach((el, j) => el.classList.toggle('sel', j === sel));
+      const s = stages[sel];
+      inner.querySelector('.kick').textContent = (sel === nowIdx ? 'Now · ' : 'Preview · ') + s.label.toLowerCase();
+      inner.querySelector('.htitle').textContent = s.title;
+      inner.querySelector('.hmeta').textContent = s.meta;
+      inner.querySelector('.hfig').innerHTML = `${s.fig} <small>${s.unit}</small>`;
+      inner.querySelector('.hwhy').textContent = s.why;
+      inner.querySelector('.hcta').textContent = s.cta;
+      inner.querySelector('.previewbar').classList.toggle('show', sel !== nowIdx);
+      inner.querySelector('.pvtext').textContent = `Preview · ${s.label}`;
+    }
+    inner.querySelector('.pvback').addEventListener('click', () => select(nowIdx));
+    // swipe up/down on the left quarter steps through stages
+    const phone = document.getElementById('ph' + prefix);
+    let sy = null;
+    phone.addEventListener('touchstart', e => {
+      const t = e.changedTouches[0];
+      const r = phone.getBoundingClientRect();
+      sy = (t.clientX - r.left) < 130 ? t.clientY : null;
+    }, { passive: true });
+    phone.addEventListener('touchend', e => {
+      if (sy === null) return;
+      const dy = e.changedTouches[0].clientY - sy;
+      if (dy < -40) select(sel + 1);
+      else if (dy > 40) select(sel - 1);
+      sy = null;
+    }, { passive: true });
+    select(nowIdx);
+    return { select };
+  }
+
+  function seam(prefix, boundFn) {
+    const bound = (y) => boundFn(y);
+    let d = `M10,12 L${bound(12).toFixed(1)},12 `;
+    for (let k = 1; k <= NPTS; k++) {
+      const y = 12 + (588 - 12) * k / NPTS;
+      d += `L${bound(y).toFixed(1)},${y.toFixed(1)} `;
+    }
+    d += 'L10,588 Z';
+    document.getElementById('fl' + prefix).setAttribute('d', d);
+    document.getElementById('sh' + prefix).setAttribute('d', d);
+    let e = `M${(bound(12) + GAP).toFixed(1)},12 `;
+    for (let k = 1; k <= NPTS; k++) {
+      const y = 12 + (588 - 12) * k / NPTS;
+      e += `L${(bound(y) + GAP).toFixed(1)},${y.toFixed(1)} `;
+    }
+    document.getElementById('ed' + prefix).setAttribute('d', e);
+    const clip = [];
+    for (let k = 0; k <= NPTS; k++) {
+      const y = (600 * k / NPTS);
+      clip.push(`${(bound(y) + GAP).toFixed(1)}px ${y.toFixed(1)}px`);
+    }
+    document.getElementById('sheet' + prefix).style.clipPath =
+      `polygon(390px 0px, 390px 600px, ${clip.slice().reverse().join(', ')})`;
+    return bound;
+  }
+
+  // A: dot strip on the edge (menu lives in rail-cutline)
+  (function dotsA() {
+    const inner = document.getElementById('innerA');
+    inner.innerHTML = `<p class="eyebrow">Sunday · Block 2, wk 3</p>
+      <h2 class="ptitle">Today</h2>
+      <div class="previewbar"><span class="pvtext">Preview</span><button class="pvback">Back to now</button></div>
+      <div class="herowrap">
+        <div class="pcard" style="padding-left:44px">
+          <p class="eyebrow kick">Now · lift</p>
+          <h2 class="htitle">Lower A · Squat day</h2>
+          <p class="meta hmeta">Squat 3 × 4 at 245 · 55 min</p>
+          <div class="herofig hfig">245 <small>lb × 4</small></div>
+          <p class="pwhy hwhy">Under your average, so squat holds.</p>
+          <a class="pcta hcta" href="#">Start warm-up</a>
+        </div>
+        <svg class="bite" viewBox="0 0 48 180" aria-hidden="true">
+          <path d="M0,0 L36,0 L36,180 L0,180 Z" style="fill:var(--bg)"/>
+          <path d="M4,0 L36,0 L36,180 L4,180" fill="none" stroke="rgba(15,21,42,.24)" stroke-width="2"/>
+        </svg>
+        <div class="dstrip" id="stripA"></div>
+      </div>
+      <div class="pcard"><p class="eyebrow">Then · 6 pm</p><h2>Easy run · 3.0 mi</h2></div>`;
+    const strip = document.getElementById('stripA');
+    let sel = nowIdx;
+    const items = stages.map((s, i) => {
+      const b = document.createElement('button');
+      b.className = 'ddot ' + s.status;
+      b.setAttribute('aria-label', `${s.label} at ${s.time}`);
+      b.innerHTML = `<i></i>`;
+      b.addEventListener('click', () => select(i));
+      strip.appendChild(b);
+      return b;
+    });
+    function select(i) {
+      sel = Math.max(0, Math.min(stages.length - 1, i));
+      items.forEach((el, j) => el.classList.toggle('sel', j === sel));
+      const s = stages[sel];
+      inner.querySelector('.kick').textContent = (sel === nowIdx ? 'Now · ' : 'Preview · ') + s.label.toLowerCase();
+      inner.querySelector('.htitle').textContent = s.title;
+      inner.querySelector('.hmeta').textContent = s.meta;
+      inner.querySelector('.hfig').innerHTML = `${s.fig} <small>${s.unit}</small>`;
+      inner.querySelector('.hwhy').textContent = s.why;
+      inner.querySelector('.hcta').textContent = s.cta;
+      inner.querySelector('.previewbar').classList.toggle('show', sel !== nowIdx);
+      inner.querySelector('.pvtext').textContent = `Preview · ${s.label}`;
+    }
+    inner.querySelector('.pvback').addEventListener('click', () => select(nowIdx));
+    let sy = null;
+    strip.addEventListener('touchstart', e => { sy = e.changedTouches[0].clientY; }, { passive: true });
+    strip.addEventListener('touchend', e => {
+      if (sy === null) return;
+      const dy = e.changedTouches[0].clientY - sy;
+      if (dy < -40) select(sel + 1);
+      else if (dy > 40) select(sel - 1);
+      sy = null;
+    }, { passive: true });
+    select(nowIdx);
+  })();
+  // B: diagonal, narrow top -> wide bottom
+  const bB = seam('B', y => 50 + 52 * y / H);
+  wire('B', { left: i => Math.max(2, 10 + (bB(YS[i]) - 10) / 2 - 18) });
+  // C: micro strip
+  seam('C', () => 46);
+  wire('C', { micro: true, left: () => 16 });
+  // D: tabs need no seam
+  wire('D', { tabs: true });
+</script>
+</body>
+</html>

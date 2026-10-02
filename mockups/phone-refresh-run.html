@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Qala refresh: Live run</title>
+<link rel="stylesheet" href="phone-refresh-core.css">
+<style>
+  .phone.run { background: #dfe5ee; }
+  .mapbg { position: absolute; inset: 0; }
+  .mapbg svg { width: 100%; height: 100%; display: block; }
+  .hud { position: relative; z-index: 5; padding-top: 46px; }
+  .hud-hero {
+    margin: 6px 16px 0; border-radius: 26px; padding: 18px 20px 16px; text-align: center;
+  }
+  .hud-hero .miles { font-family: "Qala Test", Georgia, serif; font-weight: 700; font-size: 76px; line-height: 1; font-variant-numeric: lining-nums tabular-nums; }
+  .hud-hero .trio { display: flex; margin-top: 10px; }
+  .hud-hero .trio > div { flex: 1; }
+  .hud-hero .trio > div + div { border-left: 1px solid rgba(15,21,42,.12); }
+  .hud-hero .trio .v { font-family: "Qala Test", Georgia, serif; font-weight: 700; font-size: 20px; font-variant-numeric: lining-nums tabular-nums; }
+  .hud-hero .trio .k { font-size: 10px; letter-spacing: .09em; text-transform: uppercase; color: var(--fg-muted); }
+  .rec { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 500; color: var(--danger); }
+  .rec i { width: 8px; height: 8px; border-radius: 50%; background: var(--danger); animation: blink 1.4s infinite; }
+  @keyframes blink { 50% { opacity: .25; } }
+  .hud-pace {
+    margin: 10px 16px 0; border-radius: 20px; padding: 12px 18px;
+    display: flex; align-items: center; gap: 12px; font-size: 13px;
+  }
+  .hud-pace .band { flex: 1; height: 8px; border-radius: 4px; background: rgba(15,21,42,.1); position: relative; }
+  .hud-pace .band i { position: absolute; top: -4px; width: 4px; height: 16px; border-radius: 2px; background: var(--run); left: 62%; }
+  .hud-pace .band em { position: absolute; top: 0; height: 100%; background: rgba(72,92,199,.35); border-radius: 4px; left: 45%; width: 25%; }
+  .run-controls {
+    position: sticky; bottom: 14px; z-index: 50; margin: 12px 16px 0;
+    display: flex; gap: 10px; align-items: center;
+  }
+  .pause-big {
+    flex: none; width: 76px; height: 76px; border-radius: 50%; border: 0; cursor: pointer;
+    background: var(--accent); color: #fff; font-size: 26px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 14px 30px -8px rgba(194,65,12,.6);
+  }
+  .finish-pill {
+    flex: 1; border-radius: 22px; padding: 16px; font-size: 14px; font-weight: 500;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+<div class="opt">
+  <h1>Live run</h1>
+  <p><b>The map is the screen.</b> Full-bleed route with <b>frosted HUD cards</b> floating over it: miles huge, time and pace beneath, the target band as a slim glass strip, and a thumb-sized pause plus a glass Finish pill pinned to the bottom. Numbers tick live here.</p>
+  <div class="phone run"><div class="screen">
+    <div class="mapbg" aria-hidden="true">
+      <svg viewBox="0 0 390 844" preserveAspectRatio="xMidYMid slice">
+        <rect width="390" height="844" fill="#dde3ec"/>
+        <g stroke="#c9d1de" stroke-width="10">
+          <path d="M-20 180 L410 120"/><path d="M-20 380 L410 340"/>
+          <path d="M-20 580 L410 620"/><path d="M-20 760 L410 720"/>
+          <path d="M90 -20 L60 870"/><path d="M230 -20 L260 870"/><path d="M330 -20 L310 870"/>
+        </g>
+        <g stroke="#eef1f6" stroke-width="6">
+          <path d="M-20 180 L410 120"/><path d="M-20 380 L410 340"/>
+          <path d="M-20 580 L410 620"/><path d="M-20 760 L410 720"/>
+          <path d="M90 -20 L60 870"/><path d="M230 -20 L260 870"/><path d="M330 -20 L310 870"/>
+        </g>
+        <rect x="240" y="400" width="80" height="60" rx="10" fill="#cfe3d4"/>
+        <path d="M60 640 C 90 620, 70 560, 120 540 S 150 450, 210 440 S 300 380, 320 430 S 300 520, 240 540 S 150 580, 130 620 S 80 660, 60 640"
+          fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round"/>
+        <path d="M60 640 C 90 620, 70 560, 120 540 S 150 450, 210 440 S 300 380, 320 430 S 300 520, 240 540 S 150 580, 130 620 S 80 660, 60 640"
+          fill="none" stroke="#485cc7" stroke-width="5" stroke-linecap="round"/>
+        <circle cx="60" cy="640" r="7" fill="#0f152a"/>
+        <circle cx="248" cy="505" r="11" fill="#485cc7" stroke="#fff" stroke-width="4"/>
+      </svg>
+    </div>
+    <div class="notch"></div>
+    <div class="statusbar"><span>9:41</span><span>5G&nbsp;&nbsp;▮▮▮</span></div>
+
+    <div class="hud">
+      <div class="hud-hero glass">
+        <span class="rec"><i></i>RECORDING · EASY RUN</span>
+        <div class="miles ticking" id="miles">1.42</div>
+        <div class="group-label">miles</div>
+        <div class="trio">
+          <div><div class="v ticking" id="t">13:05</div><div class="k">Time</div></div>
+          <div><div class="v ticking">9:12</div><div class="k">Pace</div></div>
+          <div><div class="v ticking">9:08</div><div class="k">Avg</div></div>
+        </div>
+      </div>
+      <div class="hud-pace glass">
+        <span style="font-size:12px;color:var(--fg-2)">9:00–9:30</span>
+        <div class="band"><em></em><i></i></div>
+        <span style="font-size:12px;font-weight:500">on pace</span>
+      </div>
+    </div>
+
+    <div style="height:330px"></div>
+    <div class="run-controls">
+      <button class="pause-big" aria-label="Pause">❚❚</button>
+      <button class="finish-pill glass">■&nbsp;&nbsp;Finish run</button>
+    </div>
+    <div class="page-pad"></div>
+  </div></div>
+</div>
+<script>
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let mi = 1.42, sec = 785;
+  const mEl = document.getElementById('miles'), tEl = document.getElementById('t');
+  if (!reduced) setInterval(() => {
+    mi += 0.0038; sec += 2;
+    mEl.textContent = mi.toFixed(2);
+    tEl.textContent = Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0');
+  }, 2000);
+</script>
+</body>
+</html>

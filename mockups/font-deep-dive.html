@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Qala font deep dive: body face specimens</title>
+<style>
+  @font-face { font-family: "Qala Test"; src: url(../apps/web/public/fonts/QalaTestV2-Bold.woff2) format("woff2"); font-weight: 700; }
+  @font-face { font-family: "DM Mono"; src: url(../apps/web/public/fonts/DMMono-Regular.woff2) format("woff2"); font-weight: 400; }
+  @font-face { font-family: "DM Mono"; src: url(../apps/web/public/fonts/DMMono-Medium.woff2) format("woff2"); font-weight: 500; }
+  @font-face { font-family: "Spec Recursive"; src: url(fonts/recursive-slnt-wght.woff2) format("woff2"); font-weight: 300 1000; font-style: oblique 0deg 15deg; }
+  @font-face { font-family: "Spec Public"; src: url(fonts/public-sans.woff2) format("woff2"); font-weight: 100 900; }
+  @font-face { font-family: "Spec Public"; src: url(fonts/public-sans-italic.woff2) format("woff2"); font-weight: 100 900; font-style: italic; }
+  @font-face { font-family: "Spec Source"; src: url(fonts/source-sans-3.woff2) format("woff2"); font-weight: 200 900; }
+  @font-face { font-family: "Spec Source"; src: url(fonts/source-sans-3-italic.woff2) format("woff2"); font-weight: 200 900; font-style: italic; }
+  @font-face { font-family: "Spec Atkinson"; src: url(fonts/atkinson-next.woff2) format("woff2"); font-weight: 200 800; }
+  @font-face { font-family: "Spec Atkinson"; src: url(fonts/atkinson-next-italic.woff2) format("woff2"); font-weight: 200 800; font-style: italic; }
+  @font-face { font-family: "Spec Figtree"; src: url(fonts/figtree.woff2) format("woff2"); font-weight: 300 900; }
+  @font-face { font-family: "Spec Figtree"; src: url(fonts/figtree-italic.woff2) format("woff2"); font-weight: 300 900; font-style: italic; }
+  @font-face { font-family: "Spec Plex"; src: url(fonts/plex-400.woff2) format("woff2"); font-weight: 400; }
+  @font-face { font-family: "Spec Plex"; src: url(fonts/plex-600.woff2) format("woff2"); font-weight: 600; }
+  @font-face { font-family: "Spec Plex"; src: url(fonts/plex-400-italic.woff2) format("woff2"); font-weight: 400; font-style: italic; }
+
+  :root { --fg: #0f152a; --fg-2: #4a5578; --muted: #64708b; --accent: #c2410c; --grid: #e3e6ee; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #e8eaf0; color: var(--fg); font-family: "DM Mono", monospace; font-size: 13px; line-height: 1.55; -webkit-font-smoothing: antialiased; }
+  .doc { max-width: 860px; margin: 0 auto; padding: 36px 20px 70px; }
+  .doc > h1 { font-family: "Qala Test", Georgia, serif; font-size: 32px; margin: 0 0 4px; }
+  .doc > .sub { color: var(--fg-2); margin: 0 0 20px; font-size: 12.5px; max-width: 68ch; }
+  .doc > .sub b { color: var(--fg); }
+  .hero-strip { background: #fff; border-radius: 14px; padding: 18px 22px; margin-bottom: 14px; box-shadow: 0 10px 30px -12px rgba(15,21,42,.18); display: flex; gap: 26px; align-items: center; flex-wrap: wrap; }
+  .hero-strip .t { font-family: "Qala Test", Georgia, serif; font-weight: 700; font-size: 64px; line-height: 1; font-variant-numeric: lining-nums tabular-nums; }
+  .hero-strip .c { font-size: 12px; color: var(--fg-2); max-width: 52ch; }
+  .card { background: #fff; border-radius: 14px; padding: 20px 22px; margin-bottom: 14px; box-shadow: 0 10px 30px -12px rgba(15,21,42,.18); }
+  .card .fname { font-family: "Qala Test", Georgia, serif; font-size: 20px; }
+  .card .facts { font-size: 11.5px; color: var(--muted); margin: 2px 0 12px; }
+  .card .facts b { color: var(--fg-2); font-weight: 500; }
+  .spec { border-top: 1px solid var(--grid); padding-top: 14px; }
+  .spec .s-title { font-size: 17px; font-weight: 600; margin: 0; }
+  .spec .s-meta { font-size: 12.5px; color: var(--fg-2); margin: 1px 0 8px; }
+  .spec .s-body { font-size: 14.5px; margin: 0 0 8px; max-width: 60ch; }
+  .spec .s-stats { font-size: 14px; margin: 0 0 8px; font-variant-numeric: tabular-nums; }
+  .spec .s-stats b { font-weight: 600; }
+  .spec .s-cols { display: flex; gap: 26px; margin: 0 0 8px; }
+  .spec .s-col { font-size: 13.5px; text-align: right; font-variant-numeric: tabular-nums; line-height: 1.7; }
+  .spec .s-col span { display: block; color: var(--muted); font-size: 11px; text-align: right; }
+  .spec .s-btn { display: inline-block; font-size: 14px; font-weight: 600; background: var(--accent); color: #fff; border-radius: 8px; padding: 9px 18px; margin: 2px 12px 8px 0; }
+  .spec .s-ghost { display: inline-block; font-size: 14px; font-weight: 500; border: 2px solid rgba(15,21,42,.2); border-radius: 8px; padding: 7px 16px; margin-bottom: 8px; }
+  .spec .s-label { font-size: 11px; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); margin: 0 0 4px; }
+  .spec .s-italic { font-size: 13.5px; font-style: italic; color: var(--fg-2); margin: 0; }
+  .f-recursive { font-family: "Spec Recursive", sans-serif; }
+  .f-recursive .s-italic { font-style: oblique 15deg; }
+  .f-public { font-family: "Spec Public", sans-serif; }
+  .f-source { font-family: "Spec Source", sans-serif; }
+  .f-atkinson { font-family: "Spec Atkinson", sans-serif; }
+  .f-figtree { font-family: "Spec Figtree", sans-serif; }
+  .f-plex { font-family: "Spec Plex", sans-serif; }
+  .f-mono { font-family: "DM Mono", monospace; }
+  .cut { opacity: .85; border-left: 4px solid var(--accent); }
+  .method { font-size: 12px; color: var(--fg-2); background: #fff; border-radius: 14px; padding: 16px 22px; margin-bottom: 14px; }
+  .method b { color: var(--fg); }
+  .method code { font-size: 11.5px; background: #f1f3f9; padding: 1px 6px; border-radius: 5px; }
+</style>
+</head>
+<body>
+<div class="doc">
+  <h1>Body face specimens</h1>
+  <p class="sub">Every candidate set in real Qala copy at production sizes: card title 17 semibold, body 14.5, stats with numerals, a right-aligned load column, buttons, an 11px group label, and an italic hint line. <b>Row 0 is today</b> (DM Mono body) for contrast. All files below are the Google Fonts latin woff2 I measured with fontTools; facts, not brochure copy. DM Sans was cut before specimens: it ships proportional-only digits with no <b>tnum</b>, so stat columns and ticking numbers would wobble.</p>
+
+  <div class="hero-strip">
+    <div class="t">2:18</div>
+    <div class="c"><b>Qala Test stays, narrowed.</b> The proposal: it keeps hero numerals (this timer, top sets, stat tiles) and the page title at the top of a screen. Everything below the title goes to the new sans; DM Mono keeps set logs, tables, LS++ code, and chart ticks. So the serif is the brand moment, not the wallpaper.</div>
+  </div>
+
+  <div class="card">
+    <div class="fname">0 · DM Mono <span style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted)">(today, for contrast)</span></div>
+    <div class="facts">body today · every sentence pays the full character width</div>
+    <div class="spec f-mono">
+      <p class="s-title">Back Squat</p>
+      <p class="s-meta">3 × 4 @ 245 lb · last time 245 × 4, 245 × 4, 245 × 3</p>
+      <p class="s-body">A little under your average, so squat holds at 245. Quads ready Wednesday.</p>
+      <p class="s-stats"><b>20,420</b> lb · <b>+6%</b> · <b>58</b> min · <b>1</b> PR</p>
+      <div class="s-cols"><div class="s-col"><span>load</span>245<br>205<br>360<br>110</div>
+      <div class="s-col"><span>e1RM</span>296<br>241<br>—<br>128</div></div>
+      <span class="s-btn">Start warm-up</span><span class="s-ghost">Skip today</span>
+      <p class="s-label">Now · warm-up, then lift</p>
+      <p class="s-italic">Same as last set, leave the plates on.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="fname">1 · Recursive</div>
+    <div class="facts"><b>OFL</b> · Arrow Type · variable <b>wght 300–1000 + slnt</b> (this file; full family adds MONO / CASL / CRSV) · digits <b>tabular by default</b> (pnum for proportional) · real obliques, no true italic · x-height <b>0.526</b>, tallest here · Beamer's UI face · 105 KB latin</div>
+    <div class="spec f-recursive">
+      <p class="s-title">Back Squat</p>
+      <p class="s-meta">3 × 4 @ 245 lb · last time 245 × 4, 245 × 4, 245 × 3</p>
+      <p class="s-body">A little under your average, so squat holds at 245. Quads ready Wednesday.</p>
+      <p class="s-stats"><b>20,420</b> lb · <b>+6%</b> · <b>58</b> min · <b>1</b> PR</p>
+      <div class="s-cols"><div class="s-col"><span>load</span>245<br>205<br>360<br>110</div>
+      <div class="s-col"><span>e1RM</span>296<br>241<br>—<br>128</div></div>
+      <span class="s-btn">Start warm-up</span><span class="s-ghost">Skip today</span>
+      <p class="s-label">Now · warm-up, then lift</p>
+      <p class="s-italic">Same as last set, leave the plates on.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="fname">2 · Public Sans</div>
+    <div class="facts"><b>OFL</b> · USWDS, Libre Franklin descendant · variable <b>wght 100–900</b> + italic · <b>tnum</b> available, proportional default · x-height <b>0.517</b> · 26 KB latin</div>
+    <div class="spec f-public">
+      <p class="s-title">Back Squat</p>
+      <p class="s-meta">3 × 4 @ 245 lb · last time 245 × 4, 245 × 4, 245 × 3</p>
+      <p class="s-body">A little under your average, so squat holds at 245. Quads ready Wednesday.</p>
+      <p class="s-stats"><b>20,420</b> lb · <b>+6%</b> · <b>58</b> min · <b>1</b> PR</p>
+      <div class="s-cols"><div class="s-col"><span>load</span>245<br>205<br>360<br>110</div>
+      <div class="s-col"><span>e1RM</span>296<br>241<br>—<br>128</div></div>
+      <span class="s-btn">Start warm-up</span><span class="s-ghost">Skip today</span>
+      <p class="s-label">Now · warm-up, then lift</p>
+      <p class="s-italic">Same as last set, leave the plates on.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="fname">3 · Source Sans 3</div>
+    <div class="facts"><b>OFL</b> · Adobe (Paul Hunt) · variable <b>wght 200–900</b> + italic · digits <b>tabular by default</b> (pnum for proportional) · x-height <b>0.478</b>, smallest here, reads a size down · 28 KB latin</div>
+    <div class="spec f-source">
+      <p class="s-title">Back Squat</p>
+      <p class="s-meta">3 × 4 @ 245 lb · last time 245 × 4, 245 × 4, 245 × 3</p>
+      <p class="s-body">A little under your average, so squat holds at 245. Quads ready Wednesday.</p>
+      <p class="s-stats"><b>20,420</b> lb · <b>+6%</b> · <b>58</b> min · <b>1</b> PR</p>
+      <div class="s-cols"><div class="s-col"><span>load</span>245<br>205<br>360<br>110</div>
+      <div class="s-col"><span>e1RM</span>296<br>241<br>—<br>128</div></div>
+      <span class="s-btn">Start warm-up</span><span class="s-ghost">Skip today</span>
+      <p class="s-label">Now · warm-up, then lift</p>
+      <p class="s-italic">Same as last set, leave the plates on.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="fname">4 · Atkinson Hyperlegible Next</div>
+    <div class="facts"><b>OFL</b> · Braille Institute · variable <b>wght 200–800</b> + italic · <b>tnum</b> available, proportional default · x-height <b>0.496</b> · drawn to split confusables (1/l/I, 0/O) · 33 KB latin</div>
+    <div class="spec f-atkinson">
+      <p class="s-title">Back Squat</p>
+      <p class="s-meta">3 × 4 @ 245 lb · last time 245 × 4, 245 × 4, 245 × 3</p>
+      <p class="s-body">A little under your average, so squat holds at 245. Quads ready Wednesday.</p>
+      <p class="s-stats"><b>20,420</b> lb · <b>+6%</b> · <b>58</b> min · <b>1</b> PR</p>
+      <div class="s-cols"><div class="s-col"><span>load</span>245<br>205<br>360<br>110</div>
+      <div class="s-col"><span>e1RM</span>296<br>241<br>—<br>128</div></div>
+      <span class="s-btn">Start warm-up</span><span class="s-ghost">Skip today</span>
+      <p class="s-label">Now · warm-up, then lift</p>
+      <p class="s-italic">Same as last set, leave the plates on.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="fname">5 · Figtree</div>
+    <div class="facts"><b>OFL</b> · Erik Kennedy · variable <b>wght 300–900</b> + italic · <b>tnum</b> available, proportional default · x-height <b>0.500</b> · smallest file here, 19 KB latin</div>
+    <div class="spec f-figtree">
+      <p class="s-title">Back Squat</p>
+      <p class="s-meta">3 × 4 @ 245 lb · last time 245 × 4, 245 × 4, 245 × 3</p>
+      <p class="s-body">A little under your average, so squat holds at 245. Quads ready Wednesday.</p>
+      <p class="s-stats"><b>20,420</b> lb · <b>+6%</b> · <b>58</b> min · <b>1</b> PR</p>
+      <div class="s-cols"><div class="s-col"><span>load</span>245<br>205<br>360<br>110</div>
+      <div class="s-col"><span>e1RM</span>296<br>241<br>—<br>128</div></div>
+      <span class="s-btn">Start warm-up</span><span class="s-ghost">Skip today</span>
+      <p class="s-label">Now · warm-up, then lift</p>
+      <p class="s-italic">Same as last set, leave the plates on.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="fname">6 · IBM Plex Sans</div>
+    <div class="facts"><b>OFL</b> · IBM (Mike Abbink) · <b>static</b> weights + italics, shown 400 / 600 · digits <b>tabular by default</b> · x-height <b>0.516</b> · most files to ship (no variable on GF) · 22 KB per weight latin</div>
+    <div class="spec f-plex">
+      <p class="s-title">Back Squat</p>
+      <p class="s-meta">3 × 4 @ 245 lb · last time 245 × 4, 245 × 4, 245 × 3</p>
+      <p class="s-body">A little under your average, so squat holds at 245. Quads ready Wednesday.</p>
+      <p class="s-stats"><b>20,420</b> lb · <b>+6%</b> · <b>58</b> min · <b>1</b> PR</p>
+      <div class="s-cols"><div class="s-col"><span>load</span>245<br>205<br>360<br>110</div>
+      <div class="s-col"><span>e1RM</span>296<br>241<br>—<br>128</div></div>
+      <span class="s-btn">Start warm-up</span><span class="s-ghost">Skip today</span>
+      <p class="s-label">Now · warm-up, then lift</p>
+      <p class="s-italic">Same as last set, leave the plates on.</p>
+    </div>
+  </div>
+
+  <div class="method">
+    <b>How this was measured.</b> Files are the Google Fonts latin woff2 for each face (via Fontsource, same bytes Google serves). <code>fontTools</code> read the <code>fvar</code> axes, the <code>GSUB</code> feature list, <code>OS/2.sxHeight</code>, and the advance widths of 0–9. Licenses confirmed as <code>license: "OFL"</code> in each family's upstream <code>METADATA.pb</code>. Full upstream variable TTFs were checked where the subset lacked <code>tnum</code>: Recursive, Source Sans 3, and DM Sans have no <code>tnum</code> even upstream, but Recursive and Source Sans ship tabular-by-default digits with <code>pnum</code>, so alignment needs no CSS. DM Sans is proportional-only and was cut.
+  </div>
+</div>
+</body>
+</html>

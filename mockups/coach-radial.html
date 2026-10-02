@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Coach radial: Drawboard circle for voice and quick actions</title>
+<style>
+  @font-face { font-family: "Qala Test"; src: url(../apps/web/public/fonts/QalaTestV2-Bold.woff2) format("woff2"); font-weight: 700; }
+  @font-face { font-family: "DM Mono"; src: url(../apps/web/public/fonts/DMMono-Regular.woff2) format("woff2"); font-weight: 400; }
+  @font-face { font-family: "DM Mono"; src: url(../apps/web/public/fonts/DMMono-Medium.woff2) format("woff2"); font-weight: 500; }
+  @font-face { font-family: "UI Sans"; src: url(fonts/recursive-slnt-wght.woff2) format("woff2"); font-weight: 300 1000; font-style: oblique 0deg 15deg; }
+
+  :root {
+    --bg: #f5f5f7; --surface: #fff;
+    --fg: #0f152a; --fg-2: #4a5578; --muted: #64708b;
+    --accent: #c2410c; --teal: #08a49c;
+    --border: rgba(15,21,42,.14);
+    --shadow: 2px 4px 0 0 rgba(15,21,42,.10);
+    --serif: "Qala Test", Georgia, serif;
+    --sans: "UI Sans", system-ui, sans-serif;
+    --mono: "DM Mono", ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #e8eaf0; color: var(--fg); font-family: var(--sans); font-size: 14px; -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 560px; margin: 0 auto; padding: 36px 20px 70px; }
+  .wrap > h1 { font-family: var(--serif); font-size: 30px; margin: 0 0 4px; }
+  .wrap > p { color: var(--fg-2); font-size: 13px; margin: 0 0 18px; }
+  .wrap > p b { color: var(--fg); }
+
+  .phone { width: 390px; margin: 0 auto; border-radius: 28px; background: var(--bg); border: 2px solid var(--border); box-shadow: 4px 8px 0 0 rgba(15,21,42,.14); overflow: hidden; position: relative; }
+  .pscreen { padding: 18px 14px 22px; min-height: 640px; }
+  .eyebrow { font-size: 11px; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); margin: 0 4px 2px; }
+  .ptitle { font-family: var(--serif); font-size: 30px; margin: 0 4px 12px; line-height: 1.1; }
+  .pcard { background: var(--surface); border: 2px solid var(--border); border-radius: 8px; box-shadow: var(--shadow); padding: 16px; margin-bottom: 12px; }
+  .pcard h2 { font-size: 17px; font-weight: 600; margin: 0; }
+  .pcard .meta { font-size: 12.5px; color: var(--fg-2); margin: 1px 0 10px; }
+  .setdots { display: flex; gap: 8px; justify-content: center; margin: 2px 0 8px; }
+  .setdots i { width: 30px; height: 7px; border-radius: 4px; background: #dfe3ec; }
+  .setdots i.f { background: var(--teal); }
+  .setdots i.n { background: var(--accent); }
+  .herofig { font-family: var(--serif); font-size: 44px; line-height: 1; font-variant-numeric: tabular-nums; text-align: center; margin: 4px 0; }
+  .herofig small { font-size: 13px; color: var(--muted); font-family: var(--sans); font-weight: 500; }
+  .pwhy { font-size: 13px; text-align: center; color: var(--fg-2); margin: 0 0 12px; }
+  .pcta { display: block; text-align: center; font-size: 15px; font-weight: 600; background: var(--accent); color: #fff; border-radius: 6px; padding: 14px; text-decoration: none; box-shadow: 2px 4px 0 0 #4a4a4a; margin-bottom: 10px; }
+  .coachline { display: none; font-size: 12.5px; background: #f1f3f9; border: 2px solid var(--border); border-radius: 6px; padding: 8px 10px; margin: 0 0 10px; }
+  .coachline.show { display: block; }
+  .coachline b { font-weight: 600; }
+
+  /* FAB trigger */
+  .fab {
+    position: absolute; right: 16px; bottom: 20px; z-index: 5;
+    width: 62px; height: 62px; border-radius: 50%;
+    background: var(--accent); border: 2px solid var(--accent); cursor: pointer;
+    display: flex; align-items: center; justify-content: center; color: #fff;
+    box-shadow: 2px 4px 0 0 #4a4a4a;
+  }
+  .fab:active { transform: translate(1px, 2px); box-shadow: none; }
+
+  /* radial overlay */
+  .scrim { position: absolute; inset: 0; z-index: 10; background: rgba(15,21,42,.34); opacity: 0; pointer-events: none; transition: opacity .2s ease; }
+  .radial { position: absolute; inset: 0; z-index: 11; pointer-events: none; }
+  .open .scrim { opacity: 1; pointer-events: auto; }
+  .open .radial { pointer-events: auto; }
+  .ringstage { position: absolute; left: 50%; top: 44%; width: 300px; height: 300px; transform: translate(-50%, -50%) scale(.7); opacity: 0; transition: transform .25s cubic-bezier(.25,1,.5,1), opacity .2s ease; }
+  .open .ringstage { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  .ringstage svg.track { position: absolute; inset: 0; }
+  .rnode {
+    position: absolute; width: 78px; height: 78px; border-radius: 50%;
+    background: #fff; border: 2px solid var(--border); box-shadow: var(--shadow);
+    cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+    font-family: var(--sans); transform: translate(-50%, -50%);
+    padding: 0;
+  }
+  .rnode:active { background: var(--fg); color: #fff; border-color: var(--fg); }
+  .rnode svg { width: 21px; height: 21px; }
+  .rnode span { font-size: 9.5px; font-weight: 600; line-height: 1.1; }
+  .rnode.hot { background: var(--accent); border-color: var(--accent); color: #fff; box-shadow: 2px 4px 0 0 #4a4a4a; }
+  .rcenter {
+    position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    width: 132px; height: 132px; border-radius: 50%;
+    background: var(--fg); color: #fff;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 10px;
+  }
+  .rcenter b { font-family: var(--serif); font-size: 16px; line-height: 1.15; }
+  .rcenter span { font-size: 10px; opacity: .8; margin-top: 2px; }
+  .rbars { display: none; gap: 3px; align-items: flex-end; height: 22px; margin-top: 4px; }
+  .rbars i { width: 4px; background: #fff; border-radius: 2px; animation: eq 0.9s ease-in-out infinite; }
+  .rbars i:nth-child(2) { animation-delay: .15s; } .rbars i:nth-child(3) { animation-delay: .3s; }
+  .rbars i:nth-child(4) { animation-delay: .45s; } .rbars i:nth-child(5) { animation-delay: .6s; }
+  @keyframes eq { 0%, 100% { height: 6px; } 50% { height: 20px; } }
+  .listening .rbars { display: flex; }
+  .toast {
+    position: absolute; left: 24px; right: 24px; bottom: 96px; z-index: 12;
+    background: var(--fg); color: #fff; border-radius: 8px; padding: 11px 14px;
+    font-size: 13px; text-align: center; opacity: 0; transform: translateY(8px);
+    transition: opacity .2s ease, transform .2s ease; pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: none; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .scrim, .ringstage, .toast { transition: none; }
+    .rbars i { animation: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Coach radial</h1>
+  <p>The Drawboard circle, repurposed: a <b>press-and-pick ring</b> for talking to the coach and changing the workout without leaving the set. Tap the ember button — the icon is TBD, the plus is a placeholder — (or long-press the set card) and six actions fan out around the current set: voice command, ask coach, note, swap, drop set, +30 s rest. Try <b>Voice cmd</b>: it listens, hears "drop my last set", and the third set dot empties. Everything here is Beamer-strict and in the agreed type mix.</p>
+
+  <div class="phone" id="phone">
+    <div class="pscreen">
+      <p class="eyebrow">Lower A · Exercise 1 of 6 · 24:10 in</p>
+      <h2 class="ptitle">Back Squat</h2>
+      <div class="pcard" id="setcard">
+        <p class="eyebrow">Set 3 of 3</p>
+        <div class="setdots" id="setdots"><i class="f"></i><i class="f"></i><i class="n" id="dot3"></i></div>
+        <div class="herofig">245 <small>lb × 4</small></div>
+        <p class="pwhy">Same weight. Brace harder out of the hole.</p>
+        <div class="coachline" id="coachline"><b>Coach:</b> <span id="coachtext"></span></div>
+        <a class="pcta" href="#">Log set</a>
+      </div>
+      <div class="pcard">
+        <p class="eyebrow">After squats · RDL 205</p>
+        <h2>Take off 45 and 10, add 35 each side.</h2>
+      </div>
+    </div>
+
+    <button class="fab" id="fab" aria-label="Open coach actions" style="font-size:30px;font-weight:500">+</button>
+
+    <div class="scrim" id="scrim"></div>
+    <div class="radial" id="radial" role="menu" aria-label="Coach quick actions">
+      <div class="ringstage" id="ringstage">
+        <svg class="track" viewBox="0 0 300 300" aria-hidden="true">
+          <circle cx="150" cy="150" r="112" fill="rgba(255,255,255,.55)" stroke="rgba(15,21,42,.2)" stroke-width="2"/>
+        </svg>
+        <div class="rcenter" id="rcenter"><b>Set 3 · 245 × 4</b><span id="rsub">pick an action</span><div class="rbars"><i></i><i></i><i></i><i></i><i></i></div></div>
+      </div>
+    </div>
+    <div class="toast" id="toast"></div>
+  </div>
+</div>
+
+<script>
+  const actions = [
+    { id: 'voice', label: 'Voice cmd', hot: true, icon: '<rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 19v3"/>' },
+    { id: 'coach', label: 'Ask coach', icon: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>' },
+    { id: 'note', label: 'Note', icon: '<path d="M15.5 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8.5L15.5 3Z"/><path d="M15 3v6h6"/>' },
+    { id: 'swap', label: 'Swap', icon: '<path d="M8 3 4 7l4 4M4 7h16M16 21l4-4-4-4M20 17H4"/>' },
+    { id: 'drop', label: 'Drop set', icon: '<path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>' },
+    { id: 'rest', label: '+30 s', icon: '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>' },
+  ];
+  const phone = document.getElementById('phone');
+  const stage = document.getElementById('ringstage');
+  const rcenter = document.getElementById('rcenter');
+  const rsub = document.getElementById('rsub');
+  const rtitle = rcenter.querySelector('b');
+  const toast = document.getElementById('toast');
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const D = reduced ? 0 : 1;
+  let toastT = null;
+
+  actions.forEach((a, i) => {
+    const ang = -Math.PI / 2 + (i / actions.length) * Math.PI * 2;
+    const b = document.createElement('button');
+    b.className = 'rnode' + (a.hot ? ' hot' : '');
+    b.setAttribute('role', 'menuitem');
+    b.setAttribute('aria-label', a.label);
+    b.style.left = (150 + 112 * Math.cos(ang)) + 'px';
+    b.style.top = (150 + 112 * Math.sin(ang)) + 'px';
+    b.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${a.icon}</svg><span>${a.label}</span>`;
+    b.addEventListener('click', () => run(a.id));
+    stage.appendChild(b);
+  });
+
+  function open() {
+    phone.classList.add('open');
+    rtitle.textContent = 'Set 3 · 245 × 4';
+    rsub.textContent = 'pick an action';
+    rcenter.classList.remove('listening');
+  }
+  function close() { phone.classList.remove('open'); }
+  document.getElementById('fab').addEventListener('click', open);
+  document.getElementById('scrim').addEventListener('click', close);
+
+  // long-press the set card also opens it
+  let pressT = null;
+  const card = document.getElementById('setcard');
+  card.addEventListener('pointerdown', () => { pressT = setTimeout(open, 550); });
+  ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => card.addEventListener(ev, () => clearTimeout(pressT)));
+
+  function say(msg, ms = 2200) {
+    toast.textContent = msg;
+    toast.classList.add('show');
+    clearTimeout(toastT);
+    toastT = setTimeout(() => toast.classList.remove('show'), ms * D || 1500);
+  }
+
+  function run(id) {
+    if (id === 'voice') {
+      rtitle.textContent = 'Listening…';
+      rsub.textContent = 'say it like it is';
+      rcenter.classList.add('listening');
+      setTimeout(() => {
+        rcenter.classList.remove('listening');
+        rtitle.textContent = '"drop my last set"';
+        rsub.textContent = 'heard you';
+        setTimeout(() => {
+          document.getElementById('dot3').className = '';
+          rtitle.textContent = 'Done';
+          rsub.textContent = 'set 3 dropped';
+          say('Set 3 dropped · RDL moves up');
+          setTimeout(close, 1100 * D || 400);
+        }, 1100 * D || 100);
+      }, 1700 * D || 100);
+    } else if (id === 'coach') {
+      rtitle.textContent = 'Asking coach…';
+      rsub.textContent = '245 × 4 @ target 9';
+      setTimeout(() => {
+        document.getElementById('coachtext').textContent = 'Keep 245. Bar speed held up on set 2.';
+        document.getElementById('coachline').classList.add('show');
+        close();
+        say('Coach replied on the card');
+      }, 1300 * D || 100);
+    } else if (id === 'note') {
+      close();
+      say('Note pinned to Back Squat · "left knee twinge"');
+    } else if (id === 'swap') {
+      close();
+      say('Swapped: Front Squat 3 × 4 @ 205');
+    } else if (id === 'drop') {
+      document.getElementById('dot3').className = '';
+      close();
+      say('Set 3 dropped · RDL moves up');
+    } else if (id === 'rest') {
+      close();
+      say('Next rest +30 s · now 4:15');
+    }
+  }
+</script>
+</body>
+</html>

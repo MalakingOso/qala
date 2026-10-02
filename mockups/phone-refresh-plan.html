@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Qala refresh: Plan</title>
+<link rel="stylesheet" href="phone-refresh-core.css">
+<style>
+  .daystrip { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin: 12px 12px 4px; }
+  .daystrip button {
+    border: 0; border-radius: 16px; background: #fff; padding: 10px 0 8px; cursor: pointer;
+    box-shadow: var(--card-shadow); font-size: 11px; color: var(--fg-2);
+  }
+  .daystrip button b { display: block; font-size: 15px; font-weight: 500; color: var(--fg); }
+  .daystrip button.on { background: var(--accent); color: rgba(255,255,255,.85); }
+  .daystrip button.on b { color: #fff; }
+  .daystrip button.done b::after { content: " ✓"; color: var(--progress-fill); font-size: 11px; }
+  .daystrip button.on.done b::after { color: #fff; }
+  .blockline { display: flex; align-items: center; gap: 8px; margin: 0 24px 4px; font-size: 12px; color: var(--fg-muted); }
+  .blockline .wk { display: flex; gap: 4px; }
+  .blockline .wk i { width: 18px; height: 6px; border-radius: 3px; background: #dfe3ec; }
+  .blockline .wk i.f { background: var(--progress-fill); }
+  .blockline .wk i.n { background: var(--accent); }
+  .dayhead { display: flex; align-items: baseline; justify-content: space-between; margin: 14px 24px 8px; }
+  .dayhead h2 { font-size: 24px; margin: 0; }
+  .dayhead span { font-size: 12px; color: var(--fg-muted); }
+</style>
+</head>
+<body>
+<div class="opt">
+  <h1>Plan</h1>
+  <p><b>The week at a glance, the day in cards.</b> Calm ground like Today: a day strip with done checks, block progress as a slim segmented line, then the day's exercises as soft cards with the load on each. The floating glass tab bar carries over, so the two calm screens feel like one place.</p>
+  <div class="phone"><div class="screen">
+    <div class="notch"></div>
+    <div class="statusbar"><span>9:41</span><span>5G&nbsp;&nbsp;▮▮▮</span></div>
+
+    <div class="greet">
+      <p>Strength block 2 · week 3 of 6</p>
+      <h1 class="title">This week</h1>
+    </div>
+    <div class="blockline"><span class="wk"><i class="f"></i><i class="f"></i><i class="n"></i><i></i><i></i><i></i></span> Deload in week 6</div>
+
+    <div class="daystrip" role="tablist" aria-label="Days">
+      <button class="done">M<b>12</b></button>
+      <button class="done">T<b>13</b></button>
+      <button class="done">W<b>14</b></button>
+      <button class="done">T<b>15</b></button>
+      <button class="done">F<b>16</b></button>
+      <button class="done">S<b>17</b></button>
+      <button class="on">S<b>18</b></button>
+    </div>
+
+    <div class="dayhead">
+      <h2 class="title">Lower A</h2>
+      <span>Squat day · ~70 min</span>
+    </div>
+    <div class="chip-row" style="margin-bottom:12px">
+      <button class="chip on">Overview</button>
+      <button class="chip">Every set</button>
+      <button class="chip">Warm-up</button>
+    </div>
+
+    <div class="ex-card"><span class="ic">Sq</span><div><b>Back Squat</b><span>3 × 4 @ 245 lb</span></div><span class="go">›</span></div>
+    <div class="ex-card"><span class="ic">Rd</span><div><b>Romanian Deadlift</b><span>3 × 8 @ 205 lb</span></div><span class="go">›</span></div>
+    <div class="ex-card"><span class="ic">Lp</span><div><b>Leg Press</b><span>3 × 10 @ 360 lb</span></div><span class="go">›</span></div>
+    <div class="ex-card"><span class="ic">Lc</span><div><b>Lying Leg Curl</b><span>3 × 12 @ 110 lb</span></div><span class="go">›</span></div>
+    <div class="ex-card"><span class="ic">Ce</span><div><b>Standing Calf Raise</b><span>4 × 15 @ 90 lb</span></div><span class="go">›</span></div>
+    <div class="ex-card"><span class="ic">Ab</span><div><b>Cable Crunch</b><span>3 × 15 @ 70 lb</span></div><span class="go">›</span></div>
+
+    <div class="page-pad"></div>
+    <nav class="tabbar-float glass" aria-label="Primary">
+      <a href="phone-refresh-today.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>Today<span class="dot"></span></a>
+      <a class="on" href="phone-refresh-plan.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Plan<span class="dot"></span></a>
+      <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>Body<span class="dot"></span></a>
+      <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>Progress<span class="dot"></span></a>
+      <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Coach<span class="dot"></span></a>
+    </nav>
+  </div></div>
+</div>
+</body>
+</html>
