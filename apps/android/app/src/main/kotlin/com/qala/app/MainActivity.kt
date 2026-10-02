@@ -13,7 +13,8 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         container = AppContainer.obtain(applicationContext)
-        container.start()
+        // Debug builds only: `--ez qala.seed false` starts without the seed, to see Today as a release build first starts.
+        container.start(seed = intent.getBooleanExtra(EXTRA_SEED, true))
         setContent {
             CompositionLocalProvider(LocalAppContainer provides container) { QalaApp() }
         }
@@ -23,5 +24,10 @@ class MainActivity : ComponentActivity() {
         super.onStart()
         // A new day moves "today" and the week, so the engine snapshot is rebuilt whenever the app comes back.
         container.engine.refresh()
+    }
+
+    companion object {
+        /** A debug build seeds on first launch unless this boolean extra is false. A release build never seeds. */
+        const val EXTRA_SEED = "qala.seed"
     }
 }

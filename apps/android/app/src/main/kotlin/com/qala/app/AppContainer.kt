@@ -58,9 +58,12 @@ class AppContainer(
 
     private val seeder = DebugSeeder(database, sessions, runs, checkIns, weights, availability, settings, programs, env)
 
-    /** Runs the debug seed in a debug build, once per install. Safe to call again. */
-    fun start() {
-        if (seedInDebug) scope.launch { seeder.seedIfEmpty() }
+    /**
+     * Runs the debug seed in a debug build, once per install, unless [seed] is false. Safe to call again. [seed] only
+     * ever turns the seed off: a container built without it (a release build) stays empty.
+     */
+    fun start(seed: Boolean = true) {
+        if (seedInDebug && seed) scope.launch { seeder.seedIfEmpty() }
     }
 
     companion object {

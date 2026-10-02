@@ -1,10 +1,12 @@
 package com.qala.app
 
 import androidx.compose.runtime.saveable.Saver
+import com.qala.app.today.Destination
 
 /**
- * The seven places the shell can show. Five are tabs; History and Settings are pushed over a tab.
- * Navigation Compose versus Navigation 3 stays open until A4, when real back stacks and arguments appear.
+ * The places the shell can show. Five are tabs; History, Settings and the four stage stubs (check-in, warm-up,
+ * workout, run) are pushed over a tab. Navigation Compose versus Navigation 3 stays open until A4, when real back
+ * stacks and arguments appear.
  */
 sealed interface Route {
     val id: String
@@ -16,18 +18,26 @@ sealed interface Route {
     data object Coach : Route { override val id = "coach" }
     data object History : Route { override val id = "history" }
     data object Settings : Route { override val id = "settings" }
+    data object CheckIn : Route { override val id = "check-in" }
+    data object WarmUp : Route { override val id = "warm-up" }
+    data object Workout : Route { override val id = "workout" }
+    data object Run : Route { override val id = "run" }
 
     companion object {
         val tabs: List<Route> = listOf(Today, Plan, Body, Progress, Coach)
-        private val all: List<Route> = tabs + History + Settings
+        private val all: List<Route> = tabs + History + Settings + CheckIn + WarmUp + Workout + Run
 
         fun fromId(id: String): Route = all.firstOrNull { it.id == id } ?: Today
     }
 }
 
-val Route.isPushed: Boolean get() = this == Route.History || this == Route.Settings
+val Route.isPushed: Boolean
+    get() = when (this) {
+        Route.History, Route.Settings, Route.CheckIn, Route.WarmUp, Route.Workout, Route.Run -> true
+        else -> false
+    }
 
-/** The tab to highlight: History and Settings count as Today, as they do on the web. */
+/** The tab to highlight: a pushed screen counts as Today, as History and Settings do on the web. */
 val Route.tab: Route get() = if (isPushed) Route.Today else this
 
 /** Where the user is, and the tab a pushed screen returns to. */
@@ -49,4 +59,18 @@ data class Nav(val route: Route = Route.Today, val origin: Route = Route.Today) 
             restore = { Nav(Route.fromId(it[0]), Route.fromId(it[1])) },
         )
     }
+}
+
+/**
+ * Where a Today button leads. The stage stubs are pushed over Today, so Back (or a stub's Mark done) comes home to
+ * it; Plan and Body are tabs, and Settings is pushed over whatever tab is showing.
+ */
+fun Nav.go(to: Destination): Nav = when (to) {
+    Destination.CheckIn -> push(Route.CheckIn)
+    Destination.WarmUp -> push(Route.WarmUp)
+    Destination.Workout -> push(Route.Workout)
+    Destination.Run -> push(Route.Run)
+    Destination.Plan -> selectTab(Route.Plan)
+    Destination.Body -> selectTab(Route.Body)
+    Destination.Settings -> push(Route.Settings)
 }

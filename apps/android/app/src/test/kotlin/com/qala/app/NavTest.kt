@@ -7,7 +7,7 @@ import org.junit.Test
 class NavTest {
     @Test
     fun idsRoundTrip() {
-        for (route in Route.tabs + Route.History + Route.Settings) {
+        for (route in Route.tabs + Route.History + Route.Settings + Route.CheckIn + Route.WarmUp + Route.Workout + Route.Run) {
             assertEquals(route, Route.fromId(route.id))
         }
     }
@@ -22,6 +22,21 @@ class NavTest {
         assertEquals(Route.Today, Route.History.tab)
         assertEquals(Route.Today, Route.Settings.tab)
         assertEquals(Route.Coach, Route.Coach.tab)
+    }
+
+    @Test
+    fun theStageStubsArePushedOverToday() {
+        for (stub in listOf(Route.CheckIn, Route.WarmUp, Route.Workout, Route.Run)) {
+            assertEquals(Route.Today, stub.tab)
+            val nav = Nav().push(stub)
+            assertEquals(stub, nav.route)
+            assertEquals("Back from a stub is Today, so Mark done lands on the rail", Nav(), nav.back())
+        }
+    }
+
+    @Test
+    fun aStubPushedOverATabReturnsToThatTab() {
+        assertEquals(Nav(Route.Plan), Nav().selectTab(Route.Plan).push(Route.Run).back())
     }
 
     @Test
