@@ -419,6 +419,7 @@ export const defaultSettings: SettingsModel = {
   theme: "light",
   titleFont: "qalaTest",
   defaultBar: 45,
+  ezBar: 25,
   // Deliberately limited (owner's real inventory is still to enter, PLAN
   // 6.8): a 45 lb bar with only two 45s means 315 lb can't be 45+45+45 per
   // side, so the plate math has to actually reach for 45+45+35+10.

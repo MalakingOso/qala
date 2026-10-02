@@ -24,9 +24,13 @@ import { Minus, Plus } from "../../shared/icons.ts";
 export function PlateCalcPage() {
   const { settings, updateSettings } = useQala();
   const [target, setTarget] = useState(245);
+  // The EZ bar is chosen for this screen only, so it doesn't change the bar
+  // every lift's plates are planned with; 45 and 35 set the default.
+  const [ez, setEz] = useState(false);
+  const barWeight = ez ? settings.ezBar : settings.defaultBar;
   const plan = planPlates(
     target,
-    settings.defaultBar,
+    barWeight,
     settings.plates,
     settings.collarWeight,
   );
@@ -62,31 +66,37 @@ export function PlateCalcPage() {
             value={target}
             unit="lb"
             step={5}
-            onStep={(d) =>
-              setTarget((t) => Math.max(settings.defaultBar, t + d))}
+            onStep={(d) => setTarget((t) => Math.max(barWeight, t + d))}
           />
           <div className="calc-bar">
             <span className="group-label">Bar</span>
-            <ScalePicker
+            <ScalePicker<number | "ez">
               label="Bar"
               options={[
                 { value: 45, label: "45" },
                 { value: 35, label: "35" },
+                { value: "ez", label: `EZ ${settings.ezBar}` },
               ]}
-              value={settings.defaultBar}
-              onPick={(b) => updateSettings((s) => ({ ...s, defaultBar: b }))}
+              value={ez ? "ez" : settings.defaultBar}
+              onPick={(b) => {
+                if (b === "ez") return setEz(true);
+                setEz(false);
+                updateSettings((s) => ({ ...s, defaultBar: b }));
+              }}
             />
           </div>
         </div>
         <PlateDrawing
           perSide={perSide}
-          barWeight={settings.defaultBar}
+          barWeight={barWeight}
+          bar={ez ? "ez" : "straight"}
           label={`Plates for ${target}`}
           inventory={settings.plates}
         />
         <p className="calc-sum">
-          {settings.defaultBar} bar + 2 × {load ? load.perSideTotal : 0} ={" "}
-          <strong className="figure">{load ? load.total : "—"}</strong>
+          {barWeight} {ez ? "EZ " : ""}bar + 2 × {load ? load.perSideTotal : 0}
+          {" "}
+          = <strong className="figure">{load ? load.total : "—"}</strong>
           {load && load.total !== target
             ? (
               <span className="kbd-hint">

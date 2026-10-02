@@ -146,11 +146,14 @@ function Img(
 export function PlateDrawing({
   perSide,
   barWeight = 45,
+  bar = "straight",
   label,
   inventory,
 }: {
   perSide: number[];
   barWeight?: number;
+  /** `ez` swaps the knurled shaft behind the collar for the EZ curl bar's bends. */
+  bar?: "straight" | "ez";
   label?: string;
   inventory?: PlateEntry[];
 }) {
@@ -160,7 +163,7 @@ export function PlateDrawing({
     <figure
       className="plate-figure"
       aria-label={label ??
-        `${barWeight} lb bar with ${
+        `${bar === "ez" ? "EZ bar" : `${barWeight} lb bar`} with ${
           perSide.join(", ") || "no plates"
         } per side`}
     >
@@ -236,7 +239,12 @@ export function PlateDrawing({
           );
           return (
             <div
-              style={{ position: "relative", isolation: "isolate", width, height: DRAW_H }}
+              style={{
+                position: "relative",
+                isolation: "isolate",
+                width,
+                height: DRAW_H,
+              }}
               aria-hidden="true"
             >
               {perSide.length
@@ -262,10 +270,22 @@ export function PlateDrawing({
                   </svg>
                 )
                 : null}
-              {knurlTiles.map((uu, i) => (
-                <Img key={`k${i}`} sprite={knurl} {...at(uu)} s={s} z={1} />
-              ))}
-              <Img sprite={collar} {...at(0)} s={s} z={2} />
+              {bar === "ez"
+                ? <Img sprite={SPRITES.ez_back} {...at(0)} s={s} z={2} />
+                : (
+                  <>
+                    {knurlTiles.map((uu, i) => (
+                      <Img
+                        key={`k${i}`}
+                        sprite={knurl}
+                        {...at(uu)}
+                        s={s}
+                        z={1}
+                      />
+                    ))}
+                    <Img sprite={collar} {...at(0)} s={s} z={2} />
+                  </>
+                )}
               {under.map((uu, i) => (
                 <Img key={`s${i}`} sprite={sTile} {...at(uu)} s={s} z={3} />
               ))}
@@ -318,12 +338,17 @@ export function PlateDrawing({
         }}
       </Plot>
       <figcaption className="plate-caption">
-        {perSide.length === 0 ? `${fmt(barWeight)} lb bar, no plates.` : (
-          <>
-            <strong>{perSide.map(fmt).join(" · ")}</strong> on each side,{" "}
-            {fmt(perSideTotal)} lb a side, on a {fmt(barWeight)} lb bar
-          </>
-        )}
+        {perSide.length === 0
+          ? `${
+            bar === "ez" ? "EZ bar" : `${fmt(barWeight)} lb bar`
+          }, no plates.`
+          : (
+            <>
+              <strong>{perSide.map(fmt).join(" · ")}</strong> on each side,{" "}
+              {fmt(perSideTotal)} lb a side, on{" "}
+              {bar === "ez" ? "the EZ bar" : `a ${fmt(barWeight)} lb bar`}
+            </>
+          )}
       </figcaption>
     </figure>
   );

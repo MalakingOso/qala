@@ -2,6 +2,9 @@
 
     python3 assets/3d/pack_sprites.py /tmp/qala-sprites apps/web/public/plates apps/web/src/shared/plateSprites.json
 
+Add `--merge` to add only the `ez_` sprites of an `--only ez` render to the existing JSON and
+folder, leaving every plate entry as it is.
+
 Plates and faces are cropped to their visible pixels and saved as WebP. The
 bar is cut into pieces the app can lengthen or shorten, since a polished tube
 lit evenly looks the same all along its length:
@@ -26,17 +29,26 @@ import sys
 
 from PIL import Image
 
-src, dst, meta_out = sys.argv[1], sys.argv[2], sys.argv[3]
+args = [a for a in sys.argv[1:] if not a.startswith("--")]
+MERGE = "--merge" in sys.argv     # add the EZ-bar sprites to the existing JSON instead of rebuilding it
+src, dst, meta_out = args
 os.makedirs(dst, exist_ok=True)
 raw = json.load(open(os.path.join(src, "meta_raw.json")))
 S = raw["sprites"]
-ref = next(v for k, v in S.items() if k.startswith("plate_"))
-AX, AY = ref["axis"]
 SLEEVE_LEN = 16.25
 TILE_IN, END_IN = 2.0, 7.0
 
-out = {"px_per_in": raw["px_per_in"], "axis": [round(AX, 3), round(AY, 3)], "tile_in": TILE_IN, "end_in": END_IN,
-       "sleeve_len": SLEEVE_LEN, "face_px_per_in": None, "sprites": {}}
+if MERGE:
+    out = json.load(open(meta_out))
+    AX, AY = out["axis"]
+    S = {k: v for k, v in S.items() if k.startswith("ez_")}
+    if "ez_back" in S:   # the drawing places it with the plates' axis, so it must be the same camera
+        assert all(abs(a - b) < 0.01 for a, b in zip(S["ez_back"]["axis"], (AX, AY))), "ez_back axis differs from the plates'"
+else:
+    ref = next(v for k, v in S.items() if k.startswith("plate_"))
+    AX, AY = ref["axis"]
+    out = {"px_per_in": raw["px_per_in"], "axis": [round(AX, 3), round(AY, 3)], "tile_in": TILE_IN, "end_in": END_IN,
+           "sleeve_len": SLEEVE_LEN, "face_px_per_in": None, "sprites": {}}
 total = 0
 
 

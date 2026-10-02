@@ -157,6 +157,8 @@ export interface SettingsModel {
   theme: "light" | "dark" | "system";
   titleFont: "qalaTest" | "faustina";
   defaultBar: number;
+  /** The EZ curl bar's weight; the plate calculator draws it as the EZ bar. */
+  ezBar: number;
   /** `@qala/core`'s plate type: the plate calculator uses its real math directly. */
   plates: PlateEntry[];
   collarWeight: number;

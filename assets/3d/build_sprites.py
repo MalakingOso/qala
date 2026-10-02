@@ -14,7 +14,12 @@ along the bar's axis on screen:
     sleeve.png                   the 16.25" sleeve and end cap, from the collar
     bar_back.png                 collar and the shaft behind it
     knurl_tile.png               a window of knurled shaft that tiles along the axis
+    ez_back.png                  EZ curl bar: collar, polished shaft and the bends (replaces bar_back and knurl_tile)
+    ez_hero.png                  the whole EZ bar, for a picker
     meta.json                    pixel origin of each sprite and the axis vector
+
+`--only ez` renders just the EZ parts (pack them with `pack_sprites.py ... --merge`).
+`--icon` instead renders the app icon candidates and stops (see make_icons.py).
 
 Everything is real geometry: the plate profile (raised lip, recessed groove,
 lower field, raised hub ring), raised lettering, steel insert, polished
@@ -313,6 +318,118 @@ def build_bar():
 
 
 # ---------------------------------------------------------------------------
+# the EZ curl bar (DECISIONS L13)
+# Behind the collar this bar is not a knurled tube, so one sprite (`ez_back`:
+# collar, polished shaft, the bends) stands in for `bar_collar` and the knurl
+# tiles; the sleeve pieces are the straight bar's. `ez_hero` is the whole bar,
+# for a picker. Bends run in the vertical plane, so the low plate camera shows them.
+EZ_R = 0.50            # 1" shaft
+EZ_FILLET = 0.75       # centre-line bend radius
+EZ_HALF = 15.0         # collar face to bar centre
+EZ_SLEEVE = 7.5
+
+
+def ez_profile(back_only):
+    """Centre line as (u, rise): u inches back from the collar face, and where the
+    bent grip section starts and ends. One block of three steep jogs and two
+    shallow runs, back on the axis at the end, like the reference bar. On the
+    whole bar the block is centred; for the plate drawing it starts closer to the
+    collar so the bends show on a card that only has room for a little shaft."""
+    jog, run, up, down = 1.1, 3.6, 1.4, 2.1
+    span = 3 * jog + 2 * run
+    u0 = 6.0 if back_only else (2 * EZ_HALF - span) / 2
+    pts = [(0.0, 0.0), (u0, 0.0)]
+    u, y = u0, 0.0
+    for i in range(3):
+        u, y = u + jog, y + up
+        pts.append((u, y))
+        if i < 2:
+            u, y = u + run, y - down
+            pts.append((u, y))
+    return pts + [(2 * EZ_HALF, 0.0)], u0, u0 + span
+
+
+def fillet(pts, r, n=10):
+    """Round the corners of a 2D polyline with arcs of radius r."""
+    out = [pts[0]]
+    for p0, p1, p2 in zip(pts, pts[1:], pts[2:]):
+        v1 = Vector((p0[0] - p1[0], p0[1] - p1[1])).normalized()
+        v2 = Vector((p2[0] - p1[0], p2[1] - p1[1])).normalized()
+        ang = v1.angle(v2)
+        if abs(math.pi - ang) < 1e-4:
+            out.append(p1)
+            continue
+        d = r / math.tan(ang / 2)
+        c = Vector(p1) + (v1 + v2).normalized() * (r / math.sin(ang / 2))
+        a, b = Vector(p1) + v1 * d - c, Vector(p1) + v2 * d - c
+        a0 = math.atan2(a.y, a.x)
+        da = (math.atan2(b.y, b.x) - a0 + math.pi) % math.tau - math.pi
+        out += [(c.x + r * math.cos(a0 + da * k / n), c.y + r * math.sin(a0 + da * k / n)) for k in range(n + 1)]
+    out.append(pts[-1])
+    return out
+
+
+def tube(name, pts, mat, parent, z0=0.0):
+    """A round bar along a (u, rise) polyline; local z runs outward, so back is -u."""
+    cu = bpy.data.curves.new(name, "CURVE")
+    cu.dimensions, cu.bevel_depth, cu.bevel_resolution, cu.use_fill_caps = "3D", EZ_R, 8, True
+    sp = cu.splines.new("POLY")
+    sp.points.add(len(pts) - 1)
+    for p, (u, y) in zip(sp.points, pts):
+        p.co = (0.0, y, z0 - u, 1.0)
+    ob = bpy.data.objects.new(name, cu)
+    sc.collection.objects.link(ob)
+    ob.data.materials.append(mat)
+    ob.parent, ob.matrix_parent_inverse = parent, Matrix.Identity(4)
+    return ob
+
+
+def ez_shaft(parent, back_only, z0=0.0):
+    grip = principled("Grip", (0.50, 0.52, 0.55), 0.46, 1.0)
+    prof, u0, u1 = ez_profile(back_only)
+    pts = fillet(prof, EZ_FILLET)
+    cut = next(i for i, p in enumerate(pts) if p[0] > u0 - 0.5)       # polished shaft ends a little before the first bend
+    far = next(i for i, p in enumerate(pts) if p[0] > u1 + 0.5)
+    tube("EzPolishA", pts[:cut + 1], CHROME, parent, z0)
+    tube("EzGrip", pts[cut:far], grip, parent, z0)
+    tube("EzPolishB", pts[far - 1:], CHROME, parent, z0)
+
+
+def ez_collar(parent, z0=0.0, flip=False):
+    ob = revolve("Collar", [(0.56, -1.0), (1.42, -1.0), (1.54, -0.9), (1.54, -0.55), (1.49, -0.52), (1.49, -0.47), (1.54, -0.44),
+                            (1.54, -0.08), (1.46, 0.0), (1.16, 0.0), (1.10, -0.07), (1.02, -0.07), (0.985, 0.0)], CHROME, parent)
+    ob.location = (0, 0, z0)
+    if flip:
+        ob.rotation_euler = (0, math.pi, 0)
+
+
+def ez_sleeve(parent, z0=0.0, flip=False):
+    cap = principled("Cap", (0.02, 0.10, 0.55), 0.35)
+    L = EZ_SLEEVE
+    for ob in (revolve("Sleeve", [(0.985, 0.0), (0.985, L - 0.10), (0.90, L), (0.84, L), (0.84, L - 0.07), (0.0, L - 0.07)], CHROME, parent),
+               revolve("CapDisc", [(0.0, L - 0.05), (0.83, L - 0.05)], cap, parent, steps=64)):
+        ob.location = (0, 0, z0)
+        if flip:
+            ob.rotation_euler = (0, math.pi, 0)
+
+
+def build_ez_back():
+    fr = new_frame("ez_back")
+    ez_collar(fr)
+    ez_shaft(fr, True)
+    return fr
+
+
+def build_ez_hero():
+    fr = new_frame("ez_hero")
+    ez_shaft(fr, False, EZ_HALF)
+    for z0, flip in ((EZ_HALF, False), (-EZ_HALF, True)):
+        ez_collar(fr, z0, flip)
+        ez_sleeve(fr, z0, flip)
+    return fr
+
+
+# ---------------------------------------------------------------------------
 # rendering
 meta = {"px_per_in": PX_PER_IN, "canvas": CANVAS, "sprites": {}}
 
@@ -345,6 +462,330 @@ def render(name, frames, cam, shift=(0.0, 0.0), size=CANVAS):
     print("rendered", name)
 
 
+def render_wide(name, frames, cam, size, origin):
+    """`render` for a canvas wider than tall, with the bar's origin put at pixel `origin`."""
+    if ONLY and name not in ONLY and name.split("_")[0] not in ONLY:
+        return
+    W, H = size
+    show(frames)
+    cam.data.shift_x = -(origin[0] - W / 2) / max(W, H)
+    cam.data.shift_y = (origin[1] - H / 2) / max(W, H)
+    sc.render.resolution_x, sc.render.resolution_y = W, H
+    bpy.context.view_layer.update()
+    sc.render.filepath = os.path.join(OUT, name + ".png")
+    bpy.ops.render.render(write_still=True)
+    o = world_to_camera_view(sc, cam, Vector((0, 0, 0)))
+    u = world_to_camera_view(sc, cam, Vector((0, -1, 0)))
+    meta["sprites"][name] = {
+        "file": name + ".png", "size": [W, H],
+        "ox": o.x * W, "oy": (1 - o.y) * H,
+        "axis": [(u.x - o.x) * W, -(u.y - o.y) * H],
+    }
+    print("rendered", name)
+
+
+# ---------------------------------------------------------------------------
+# app icon candidates: `--icon` renders big plate poses and stops (see make_icons.py)
+if "--icon" in args:
+    COLORS["ember"] = ((0.76, 0.255, 0.047), "white")      # the app's accent, #c2410c
+    sc.cycles.samples = SAMPLES if "--samples" in args else max(SAMPLES, 128)
+    SIZE = int(args[args.index("--size") + 1]) if "--size" in args else 1400
+    PPI = 62.0 * SIZE / 1400                                         # --size only changes pixels, not the framing
+    for name, weight, color in (("face_red", 45, "red"), ("face_ember", 45, "ember"), ("face_blue", 45, "blue")):
+        fr = build_plate(weight, color)
+        render(f"icon_{name}", [fr], make_camera(0.0, 0.0, SIZE / PPI), size=SIZE)
+        delete_tree(fr)
+    fr = build_plate(55, "red")
+    render("icon_oblique_red", [fr], make_camera(38.0, 14.0, SIZE / PPI), size=SIZE)
+    delete_tree(fr)
+    # a stack from the back: 55 red, 45 blue, 35 yellow
+    frs, y = [], 0.0
+    for weight, color in ((55, "red"), (45, "blue"), (35, "yellow")):
+        fr = build_plate(weight, color)
+        fr.location = (0, -y, 0)
+        y += PLATES[weight][1]
+        frs.append(fr)
+    render("icon_stack", frs, make_camera(38.0, 14.0, SIZE / PPI), size=SIZE)
+    # the run side: a route laid across an ember plate with the lettering taken off, in white or in
+    # the app's run colour (#8e9cf0, the dark theme's --run). "climb" is a wandering GPS trace;
+    # "q" is a lap round the hub with a tail leaving it, so the route is the Q of QALA.
+    ROUTES = {
+        "climb": [(-5.2, -3.6), (-2.2, -4.6), (0.4, -2.4), (3.0, -3.0), (4.6, -0.2), (2.0, 1.8), (4.2, 4.4)],
+        "q": [(-5.0, -4.6), (-1.0, -5.2), (3.0, -3.4), (4.4, 0.4), (2.8, 3.8), (-1.4, 4.4), (-4.6, 2.0), (-3.4, -1.6), (1.2, -2.8), (5.6, -5.6)],
+    }
+
+    def route_plate(name, shape, rgb):
+        fr = build_plate(45, "ember")
+        for ch in list(fr.children):
+            if ch.name.startswith(("W_", "L_", "Lb_")):       # every letter and number
+                bpy.data.objects.remove(ch, do_unlink=True)
+        z = PLATES[45][1] + 0.18
+        mat = principled("Route", rgb, 0.38)
+        pts = ROUTES[shape]
+        cu = bpy.data.curves.new("Route", "CURVE")
+        cu.dimensions, cu.bevel_depth, cu.bevel_resolution, cu.use_fill_caps, cu.resolution_u = "3D", 0.50, 10, True, 24
+        sp = cu.splines.new("BEZIER")
+        sp.bezier_points.add(len(pts) - 1)
+        for bp, (x, y) in zip(sp.bezier_points, pts):
+            bp.co = (x, y, z)
+            bp.handle_left_type = bp.handle_right_type = "AUTO"
+        ob = bpy.data.objects.new("Route", cu)
+        sc.collection.objects.link(ob)
+        ob.data.materials.append(mat)
+        ob.parent, ob.matrix_parent_inverse = fr, Matrix.Identity(4)
+        for (x, y), rad in ((pts[0], 0.66), (pts[-1], 0.92)):   # a small dot to start, a bigger one to finish
+            d = revolve("Dot", [(rad * math.sin(a), rad * math.cos(a)) for a in [k * math.pi / 12 for k in range(13)]], mat, fr)
+            d.location = (x, y, z)
+        render(name, [fr], make_camera(0.0, 0.0, SIZE / PPI), size=SIZE)
+        delete_tree(fr)
+
+    # a raised Q on the red plate with the hub in its counter: the glyph is Montserrat Bold,
+    # its bowl centred on the hub by measuring the font's own geometry, then scaled so the tail
+    # stays on the plate's field
+    def q_plate(name):
+        fr = build_plate(45, "red", lettering=False)
+        T = PLATES[45][1]
+        ink = principled("QInk", (0.96, 0.97, 1.0), 0.40)
+        q = text("Q", 10.0, (0, 0, T - 0.05), 0, ink, fr, "Q", extrude=0.12)
+        q.data.bevel_depth, q.data.bevel_resolution = 0.05, 3
+        bpy.context.view_layer.update()
+        ev = q.evaluated_get(bpy.context.evaluated_depsgraph_get())
+        me = ev.to_mesh()
+        pts = [(v.co.x, v.co.y) for v in me.vertices]
+        ev.to_mesh_clear()
+        ymax, ymin = max(p[1] for p in pts), min(p[1] for p in pts)
+        upper = [p for p in pts if p[1] >= ymax - 0.44 * (ymax - ymin)]     # the bowl above its equator: no tail
+        xmin, xmax = min(p[0] for p in upper), max(p[0] for p in upper)
+        cx, cy = (xmin + xmax) / 2, ymax - (xmax - xmin) / 2
+        k = 7.1 / max(math.hypot(x - cx, y - cy) for x, y in pts)
+        inner = min(math.hypot(x - cx, y - cy) for x, y in upper) * k
+        q.data.size *= k
+        q.location = (-cx * k, -cy * k, T - 0.05)
+        print("Q glyph: bowl diameter %.2f in, counter radius %.2f in (hub ring is 2.52)" % ((xmax - xmin) * k, inner))
+        render(name, [fr], make_camera(0.0, 0.0, SIZE / PPI), size=SIZE)
+        delete_tree(fr)
+
+    q_plate("icon_q_red")
+    # the plate itself as the Q: its outline gets a tail (the plate is already the O). A tail whose top is
+    # flush with the lip fights it for the surface, so it stands a hair proud.
+    def slab(name, outline, z0, z1, mat, parent, bevel=0.35):
+        """A flat piece from a 2D outline, z0 to z1, with soft edges."""
+        me = bpy.data.meshes.new(name)
+        bm = bmesh.new()
+        f = bm.faces.new([bm.verts.new((x, y, z0)) for x, y in outline])
+        ext = bmesh.ops.extrude_face_region(bm, geom=[f])
+        bmesh.ops.translate(bm, vec=(0, 0, z1 - z0), verts=[v for v in ext["geom"] if isinstance(v, bmesh.types.BMVert)])
+        bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+        bm.to_mesh(me)
+        bm.free()
+        ob = bpy.data.objects.new(name, me)
+        sc.collection.objects.link(ob)
+        ob.data.materials.append(mat)
+        ob.parent, ob.matrix_parent_inverse = parent, Matrix.Identity(4)
+        m = ob.modifiers.new("Bevel", "BEVEL")
+        m.width, m.segments = bevel, 4
+        bpy.context.view_layer.objects.active = ob
+        ob.select_set(True)
+        bpy.ops.object.shade_smooth_by_angle(angle=math.radians(40))
+        ob.select_set(False)
+        return ob
+
+    def stadium(p0, p1, half, n=16):
+        ang = math.atan2(p1[1] - p0[1], p1[0] - p0[0])
+        pts = [(p1[0] + half * math.cos(ang - math.pi / 2 + math.pi * k / n), p1[1] + half * math.sin(ang - math.pi / 2 + math.pi * k / n)) for k in range(n + 1)]
+        return pts + [(p0[0] + half * math.cos(ang + math.pi / 2 + math.pi * k / n), p0[1] + half * math.sin(ang + math.pi / 2 + math.pi * k / n)) for k in range(n + 1)]
+
+    TAIL = (math.cos(-math.pi / 4), math.sin(-math.pi / 4))          # leaves at the lower right
+
+    def at(r):
+        return (TAIL[0] * r, TAIL[1] * r)
+
+    def q_shape(name, kind):
+        T = PLATES[45][1]
+        wide = 1400 / 54.0                                            # a roomier view than the plain plates, for the tail
+        if kind == "ring":                                           # a bumper ring: the plate with its middle opened up
+            fr = new_frame("ring")
+            R, RI = 8.85, 4.5
+            rubber = principled("Rubber_red", COLORS["red"][0], 0.52)
+            front = [(R, T / 2), (R, T - 0.30), (R - 0.12, T - 0.08), (R - 0.30, T), (7.95, T), (7.90, T - 0.06), (7.82, T - 0.24),
+                     (7.62, T - 0.24), (7.54, T - 0.06), (7.46, T - 0.12), (RI + 0.5, T - 0.12), (RI + 0.3, T - 0.04), (RI + 0.12, T - 0.04),
+                     (RI, T - 0.2), (RI, T / 2)]
+            back = [(r, T - z) for (r, z) in reversed(front)]
+            revolve("Body", front + back[1:-1], rubber, fr)
+            slab("Tail", stadium(at(5.2), at(10.3), 1.7), 0.0, T + 0.04, rubber, fr)
+        else:
+            fr = build_plate(45, "red", lettering=False)
+            rubber = next(c for c in fr.children if c.name.startswith("Body")).data.materials[0]
+            slab("Tail", stadium(at(9.0), at(10.3), 1.7), 0.0, T + 0.04, rubber, fr)      # its inner end hides in the rim
+        render(name, [fr], make_camera(0.0, 0.0, wide), size=SIZE)
+        delete_tree(fr)
+
+    q_shape("icon_qa_tail", "tail")
+    q_shape("icon_qb_ring", "ring")
+
+    # -- round two ---------------------------------------------------------------------------------
+    # The ring gets a turned steel core with a small bore, and its tail becomes gym kit. The raised Q
+    # gets its counter pulled tight round a steel hub, its tail left as the font draws it.
+    def turned_steel(name, rough=0.46):
+        """Brushed steel: anisotropic metal whose grain runs round the disc, which is what throws the light and dark
+        wedges across a bumper plate's steel centre (a mirror face-on would just reflect the dark horizon)."""
+        m = principled(name, (0.90, 0.91, 0.93), rough, 1.0)
+        nt = m.node_tree
+        b = next(n for n in nt.nodes if n.type == "BSDF_PRINCIPLED")
+        tg = nt.nodes.new("ShaderNodeTangent")
+        tg.direction_type, tg.axis = "RADIAL", "Z"
+        b.inputs["Anisotropic"].default_value = 0.7
+        nt.links.new(tg.outputs["Tangent"], b.inputs["Tangent"])
+        return m
+
+    def steel_hub(fr, R, B, zt, mat):
+        """A flat steel disc, outer radius R, bore B, face at zt, with a small chamfer at the rim and at the bore."""
+        prof = [(B, 0.25), (B, zt - 0.05), (B + 0.10, zt), (R - 0.10, zt), (R, zt - 0.08), (R, 0.25)]
+        return revolve("Hub", prof, mat, fr)
+
+    def along_tail(ob, r0, zc):
+        """Lay a part revolved about its local Z along the tail direction, r0 out from the hub, zc above the plate's back."""
+        ob.matrix_basis = Matrix.Translation((TAIL[0] * r0, TAIL[1] * r0, zc)) @ Matrix.Rotation(-math.pi / 4, 4, "Z") @ Matrix.Rotation(math.pi / 2, 4, "Y")
+        return ob
+
+    def cyl(name, rad, length, mat, fr, r0, zc, bevel=0.3):
+        b = min(bevel, rad * 0.9, length / 2 - 0.01)
+        prof = [(0.0, 0.0), (rad - b, 0.0), (rad, b), (rad, length - b), (rad - b, length), (0.0, length)]
+        return along_tail(revolve(name, prof, mat, fr, steps=64), r0, zc)
+
+    def ring_plate(name, tail):
+        T = PLATES[45][1]
+        fr = new_frame("ring2")
+        R, RI, B = 8.85, 4.5, 1.0
+        rubber = principled("Rubber_red", COLORS["red"][0], 0.52)
+        front = [(R, T / 2), (R, T - 0.30), (R - 0.12, T - 0.08), (R - 0.30, T), (7.95, T), (7.90, T - 0.06), (7.82, T - 0.24),
+                 (7.62, T - 0.24), (7.54, T - 0.06), (7.46, T - 0.12), (RI + 0.5, T - 0.12), (RI + 0.3, T - 0.04), (RI + 0.12, T - 0.04),
+                 (RI, T - 0.2), (RI, T / 2)]
+        back = [(r, T - z) for (r, z) in reversed(front)]
+        revolve("Body", front + back[1:-1], rubber, fr)
+        steel = turned_steel("Turned")
+        steel_hub(fr, RI + 0.08, B, T - 0.10, steel)
+        if tail == "dumbbell":
+            h, zc = 2.45, T + 1.7
+            cyl("HeadA", h, 2.2, rubber, fr, 4.6, zc, 0.4)
+            cyl("CollarA", 1.35, 0.5, steel, fr, 6.8, zc, 0.16)
+            cyl("Handle", 0.85, 2.4, steel, fr, 7.3, zc, 0.25)
+            cyl("CollarB", 1.35, 0.5, steel, fr, 9.7, zc, 0.16)
+            cyl("HeadB", h, 2.2, rubber, fr, 10.2, zc, 0.4)
+        elif tail == "barbell":
+            zc = T + 1.0
+            blue = principled("Rubber_blue", COLORS["blue"][0], 0.52)
+            cyl("Bar", 0.7, 7.0, steel, fr, 4.8, zc, 0.25)
+            cyl("PlateA", 3.7, 1.5, rubber, fr, 7.9, zc, 0.3)
+            cyl("PlateB", 2.9, 1.2, blue, fr, 9.4, zc, 0.26)
+            cyl("Collar", 1.2, 0.7, steel, fr, 10.6, zc, 0.2)
+            cyl("Cap", 0.7, 1.0, steel, fr, 11.3, zc, 0.25)
+        elif tail == "plate":
+            sm = build_plate(5, "silver", lettering=False)         # a 9 in iron change plate
+            sm.location = (TAIL[0] * 8.1, -(T + 0.1), TAIL[1] * 8.1)
+            return fr, sm
+        return fr, None
+
+    ring_names = {"icon_qc_dumbbell": "dumbbell", "icon_qd_barbell": "barbell", "icon_qe_plate": "plate"}
+    for nm, kind in ring_names.items():
+        fr, extra = ring_plate(nm, kind)
+        render(nm, [fr] + ([extra] if extra else []), make_camera(0.0, 0.0, 1400 / 54.0), size=SIZE)
+        delete_tree(fr)
+        if extra:
+            delete_tree(extra)
+
+    def letter_plate(fr, z, parts, wx=5.0, wsize=1.75, r=5.75, size=3.15, track=0.30):
+        """The plate's own lettering as build_plate sets it (45LB each side, QALA on the arc at the top and bottom),
+        but each part optional: parts holds any of "w", "t", "b"."""
+        ink = principled("InkLetters", (0.93, 0.95, 1.0), 0.42)
+        if "w" in parts:
+            text("45LB", wsize, (-wx, 0, z), 0, ink, fr, "W_left")
+            text("45LB", wsize, (wx, 0, z), math.pi, ink, fr, "W_right")
+        if "t" in parts or "b" in parts:
+            widths = []
+            for ch in "QALA":
+                t = text(ch, size, (0, 0, z), 0, ink, fr, "m")
+                bpy.context.view_layer.update()
+                widths.append(t.dimensions.x)
+                bpy.data.objects.remove(t, do_unlink=True)
+            ang = math.pi / 2 + ((sum(widths) + track * 3) / r) / 2
+            for ch, wd in zip("QALA", widths):
+                a = ang - (wd / 2) / r
+                if "t" in parts:
+                    text(ch, size, (r * math.cos(a), r * math.sin(a), z), a - math.pi / 2, ink, fr, "L_" + ch)
+                if "b" in parts:
+                    text(ch, size, (-r * math.cos(a), -r * math.sin(a), z), a + math.pi / 2, ink, fr, "Lb_" + ch)
+                ang -= (wd + track) / r
+
+    def q_tight(name, ttf, c, lettering="", **lay):
+        """The raised Q with its counter drawn in tight round a steel hub of radius c.
+        The glyph is measured, then stretched a few percent so its counter is round."""
+        T = PLATES[45][1]
+        fr = new_frame(name)
+        R = PLATES[45][0] / 2
+        rubber = principled("Rubber_red", COLORS["red"][0], 0.52)
+        front = [(R, T / 2), (R, T - 0.30), (R - 0.12, T - 0.08), (R - 0.30, T), (7.95, T), (7.90, T - 0.06), (7.82, T - 0.24),
+                 (7.62, T - 0.24), (7.54, T - 0.06), (7.46, T - 0.12), (BORE_R + 0.02, T - 0.12)]
+        back = [(r, T - z) for (r, z) in reversed(front)]
+        revolve("Body", front + back[1:-1], rubber, fr)
+        ink = principled("QInk", (0.96, 0.97, 1.0), 0.40)
+        q = text("Q", 10.0, (0, 0, T - 0.05), 0, ink, fr, "Q", extrude=0.12)
+        q.data.font = bpy.data.fonts.load(os.path.join(HERE, ttf))
+        q.data.bevel_depth, q.data.bevel_resolution = 0.05, 3
+        bpy.context.view_layer.update()
+        # the glyph's own contours: the biggest is the outline, the biggest one inside it is the counter
+        probe = bpy.data.objects.new("probe", bpy.data.curves.new("probe", "FONT"))
+        sc.collection.objects.link(probe)
+        probe.data.body, probe.data.font, probe.data.size = "Q", q.data.font, q.data.size
+        probe.data.align_x = probe.data.align_y = "CENTER"
+        bpy.context.view_layer.objects.active = probe
+        probe.select_set(True)
+        bpy.ops.object.convert(target="CURVE")
+        boxes = []
+        for sp in probe.data.splines:
+            xs, ys = [bp.co.x for bp in sp.bezier_points], [bp.co.y for bp in sp.bezier_points]
+            boxes.append((min(xs), max(xs), min(ys), max(ys)))
+        data = probe.data
+        bpy.data.objects.remove(probe, do_unlink=True)
+        bpy.data.curves.remove(data)
+        area_ = lambda bx: (bx[1] - bx[0]) * (bx[3] - bx[2])
+        outer = max(boxes, key=area_)
+        inner = [bx for bx in boxes if bx is not outer and bx[0] > outer[0] and bx[1] < outer[1] and bx[2] > outer[2] and bx[3] < outer[3]]
+        x0, x1, y0, y1 = max(inner, key=area_)
+        cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
+        a, b = (x1 - x0) / 2, (y1 - y0) / 2
+        ro = (outer[1] - outer[0]) / 2
+        me = q.evaluated_get(bpy.context.evaluated_depsgraph_get()).to_mesh()
+        pts = [(v.co.x, v.co.y) for v in me.vertices]
+        q.evaluated_get(bpy.context.evaluated_depsgraph_get()).to_mesh_clear()
+        sx, sy = c / a, c / b
+        if abs(sx / sy - 1) > 0.08:                                                  # too oval to stretch: keep the shape
+            sx = sy = c / min(a, b)
+        q.scale = (sx, sy, 1.0)
+        q.location = (-cx * sx, -cy * sy, T - 0.05)
+        far = max(math.hypot((x - cx) * sx, (y - cy) * sy) for x, y in pts)
+        print("%s: counter %.2f x %.2f (aspect %.3f), stretch x%.3f y%.3f, outer bowl r %.2f, tail tip at %.2f in" % (
+            name, 2 * a, 2 * b, a / b, sx, sy, ro * sx, far))
+        steel_hub(fr, c * 1.08, BORE_R, T - 0.02, turned_steel("Turned"))       # its rim tucks under the glyph
+        if lettering:
+            letter_plate(fr, T - 0.08, lettering, **lay)
+        render(name, [fr], make_camera(0.0, 0.0, SIZE / PPI), size=SIZE)
+        delete_tree(fr)
+
+    for nm, ttf, c in (("icon_q_mont800", "Montserrat-ExtraBold.ttf", 2.2), ("icon_q_mont800_snug", "Montserrat-ExtraBold.ttf", 1.8)):
+        q_tight(nm, ttf, c)
+    # Qh with the plate's lettering added back: weights, QALA over the top, both, and all of it.
+    # Qk ("both") is the app icon; Qh is what it shrinks to at small sizes (see make_icons.py --ship).
+    for nm, parts, lay in (("icon_qi_weights", "w", dict(wx=5.5, wsize=1.5)), ("icon_qj_qala", "t", {}),
+                           ("icon_qk_both", "wt", dict(wx=5.5, wsize=1.5)), ("icon_ql_all", "wtb", dict(wx=5.5, wsize=1.5))):
+        q_tight(nm, "Montserrat-ExtraBold.ttf", 1.8, parts, **lay)
+    route_plate("icon_climb_run", "climb", (0.557, 0.612, 0.941))
+    route_plate("icon_q_white", "q", (0.96, 0.97, 1.0))
+    route_plate("icon_q_run", "q", (0.557, 0.612, 0.941))
+    with open(os.path.join(OUT, "meta_raw.json"), "w") as f:
+        json.dump(meta, f, indent=1)
+    sys.exit(0)
+
 cam = make_camera(AZ, EL, CANVAS / PX_PER_IN)
 back, sleeve, tile = build_bar()
 
@@ -374,6 +815,22 @@ for weight in PLATES:
         fr = build_plate(weight, color, lettering=False)
         render(f"face_{weight:g}_{color}", [fr], fcam, size=192)
         delete_tree(fr)
+
+# EZ bar: the straight bar's camera, on a canvas wide enough for 30" of shaft going back
+if not ONLY or "ez" in ONLY or "ez_back" in ONLY or "ez_hero" in ONLY:
+    EZ_W, EZ_H = 760, 420
+    ecam = make_camera(AZ, EL, EZ_W / PX_PER_IN)
+    fr = build_ez_back()
+    sc.cycles.samples = max(SAMPLES, 192)
+    set_lights(["Key", "Fill", "Rim", "Rake"], False)         # as the straight bar's pieces
+    render_wide("ez_back", [fr], ecam, (EZ_W, EZ_H), (EZ_W - 100, 300))
+    set_lights(["Key", "Fill", "Rim", "Rake"], True)
+    delete_tree(fr)
+    sc.cycles.samples = SAMPLES
+    hcam = make_camera(75.0, 22.0, 900 / 20.0)
+    fr = build_ez_hero()
+    render_wide("ez_hero", [fr], hcam, (900, 360), (450, 180))
+    delete_tree(fr)
 
 with open(os.path.join(OUT, "meta_raw.json"), "w") as f:
     json.dump(meta, f, indent=1)
