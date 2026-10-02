@@ -198,6 +198,29 @@ pub fn shifts_plan(request: &str) -> ApiResult {
 }
 
 // ---------------------------------------------------------------------------
+// Muscles
+// ---------------------------------------------------------------------------
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct ExerciseMusclesReq {
+    exercise_ids: Vec<String>,
+}
+
+/// `{v, exerciseIds}` -> `{ "<id>": {targets, synergists} | null }`: the engine muscle ids of each
+/// liftosaur exercise (targets first, synergists never repeat a target). Unknown ids map to `null`.
+/// The check-in screen uses this to list the muscles a program day trains.
+pub fn exercise_muscles(request: &str) -> ApiResult {
+    let r: ExerciseMusclesReq = parse_request(request)?;
+    let mut out = std::collections::BTreeMap::new();
+    for id in r.exercise_ids {
+        let muscles = crate::muscles::exercise_muscles(&id);
+        out.insert(id, muscles);
+    }
+    respond(&out)
+}
+
+// ---------------------------------------------------------------------------
 // Hybrid logical clock (golden-only until the sync endpoint exists)
 // ---------------------------------------------------------------------------
 
@@ -319,6 +342,15 @@ mod tests {
         );
         let inj = r#"{"v":1,"date":"2026-10-03","availability":{"status":"injured","since":"2026-10-01","muscle":"calves"}}"#;
         assert_eq!(result(injured_on(inj)), serde_json::json!(["calves"]));
+    }
+
+    #[test]
+    fn exercise_muscles_lookup() {
+        let r = result(exercise_muscles(r#"{"v":1,"exerciseIds":["squat","noSuchLift"]}"#));
+        assert!(r["noSuchLift"].is_null());
+        let targets = r["squat"]["targets"].as_array().unwrap();
+        assert!(targets.iter().any(|m| m == "quads"));
+        assert!(matches!(exercise_muscles(r#"{"v":1}"#), Err(ApiError::InvalidInput(_))));
     }
 
     #[test]

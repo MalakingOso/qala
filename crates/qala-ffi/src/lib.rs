@@ -134,6 +134,11 @@ pub fn hlc_merge_field(request: String) -> Result<String, QalaError> {
     Ok(core_api::hlc_merge_field(&request)?)
 }
 
+#[uniffi::export]
+pub fn exercise_muscles(request: String) -> Result<String, QalaError> {
+    Ok(core_api::exercise_muscles(&request)?)
+}
+
 // LS++ evaluation API.
 #[uniffi::export]
 pub fn force_evaluate_text(request: String) -> Result<String, QalaError> {
