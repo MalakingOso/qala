@@ -84,7 +84,7 @@ What Room stores, so the Kotlin side maps 1:1. All serde camelCase.
 - Lift entry: `targets` and `synergists` from the liftosaur library (`exercise.targetMuscles`, `synergistMuscles`) mapped through `muscles.rs`, deduplicated, synergists exclude anything already a target. Unknown exercise id: no targets (the engine treats the entry as volume-only) and a warning in the result.
 - `isMain`: `settings.mainLifts` contains the exercise id (default `squat`, `benchPress`, `deadlift`, `overheadPress`; the adapter owns this list because liftosaur ids differ from the TS `bench`/`ohp`).
 - Weight: converted to `settings.unit`, rounded to 4 decimals.
-- A lift `Checkin` is attached to the session closest before it within 3 hours when one exists (so `prsHistory` and soreness feed the engine); standalone check-ins on rest days are applied through a separate `apply_checkin` that only touches `prsHistory`, `lastCheckin`, `sorenessPrev`, `sorenessPrevPrev` (the same bookkeeping `applyLift` does).
+- A check-in is attached to the lift session that starts closest AFTER it, within 3 hours (the check-in is taken before training), when one exists (so `prsHistory` and soreness feed the engine); standalone check-ins on rest days are applied through a separate `apply_checkin` that only touches `prsHistory`, `lastCheckin`, `sorenessPrev`, `sorenessPrevPrev` (the same bookkeeping `applyLift` does).
 - Run: `gradeProfile`, `descentM`, `srpe`, `minutes` pass through; missing `movingSec` falls back to `elapsedSec`.
 
 ## Derived numbers (`derived.rs`, no TS source, hand-worked goldens)
@@ -111,6 +111,19 @@ Each takes a request JSON string, returns the `{"v":1,"result":...}` envelope.
 | `weight_trend` | `{weights, today}` | trend or none |
 | `classify_day`, `reason_on`, `injured_on`, `guard_exercise`, `shifts_plan` | availability inputs | availability results |
 | `hlc_compare`, `hlc_tick`, `hlc_receive`, `hlc_merge_field` | HLC inputs | HLC results |
+
+## Final JSON shapes (as built, 2026-10-02)
+
+All requests carry `"v": 1`, use camelCase, ignore unknown fields. Results are `{"v":1,"result":...}`. A missing or mistyped field is `invalid_input`; a bad date, clock or non-finite number is `evaluation`.
+
+- `log_session {state, workout}` -> `EngineState`. `calibrate {history}` -> `EngineState`. `predict_readiness {state, checkin, sessionMuscles?, now}` -> `{score, prsZ|null, prsFlag, soreBlockedMuscles, reasons}`.
+- `build_engine_state {records: [SessionRecord], checkins: [CheckInRecord], settings}` -> `{state, warnings: ["unknown exercise: <id>"]}`. Check-ins are a separate list. A stub record is dropped before the engine. The core has no deleted flag: the caller removes tombstoned records first.
+- `readiness_summary {records, checkins, settings, now, offsetMin, sessionMuscles?}` -> `{today: Readiness, checkedInToday, average28d|null, checkinCount28d, readyDates: [{muscle, date: "YYYY-MM-DD", capped}]}`. `today` is scored from the latest check-in of today's local date; with none it is a fatigue-only estimate (no soreness, recovery at the 28-day mean but at least 5.0, 7.0 with no history), so a day without a check-in never raises `prs-low`. Records and check-ins after `now` are ignored.
+- `week_load {planned: [7 entries, Monday first], records, settings, weekStart (a Monday)}` -> `{planned: [7 numbers], done: [7 numbers], warnings}`. A planned entry is `{"kind":"rest"}`, `{"kind":"lift","exercises":[{"exerciseId","sets","targetRpe"?}]}` (rpe defaults to 8) or `{"kind":"run","distanceM","zone"}` with zone 0.5, 1.0, 1.5 or "easy", "steady", "hard". Load leaves out sRPE systemic load and descent damage. Done runs use the zone the engine assigned.
+- `weight_trend {weights: [{id, date, kg}], today}` -> `null` or `{latestKg, avg7Kg, prevAvg7Kg?, deltaPerWeekKg?, direction: "up"|"down"|"flat", runDays}`. Several weights on one date are averaged; at least 3 distinct days in the last 7 are needed. `direction` is today's rolling-mean move against yesterday's (flat under 0.05 kg), not the sign of the weekly delta, so show both numbers and never infer one from the other.
+- Availability: `classify_day`, `reason_on`, `injured_on` take `{date, availability?, skips?}`; `guard_exercise {targets, synergists?, injured?}`; `shifts_plan {reason}`. HLC: `hlc_compare {a, b}` -> -1|0|1, `hlc_tick {hlc, nowMs}`, `hlc_receive {local, remote, nowMs, maxDriftMs}`, `hlc_merge_field {local: {value, hlc}, remote: {value, hlc}}`; a clock is `{wallMs, counter, nodeId}` with a non-empty ASCII-graphic node id and a counter under 100000.
+- `logged_program_days(records)` (Rust only, not exposed over FFI yet) returns the program day index of every lift record including stubs, chronologically. Add an FFI export when M2 needs it.
+- kg to lb divides by 0.45359237; `packages/core/units.ts` multiplies by 2.2046226218, so a displayed lb weight can differ in the fourth decimal.
 
 ## Build
 
