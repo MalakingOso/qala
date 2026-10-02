@@ -12,7 +12,10 @@ time; checksums in DESIGN.md 3.2):
 
 Runtime libraries (see `package.json` for versions):
 
-- `lucide-react` (ISC) for all icons. Running uses `sport-shoe`.
+- `lucide-react` (ISC) for all icons. Running uses `sport-shoe`. Icons Lucide
+  inherited from Feather are MIT (eleven of them are in the Android set); the
+  Android app ships both licence texts in
+  `apps/android/app/src/main/assets/licenses/`.
 - `@visx/*` (MIT) for every in-app chart.
 - `uPlot` (MIT) for dense or zoomable time series.
 - `codemirror` + `@codemirror/*` (MIT) for the desktop program editor.

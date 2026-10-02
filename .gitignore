@@ -5,8 +5,6 @@ coverage/
 *.log
 .env
 .env.local
-apps/phone/android/
-apps/phone/ios/
 server/data/
 *.pmtile
 *.tif
@@ -24,3 +22,12 @@ target/wasm-out/
 
 # Playwright MCP session logs and snapshots
 .playwright-mcp/
+
+# Android build outputs (apps/android)
+apps/android/.gradle/
+apps/android/.kotlin/
+apps/android/.idea/
+apps/android/**/build/
+apps/android/local.properties
+*.keystore
+*.jks
