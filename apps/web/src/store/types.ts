@@ -38,6 +38,20 @@ export interface WeekLoadDay {
   label?: string;
 }
 
+/** One calendar week of load for the desktop week ribbon: the focused week
+ * sits between the one before and the one after (DESIGN 6.3, U20). `relation`
+ * is relative to today, not to the focus, so a past week stays "past" while it
+ * is the one in view. */
+export interface WeekLoad {
+  id: string;
+  /** "Week 3": the position in the training block. */
+  name: string;
+  /** "Sep 7-13", Monday to Sunday. */
+  range: string;
+  relation: "past" | "current" | "future";
+  days: WeekLoadDay[];
+}
+
 export interface WorkoutSet {
   w: number;
   r: number;

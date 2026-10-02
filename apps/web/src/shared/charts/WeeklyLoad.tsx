@@ -27,10 +27,10 @@ const DAY_NAMES = [
   "Sunday",
 ];
 
-type DayKind = "lift" | "run" | "both" | "rest";
-type DayState = "done" | "partial" | "today" | "later" | "rest";
+export type DayKind = "lift" | "run" | "both" | "rest";
+export type DayState = "done" | "partial" | "today" | "later" | "rest";
 
-interface DayView {
+export interface DayView {
   index: number;
   name: string;
   letter: string;
@@ -47,11 +47,11 @@ interface DayView {
   runPlanned: number;
 }
 
-function n(v: number) {
+export function n(v: number) {
   return v.toLocaleString("en-US");
 }
 
-function describe(days: WeekLoadDay[]): DayView[] {
+export function describe(days: WeekLoadDay[]): DayView[] {
   return days.map((d, i) => {
     const done = d.liftDone + d.runDone;
     const planned = d.liftPlanned + d.runPlanned;
@@ -101,7 +101,7 @@ function describe(days: WeekLoadDay[]): DayView[] {
   });
 }
 
-function Glyph({ kind }: { kind: DayKind }) {
+export function Glyph({ kind }: { kind: DayKind }) {
   if (kind === "both") {
     return (
       <>
@@ -117,13 +117,13 @@ function Glyph({ kind }: { kind: DayKind }) {
 
 /** "420 done", "750 planned" or "300 of 750 done". The lift/run split lives
  * in the table view. */
-function captionNums(v: DayView) {
+export function captionNums(v: DayView) {
   if (v.done === 0) return `${n(v.planned)} planned`;
   if (v.done >= v.planned) return `${n(v.done)} done`;
   return `${n(v.done)} of ${n(v.planned)} done`;
 }
 
-function dayLabel(v: DayView) {
+export function dayLabel(v: DayView) {
   const when = v.today ? ", today" : "";
   if (v.state === "rest") return `${v.name}${when}: rest`;
   return `${v.name}${when}, ${v.session}: ${n(v.done)} done of ${

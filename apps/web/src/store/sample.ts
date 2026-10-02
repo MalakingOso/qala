@@ -11,6 +11,7 @@ import type {
   SessionSummary,
   SettingsModel,
   StageState,
+  WeekLoad,
   WeekLoadDay,
   WorkoutExercise,
 } from "./types.ts";
@@ -48,6 +49,220 @@ export const sampleWeekLoad: WeekLoadDay[] = [
     label: "Lower A",
   },
 ];
+
+/* The desktop week ribbon shows three weeks with one in focus (U20). Week 3 is
+ * the sample week with Lower A done (the session list already has it logged,
+ * so Overview reads "Lower A complete"); weeks 2 and 4 are sample data until
+ * the engine supplies the neighbouring weeks. */
+export const sampleWeeks: WeekLoad[] = [
+  {
+    id: "w2",
+    name: "Week 2",
+    range: "Aug 31-Sep 6",
+    relation: "past",
+    days: [
+      {
+        day: "M",
+        liftDone: 400,
+        runDone: 0,
+        liftPlanned: 400,
+        runPlanned: 0,
+        label: "Upper A",
+      },
+      {
+        day: "T",
+        liftDone: 0,
+        runDone: 300,
+        liftPlanned: 0,
+        runPlanned: 300,
+        label: "Easy run",
+      },
+      {
+        day: "W",
+        liftDone: 370,
+        runDone: 0,
+        liftPlanned: 370,
+        runPlanned: 0,
+        label: "Lower B",
+      },
+      {
+        day: "T",
+        liftDone: 0,
+        runDone: 100,
+        liftPlanned: 0,
+        runPlanned: 180,
+        label: "Run",
+      },
+      {
+        day: "F",
+        liftDone: 440,
+        runDone: 0,
+        liftPlanned: 440,
+        runPlanned: 0,
+        label: "Upper B",
+      },
+      {
+        day: "S",
+        liftDone: 0,
+        runDone: 280,
+        liftPlanned: 0,
+        runPlanned: 280,
+        label: "Long run",
+      },
+      {
+        day: "S",
+        liftDone: 480,
+        runDone: 220,
+        liftPlanned: 480,
+        runPlanned: 220,
+        label: "Lower A + run",
+      },
+    ],
+  },
+  {
+    id: "w3",
+    name: "Week 3",
+    range: "Sep 7-13",
+    relation: "current",
+    days: [
+      {
+        day: "M",
+        liftDone: 420,
+        runDone: 0,
+        liftPlanned: 420,
+        runPlanned: 0,
+        label: "Upper A",
+      },
+      {
+        day: "T",
+        liftDone: 0,
+        runDone: 310,
+        liftPlanned: 0,
+        runPlanned: 310,
+        label: "Easy run",
+      },
+      {
+        day: "W",
+        liftDone: 380,
+        runDone: 0,
+        liftPlanned: 380,
+        runPlanned: 0,
+        label: "Lower B",
+      },
+      {
+        day: "T",
+        liftDone: 0,
+        runDone: 0,
+        liftPlanned: 0,
+        runPlanned: 180,
+        label: "Run",
+      },
+      {
+        day: "F",
+        liftDone: 450,
+        runDone: 0,
+        liftPlanned: 450,
+        runPlanned: 0,
+        label: "Upper B",
+      },
+      {
+        day: "S",
+        liftDone: 0,
+        runDone: 170,
+        liftPlanned: 0,
+        runPlanned: 290,
+        label: "Long run",
+      },
+      {
+        day: "S",
+        liftDone: 510,
+        runDone: 0,
+        liftPlanned: 510,
+        runPlanned: 240,
+        today: true,
+        label: "Lower A",
+      },
+    ],
+  },
+  {
+    id: "w4",
+    name: "Week 4",
+    range: "Sep 14-20",
+    relation: "future",
+    days: [
+      {
+        day: "M",
+        liftDone: 0,
+        runDone: 0,
+        liftPlanned: 430,
+        runPlanned: 0,
+        label: "Upper A",
+      },
+      {
+        day: "T",
+        liftDone: 0,
+        runDone: 0,
+        liftPlanned: 0,
+        runPlanned: 320,
+        label: "Easy run",
+      },
+      {
+        day: "W",
+        liftDone: 0,
+        runDone: 0,
+        liftPlanned: 390,
+        runPlanned: 0,
+        label: "Lower B",
+      },
+      {
+        day: "T",
+        liftDone: 0,
+        runDone: 0,
+        liftPlanned: 0,
+        runPlanned: 190,
+        label: "Run",
+      },
+      {
+        day: "F",
+        liftDone: 0,
+        runDone: 0,
+        liftPlanned: 460,
+        runPlanned: 0,
+        label: "Upper B",
+      },
+      {
+        day: "S",
+        liftDone: 0,
+        runDone: 0,
+        liftPlanned: 0,
+        runPlanned: 300,
+        label: "Long run",
+      },
+      {
+        day: "S",
+        liftDone: 0,
+        runDone: 0,
+        liftPlanned: 520,
+        runPlanned: 250,
+        label: "Lower A + run",
+      },
+    ],
+  },
+];
+
+/** Where the training block stands, for Overview's lede and the program page.
+ * The deload is the last week of the block (Body's "Next planned: week 6"). */
+export const sampleBlock = {
+  name: "Strength B2",
+  focus: "Lower focus",
+  week: 3,
+  of: 6,
+  deloadWeek: 6,
+  today: "Sunday, September 13",
+  /** The same day as a session date, to find what was logged today. */
+  todayDate: "Sep 13",
+  profile: "4-day upper/lower + 3 runs",
+};
 
 export const sampleExercises: WorkoutExercise[] = [
   {
@@ -398,7 +613,8 @@ export const sampleSessions: SessionSummary[] = [
   },
   {
     id: "sep6-upper-a",
-    date: "Sep 6",
+    // Monday of the sample week; the id keeps its old name.
+    date: "Sep 7",
     type: "lift",
     label: "Upper A",
     loadLb: 15200,

@@ -1,5 +1,6 @@
 export { ChartShell } from "./ChartShell.tsx";
 export { WeeklyLoad } from "./WeeklyLoad.tsx";
+export { WeekRibbon } from "./WeekRibbon.tsx";
 export { ReadinessRing } from "./ReadinessRing.tsx";
 export { ReadinessLine } from "./ReadinessLine.tsx";
 export { TimeSplit } from "./TimeSplit.tsx";
