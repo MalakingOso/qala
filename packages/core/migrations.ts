@@ -58,6 +58,8 @@ export function createBaselineDocument(): QalaDocument {
     runPlans: {},
     activeRunPlanId: "",
     history: [],
+    daySkips: [],
+    availability: { status: "active" },
     engineSnapshots: [],
     coachMemory: [],
     llmLog: [],

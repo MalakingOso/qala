@@ -14,6 +14,40 @@ export type Approach = "strength" | "hypertrophy" | "maintenance";
 export type Periodization = "linear" | "dup" | "block";
 export type HybridPriority = "lifting" | "running";
 
+/** Why a training day is off. Vacation and sick shift the plan out; a
+ * break or a scheduling conflict rests in place; an injured day guards one
+ * muscle. */
+export type SkipReason =
+  | "break"
+  | "vacation"
+  | "sick"
+  | "injured"
+  | "scheduling";
+
+/** One skipped calendar day (date is YYYY-MM-DD in the user's timezone). */
+export interface DaySkip {
+  date: string;
+  reason: SkipReason;
+  /** Injured target: a lowercase engine muscle id (quads, calves, ...). */
+  muscle?: string;
+  note?: string;
+}
+
+export type AvailabilityStatus = "active" | SkipReason;
+
+/** Persistent training status. Active is the default; the rest cover every
+ * day from `since` through `until` (inclusive, open when absent). */
+export interface Availability {
+  status: AvailabilityStatus;
+  /** YYYY-MM-DD, set whenever the status is not active. */
+  since?: string;
+  /** YYYY-MM-DD inclusive; absent means until cleared. */
+  until?: string;
+  /** Injured target: a lowercase engine muscle id. */
+  muscle?: string;
+  note?: string;
+}
+
 export interface RunSettings {
   hrMax?: number;
   hrRest?: number;
@@ -284,6 +318,10 @@ export interface QalaDocument {
   runPlans: Record<string, RunPlan>;
   activeRunPlanId: string;
   history: HistorySession[];
+  /** Skipped days and persistent status. Optional so stored v1 documents
+   * without them stay valid; readers default to no skips and active. */
+  daySkips?: DaySkip[];
+  availability?: Availability;
   engineSnapshots: EngineSnapshot[];
   coachMemory: CoachMemoryEntry[];
   llmLog: LlmLogEntry[];

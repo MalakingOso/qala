@@ -26,6 +26,7 @@ import {
   predictReadiness as readinessCore,
   type Readiness,
 } from "./readiness.ts";
+import { guardExercise } from "./availability.ts";
 import {
   doubleProgression,
   ReasonCode,
@@ -134,7 +135,7 @@ function applyLift(s: EngineState, w: LiftWorkout): void {
       }
     }
     if (main) {
-      // CONTEXT.md: reference 1RM updates "only at block boundaries or on a
+      // docs/CONTEXT.md: reference 1RM updates "only at block boundaries or on a
       // new tested 1RM." The engine has no block-boundary concept yet, so
       // only the tested-1RM trigger is implemented here; that's this
       // session's own open question (see the report), not invented here.
@@ -332,6 +333,7 @@ export interface Recommendation {
 export interface PlannedExercise {
   exerciseId: string;
   targets: string[];
+  synergists?: string[];
   lastWeight: number;
   sets: number;
   reps: number;
@@ -344,6 +346,7 @@ export function recommendNextSession(
   state: EngineState,
   exercises: PlannedExercise[],
   targetDate: string,
+  opts?: { injuredMuscles?: string[] },
 ): Recommendation {
   const reasons: ReasonCode[] = [];
   // Whole-body deload check: two main lifts below 4-week median twice.
@@ -371,8 +374,24 @@ export function recommendNextSession(
   // Cross-modal context from the last run.
   const lastRun = state.runs[state.runs.length - 1];
   const lastLift = state.liftSessions[state.liftSessions.length - 1];
+  const injured = opts?.injuredMuscles ?? [];
   const lifts: RecommendedLift[] = exercises.map((e) => {
     const lb = e.lowerBody ?? isLowerBodyLift(e.exerciseId);
+    // Injured-muscle guard: a hurt direct target takes the exercise out of
+    // the session (0 sets); a hurt synergist halves it.
+    const guard = guardExercise(e.targets, e.synergists, injured);
+    if (guard === "skip") {
+      reasons.push(ReasonCode.INJURED_SKIP);
+      return {
+        exerciseId: e.exerciseId,
+        targetWeight: roundWeight(e.lastWeight),
+        targetSets: 0,
+        targetReps: e.reps,
+        targetRpe: e.targetRpe,
+        recWeightPct: 0,
+        recSets: 0,
+      };
+    }
     let recWeightPct = 0;
     let recSets = 0;
     let targetReps = e.reps;
@@ -425,12 +444,17 @@ export function recommendNextSession(
     }
     recWeightPct = clampWeightPct(recWeightPct);
     recSets = clampSets(recSets);
+    let targetSets = Math.max(1, Math.round(e.sets * setsFactor) + recSets);
+    if (guard === "halve") {
+      targetSets = Math.max(1, Math.floor(targetSets / 2));
+      reasons.push(ReasonCode.INJURED_HALVE);
+    }
     return {
       exerciseId: e.exerciseId,
       targetWeight: roundWeight(
         e.lastWeight * loadFactor * (1 + recWeightPct / 100),
       ),
-      targetSets: Math.max(1, Math.round(e.sets * setsFactor) + recSets),
+      targetSets,
       targetReps,
       targetRpe: e.targetRpe,
       recWeightPct,

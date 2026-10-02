@@ -17,6 +17,9 @@ export enum ReasonCode {
   // Flags
   RECOVERY_NUDGE = "RECOVERY_NUDGE",
   INJURY_RISK = "INJURY_RISK",
+  // Injured-muscle guard (availability.ts)
+  INJURED_SKIP = "INJURED_SKIP",
+  INJURED_HALVE = "INJURED_HALVE",
   // Cross-modal (PLAN 6.4)
   RUN_BEFORE_LIFT = "RUN_BEFORE_LIFT",
   LIFT_BEFORE_HARD_RUN = "LIFT_BEFORE_HARD_RUN",

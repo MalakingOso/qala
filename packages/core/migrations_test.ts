@@ -18,6 +18,8 @@ Deno.test("baseline document is v1 with required sections", () => {
   assertEquals(doc.equipment.recovery, ["foamRoller", "percussionMassager"]);
   assertEquals(doc.history, []);
   assertEquals(doc.activeProgramId, "");
+  assertEquals(doc.daySkips, []);
+  assertEquals(doc.availability, { status: "active" });
 });
 
 Deno.test("v0 document (no schemaVersion) migrates to v1 baseline", () => {
