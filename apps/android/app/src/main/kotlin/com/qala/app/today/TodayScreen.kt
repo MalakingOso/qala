@@ -338,14 +338,14 @@ private fun WeekDay(cell: WeekCell, scale: Double, modifier: Modifier) {
         Box(
             Modifier
                 .fillMaxWidth()
-                .height(52.dp)
+                .height(if (scale <= 0.0) 30.dp else 52.dp)           // a week with nothing in it needs no tall bars
                 .drawBehind {
                     val stroke = 2.dp.toPx()
                     val radius = CornerRadius(3.dp.toPx())
                     val outline = if (cell.today) c.accent else if (cell.done > 0) c.progressFill else c.fgFaint
                     if (size <= 0.0) {
                         if (cell.training) {
-                            val h = this.size.height * 0.4f
+                            val h = if (scale <= 0.0) this.size.height else this.size.height * 0.4f
                             drawRoundRect(
                                 outline, Offset(stroke / 2, this.size.height - h + stroke / 2), Size(this.size.width - stroke, h - stroke), radius,
                                 style = Stroke(stroke, pathEffect = PathEffect.dashPathEffect(floatArrayOf(5.dp.toPx(), 4.dp.toPx()))),

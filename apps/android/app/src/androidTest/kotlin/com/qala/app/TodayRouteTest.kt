@@ -9,7 +9,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.isHeading
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
@@ -34,6 +40,7 @@ import kotlinx.coroutines.cancel
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -109,6 +116,37 @@ class TodayRouteTest {
         rule.onNodeWithContentDescription("Back").performClick()
         rule.onNodeWithText("How are you walking in?").assertExists()
         railSays("Day stages: check-in now, 0 of 6 done")
+    }
+
+    @Test
+    fun aPreviewIsAnnouncedAndReadOnly() {
+        showApp(container())
+        waitForTheSeed()
+        railSays("Day stages: check-in now, 0 of 6 done")
+
+        // TalkBack steps through the stages with the rail's custom actions.
+        val rail = rule.onNode(hasContentDescription("Day stages: check-in now, 0 of 6 done"))
+        val next = rail.fetchSemanticsNode().config[SemanticsActions.CustomActions].first { it.label == "Next stage" }
+        rule.runOnUiThread { next.action() }
+
+        val bar = rule.onNodeWithText("Previewing Warm-up")
+        bar.assertExists()
+        assertEquals(LiveRegionMode.Polite, bar.fetchSemanticsNode().config[SemanticsProperties.LiveRegion])
+        rule.onNodeWithText("Preview · warm-up".uppercase()).assertExists()
+        rule.onNodeWithText("Start warm-up").assertIsNotEnabled()
+        rule.onNodeWithText("Back to now").performClick()
+        railSays("Day stages: check-in now, 0 of 6 done")
+        rule.onNodeWithText("Check in").assertIsEnabled()
+    }
+
+    @Test
+    fun theTitlesAreHeadings() {
+        showApp(container())
+        waitForTheSeed()
+        val headings = rule.onAllNodes(isHeading()).fetchSemanticsNodes().size
+        // The page title, the hero, and the four cards below it (some may be off screen but are still composed).
+        assertTrue("found $headings headings", headings >= 4)
+        rule.onNode(isHeading() and hasText("Today")).assertExists()
     }
 
     @Test
