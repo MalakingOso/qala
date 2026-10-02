@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Qala desktop: all tabs in the editorial Beamer theme</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #e8eaf0; color: #0f152a; padding: 32px 24px 80px; }
+  .page-intro { max-width: 1180px; margin: 0 auto 28px; }
+  .page-intro h1 { font-family: Georgia, serif; font-size: 30px; margin-bottom: 8px; }
+  .page-intro p { font-size: 14px; color: #4a5578; max-width: 70ch; line-height: 1.6; }
+  .direction { max-width: 1180px; margin: 0 auto; }
+  .direction-label { display: flex; align-items: baseline; gap: 12px; margin-bottom: 12px; }
+  .direction-label .tag { font-size: 12px; font-weight: 700; background: #0f152a; color: #fff; padding: 3px 10px; border-radius: 4px; }
+  .direction-label h2 { font-family: Georgia, serif; font-size: 22px; }
+  .direction-label p { font-size: 13px; color: #4a5578; }
+  .frame { border: 2px solid #0f152a; border-radius: 8px; overflow: hidden; box-shadow: 6px 8px 0 rgba(15,21,42,.18); }
+
+  .eb { display: grid; grid-template-columns: 210px 1fr; background: #f5f5f7; font-size: 13px; min-height: 640px; }
+  .eb-side { background: #fff; border-right: 2px solid rgba(15,21,42,.12); padding: 22px 14px; display: flex; flex-direction: column; gap: 2px; }
+  .eb-brand { font-family: Georgia, serif; font-weight: 700; font-size: 26px; padding: 0 10px; }
+  .eb-brand em { font-style: normal; color: #c2410c; }
+  .eb-brand-sub { font-size: 11px; color: #64708b; font-style: italic; font-family: Georgia, serif; padding: 0 10px; margin-bottom: 18px; }
+  .eb-group { font-size: 10px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: #64708b; padding: 12px 10px 6px; }
+  .eb-nav { display: flex; align-items: baseline; gap: 10px; padding: 9px 10px; border-radius: 6px; color: #4a5578; text-decoration: none; cursor: pointer; border: none; background: none; font-size: 13px; width: 100%; text-align: left; }
+  .eb-nav .no { font-size: 10px; color: #94a0b8; font-variant-numeric: tabular-nums; }
+  .eb-nav.active { background: rgba(194,65,12,.1); color: #c2410c; font-weight: 600; box-shadow: inset 3px 0 0 #c2410c; }
+  .eb-nav.active .no { color: #c2410c; }
+  .eb-foot { margin-top: auto; padding: 14px 10px 0; border-top: 2px solid rgba(15,21,42,.1); color: #64708b; font-size: 12px; display: flex; align-items: center; gap: 8px; }
+  .eb-live { width: 8px; height: 8px; background: #15803d; border-radius: 2px; }
+  .eb-main { min-width: 0; display: flex; flex-direction: column; }
+  .eb-bar { display: flex; align-items: center; gap: 12px; background: #fff; border-bottom: 2px solid rgba(15,21,42,.12); padding: 10px 24px; }
+  .eb-search { flex: 1; max-width: 340px; display: flex; align-items: center; gap: 8px; background: #f1f3f9; border: 2px solid rgba(15,21,42,.1); border-radius: 6px; padding: 7px 12px; color: #64708b; font-size: 12px; }
+  .eb-search kbd { margin-left: auto; font-family: inherit; font-size: 11px; background: #fff; border: 1px solid rgba(15,21,42,.15); border-radius: 4px; padding: 1px 6px; }
+  .eb-week { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; }
+  .eb-week button { width: 28px; height: 28px; border: 2px solid rgba(15,21,42,.12); background: #fff; border-radius: 6px; cursor: pointer; }
+  .eb-avatar { width: 32px; height: 32px; border-radius: 50%; background: #0f152a; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; margin-left: auto; }
+  .eb-body { padding: 24px; }
+  .eb-card { background: #fff; border: 2px solid rgba(15,21,42,.14); border-radius: 6px; padding: 24px 28px; box-shadow: 2px 3px 0 rgba(15,21,42,.08); margin-bottom: 14px; }
+  .eb-kicker { font-size: 11px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: #64708b; margin-bottom: 8px; }
+  .eb-title { font-family: Georgia, serif; font-size: 36px; font-weight: 700; line-height: 1.05; margin-bottom: 20px; }
+  .eb-rule { border: none; border-top: 2px solid #0f152a; margin: 0 0 20px; }
+  .eb-h { font-family: Georgia, serif; font-size: 19px; font-weight: 700; margin-bottom: 6px; padding-bottom: 10px; border-bottom: 2px solid #0f152a; }
+  .eb-h a { float: right; font-family: -apple-system, sans-serif; font-size: 11px; font-weight: 400; color: #64708b; text-decoration: none; margin-top: 7px; }
+  .eb-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .eb-table th { text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: #64708b; padding: 8px; border-bottom: 2px solid rgba(15,21,42,.12); }
+  .eb-table td { padding: 9px 8px; border-bottom: 1px solid rgba(15,21,42,.08); }
+  .eb-table tr:last-child td { border-bottom: none; }
+  .eb-table tbody tr:hover { background: #f1f3f9; }
+  .eb-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+  .eb-type { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; padding: 2px 7px; border-radius: 3px; white-space: nowrap; }
+  .eb-type.lift { background: rgba(194,65,12,.12); color: #9a3412; }
+  .eb-type.run { background: rgba(72,92,199,.12); color: #3a4a9f; }
+  .eb-chip { font-size: 10px; font-weight: 600; padding: 4px 10px; border-radius: 20px; background: #e8ebf4; color: #4a5578; border: none; cursor: pointer; }
+  .eb-chip.on { background: #0f152a; color: #fff; }
+  .eb-filters { display: flex; gap: 6px; margin: 12px 0 4px; }
+  .eb-pill { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; }
+  .eb-pill.ok { background: rgba(8,164,156,.12); color: #0a8078; }
+  .eb-pill.warn { background: rgba(194,65,12,.12); color: #9a3412; }
+  .eb-pill.info { background: rgba(72,92,199,.12); color: #3a4a9f; }
+  .up { color: #15803d; }
+  .panel { display: none; }
+  .panel.show { display: block; }
+  .lift-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .lift-card { background: #fff; border: 2px solid rgba(15,21,42,.14); border-radius: 6px; padding: 20px 22px; box-shadow: 2px 3px 0 rgba(15,21,42,.08); }
+  .lift-card .nm { font-family: Georgia, serif; font-size: 21px; font-weight: 700; }
+  .lift-card .nl { float: right; font-size: 11px; color: #64708b; margin-top: 6px; }
+  .lift-card .fig { font-family: Georgia, serif; font-size: 44px; font-weight: 700; line-height: 1.1; }
+  .lift-card .fig small { font-size: 14px; font-weight: 400; color: #4a5578; }
+  .lift-card .sub { font-size: 12px; color: #4a5578; margin: 2px 0 10px; }
+  .lift-card .ft { margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(15,21,42,.1); font-size: 11px; }
+  .lift-card .ft a { color: #c2410c; }
+  .eb-code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12px; line-height: 1.7; background: #f1f3f9; border: 2px solid rgba(15,21,42,.1); border-radius: 6px; padding: 14px 16px; white-space: pre; overflow-x: auto; }
+  .eb-code .c { color: #64708b; }
+  .eb-code .k { color: #9a3412; font-weight: 700; }
+  .eb-day { padding: 10px 0; border-bottom: 1px solid rgba(15,21,42,.09); font-size: 12px; }
+  .eb-day:last-child { border-bottom: none; }
+  .eb-day .dh { font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #64708b; margin-bottom: 4px; }
+  .eb-day .rest { color: #64708b; font-style: italic; }
+  .eb-btn { display: inline-block; font-size: 12px; font-weight: 600; border: 2px solid rgba(15,21,42,.16); background: #fff; border-radius: 6px; padding: 9px 18px; cursor: pointer; box-shadow: 2px 3px 0 rgba(15,21,42,.08); }
+  .eb-btn.primary { background: #c2410c; border-color: #c2410c; color: #fff; }
+  .eb-searchlg { display: flex; align-items: center; gap: 8px; background: #f1f3f9; border: 2px solid rgba(15,21,42,.1); border-radius: 6px; padding: 9px 14px; color: #64708b; font-size: 13px; margin-bottom: 12px; }
+</style>
+</head>
+<body>
+<div class="page-intro">
+  <h1>All tabs, editorial Beamer</h1>
+  <p>Every remaining tab in the picked-up language: kicker plus serif title, Beamer cards, dense console tables where rows do the work. Click the sidebar to flip tabs. Overview already lives in its own file.</p>
+</div>
+
+<div class="direction">
+  <div class="direction-label"><span class="tag">Tabs</span><h2>Training and Workspace</h2><p>One shell, seven panels. Static data throughout.</p></div>
+  <div class="frame"><div class="eb">
+    <div class="eb-side">
+      <div class="eb-brand">Qala<em>.</em></div>
+      <div class="eb-brand-sub">training record</div>
+      <div class="eb-group">Training</div>
+      <a class="eb-nav" href="desktop-editorial-beamer.html"><span class="no">01</span> Overview</a>
+      <button class="eb-nav active" data-tab="lifts"><span class="no">02</span> Lifts</button>
+      <button class="eb-nav" data-tab="running"><span class="no">03</span> Running</button>
+      <button class="eb-nav" data-tab="body"><span class="no">04</span> Body</button>
+      <button class="eb-nav" data-tab="history"><span class="no">05</span> History</button>
+      <div class="eb-group">Workspace</div>
+      <button class="eb-nav" data-tab="programs"><span class="no">06</span> Programs</button>
+      <button class="eb-nav" data-tab="exercises"><span class="no">07</span> Exercises</button>
+      <button class="eb-nav" data-tab="calibration"><span class="no">08</span> Calibration</button>
+      <div class="eb-foot"><span class="eb-live"></span> Synced 2 min ago</div>
+    </div>
+    <div class="eb-main">
+      <div class="eb-bar">
+        <div class="eb-search">&#8981; Search lifts, runs, exercises <kbd>Cmd K</kbd></div>
+        <div class="eb-week"><button>&larr;</button> Sep 7&ndash;13 <button>&rarr;</button></div>
+        <div class="eb-avatar">B</div>
+      </div>
+      <div class="eb-body">
+
+      <section class="panel show" id="panel-lifts">
+        <div class="eb-kicker">Strength B2 &middot; Week 3 of 6 &middot; reference 1RMs frozen</div>
+        <div class="eb-title">Lifts</div>
+        <div class="lift-grid">
+          <div class="lift-card"><span class="nl">NL85 27 / 33</span><div class="nm">Squat</div>
+            <div class="fig">283 <small>lb e1RM</small></div>
+            <div class="sub"><span class="up">+4% this block</span> &middot; Kalman 283 &middot; tested 275</div>
+            <svg viewBox="0 0 300 84" width="100%" height="84"><line x1="8" y1="72" x2="295" y2="72" stroke="#e3e6ee"/><polyline points="15,60 100,48 185,34 270,16" fill="none" stroke="#485cc7" stroke-width="2.5"/><circle cx="15" cy="60" r="4" fill="#fff" stroke="#485cc7" stroke-width="2"/><circle cx="100" cy="48" r="4" fill="#fff" stroke="#485cc7" stroke-width="2"/><circle cx="185" cy="34" r="4" fill="#485cc7"/><circle cx="270" cy="16" r="5" fill="#c2410c"/><text x="258" y="12" font-size="10" fill="#0f152a" font-weight="bold">283</text></svg>
+            <div class="ft"><a href="#">Full history and calibration &rarr;</a></div>
+          </div>
+          <div class="lift-card"><span class="nl">NL85 18 / 24</span><div class="nm">Bench</div>
+            <div class="fig">245 <small>lb e1RM</small></div>
+            <div class="sub"><span class="up">+2% this block</span> &middot; Kalman 243 &middot; tested 240</div>
+            <svg viewBox="0 0 300 84" width="100%" height="84"><line x1="8" y1="72" x2="295" y2="72" stroke="#e3e6ee"/><polyline points="15,58 110,50 205,40 270,30" fill="none" stroke="#485cc7" stroke-width="2.5"/><circle cx="15" cy="58" r="4" fill="#fff" stroke="#485cc7" stroke-width="2"/><circle cx="110" cy="50" r="4" fill="#fff" stroke="#485cc7" stroke-width="2"/><circle cx="205" cy="40" r="4" fill="#fff" stroke="#485cc7" stroke-width="2"/><circle cx="270" cy="30" r="5" fill="#c2410c"/></svg>
+            <div class="ft"><a href="#">Full history and calibration &rarr;</a></div>
+          </div>
+          <div class="lift-card"><span class="nl">NL85 12 / 14</span><div class="nm">Deadlift</div>
+            <div class="fig">320 <small>lb e1RM</small></div>
+            <div class="sub"><span class="up">+3% this block</span> &middot; Kalman 322 &middot; tested 315</div>
+            <svg viewBox="0 0 300 84" width="100%" height="84"><line x1="8" y1="72" x2="295" y2="72" stroke="#e3e6ee"/><polyline points="15,62 110,50 205,38 270,24" fill="none" stroke="#485cc7" stroke-width="2.5"/><circle cx="15" cy="62" r="4" fill="#fff" stroke="#485cc7" stroke-width="2"/><circle cx="110" cy="50" r="4" fill="#fff" stroke="#485cc7" stroke-width="2"/><circle cx="205" cy="38" r="4" fill="#485cc7"/><circle cx="270" cy="24" r="5" fill="#c2410c"/></svg>
+            <div class="ft"><a href="#">Full history and calibration &rarr;</a></div>
+          </div>
+          <div class="lift-card"><span class="nl">NL85 8 / 10</span><div class="nm">Press</div>
+            <div class="fig">155 <small>lb e1RM</small></div>
+            <div class="sub"><span class="up">+1% this block</span> &middot; Kalman 154 &middot; tested 150</div>
+            <svg viewBox="0 0 300 84" width="100%" height="84"><line x1="8" y1="72" x2="295" y2="72" stroke="#e3e6ee"/><polyline points="15,56 110,52 205,46 270,40" fill="none" stroke="#485cc7" stroke-width="2.5"/><circle cx="15" cy="56" r="4" fill="#fff" stroke="#485cc7" stroke-width="2"/><circle cx="110" cy="52" r="4" fill="#fff" stroke="#485cc7" stroke-width="2"/><circle cx="205" cy="46" r="4" fill="#fff" stroke="#485cc7" stroke-width="2"/><circle cx="270" cy="40" r="5" fill="#c2410c"/></svg>
+            <div class="ft"><a href="#">Full history and calibration &rarr;</a></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="panel-running">
+        <div class="eb-kicker">11.0 miles this week &middot; VDOT 40.5, +2.0 this block</div>
+        <div class="eb-title">Running</div>
+        <div class="eb-card"><div class="eb-h">Running fitness <a href="#">full history</a></div>
+          <svg viewBox="0 0 640 150" width="100%" height="150" style="margin-top:8px">
+            <line x1="36" y1="12" x2="36" y2="122" stroke="#e3e6ee"/><line x1="36" y1="122" x2="630" y2="122" stroke="#e3e6ee"/>
+            <line x1="36" y1="66" x2="630" y2="66" stroke="#e3e6ee" stroke-dasharray="3 4"/>
+            <text x="4" y="40" font-size="10" fill="#64708b">42</text><text x="4" y="70" font-size="10" fill="#64708b">40</text><text x="4" y="100" font-size="10" fill="#64708b">38</text>
+            <polyline points="60,96 170,88 280,90 390,76 500,68 600,62" fill="none" stroke="#485cc7" stroke-width="2.5"/>
+            <circle cx="60" cy="96" r="4" fill="#fff" stroke="#485cc7" stroke-width="2"/><circle cx="170" cy="88" r="4" fill="#fff" stroke="#485cc7" stroke-width="2"/><circle cx="280" cy="90" r="4" fill="#fff" stroke="#485cc7" stroke-width="2"/><circle cx="390" cy="76" r="4" fill="#fff" stroke="#485cc7" stroke-width="2"/><circle cx="500" cy="68" r="4" fill="#fff" stroke="#485cc7" stroke-width="2"/><circle cx="600" cy="62" r="5" fill="#c2410c"/>
+            <text x="52" y="138" font-size="10" fill="#64708b">W1</text><text x="162" y="138" font-size="10" fill="#64708b">W2</text><text x="272" y="138" font-size="10" fill="#64708b">W3</text><text x="382" y="138" font-size="10" fill="#64708b">W4</text><text x="492" y="138" font-size="10" fill="#64708b">W5</text><text x="592" y="138" font-size="10" fill="#c2410c" font-weight="bold">W6</text>
+          </svg>
+        </div>
+        <div class="eb-card"><div class="eb-h">Runs <a href="#">all runs</a></div>
+          <table class="eb-table">
+            <tr><th>Date</th><th>Run</th><th style="text-align:right">Distance</th><th style="text-align:right">Pace</th><th style="text-align:right">sRPE</th><th style="text-align:right">rTSS</th></tr>
+            <tr><td>Sep 12</td><td><b>Long run</b> &middot; 7.0 mi aerobic</td><td class="num">7.0 mi</td><td class="num">9:04</td><td class="num">7</td><td class="num">84</td></tr>
+            <tr><td>Sep 8</td><td><b>Easy run</b> &middot; 4.0 mi recovery</td><td class="num">4.0 mi</td><td class="num">9:31</td><td class="num">4</td><td class="num">41</td></tr>
+            <tr><td>Sep 5</td><td><b>Tempo</b> &middot; 3.0 mi with 2 mi at threshold</td><td class="num">3.0 mi</td><td class="num">8:22</td><td class="num">7</td><td class="num">58</td></tr>
+            <tr><td>Sep 1</td><td><b>Easy run</b> &middot; 5.0 mi aerobic</td><td class="num">5.0 mi</td><td class="num">9:12</td><td class="num">5</td><td class="num">52</td></tr>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel" id="panel-body">
+        <div class="eb-kicker">Readiness 72 &middot; 8 clear of the low line &middot; avg 74</div>
+        <div class="eb-title">Body</div>
+        <div class="eb-card"><div class="eb-h">Recovery by muscle <a href="#">how recovery is scored</a></div>
+          <table class="eb-table">
+            <tr><th>Muscle</th><th>Status</th><th>Ready in</th><th>Last trained</th><th style="text-align:right">Sets this week</th></tr>
+            <tr><td><b>Quads</b></td><td><span class="eb-pill warn">recovering</span></td><td>Saturday</td><td>Lower A &middot; Sep 13</td><td class="num">13</td></tr>
+            <tr><td><b>Chest</b></td><td><span class="eb-pill ok">ready</span></td><td>Now</td><td>Upper B &middot; Sep 11</td><td class="num">12</td></tr>
+            <tr><td><b>Hamstrings</b></td><td><span class="eb-pill ok">ready</span></td><td>Now</td><td>Lower B &middot; Sep 9</td><td class="num">9</td></tr>
+            <tr><td><b>Back</b></td><td><span class="eb-pill ok">ready</span></td><td>Now</td><td>Upper B &middot; Sep 11</td><td class="num">11</td></tr>
+            <tr><td><b>Front delts</b></td><td><span class="eb-pill ok">ready</span></td><td>Now</td><td>Upper B &middot; Sep 11</td><td class="num">8</td></tr>
+            <tr><td><b>Calves</b></td><td><span class="eb-pill ok">ready</span></td><td>Now</td><td>Lower A &middot; Sep 13</td><td class="num">6</td></tr>
+            <tr><td><b>Traps</b></td><td><span class="eb-pill info">nearly there</span></td><td>12 h</td><td>Lower B &middot; Sep 9</td><td class="num">5</td></tr>
+          </table>
+        </div>
+        <div class="eb-card"><div class="eb-h">Readiness, last 7 days <a href="#">all check-ins</a></div>
+          <svg viewBox="0 0 640 130" width="100%" height="130" style="margin-top:8px">
+            <line x1="36" y1="8" x2="36" y2="104" stroke="#e3e6ee"/><line x1="36" y1="104" x2="630" y2="104" stroke="#e3e6ee"/>
+            <line x1="36" y1="88" x2="630" y2="88" stroke="#b91c1c" stroke-dasharray="4 4" opacity=".5"/>
+            <text x="580" y="82" font-size="10" fill="#b91c1c">low 64</text>
+            <text x="8" y="30" font-size="10" fill="#64708b">85</text><text x="8" y="62" font-size="10" fill="#64708b">75</text><text x="8" y="94" font-size="10" fill="#64708b">65</text>
+            <polyline points="60,58 150,50 240,66 330,54 420,70 510,60 600,56" fill="none" stroke="#0a8078" stroke-width="2.5"/>
+            <circle cx="60" cy="58" r="4" fill="#fff" stroke="#0a8078" stroke-width="2"/><circle cx="150" cy="50" r="4" fill="#fff" stroke="#0a8078" stroke-width="2"/><circle cx="240" cy="66" r="4" fill="#fff" stroke="#0a8078" stroke-width="2"/><circle cx="330" cy="54" r="4" fill="#fff" stroke="#0a8078" stroke-width="2"/><circle cx="420" cy="70" r="4" fill="#fff" stroke="#0a8078" stroke-width="2"/><circle cx="510" cy="60" r="4" fill="#fff" stroke="#0a8078" stroke-width="2"/><circle cx="600" cy="56" r="5" fill="#c2410c"/>
+            <text x="592" y="120" font-size="10" fill="#c2410c" font-weight="bold">Today</text>
+          </svg>
+        </div>
+      </section>
+
+      <section class="panel" id="panel-history">
+        <div class="eb-kicker">September &middot; 14 sessions &middot; 2 PRs</div>
+        <div class="eb-title">History</div>
+        <div class="eb-card"><div class="eb-h">Sessions</div>
+          <div class="eb-filters"><button class="eb-chip on">All</button><button class="eb-chip">Lifts</button><button class="eb-chip">Runs</button><button class="eb-chip">PRs only</button></div>
+          <table class="eb-table">
+            <tr><th></th><th>Date</th><th>Session</th><th style="text-align:right">Load</th><th style="text-align:right">sRPE</th><th style="text-align:right">Note</th></tr>
+            <tr><td><span class="eb-type lift">lift</span></td><td>Sep 13</td><td><b>Lower A</b> &middot; Squat 3&times;4 @ 245</td><td class="num">20,420 lb</td><td class="num">8</td><td class="num"><span class="eb-pill warn">1 PR</span></td></tr>
+            <tr><td><span class="eb-type run">run</span></td><td>Sep 12</td><td><b>Long run</b> &middot; 7.0 mi @ 9:04</td><td class="num">&mdash;</td><td class="num">7</td><td class="num"></td></tr>
+            <tr><td><span class="eb-type lift">lift</span></td><td>Sep 11</td><td><b>Upper B</b> &middot; Bench 4&times;5 @ 225</td><td class="num">14,110 lb</td><td class="num">7</td><td class="num"></td></tr>
+            <tr><td><span class="eb-type lift">lift</span></td><td>Sep 9</td><td><b>Lower B</b> &middot; Deadlift 3&times;3 @ 315</td><td class="num">18,940 lb</td><td class="num">8</td><td class="num"></td></tr>
+            <tr><td><span class="eb-type run">run</span></td><td>Sep 8</td><td><b>Easy run</b> &middot; 4.0 mi @ 9:31</td><td class="num">&mdash;</td><td class="num">4</td><td class="num"></td></tr>
+            <tr><td><span class="eb-type lift">lift</span></td><td>Sep 6</td><td><b>Upper A</b> &middot; Bench 3&times;6 @ 205</td><td class="num">15,210 lb</td><td class="num">7</td><td class="num">note</td></tr>
+            <tr><td><span class="eb-type lift">lift</span></td><td>Sep 4</td><td><b>Lower A</b> &middot; Squat 3&times;5 @ 235</td><td class="num">19,630 lb</td><td class="num">8</td><td class="num"><span class="eb-pill warn">1 PR</span></td></tr>
+            <tr><td><span class="eb-type run">run</span></td><td>Sep 1</td><td><b>Easy run</b> &middot; 5.0 mi @ 9:12</td><td class="num">&mdash;</td><td class="num">5</td><td class="num"></td></tr>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel" id="panel-programs">
+        <div class="eb-kicker">Strength B2 &middot; Lower focus &middot; Week 3 of 6</div>
+        <div class="eb-title">Programs</div>
+        <div style="display:grid;grid-template-columns:1.1fr 1fr;gap:14px">
+        <div class="eb-card"><div class="eb-h">Liftoscript <a href="#">docs</a></div>
+          <div class="eb-code"><span class="c">// Lower A &middot; Strength B2 W3</span>
+<span class="c">// approach: strength &middot; periodization: dup</span>
+<span class="k">Squat</span> / 3x4 / 245lb / RPE 8 / rest 3:00 {
+  progress: custom(s, done) {- squatProgress(s, done) -}
+}
+<span class="k">RDL</span> / 2x8 / 205lb / RPE 8
+<span class="k">Walking Lunge</span> / 1x10 / 40lb
+<span class="k">Standing Calf Raise</span> / 2x12 / 180lb</div>
+          <div style="display:flex;align-items:center;gap:10px;margin-top:12px;font-size:12px;color:#64708b"><span class="eb-pill ok">No errors</span> 11 lines &middot; saved 2 min ago</div>
+        </div>
+        <div class="eb-card"><div class="eb-h">Week preview</div>
+          <div class="eb-day"><div class="dh">Mon &middot; Rest</div><div class="rest">Walk plus mobility as wanted.</div></div>
+          <div class="eb-day"><div class="dh">Tue &middot; Upper A</div>Bench 4&times;5 at 225 &middot; Row 3&times;8 at 135 &middot; Press 3&times;8 at 95</div>
+          <div class="eb-day"><div class="dh">Thu &middot; Lower B</div>Deadlift 3&times;3 at 315 &middot; Front squat 3&times;5 at 185</div>
+          <div class="eb-day"><div class="dh">Fri &middot; Upper B</div>Press 3&times;5 at 135 &middot; Bench var 3&times;6 at 205</div>
+          <div class="eb-day"><div class="dh">Sun &middot; Lower A</div>Squat 3&times;4 at 245 &middot; RDL 2&times;8 at 205 &middot; Lunge 1&times;10 at 40</div>
+          <div style="margin-top:14px;display:flex;gap:8px;align-items:center"><button class="eb-btn primary">Generate next block</button><span style="font-size:11px;color:#64708b">62 sets &middot; NL85 37 &middot; about 5 h</span></div>
+        </div>
+        </div>
+      </section>
+
+      <section class="panel" id="panel-exercises">
+        <div class="eb-kicker">422 seed entries &middot; plus yours</div>
+        <div class="eb-title">Exercises</div>
+        <div class="eb-card"><div class="eb-searchlg">&#8981; Filter by name, muscle, or equipment&hellip;</div>
+          <div class="eb-filters" style="margin:0 0 8px"><button class="eb-chip on">All</button><button class="eb-chip">Barbell</button><button class="eb-chip">Dumbbell</button><button class="eb-chip">Machine</button><button class="eb-chip">Bodyweight</button></div>
+          <table class="eb-table">
+            <tr><th>Exercise</th><th>Equipment</th><th>Target</th><th style="text-align:right">Bar</th><th>Rest class</th></tr>
+            <tr><td><b>Back Squat</b></td><td>Barbell</td><td>Quads</td><td class="num">45 lb</td><td><span class="eb-pill warn">main</span></td></tr>
+            <tr><td><b>Bench Press</b></td><td>Barbell</td><td>Chest</td><td class="num">45 lb</td><td><span class="eb-pill warn">main</span></td></tr>
+            <tr><td><b>Deadlift</b></td><td>Barbell</td><td>Hamstrings</td><td class="num">45 lb</td><td><span class="eb-pill warn">main</span></td></tr>
+            <tr><td><b>Overhead Press</b></td><td>Barbell</td><td>Front delts</td><td class="num">45 lb</td><td><span class="eb-pill warn">main</span></td></tr>
+            <tr><td><b>Romanian Deadlift</b></td><td>Barbell</td><td>Hamstrings</td><td class="num">45 lb</td><td><span class="eb-pill info">secondary</span></td></tr>
+            <tr><td><b>Walking Lunge</b></td><td>Dumbbell</td><td>Quads</td><td class="num">&mdash;</td><td><span class="eb-pill info">secondary</span></td></tr>
+            <tr><td><b>Standing Calf Raise</b></td><td>Machine</td><td>Calves</td><td class="num">&mdash;</td><td><span class="eb-pill ok">isolation</span></td></tr>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel" id="panel-calibration">
+        <div class="eb-kicker">105 observations &middot; 4 lifts &middot; theta freezes at 20 per lift</div>
+        <div class="eb-title">Calibration</div>
+        <div class="eb-card"><div class="eb-h">Fatigue parameters <a href="#">the math</a></div>
+          <table class="eb-table">
+            <tr><th>Lift</th><th style="text-align:right">P0</th><th style="text-align:right">K1</th><th style="text-align:right">Theta</th><th style="text-align:right">Obs</th><th>Status</th></tr>
+            <tr><td><b>Squat</b></td><td class="num">248.1</td><td class="num">0.62</td><td class="num">4.0 (prior)</td><td class="num">34</td><td><span class="eb-pill ok">frozen</span></td></tr>
+            <tr><td><b>Bench</b></td><td class="num">211.4</td><td class="num">0.55</td><td class="num">4.0 (prior)</td><td class="num">31</td><td><span class="eb-pill ok">frozen</span></td></tr>
+            <tr><td><b>Deadlift</b></td><td class="num">302.7</td><td class="num">0.71</td><td class="num">4.0 (prior)</td><td class="num">22</td><td><span class="eb-pill ok">frozen</span></td></tr>
+            <tr><td><b>Press</b></td><td class="num">141.2</td><td class="num">0.48</td><td class="num">4.0 (prior)</td><td class="num">18</td><td><span class="eb-pill info">2 to freeze</span></td></tr>
+          </table>
+        </div>
+        <div class="eb-card"><div class="eb-h">Squat residuals, lb by session <a href="#">all lifts</a></div>
+          <svg viewBox="0 0 640 150" width="100%" height="150" style="margin-top:8px">
+            <line x1="36" y1="8" x2="36" y2="122" stroke="#e3e6ee"/><line x1="36" y1="122" x2="630" y2="122" stroke="#e3e6ee"/>
+            <line x1="36" y1="65" x2="630" y2="65" stroke="#e3e6ee" stroke-dasharray="3 4"/>
+            <text x="8" y="30" font-size="10" fill="#64708b">+4</text><text x="14" y="68" font-size="10" fill="#64708b">0</text><text x="8" y="106" font-size="10" fill="#64708b">-4</text>
+            <polyline points="60,90 120,60 180,40 240,48 300,66 360,84 420,70 480,58 540,66 600,72" fill="none" stroke="#0a8078" stroke-width="2"/>
+            <circle cx="60" cy="90" r="3" fill="#0a8078"/><circle cx="180" cy="40" r="3" fill="#0a8078"/><circle cx="300" cy="66" r="3" fill="#0a8078"/><circle cx="420" cy="70" r="3" fill="#0a8078"/><circle cx="540" cy="66" r="3" fill="#0a8078"/><circle cx="600" cy="72" r="4" fill="#c2410c"/>
+            <text x="52" y="138" font-size="10" fill="#64708b">1</text><text x="292" y="138" font-size="10" fill="#64708b">15</text><text x="532" y="138" font-size="10" fill="#64708b">30</text>
+          </svg>
+          <div style="font-size:11px;color:#64708b;margin-top:6px">Residuals settle toward zero as observations accumulate. Latest: +0.4 lb.</div>
+        </div>
+      </section>
+
+      </div>
+    </div>
+  </div></div>
+</div>
+
+<script>
+  document.querySelectorAll('.eb-nav[data-tab]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.eb-nav[data-tab]').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('show'));
+      btn.classList.add('active');
+      document.getElementById('panel-' + btn.dataset.tab).classList.add('show');
+    });
+  });
+</script>
+</body>
+</html>

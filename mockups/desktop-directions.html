@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Qala desktop: three directions</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #e8eaf0; color: #0f152a; padding: 32px 24px 80px; }
+  .page-intro { max-width: 1180px; margin: 0 auto 28px; }
+  .page-intro h1 { font-family: Georgia, serif; font-size: 30px; margin-bottom: 8px; }
+  .page-intro p { font-size: 14px; color: #4a5578; max-width: 70ch; line-height: 1.6; }
+  .direction { max-width: 1180px; margin: 0 auto 48px; }
+  .direction-label { display: flex; align-items: baseline; gap: 12px; margin-bottom: 12px; }
+  .direction-label .tag { font-size: 12px; font-weight: 700; background: #0f152a; color: #fff; padding: 3px 10px; border-radius: 4px; }
+  .direction-label h2 { font-family: Georgia, serif; font-size: 22px; }
+  .direction-label p { font-size: 13px; color: #4a5578; }
+  .frame { border: 2px solid #0f152a; border-radius: 8px; overflow: hidden; box-shadow: 6px 8px 0 rgba(15,21,42,.18); }
+  .mono { font-family: ui-monospace, "SF Mono", Menlo, monospace; }
+
+  /* ============ Direction A: Refined Beamer ============ */
+  .da { display: grid; grid-template-columns: 210px 1fr; background: #f5f5f7; font-size: 13px; }
+  .da-side { background: #fff; border-right: 2px solid rgba(15,21,42,.12); padding: 22px 14px; display: flex; flex-direction: column; gap: 2px; }
+  .da-brand { font-family: Georgia, serif; font-weight: 700; font-size: 26px; padding: 0 10px; margin-bottom: 20px; }
+  .da-brand em { font-style: normal; color: #c2410c; }
+  .da-group { font-size: 10px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: #64708b; padding: 12px 10px 6px; }
+  .da-nav { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 6px; color: #4a5578; text-decoration: none; }
+  .da-nav.active { background: rgba(194,65,12,.1); color: #c2410c; font-weight: 600; box-shadow: inset 3px 0 0 #c2410c; }
+  .da-foot { margin-top: auto; padding: 14px 10px 0; border-top: 2px solid rgba(15,21,42,.1); color: #64708b; font-size: 12px; display: flex; align-items: center; gap: 8px; }
+  .da-live { width: 8px; height: 8px; background: #15803d; border-radius: 2px; }
+  .da-main { min-width: 0; }
+  .da-bar { display: flex; align-items: center; gap: 12px; background: #fff; border-bottom: 2px solid rgba(15,21,42,.12); padding: 10px 24px; }
+  .da-search { flex: 1; max-width: 340px; display: flex; align-items: center; gap: 8px; background: #f1f3f9; border: 2px solid rgba(15,21,42,.1); border-radius: 6px; padding: 7px 12px; color: #64708b; font-size: 12px; }
+  .da-search kbd { margin-left: auto; font-family: inherit; font-size: 11px; background: #fff; border: 1px solid rgba(15,21,42,.15); border-radius: 4px; padding: 1px 6px; }
+  .da-week { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; }
+  .da-week button { width: 28px; height: 28px; border: 2px solid rgba(15,21,42,.12); background: #fff; border-radius: 6px; cursor: pointer; }
+  .da-avatar { width: 32px; height: 32px; border-radius: 50%; background: #0f152a; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; margin-left: auto; }
+  .da-body { padding: 24px; }
+  .da-title { font-family: Georgia, serif; font-size: 32px; margin-bottom: 2px; }
+  .da-sub { color: #64708b; font-size: 12px; margin-bottom: 18px; }
+  .da-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 14px; }
+  .da-stat { background: #fff; border: 2px solid rgba(15,21,42,.14); border-radius: 6px; padding: 14px 16px; box-shadow: 2px 3px 0 rgba(15,21,42,.08); }
+  .da-stat .l { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: #64708b; margin-bottom: 6px; }
+  .da-stat .v { font-family: Georgia, serif; font-size: 30px; line-height: 1; }
+  .da-stat .d { font-size: 11px; margin-top: 6px; }
+  .da-stat .up { color: #15803d; } .da-stat .flat { color: #64708b; }
+  .da-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+  .da-card { background: #fff; border: 2px solid rgba(15,21,42,.14); border-radius: 6px; padding: 18px; box-shadow: 2px 3px 0 rgba(15,21,42,.08); }
+  .da-card h3 { font-family: Georgia, serif; font-size: 18px; margin-bottom: 12px; }
+  .da-card h3 span { float: right; font-family: -apple-system, sans-serif; font-size: 11px; font-weight: 400; color: #64708b; }
+  .da-weekbars { display: flex; align-items: flex-end; gap: 10px; height: 110px; margin-top: 8px; }
+  .da-weekbars .b { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%; justify-content: flex-end; }
+  .da-weekbars .fill { width: 100%; max-width: 44px; background: #08a49c; border-radius: 3px 3px 0 0; }
+  .da-weekbars .today .fill { background: #fff; border: 2px solid #c2410c; }
+  .da-weekbars .day { font-size: 10px; color: #64708b; }
+  .da-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .da-table th { text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: #64708b; padding: 8px 10px; border-bottom: 2px solid rgba(15,21,42,.12); }
+  .da-table td { padding: 10px; border-bottom: 1px solid rgba(15,21,42,.08); }
+  .da-table tr:last-child td { border-bottom: none; }
+  .da-table tbody tr:hover { background: #f1f3f9; }
+  .da-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+  .da-pill { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; background: rgba(194,65,12,.1); color: #c2410c; }
+  .da-pill.teal { background: rgba(8,164,156,.12); color: #0a8078; }
+</style>
+</head>
+<body>
+<div class="page-intro">
+  <h1>Qala desktop: three directions</h1>
+  <p>Same Overview content in three treatments. A keeps the Beamer system and fixes hierarchy. B goes dense and console-like for heavy review days. C leans into the serif and treats training as an editorial object. All static, scroll to compare.</p>
+</div>
+
+<div class="direction">
+  <div class="direction-label"><span class="tag">A</span><h2>Refined Beamer</h2><p>Same tokens, real hierarchy. Sans UI text, resting shadows, live toolbar.</p></div>
+  <div class="frame"><div class="da">
+    <div class="da-side">
+      <div class="da-brand">Qala<em>.</em></div>
+      <div class="da-group">Training</div>
+      <a class="da-nav active">&#9783; Overview</a>
+      <a class="da-nav">&#10022; Lifts</a>
+      <a class="da-nav">&#10148; Running</a>
+      <a class="da-nav">&#10084; Body</a>
+      <a class="da-nav">&#10226; History</a>
+      <div class="da-group">Workspace</div>
+      <a class="da-nav">&#9776; Programs</a>
+      <a class="da-nav">&#9646; Exercises</a>
+      <a class="da-nav">&#9782; Calibration</a>
+      <div class="da-foot"><span class="da-live"></span> Synced 2 min ago</div>
+    </div>
+    <div class="da-main">
+      <div class="da-bar">
+        <div class="da-search">&#8981; Search lifts, runs, exercises <kbd>Cmd K</kbd></div>
+        <div class="da-week"><button>&larr;</button> Sep 7&ndash;13 <button>&rarr;</button></div>
+        <div class="da-avatar">B</div>
+      </div>
+      <div class="da-body">
+        <div class="da-title">Overview</div>
+        <div class="da-sub">Strength B2 &middot; Week 3 of 6 &middot; 6 sessions &middot; 11.0 miles on the road</div>
+        <div class="da-stats">
+          <div class="da-stat"><div class="l">Volume</div><div class="v">68.6k <span style="font-size:14px">lb</span></div><div class="d up">&#9650; 6% vs last week</div></div>
+          <div class="da-stat"><div class="l">Readiness</div><div class="v">72</div><div class="d flat">8 above low line</div></div>
+          <div class="da-stat"><div class="l">Sessions</div><div class="v">6</div><div class="d flat">4 lifts &middot; 2 runs</div></div>
+          <div class="da-stat"><div class="l">VDOT</div><div class="v">40.5</div><div class="d up">+2.0 this block</div></div>
+        </div>
+        <div class="da-grid">
+          <div class="da-card"><h3>This week <span>1,730 of 2,780 planned</span></h3>
+            <div class="da-weekbars">
+              <div class="b"><div class="fill" style="height:64%"></div><div class="day">M</div></div>
+              <div class="b"><div class="fill" style="height:48%"></div><div class="day">T</div></div>
+              <div class="b"><div class="fill" style="height:56%"></div><div class="day">W</div></div>
+              <div class="b"><div class="fill" style="height:22%;background:#e3e6ee"></div><div class="day">T</div></div>
+              <div class="b"><div class="fill" style="height:70%"></div><div class="day">F</div></div>
+              <div class="b"><div class="fill" style="height:40%"></div><div class="day">S</div></div>
+              <div class="b today"><div class="fill" style="height:92%"></div><div class="day" style="color:#c2410c;font-weight:700">S</div></div>
+            </div>
+          </div>
+          <div class="da-card"><h3>Squat e1RM <span>+11 lb since Week 1</span></h3>
+            <svg viewBox="0 0 300 120" width="100%" height="110" style="margin-top:6px">
+              <line x1="30" y1="10" x2="30" y2="95" stroke="#e3e6ee"/><line x1="30" y1="95" x2="295" y2="95" stroke="#e3e6ee"/>
+              <polyline points="40,80 120,62 200,45 280,22" fill="none" stroke="#485cc7" stroke-width="2.5"/>
+              <circle cx="40" cy="80" r="4" fill="#fff" stroke="#485cc7" stroke-width="2"/><circle cx="120" cy="62" r="4" fill="#fff" stroke="#485cc7" stroke-width="2"/><circle cx="200" cy="45" r="4" fill="#485cc7"/><circle cx="280" cy="22" r="5" fill="#c2410c"/>
+              <text x="36" y="108" font-size="9" fill="#64708b">W1</text><text x="116" y="108" font-size="9" fill="#64708b">W2</text><text x="196" y="108" font-size="9" fill="#64708b">W3</text><text x="272" y="108" font-size="9" fill="#c2410c" font-weight="bold">Today</text>
+              <text x="272" y="12" font-size="11" fill="#0f152a" font-weight="bold">283</text>
+            </svg>
+          </div>
+        </div>
+        <div class="da-card"><h3>Recent sessions <span><a href="#" style="color:#c2410c">All history &rarr;</a></span></h3>
+          <table class="da-table">
+            <tr><th>Date</th><th>Session</th><th style="text-align:right">Load</th><th style="text-align:right">sRPE</th><th></th></tr>
+            <tr><td>Sat, Sep 13</td><td>Lower A &middot; Squat day</td><td class="num mono">20,420 lb</td><td class="num mono">8</td><td><span class="da-pill">1 PR</span></td></tr>
+            <tr><td>Fri, Sep 12</td><td>Long run &middot; 7.0 mi</td><td class="num mono">&mdash;</td><td class="num mono">7</td><td><span class="da-pill teal">run</span></td></tr>
+            <tr><td>Thu, Sep 11</td><td>Upper B</td><td class="num mono">14,110 lb</td><td class="num mono">7</td><td></td></tr>
+            <tr><td>Tue, Sep 9</td><td>Lower B &middot; Deadlift day</td><td class="num mono">18,940 lb</td><td class="num mono">8</td><td></td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div></div>
+</div>
+
+<div class="direction">
+  <div class="direction-label"><span class="tag">B</span><h2>Dense console</h2><p>Dark rail, command bar, compact tables with filters. Built for heavy review days.</p></div>
+  <div class="frame"><div class="db">
+    <style>
+      .db { display: grid; grid-template-columns: 200px 1fr; background: #eef0f4; font-size: 12px; }
+      .db-side { background: #0f152a; color: #aab4cc; padding: 18px 12px; display: flex; flex-direction: column; gap: 1px; }
+      .db-brand { font-family: Georgia, serif; font-weight: 700; font-size: 22px; color: #fff; padding: 0 10px; margin-bottom: 16px; }
+      .db-brand span { color: #fb923c; }
+      .db-group { font-size: 9px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #5d6680; padding: 10px 10px 4px; }
+      .db-nav { display: flex; align-items: center; gap: 9px; padding: 7px 10px; border-radius: 5px; color: #aab4cc; text-decoration: none; }
+      .db-nav .n { margin-left: auto; font-size: 10px; background: #232c4a; border-radius: 4px; padding: 1px 6px; }
+      .db-nav.active { background: #232c4a; color: #fff; font-weight: 600; }
+      .db-foot { margin-top: auto; padding: 12px 10px 0; border-top: 1px solid #232c4a; font-size: 11px; display: flex; align-items: center; gap: 8px; }
+      .db-dot { width: 7px; height: 7px; border-radius: 50%; background: #2dd4bf; }
+      .db-main { min-width: 0; }
+      .db-bar { display: flex; align-items: center; gap: 10px; background: #0f152a; padding: 10px 20px; color: #aab4cc; }
+      .db-cmd { flex: 1; max-width: 420px; display: flex; gap: 8px; align-items: center; background: #1a2340; border: 1px solid #2a3350; border-radius: 6px; padding: 7px 12px; font-size: 12px; }
+      .db-cmd kbd { margin-left: auto; font-family: inherit; font-size: 10px; background: #232c4a; border-radius: 4px; padding: 1px 6px; }
+      .db-bar .wk { font-size: 11px; font-weight: 600; color: #fff; }
+      .db-body { padding: 18px 20px; }
+      .db-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 12px; }
+      .db-head h2 { font-size: 20px; font-weight: 700; }
+      .db-head .sub { color: #64708b; font-size: 11px; }
+      .db-head .actions { margin-left: auto; display: flex; gap: 8px; }
+      .db-btn { font-size: 11px; font-weight: 600; border: 1px solid rgba(15,21,42,.2); background: #fff; border-radius: 5px; padding: 6px 12px; cursor: pointer; }
+      .db-btn.primary { background: #c2410c; border-color: #c2410c; color: #fff; }
+      .db-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 10px; }
+      .db-stat { background: #fff; border: 1px solid rgba(15,21,42,.12); border-radius: 6px; padding: 10px 12px; display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; }
+      .db-stat .l { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: #64708b; }
+      .db-stat .v { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; }
+      .db-stat .d { font-size: 10px; grid-column: 1; }
+      .db-stat svg { grid-row: 1 / span 3; grid-column: 2; align-self: center; }
+      .up { color: #15803d; } .mut { color: #64708b; }
+      .db-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+      .db-card { background: #fff; border: 1px solid rgba(15,21,42,.12); border-radius: 6px; padding: 12px 14px; }
+      .db-card h3 { font-size: 12px; font-weight: 700; margin-bottom: 8px; }
+      .db-card h3 a { float: right; font-weight: 400; font-size: 11px; color: #64708b; }
+      .db-bars { display: flex; align-items: flex-end; gap: 6px; height: 74px; }
+      .db-bars .fill { flex: 1; background: #485cc7; border-radius: 2px 2px 0 0; opacity: .85; }
+      .db-bars .fill.today { background: #c2410c; opacity: 1; }
+      .db-bars .fill.rest { background: #e3e6ee; }
+      .db-kv { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid rgba(15,21,42,.07); font-size: 11px; }
+      .db-kv:last-child { border-bottom: none; }
+      .db-kv b { font-variant-numeric: tabular-nums; }
+      .db-filters { display: flex; gap: 6px; margin-bottom: 8px; }
+      .db-chip { font-size: 10px; font-weight: 600; padding: 4px 10px; border-radius: 20px; background: #e8ebf4; color: #4a5578; border: none; cursor: pointer; }
+      .db-chip.on { background: #0f152a; color: #fff; }
+      .db-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+      .db-table th { text-align: left; font-size: 9px; text-transform: uppercase; letter-spacing: .06em; color: #64708b; padding: 6px 8px; border-bottom: 1px solid rgba(15,21,42,.12); }
+      .db-table td { padding: 7px 8px; border-bottom: 1px solid rgba(15,21,42,.06); }
+      .db-table tr:last-child td { border-bottom: none; }
+      .db-table tbody tr:hover { background: #f1f3f9; }
+      .db-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+      .db-type { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; padding: 2px 7px; border-radius: 3px; }
+      .db-type.lift { background: rgba(194,65,12,.12); color: #9a3412; }
+      .db-type.run { background: rgba(72,92,199,.12); color: #3a4a9f; }
+    </style>
+    <div class="db-side">
+      <div class="db-brand">Qala<span>.</span></div>
+      <div class="db-group">Training</div>
+      <a class="db-nav active">&#9783; Overview</a>
+      <a class="db-nav">&#10022; Lifts <span class="n">4</span></a>
+      <a class="db-nav">&#10148; Running <span class="n">2</span></a>
+      <a class="db-nav">&#10084; Body</a>
+      <a class="db-nav">&#10226; History</a>
+      <div class="db-group">Workspace</div>
+      <a class="db-nav">&#9776; Programs</a>
+      <a class="db-nav">&#9646; Exercises</a>
+      <a class="db-nav">&#9782; Calibration <span class="n">!</span></a>
+      <div class="db-foot"><span class="db-dot"></span> All systems synced</div>
+    </div>
+    <div class="db-main">
+      <div class="db-bar">
+        <div class="db-cmd">&#8981; Jump to lift, run, session, setting&hellip; <kbd>Cmd K</kbd></div>
+        <span class="wk">Week 3 of 6 &middot; Strength B2</span>
+      </div>
+      <div class="db-body">
+        <div class="db-head"><h2>Overview</h2><span class="sub">Sep 7&ndash;13 &middot; updated 2 min ago</span>
+          <span class="actions"><button class="db-btn">Export</button><button class="db-btn primary">Log session</button></span>
+        </div>
+        <div class="db-stats">
+          <div class="db-stat"><span class="l">Volume</span><span class="v">68.6k</span><span class="d up">&#9650; 6.1% WoW</span><svg width="64" height="28"><polyline points="2,22 14,18 26,20 38,12 50,14 62,5" fill="none" stroke="#15803d" stroke-width="2"/></svg></div>
+          <div class="db-stat"><span class="l">Readiness</span><span class="v">72</span><span class="d mut">avg 74 &middot; low 64</span><svg width="64" height="28"><polyline points="2,14 14,10 26,16 38,12 50,18 62,14" fill="none" stroke="#485cc7" stroke-width="2"/></svg></div>
+          <div class="db-stat"><span class="l">Mileage</span><span class="v">11.0</span><span class="d up">&#9650; 1.5 vs target</span><svg width="64" height="28"><polyline points="2,20 14,16 26,17 38,12 50,10 62,8" fill="none" stroke="#485cc7" stroke-width="2"/></svg></div>
+          <div class="db-stat"><span class="l">Est. 1RM trend</span><span class="v">+2.8%</span><span class="d mut">4 main lifts</span><svg width="64" height="28"><polyline points="2,22 14,19 26,16 38,14 50,9 62,6" fill="none" stroke="#c2410c" stroke-width="2"/></svg></div>
+        </div>
+        <div class="db-grid">
+          <div class="db-card"><h3>Load vs plan <a href="#">details</a></h3>
+            <div class="db-bars">
+              <div class="fill" style="height:62%"></div><div class="fill" style="height:46%"></div><div class="fill" style="height:55%"></div><div class="fill rest" style="height:20%"></div><div class="fill" style="height:68%"></div><div class="fill" style="height:38%"></div><div class="fill today" style="height:88%"></div>
+            </div>
+            <div class="db-kv"><span>Done</span><b>1,730</b></div><div class="db-kv"><span>Planned</span><b>2,780</b></div>
+          </div>
+          <div class="db-card"><h3>Main lifts <a href="#">all lifts</a></h3>
+            <div class="db-kv"><span>Squat e1RM</span><b>283 lb <span class="up">+4%</span></b></div>
+            <div class="db-kv"><span>Bench e1RM</span><b>245 lb <span class="up">+2%</span></b></div>
+            <div class="db-kv"><span>Deadlift e1RM</span><b>320 lb <span class="up">+3%</span></b></div>
+            <div class="db-kv"><span>Press e1RM</span><b>155 lb <span class="up">+1%</span></b></div>
+          </div>
+          <div class="db-card"><h3>Flags <a href="#">triage</a></h3>
+            <div class="db-kv"><span>Quads recovery</span><b style="color:#9a3412">Sat</b></div>
+            <div class="db-kv"><span>Press NL85</span><b>8 / 10</b></div>
+            <div class="db-kv"><span>Calibration obs</span><b>105 total</b></div>
+            <div class="db-kv"><span>Coach notes</span><b>2 pending</b></div>
+          </div>
+        </div>
+        <div class="db-card"><h3>Sessions</h3>
+          <div class="db-filters"><button class="db-chip on">All</button><button class="db-chip">Lifts</button><button class="db-chip">Runs</button><button class="db-chip">PRs only</button></div>
+          <table class="db-table">
+            <tr><th></th><th>Date</th><th>Session</th><th style="text-align:right">Load</th><th style="text-align:right">sRPE</th><th style="text-align:right">Note</th></tr>
+            <tr><td><span class="db-type lift">lift</span></td><td>Sep 13</td><td>Lower A &middot; Squat 3&times;4 @ 245</td><td class="num">20,420 lb</td><td class="num">8</td><td class="num">1 PR</td></tr>
+            <tr><td><span class="db-type run">run</span></td><td>Sep 12</td><td>Long run &middot; 7.0 mi @ 9:04</td><td class="num">&mdash;</td><td class="num">7</td><td class="num"></td></tr>
+            <tr><td><span class="db-type lift">lift</span></td><td>Sep 11</td><td>Upper B &middot; Bench 4&times;5 @ 225</td><td class="num">14,110 lb</td><td class="num">7</td><td class="num"></td></tr>
+            <tr><td><span class="db-type lift">lift</span></td><td>Sep 9</td><td>Lower B &middot; Deadlift 3&times;3 @ 315</td><td class="num">18,940 lb</td><td class="num">8</td><td class="num"></td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div></div>
+</div>
+
+<div class="direction">
+  <div class="direction-label"><span class="tag">C</span><h2>Editorial</h2><p>Serif-led, rules instead of boxes, training as a printed record. Warmest of the three.</p></div>
+  <div class="frame"><div class="dc">
+    <style>
+      .dc { display: grid; grid-template-columns: 190px 1fr; background: #f4f1ea; font-size: 13px; color: #1c1a15; }
+      .dc-side { border-right: 1px solid #d8d2c2; padding: 26px 18px; display: flex; flex-direction: column; gap: 2px; }
+      .dc-brand { font-family: Georgia, serif; font-weight: 700; font-size: 30px; margin-bottom: 4px; }
+      .dc-brand-sub { font-size: 11px; color: #8a8474; margin-bottom: 22px; font-style: italic; font-family: Georgia, serif; }
+      .dc-nav { display: flex; align-items: baseline; gap: 10px; padding: 8px 4px; color: #57534a; text-decoration: none; border-bottom: 1px solid transparent; font-size: 13px; }
+      .dc-nav .no { font-size: 10px; color: #a39d8b; font-variant-numeric: tabular-nums; }
+      .dc-nav.active { color: #1c1a15; font-weight: 700; border-bottom-color: #c2410c; }
+      .dc-sec { font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #a39d8b; padding: 16px 4px 4px; }
+      .dc-foot { margin-top: auto; padding-top: 16px; font-size: 11px; color: #8a8474; font-style: italic; font-family: Georgia, serif; }
+      .dc-main { min-width: 0; padding: 30px 36px 36px; }
+      .dc-kicker { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #8a8474; margin-bottom: 6px; }
+      .dc-title { font-family: Georgia, serif; font-size: 40px; font-weight: 700; line-height: 1.05; margin-bottom: 4px; }
+      .dc-standfirst { font-family: Georgia, serif; font-style: italic; font-size: 15px; color: #57534a; margin-bottom: 24px; }
+      .dc-rule { border: none; border-top: 2px solid #1c1a15; margin: 0 0 20px; }
+      .dc-rule.thin { border-top: 1px solid #d8d2c2; margin: 20px 0; }
+      .dc-lede { display: grid; grid-template-columns: 1.2fr 1fr; gap: 32px; margin-bottom: 6px; }
+      .dc-bigfig { font-family: Georgia, serif; font-size: 64px; line-height: 1; font-weight: 700; }
+      .dc-bigfig small { font-size: 18px; font-weight: 400; color: #57534a; }
+      .dc-cap { font-size: 12px; color: #57534a; margin-top: 6px; }
+      .dc-cap b { color: #15803d; }
+      .dc-week { display: flex; align-items: stretch; gap: 12px; height: 120px; margin-top: 4px; }
+      .dc-week .d { flex: 1; text-align: center; display: flex; flex-direction: column; justify-content: flex-end; }
+      .dc-week .bar { width: 100%; background: #1c1a15; margin-bottom: 6px; }
+      .dc-week .bar.done { background: #0a8078; }
+      .dc-week .bar.today { background: #c2410c; }
+      .dc-week .bar.rest { background: transparent; border: 1px dashed #a39d8b; }
+      .dc-week .dl { font-size: 10px; color: #8a8474; }
+      .dc-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+      .dc-h { font-family: Georgia, serif; font-size: 19px; font-weight: 700; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 2px solid #1c1a15; }
+      .dc-h a { float: right; font-family: -apple-system, sans-serif; font-size: 11px; font-weight: 400; color: #8a8474; text-decoration: none; margin-top: 6px; }
+      .dc-row { display: flex; align-items: baseline; gap: 10px; padding: 9px 0; border-bottom: 1px solid #ddd8c8; font-size: 12px; }
+      .dc-row:last-child { border-bottom: none; }
+      .dc-row .dt { color: #8a8474; min-width: 52px; }
+      .dc-row .what { flex: 1; }
+      .dc-row .what b { font-weight: 600; }
+      .dc-row .n { font-variant-numeric: tabular-nums; color: #57534a; }
+      .dc-row .pr { font-size: 10px; font-weight: 700; color: #c2410c; text-transform: uppercase; letter-spacing: .06em; }
+      .dc-quote { font-family: Georgia, serif; font-style: italic; font-size: 14px; line-height: 1.6; color: #57534a; border-left: 3px solid #c2410c; padding-left: 14px; margin-top: 4px; }
+    </style>
+    <div class="dc-side">
+      <div class="dc-brand">Qala</div>
+      <div class="dc-brand-sub">training record</div>
+      <a class="dc-nav active"><span class="no">01</span> Overview</a>
+      <a class="dc-nav"><span class="no">02</span> Lifts</a>
+      <a class="dc-nav"><span class="no">03</span> Running</a>
+      <a class="dc-nav"><span class="no">04</span> Body</a>
+      <a class="dc-nav"><span class="no">05</span> History</a>
+      <div class="dc-sec">Workspace</div>
+      <a class="dc-nav"><span class="no">06</span> Programs</a>
+      <a class="dc-nav"><span class="no">07</span> Exercises</a>
+      <div class="dc-foot">Week 3 of 6 &middot; Strength B2</div>
+    </div>
+    <div class="dc-main">
+      <div class="dc-kicker">Sunday, September 13 &middot; Lower A complete</div>
+      <div class="dc-title">The week in review</div>
+      <div class="dc-standfirst">Six sessions banked, squat up eleven pounds, and an easy seven-miler to close it out.</div>
+      <hr class="dc-rule">
+      <div class="dc-lede">
+        <div>
+          <div class="dc-bigfig">68.6k <small>lb lifted</small></div>
+          <div class="dc-cap"><b>Up 6%</b> on last week &middot; readiness 72, eight clear of the low line &middot; VDOT 40.5</div>
+        </div>
+        <div class="dc-week">
+          <div class="d"><div class="bar done" style="height:62%"></div><div class="dl">Mon</div></div>
+          <div class="d"><div class="bar done" style="height:46%"></div><div class="dl">Tue</div></div>
+          <div class="d"><div class="bar done" style="height:54%"></div><div class="dl">Wed</div></div>
+          <div class="d"><div class="bar rest" style="height:22%"></div><div class="dl">Thu</div></div>
+          <div class="d"><div class="bar done" style="height:66%"></div><div class="dl">Fri</div></div>
+          <div class="d"><div class="bar done" style="height:38%"></div><div class="dl">Sat</div></div>
+          <div class="d"><div class="bar today" style="height:90%"></div><div class="dl">Sun</div></div>
+        </div>
+      </div>
+      <hr class="dc-rule thin">
+      <div class="dc-cols">
+        <div>
+          <div class="dc-h">Sessions <a href="#">full history</a></div>
+          <div class="dc-row"><span class="dt">Sep 13</span><span class="what"><b>Lower A</b>, squat 3&times;4 at 245</span><span class="n">20.4k</span><span class="pr">PR</span></div>
+          <div class="dc-row"><span class="dt">Sep 12</span><span class="what"><b>Long run</b>, 7.0 mi at 9:04</span><span class="n">63 min</span><span></span></div>
+          <div class="dc-row"><span class="dt">Sep 11</span><span class="what"><b>Upper B</b>, bench 4&times;5 at 225</span><span class="n">14.1k</span><span></span></div>
+          <div class="dc-row"><span class="dt">Sep 9</span><span class="what"><b>Lower B</b>, deadlift 3&times;3 at 315</span><span class="n">18.9k</span><span></span></div>
+        </div>
+        <div>
+          <div class="dc-h">Estimated 1RMs <a href="#">all lifts</a></div>
+          <div class="dc-row"><span class="what"><b>Squat</b></span><span class="n">283 lb</span><span class="pr">+4%</span></div>
+          <div class="dc-row"><span class="what"><b>Bench</b></span><span class="n">245 lb</span><span class="n">+2%</span></div>
+          <div class="dc-row"><span class="what"><b>Deadlift</b></span><span class="n">320 lb</span><span class="n">+3%</span></div>
+          <div class="dc-row"><span class="what"><b>Press</b></span><span class="n">155 lb</span><span class="n">+1%</span></div>
+          <div class="dc-quote" style="margin-top:14px">A little under your average, so squat holds at 245 next week.</div>
+        </div>
+      </div>
+    </div>
+  </div></div>
+</div>
+
+</body>
+</html>
