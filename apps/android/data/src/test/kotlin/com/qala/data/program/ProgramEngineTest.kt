@@ -1,6 +1,9 @@
 package com.qala.data.program
 
 import com.qala.data.TestRepo
+import com.qala.data.core.QalaCore
+import com.qala.data.core.dayName
+import com.qala.data.model.SettingsRecord
 import com.qala.data.model.WeightUnit
 import com.qala.data.seed.GzclpProgram
 import com.qala.data.seed.SeedOneRepMax
@@ -9,6 +12,7 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Test
 
@@ -57,6 +61,36 @@ class ProgramEngineTest {
         assertEquals(listOf(5.0, 3.0, 3.0), engine.planned(gzclp, 1).map { it.sets })
         assertEquals(listOf("squat", "benchPress", "latPulldown"), engine.planned(gzclp, 1).map { it.exerciseId })
         assertEquals(listOf(null, null, null), engine.planned(gzclp, 1).map { it.targetRpe })
+    }
+
+    @Test
+    fun theHeroOfADayIsItsMainLiftsTopSet() {
+        val hero = engine.liftHero(gzclp, 1, SettingsRecord.DefaultMainLifts, "gzclp.md")!!
+        assertEquals("gzclp", hero.programName)
+        assertEquals("Day 1", hero.dayName)
+        assertEquals("squat", hero.exerciseId)
+        assertEquals("Squat", hero.exerciseName)
+        // Five sets of three at 150 lb, the last of them as many as possible: that set is the top one.
+        assertEquals(TopSet(weight = 150.0, unit = WeightUnit.Lb, reps = 3.0, amrap = true, sets = 5), hero.topSet)
+        assertEquals(3, hero.exerciseCount)
+        assertEquals("T1 5 sets, T2 3, T3 3", 11, hero.setCount)
+    }
+
+    @Test
+    fun theMainLiftIsTheFirstUsedExerciseThatIsOne() {
+        assertEquals("benchPress", engine.liftHero(gzclp, 3, SettingsRecord.DefaultMainLifts, "gzclp.md")!!.exerciseId)
+        assertEquals("Day 3", engine.liftHero(gzclp, 3, SettingsRecord.DefaultMainLifts, "gzclp.md")!!.dayName)
+        // With nothing the user calls a main lift, the day's first exercise stands in.
+        assertEquals("benchPress", engine.liftHero(gzclp, 3, emptyList(), "gzclp.md")!!.exerciseId)
+        // Day 1 opens with a squat, but if only the bench is a main lift the bench is the day's lift.
+        assertEquals("benchPress", engine.liftHero(gzclp, 1, listOf("benchPress"), "gzclp.md")!!.exerciseId)
+    }
+
+    @Test
+    fun aDayThatDoesNotExistHasNoHero() {
+        assertNull(engine.liftHero(gzclp, 99, SettingsRecord.DefaultMainLifts, "gzclp.md"))
+        assertNull(QalaCore.dayName(gzclp.program, 99))
+        assertEquals("Day 4", QalaCore.dayName(gzclp.program, 4))
     }
 
     @Test

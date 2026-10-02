@@ -17,6 +17,7 @@ import com.qala.data.repo.RepoEnv
 import com.qala.data.repo.RunRepository
 import com.qala.data.repo.SessionRepository
 import com.qala.data.repo.SettingsRepository
+import java.time.Instant
 import java.time.LocalDate
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.builtins.MapSerializer
@@ -43,7 +44,7 @@ class DebugSeeder(
     private val generator: SeedGenerator = SeedGenerator(),
 ) {
     /** Seeds the database once and returns true; false when this is not a debug build or it already ran. */
-    suspend fun seedIfEmpty(today: LocalDate = LocalDate.now(env.clock.zone)): Boolean {
+    suspend fun seedIfEmpty(today: LocalDate = LocalDate.ofInstant(Instant.ofEpochMilli(env.clock.nowMs()), env.clock.zone)): Boolean {
         if (!BuildConfig.DEBUG) return false
         if (db.metaDao().get(MetaKeys.DEBUG_SEEDED) != null) return false
         val data = withContext(env.work) { generator.generate(today, env.clock.zone) }

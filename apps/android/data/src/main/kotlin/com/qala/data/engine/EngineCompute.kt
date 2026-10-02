@@ -28,7 +28,9 @@ import com.qala.data.model.SessionRecord
 import com.qala.data.model.SettingsRecord
 import com.qala.data.model.toModel
 import com.qala.data.model.toRecord
+import com.qala.data.model.WeightUnit
 import com.qala.data.program.EvaluatedProgram
+import com.qala.data.program.LiftHero
 import com.qala.data.program.ProgramEngine
 import com.qala.data.today.DayKind
 import com.qala.data.today.DayRecords
@@ -58,6 +60,9 @@ data class EngineInput(
     val program: ProgramEntity? = null,
 )
 
+/** The newest weigh-in: its local day and the weight in kilograms. */
+data class LatestWeight(val date: String, val kg: Double)
+
 /**
  * The derived state the Today cards read. It is a cache of history (DECISIONS S8): rebuilt from the records,
  * never written back.
@@ -82,6 +87,12 @@ data class EngineSnapshot(
     val today: TodayPlan? = null,
     val week: WeekPlan? = null,
     val nextRun: NextRun? = null,
+    /** The unit the user reads weights in (settings); [weightTrend] and [latestWeight] are in kilograms. */
+    val unit: WeightUnit = WeightUnit.Lb,
+    /** The newest weigh-in, set even while [weightTrend] is null (it needs three weigh-in days in a week). */
+    val latestWeight: LatestWeight? = null,
+    /** Today's day heading, main lift and top set; null on a rest day, with no program, or without a usable day. */
+    val liftHero: LiftHero? = null,
     /** Set when the build failed; the other fields are then empty. */
     val error: String? = null,
 )
@@ -144,6 +155,13 @@ class EngineCompute(private val programs: ProgramEngine = ProgramEngine()) {
             today = plan,
             week = week,
             nextRun = schedule.nextRun(today, input.runPlan, input.runs),
+            unit = input.settings.unit,
+            latestWeight = input.weights.maxByOrNull { it.date }?.let { LatestWeight(it.date, it.kg) },
+            liftHero = if (evaluated != null && input.program != null && plan.liftDay && plan.programDay != null) {
+                programs.liftHero(evaluated, plan.programDay, input.settings.mainLifts, input.program.name)
+            } else {
+                null
+            },
         )
     }
 }

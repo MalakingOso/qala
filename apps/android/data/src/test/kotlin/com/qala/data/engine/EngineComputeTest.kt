@@ -1,11 +1,14 @@
 package com.qala.data.engine
 
+import com.qala.data.db.BodyWeightEntity
 import com.qala.data.db.ProgramEntity
 import com.qala.data.model.Availability
 import com.qala.data.model.AvailabilityStatus
 import com.qala.data.model.RunPlan
 import com.qala.data.model.RunPlanDay
 import com.qala.data.model.RunZone
+import com.qala.data.model.SettingsRecord
+import com.qala.data.model.WeightUnit
 import com.qala.data.seed.GzclpProgram
 import com.qala.data.seed.SeedOneRepMax
 import com.qala.data.today.DayKind
@@ -42,6 +45,8 @@ class EngineComputeTest {
         assertEquals(List(7) { 0.0 }, snapshot.weekLoad!!.planned)
         assertEquals(List(7) { 0.0 }, snapshot.weekLoad.done)
         assertNull(snapshot.nextRun)
+        assertNull("no program, no hero", snapshot.liftHero)
+        assertNull(snapshot.latestWeight)
         val plan = snapshot.today!!
         assertTrue("Monday is a training day even with no program", plan.liftDay)
         assertNull("but there is no program day to lift", plan.programDay)
@@ -57,6 +62,10 @@ class EngineComputeTest {
         )
         val snapshot = compute.compute(input, ms("2026-10-05", 12), zone)
         assertEquals(1, snapshot.today!!.programDay)
+        val hero = snapshot.liftHero!!
+        assertEquals("Day 1", hero.dayName)
+        assertEquals("Squat", hero.exerciseName)
+        assertEquals(WeightUnit.Lb, snapshot.unit)
         assertEquals(listOf(1, null, 2, null, 3, 4, null), snapshot.week!!.days.map { it.programDay })
         val planned = snapshot.weekLoad!!.planned
         assertTrue(planned[0] > 0 && planned[2] > 0 && planned[4] > 0 && planned[5] > 0)
@@ -64,6 +73,27 @@ class EngineComputeTest {
         assertEquals(0.0, planned[6], 0.0)
         assertEquals(List(7) { 0.0 }, snapshot.weekLoad.done)
         assertEquals("2026-10-06", snapshot.nextRun!!.date)
+    }
+
+    @Test
+    fun theLatestWeighInIsKeptWhileTheTrendWaitsForMoreOfThem() {
+        val input = EngineInput(
+            weights = listOf(BodyWeightEntity("w1", "2026-10-02", 81.0, false), BodyWeightEntity("w2", "2026-10-03", 80.5, false)),
+            settings = SettingsRecord(unit = WeightUnit.Kg),
+        )
+        val snapshot = compute.compute(input, ms("2026-10-05", 12), zone)
+        assertNull("two weigh-in days are not enough for a trend", snapshot.weightTrend)
+        assertEquals(LatestWeight("2026-10-03", 80.5), snapshot.latestWeight)
+        assertEquals(WeightUnit.Kg, snapshot.unit)
+    }
+
+    @Test
+    fun noHeroOnARestDay() {
+        val input = EngineInput(
+            program = ProgramEntity("p", GzclpProgram.NAME, GzclpProgram.TEXT, false),
+            exerciseData = SeedOneRepMax.ExerciseData,
+        )
+        assertNull(compute.compute(input, ms("2026-10-06", 12), zone).liftHero) // a Tuesday
     }
 
     @Test

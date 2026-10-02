@@ -191,3 +191,10 @@ private val EmptyStats: JsonObject = buildJsonObject {
 /** The number of days of an evaluated program, counted over its weeks. */
 fun QalaCore.dayCount(program: JsonObject): Int =
     program.getValue("weeks").jsonArray.sumOf { it.jsonObject.getValue("days").jsonArray.size }
+
+/** The heading a program gives a 1-based [day] counted over all its weeks ("Day 3"), null when there is no such day. */
+fun QalaCore.dayName(program: JsonObject, day: Int): String? =
+    program.getValue("weeks").jsonArray
+        .flatMap { it.jsonObject.getValue("days").jsonArray }
+        .getOrNull(day - 1)
+        ?.jsonObject?.get("name")?.jsonPrimitive?.content
