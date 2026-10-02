@@ -87,6 +87,8 @@ Mirror the dark block under `@media (prefers-color-scheme: dark)` for `theme: 's
 | Big static number: weight x reps, stat tiles, readiness, session figures | Qala Test | 700 | 24-64 | default (proportional lining) |
 | Ticking number: rest countdown, "of 3:45", workout clock, live run numbers, warm-up timers | Qala Test | 700, 500 for "of 3:45" | 22-150 | `font-variant-numeric: lining-nums tabular-nums` |
 | Body, buttons, controls, set rows, table cells | DM Mono | 400, 500 for labels and emphasis | 13-15 / 13-14 | DM Mono's own |
+| Desktop shell UI text: nav, labels, table cells, body copy, buttons (L16) | a proportional sans (`--font-ui` in `theme/desktop.css`, a system stack until the owner picks a face) | 400, 500, 600 for emphasis | 12-13 | tabular for numerals |
+| Desktop numerals, chart ticks, code: load and distance columns, axis ticks, times, liftoscript | DM Mono | 400, 500 | 10-13 | DM Mono's own, tabular |
 | Group labels (uppercase band) | DM Mono | 500, letter-spacing .09em | 11 | |
 | Chart text: axis ticks, direct labels, legends | DM Mono | 400, 500 for the labeled value | 10-12 | tabular in axis ticks |
 
@@ -210,6 +212,7 @@ Code lives in `apps/web/src/shared/charts/`. The plate drawing and the readiness
 | Chart | Where | Form | Library |
 |---|---|---|---|
 | This week | Today hero, desktop Overview, landing | seven-day strip: one bar per day, height the day's load, fill the part done; done teal, today ember on an `--accent-subtle` band, later outlined, rest a dash; a lift/run/both/rest glyph and the day letter under each; a caption naming the tapped, hovered or focused day (today by default) and a week total line (U13) | HTML/CSS, no plotting library |
+| Week ribbon | desktop Overview | three weeks side by side with one in focus (U20): the same bars and glyphs as the strip, with everything behind today on a gray wash, today on an ember edge, the week still to come dashed (a plan, not a record), a ruler of week names, date ranges and totals above, and the focus week at full strength while the other two go quiet. The toolbar's week switcher and the ruler both move the focus | HTML/CSS, no plotting library |
 | Readiness ring | Today hero | ring meter out of 100 with average and low markers (6.4) | visx `Arc` |
 | Readiness, last 7 days | Body | line with markers by weekday, today's value as a headline, average and low as hairlines | visx |
 | Where the time went | Session complete | one stacked horizontal bar, categorical | visx |
@@ -338,18 +341,21 @@ Start (map, GPS status, the planned run, Start run), Live (time, miles largest, 
 
 Build, 2026-09-30: the map is a drawn stand-in (streets, the loop in the run color, start dot, mile markers on the summary) until MapLibre lands. Start shows GPS and a cues switch. Live switches Numbers / Splits / Map with a segmented control, shows miles largest, and pairs a square ember pause with Finish run (no hold gesture yet). Guided draws the pace band slow to fast with both edges labeled and the current pace as a marker; Back to numbers is secondary. Summary uses the splits chart and the effort scale.
 
-### 7.15 Desktop: program editor
+### 7.15 Desktop: the refined shell (U11, U20-U23)
 
-Sidebar groups into Stats (Overview, Lifts, Running, Body, History) and Author (Programs, Exercises, Coach memory, Calibration), with Settings and the phone-shell link pinned below both (DECISIONS U11; supersedes the earlier Today/Plan/Programs/Run plans/Exercises/Body/Progress/Coach/Settings list, which the shipped v1 build had already diverged from). The Programs page itself is unchanged: a header with the block and Generate next block, the liftoscript editor with inline errors, and the evaluated week preview with week totals.
+The sidebar has two numbered groups, Training (01 Overview, 02 Lifts, 03 Running, 04 Body, 05 History) and Workspace (06 Programs, 07 Exercises, 08 Coach memory, 09 Calibration), with Settings pinned below and the sync status under it. The numbers replace icons: the owner found the icons took away from the look. The mark at the top is the app icon (the Qk plate, L15) beside "Qala." and a small italic "training record".
 
-The refined shell labels these groups Training and Workspace. It uses a
-232-256px full-height sidebar, a 72px workspace toolbar, and a wide, responsive
-content region. Overview is the default desktop entry, statistics share one
-strip, and related charts align in a two-column grid. Settings opens inside the
-desktop shell. Below 760px, an explicit menu toggles the sidebar. Program source
-and its week preview share a responsive split view. Run detail uses three
-separate plots for pace, heart rate, and elevation, with synchronized time
-windows and cursors.
+The toolbar holds a search that jumps to a page, lift, exercise or session (Ctrl or Cmd K), a week switcher that moves which week is in focus, and a Workout view link to the phone shell. It has no avatar: Qala has no accounts.
+
+Every page opens on a lede card: a kicker line, the title in Qala Test, an ink rule (2px, `--fg`), then whatever leads the page. Cards below use a serif heading over the same ink rule. Cards are white on the off-white ground with the Beamer border and a resting `--shadow-card`; tokens.css is untouched and every color is a token, so dark mode comes with it. Tables are dense: 10px uppercase headers, 12px cells, a LIFT or RUN tag, DM Mono numerals right-aligned, and PR and note pills; a session's coach flag and note sit under its row.
+
+- Overview is the week in review: where the block stands (week 3 of 6, deload in week 6), four headline figures, and the week ribbon (6.3), then the sessions with filter chips and the estimated 1RMs.
+- Lifts leads with the average e1RM gain and a ranked gain bar per lift, then one card per lift.
+- Running leads with VDOT and its trend, then the runs and the latest run's splits against its own average (U17).
+- Body leads with the recovery map, front and back side by side with the selected muscle's fatigue curve under them, then readiness by weekday, sets by muscle and the deload status.
+- History is one filterable table. Programs shows the block, the single ember action (generate the next block), the liftoscript source and the week preview. Exercises has search, an equipment filter and a Hide action per row. Coach memory shows proposals with Accept and Reject, the profile and the log. Calibration shows observations against the 20 that free theta, the parameters and the squat residuals. Settings flows the phone's groups into two columns.
+
+Below 1100px the two-column rows stack; below 760px the sidebar becomes a menu and the toolbar wraps. Program source and its week preview share a split view. Run detail uses three separate plots for pace, heart rate, and elevation, with synchronized time windows and cursors.
 
 ### 7.16 Desktop: coach memory
 
