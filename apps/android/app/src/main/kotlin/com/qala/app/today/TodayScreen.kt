@@ -281,7 +281,7 @@ private fun HeroContent(hero: Hero, onGo: (Destination) -> Unit) {
     hero.lines.forEach { QalaText(it, Modifier.padding(top = 8.dp), BodyStyle, c.fgSecondary) }
     hero.detail?.let {
         Row(Modifier.padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-            QalaIcon(QalaIcons.Clock, null, size = 16.dp, tint = c.fgSecondary)
+            QalaIcon(QalaIcons.ListChecks, null, size = 16.dp, tint = c.fgSecondary)
             QalaText(it, style = QalaType.body.copy(fontSize = QalaType.groupLabel.fontSize), color = c.fgSecondary)
         }
     }

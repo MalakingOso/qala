@@ -3,6 +3,7 @@ package com.qala.app
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -35,7 +36,7 @@ import kotlinx.coroutines.launch
 /** The back row over a stub's title: the in-app twin of the system Back. */
 @Composable
 private fun StubHead(title: String, onBack: () -> Unit) {
-    IconButton(QalaIcons.ChevronLeft, "Back", onBack)
+    IconButton(QalaIcons.ChevronLeft, "Back", onBack, Modifier.offset(x = (-12).dp))      // the glyph, not its 44 dp box, sits on the gutter
     Spacer(Modifier.height(8.dp))
     PageHead(title, eyebrow = "Stand-in screen")
 }
