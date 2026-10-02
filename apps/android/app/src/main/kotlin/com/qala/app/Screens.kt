@@ -13,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.qala.app.checkin.CheckInScreen
+import com.qala.app.settings.SettingsScreen
 import com.qala.app.today.Destination
 import com.qala.app.today.TodayLoad
 import com.qala.app.today.TodayScreen
@@ -45,7 +46,7 @@ fun Screen(
         Route.Progress -> Plain(scroll, topBar) { StubScreen("Progress", "Charts and records. Arrives with the stats screens (A5).") }
         Route.Coach -> Plain(scroll, topBar) { StubScreen("Coach", "Chat and suggestions. Arrives with the coach route (A6).") }
         Route.History -> Plain(scroll, topBar) { StubScreen("History", "Past sessions. Arrives with the rest of A1.") }
-        Route.Settings -> Plain(scroll, topBar) { StubScreen("Settings", "Units, equipment, title font. Arrives with the rest of A1.") }
+        Route.Settings -> SettingsScreen(scroll, onBack)
         Route.CheckIn -> CheckInRoute(today, scroll, topBar, onBack)
         Route.WarmUp -> Plain(scroll, topBar) { WarmUpStub(onBack) }
         Route.Workout -> Plain(scroll, topBar) { WorkoutStub(onBack) }

@@ -68,14 +68,19 @@ private fun StripCell(
     modifier: Modifier,
     fontSize: TextUnit = 14.sp,
     maxLines: Int = 1,
+    /** The cell before this one is picked too, so the divider has to show against ink. */
+    afterPicked: Boolean = false,
 ) {
     val c = Qala.colors
     val divider = QalaTokens.borderWidth
+    val onInk = onInk()
     Box(
         modifier
             .heightIn(min = height)
             .background(if (picked) c.fg else Color.Transparent)
-            .drawBehind { if (!first) drawRect(c.border, Offset.Zero, Size(divider.toPx(), size.height)) }
+            .drawBehind {
+                if (!first) drawRect(if (picked && afterPicked) onInk.copy(alpha = 0.3f) else c.border, Offset.Zero, Size(divider.toPx(), size.height))
+            }
             .padding(horizontal = 2.dp),
         contentAlignment = Alignment.Center,
     ) {
@@ -170,6 +175,7 @@ fun DayStrip(
                 picked = on,
                 first = i == 0,
                 height = cellHeight,
+                afterPicked = (i - 1) in picked,
                 modifier = Modifier
                     .weight(1f)
                     .toggleable(
