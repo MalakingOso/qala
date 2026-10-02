@@ -1,6 +1,6 @@
 /* One codebase, two shells (PLAN 3). Hash routes: #/ landing,
- * #/phone/* logger + run recorder, #/desktop/* author. The Capacitor
- * wrapper boots straight into #/phone/today. */
+ * #/phone/* logger + run recorder, #/desktop/* author. The phone shell is
+ * frozen as a PWA; the Android app is native Kotlin (apps/android). */
 
 import { useEffect, useState } from "react";
 import { QalaProvider, useQala } from "./store/qalaStore.tsx";

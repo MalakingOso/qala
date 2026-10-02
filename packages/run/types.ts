@@ -1,10 +1,10 @@
-// Shared types for @qala/run. Pure TypeScript: no DOM, no Capacitor imports.
+// Shared types for @qala/run. Pure TypeScript: no DOM, no platform imports.
 //
 // Conventions (PLAN.md sections 6.4, 7, 8a):
 // - Distances in metres, times in seconds, speeds in m/s. The UI converts to
 //   miles and min/mi from settings.units.distance.
 // - Fix.t is seconds on a monotonic clock owned by the fix source (the
-//   plugin's location timestamp), never callback wall-clock time, so batched
+//   platform's location timestamp), never callback wall-clock time, so batched
 //   late delivery after screen lock gives identical results to on-time
 //   delivery. Exporters take an explicit startTimeMs epoch origin.
 

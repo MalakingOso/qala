@@ -11,8 +11,7 @@ createRoot(rootEl).render(
   </StrictMode>,
 );
 
-// Service worker for the PWA build (M4/M9). Capacitor bundles local files
-// and never hits this path.
+// Service worker for the PWA build (M4/M9), production builds only.
 if ("serviceWorker" in navigator && import.meta.env.PROD) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("/sw.js").catch(() => {
