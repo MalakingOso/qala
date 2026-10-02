@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["crates/qala-lspp", "crates/qala-lspp-json", "crates/qala-lspp-wasm", "crates/qala-lspp-ffi", "crates/qala-core"]
+members = ["crates/qala-lspp", "crates/qala-lspp-json", "crates/qala-lspp-wasm", "crates/qala-ffi", "crates/qala-core"]
 
 [workspace.package]
 edition = "2021"
@@ -12,3 +12,11 @@ lto = true
 codegen-units = 1
 panic = "abort"
 strip = true
+
+# Faster Android builds for the emulator and debug APKs: same panic strategy as release, no fat LTO.
+[profile.android-dev]
+inherits = "release"
+opt-level = 1
+lto = false
+codegen-units = 16
+strip = false

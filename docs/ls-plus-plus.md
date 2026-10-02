@@ -68,7 +68,7 @@ Benchmark (2026-10-01): 10 gym phrases in two Kokoro voices, 20 clips, clean syn
 ## 6. Build order
 
 1. Rename the crates to LS++ and keep every golden suite green. Done, merged (`415fb07`).
-2. Parser error positions, then `fmt`, then lint, then dry run, then `unresolved_sets`. Done in Rust and merged (`32cb81c`). Open: FFI exports of the six new functions plus Kotlin regen (wasm already exports them; `qala-lspp-ffi` has only the nine evaluation calls), suggestions for evaluation-time errors, fmt for standalone scripts, and a post-rename wasm build (`target/wasm-out/` still has the pre-rename filenames).
+2. Parser error positions, then `fmt`, then lint, then dry run, then `unresolved_sets`. Done in Rust and merged (`32cb81c`). Open: FFI exports of the six new functions plus Kotlin regen (wasm already exports them; `qala-lspp-ffi` (now `qala-ffi`, which also exports `qala-core`) has only the nine evaluation calls), suggestions for evaluation-time errors, fmt for standalone scripts, and a post-rename wasm build (`target/wasm-out/` still has the pre-rename filenames).
 3. Edit-list schema, emitter and validator in `packages/llm`, tested without any model. Done and merged (`8f5bd5c`).
 4. `POST /api/import/text` against the agent (merged; the confirm step is the same endpoint with `resolutions`), then wire PDF via MinerU (open).
 5. `POST /api/transcribe` against E4B-mm (base64 `input_audio` to `/v1/chat/completions`, wav in, fall back to whisper.cpp when it is down); mic capture on the phone and desktop shells.

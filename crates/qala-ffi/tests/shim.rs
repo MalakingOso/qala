@@ -3,7 +3,7 @@
 mod common;
 
 use common::*;
-use qala_lspp_ffi as w;
+use qala_ffi as w;
 use w::QalaError;
 use serde_json::{json, Value};
 

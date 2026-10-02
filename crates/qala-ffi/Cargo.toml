@@ -1,9 +1,9 @@
 [package]
-name = "qala-lspp-ffi"
+name = "qala-ffi"
 version = "0.1.0"
 edition.workspace = true
 license.workspace = true
-description = "UniFFI exports of the liftoscript evaluation API (Kotlin)."
+description = "UniFFI exports for Kotlin: qala-core (engine, availability, HLC, derived numbers) and the LS++ evaluation API. One .so."
 
 [lib]
 crate-type = ["cdylib", "staticlib", "rlib"]
@@ -17,6 +17,7 @@ required-features = ["cli"]
 cli = ["uniffi/cli"]
 
 [dependencies]
+qala-core = { path = "../qala-core" }
 qala-lspp-json = { path = "../qala-lspp-json" }
 uniffi = "0.32"
 

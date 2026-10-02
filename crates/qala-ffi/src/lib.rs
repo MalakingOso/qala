@@ -1,8 +1,9 @@
-//! UniFFI shim over `qala-lspp-json` for Kotlin. Strings in, strings out;
+//! UniFFI shim over `qala-core` and `qala-lspp-json` for Kotlin. Strings in, strings out;
 //! failures come back as `QalaError`. On success the string is the envelope
-//! `{"v":1,"result":...}`. Request shapes and the uid arguments (`uids`, `uidSeed`)
-//! are documented in `qala-lspp-json`.
+//! `{"v":1,"result":...}`. Request shapes are documented in `qala-core::api` and
+//! `qala-lspp-json`. One crate, one `.so`, so the app loads a single native library.
 
+use qala_core::api as core_api;
 use qala_lspp_json as api;
 
 uniffi::setup_scaffolding!();
@@ -35,6 +36,105 @@ impl From<api::ApiError> for QalaError {
     }
 }
 
+impl From<core_api::ApiError> for QalaError {
+    fn from(e: core_api::ApiError) -> Self {
+        match e {
+            core_api::ApiError::InvalidInput(m) => QalaError::InvalidInput(m),
+            core_api::ApiError::Evaluation(m) => QalaError::Evaluation(m),
+            core_api::ApiError::Internal(m) => QalaError::Internal(m),
+        }
+    }
+}
+
+/// Envelope version of the JSON boundary; the Kotlin side checks it at startup.
+#[uniffi::export]
+pub fn api_version() -> u32 {
+    core_api::VERSION
+}
+
+// qala-core: engine, availability, HLC, derived numbers.
+
+#[uniffi::export]
+pub fn log_session(request: String) -> Result<String, QalaError> {
+    Ok(core_api::log_session(&request)?)
+}
+
+#[uniffi::export]
+pub fn calibrate(request: String) -> Result<String, QalaError> {
+    Ok(core_api::calibrate(&request)?)
+}
+
+#[uniffi::export]
+pub fn predict_readiness(request: String) -> Result<String, QalaError> {
+    Ok(core_api::predict_readiness(&request)?)
+}
+
+#[uniffi::export]
+pub fn build_engine_state(request: String) -> Result<String, QalaError> {
+    Ok(core_api::build_engine_state(&request)?)
+}
+
+#[uniffi::export]
+pub fn readiness_summary(request: String) -> Result<String, QalaError> {
+    Ok(core_api::readiness_summary(&request)?)
+}
+
+#[uniffi::export]
+pub fn week_load(request: String) -> Result<String, QalaError> {
+    Ok(core_api::week_load(&request)?)
+}
+
+#[uniffi::export]
+pub fn weight_trend(request: String) -> Result<String, QalaError> {
+    Ok(core_api::weight_trend(&request)?)
+}
+
+#[uniffi::export]
+pub fn classify_day(request: String) -> Result<String, QalaError> {
+    Ok(core_api::classify_day(&request)?)
+}
+
+#[uniffi::export]
+pub fn reason_on(request: String) -> Result<String, QalaError> {
+    Ok(core_api::reason_on(&request)?)
+}
+
+#[uniffi::export]
+pub fn injured_on(request: String) -> Result<String, QalaError> {
+    Ok(core_api::injured_on(&request)?)
+}
+
+#[uniffi::export]
+pub fn guard_exercise(request: String) -> Result<String, QalaError> {
+    Ok(core_api::guard_exercise(&request)?)
+}
+
+#[uniffi::export]
+pub fn shifts_plan(request: String) -> Result<String, QalaError> {
+    Ok(core_api::shifts_plan(&request)?)
+}
+
+#[uniffi::export]
+pub fn hlc_compare(request: String) -> Result<String, QalaError> {
+    Ok(core_api::hlc_compare(&request)?)
+}
+
+#[uniffi::export]
+pub fn hlc_tick(request: String) -> Result<String, QalaError> {
+    Ok(core_api::hlc_tick(&request)?)
+}
+
+#[uniffi::export]
+pub fn hlc_receive(request: String) -> Result<String, QalaError> {
+    Ok(core_api::hlc_receive(&request)?)
+}
+
+#[uniffi::export]
+pub fn hlc_merge_field(request: String) -> Result<String, QalaError> {
+    Ok(core_api::hlc_merge_field(&request)?)
+}
+
+// LS++ evaluation API.
 #[uniffi::export]
 pub fn force_evaluate_text(request: String) -> Result<String, QalaError> {
     Ok(api::force_evaluate_text(&request)?)
