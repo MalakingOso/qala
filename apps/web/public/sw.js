@@ -1,8 +1,8 @@
 /* Qala service worker: app-shell offline cache + mutation outbox flush.
  * Tile PNGs and API sync stay network-first; the shell and queued ops
  * survive airplane mode. Version the cache to force updates. */
-const VERSION = "qala-v1";
-const SHELL = ["/", "/index.html", "/manifest.webmanifest", "/icons/icon.svg"];
+const VERSION = "qala-v2";
+const SHELL = ["/", "/index.html", "/manifest.webmanifest", "/icons/icon-192.png"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
