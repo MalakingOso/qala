@@ -12,6 +12,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.qala.app.checkin.CheckInScreen
 import com.qala.app.today.Destination
 import com.qala.app.today.TodayLoad
 import com.qala.app.today.TodayScreen
@@ -21,6 +22,7 @@ import com.qala.design.PageHead
 import com.qala.design.Qala
 import com.qala.design.QalaText
 import com.qala.design.QalaType
+import kotlinx.coroutines.launch
 
 /**
  * The screen for [route], filling the shell's content box. Today brings its own scroll column and fixed layers; every
@@ -44,7 +46,7 @@ fun Screen(
         Route.Coach -> Plain(scroll, topBar) { StubScreen("Coach", "Chat and suggestions. Arrives with the coach route (A6).") }
         Route.History -> Plain(scroll, topBar) { StubScreen("History", "Past sessions. Arrives with the rest of A1.") }
         Route.Settings -> Plain(scroll, topBar) { StubScreen("Settings", "Units, equipment, title font. Arrives with the rest of A1.") }
-        Route.CheckIn -> Plain(scroll, topBar) { CheckInStub(onBack) }
+        Route.CheckIn -> CheckInRoute(today, scroll, topBar, onBack)
         Route.WarmUp -> Plain(scroll, topBar) { WarmUpStub(onBack) }
         Route.Workout -> Plain(scroll, topBar) { WorkoutStub(onBack) }
         Route.Run -> Plain(scroll, topBar) { RunStub(onBack) }
@@ -60,6 +62,22 @@ private fun Plain(scroll: ScrollState, topBar: @Composable (Modifier) -> Unit, c
             Spacer(Modifier.height(16.dp))
             content()
         }
+    }
+}
+
+/** The check-in over the day Today is showing; Save writes the record on the container's scope and goes home. */
+@Composable
+private fun CheckInRoute(today: TodayLoad, scroll: ScrollState, topBar: @Composable (Modifier) -> Unit, onBack: () -> Unit) {
+    val container = LocalAppContainer.current
+    val model = (today as? TodayLoad.Ready)?.model
+    if (model == null) {
+        Plain(scroll, topBar) { StubScreen("Check-in", "Getting your day ready.") }
+        return
+    }
+    CheckInScreen(model.checkIn, scroll, onBack) { save ->
+        // The container's scope, not the screen's: going back leaves the screen, and a Room write must not be cancelled half way.
+        container.scope.launch { container.checkIns.save(save.recovery, save.soreness, save.note) }
+        onBack()
     }
 }
 

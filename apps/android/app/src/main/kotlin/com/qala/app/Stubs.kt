@@ -26,7 +26,7 @@ import com.qala.design.QalaType
 import kotlinx.coroutines.launch
 
 /*
- * Stand-ins for the screens that arrive later (check-in in M4, the lifting and run screens in A4), so Today's buttons
+ * Stand-ins for the screens that arrive later (the lifting and run screens in A4), so Today's buttons
  * have somewhere real to go and the rail can be seen to move. Each one writes the smallest honest record through the
  * repositories, then goes back to Today; the rail and the hero advance on their own because they observe the engine
  * snapshot. The writes run on the container's scope, not the screen's: going back leaves the screen's scope, and a
@@ -48,22 +48,6 @@ private fun StubBody(note: String, label: String, onClick: () -> Unit) {
         QalaText(note, style = QalaType.hint, color = Qala.colors.fgMuted)
         Spacer(Modifier.height(20.dp))
         PrimaryButton(label, onClick = { busy = true; onClick() }, enabled = !busy)
-    }
-}
-
-/** Saves a basic check-in: recovery 7 of 10 and no soreness. M4 replaces this with the real screen. */
-@Composable
-fun CheckInStub(onBack: () -> Unit) {
-    val container = LocalAppContainer.current
-    Column {
-        StubHead("Check-in", onBack)
-        StubBody(
-            note = "The real check-in arrives with M4. Save writes a basic one, recovery 7 of 10 and no soreness, so readiness and the rail have a check-in to work from.",
-            label = "Save",
-        ) {
-            container.scope.launch { container.checkIns.save(recovery = 7.0) }
-            onBack()
-        }
     }
 }
 

@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsTopHeight
@@ -79,7 +80,12 @@ fun QalaApp() {
                     .background(Qala.colors.bg)
                     .zIndex(1f),
             )
-            Column(Modifier.widthIn(max = ContentMaxWidth).fillMaxSize()) {
+            Column(
+                Modifier
+                    .widthIn(max = ContentMaxWidth)
+                    .fillMaxSize()
+                    .then(if (nav.route == Route.CheckIn) Modifier.imePadding() else Modifier),      // the note field stays above the keyboard
+            ) {
                 key(nav.route) {       // each screen keeps its own scroll position
                     val scroll = rememberScrollState()
                     Box(Modifier.weight(1f).fillMaxWidth()) {

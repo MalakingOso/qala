@@ -1,5 +1,7 @@
 package com.qala.app.today
 
+import com.qala.app.checkin.CheckInPlan
+import com.qala.app.checkin.checkInPlan
 import com.qala.data.core.ReadinessSummary
 import com.qala.data.core.TrendDirection
 import com.qala.data.engine.EngineSnapshot
@@ -118,6 +120,9 @@ class TodayModel(private val snapshot: EngineSnapshot, val plan: TodayPlan, priv
     val readiness: InfoCard = readinessCard(snapshot)
     val week: WeekCard = weekCard(snapshot)
     val weight: InfoCard = weightCard(snapshot)
+
+    /** What the check-in screen asks about today. */
+    val checkIn: CheckInPlan = checkInPlan(snapshot, plan)
 
     fun hero(viewing: Int): Hero = heroFor(snapshot, plan, viewing, nowIndex, use24h)
 }

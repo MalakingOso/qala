@@ -1,6 +1,7 @@
 package com.qala.design
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -26,6 +27,8 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 
 /** Content is never wider than this, however wide the screen (the web's `.page` max-width). */
@@ -129,5 +132,29 @@ fun PageHead(title: String, modifier: Modifier = Modifier, eyebrow: String? = nu
             GroupLabel(eyebrow, Modifier.padding(bottom = 12.dp))
         }
         QalaText(title, style = QalaType.pageTitle, color = Qala.colors.fg)
+    }
+}
+
+/**
+ * The head of a screen that is not a tab (check-in, Settings): a bordered 44 dp Back button, then the [title] in the
+ * stage-title face under an optional [eyebrow]. The shell's system Back does the same thing.
+ */
+@Composable
+fun FlowHead(title: String, onBack: () -> Unit, modifier: Modifier = Modifier, eyebrow: String? = null) {
+    val c = Qala.colors
+    Row(modifier.fillMaxWidth().padding(bottom = 16.dp), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.Top) {
+        Box(
+            Modifier
+                .size(44.dp)
+                .beamerSurface(c.bgSurface, c.border, QalaTokens.radiusMd, c.shadowCard)
+                .clickable(role = Role.Button, onClickLabel = "Back", onClick = onBack),
+            contentAlignment = Alignment.Center,
+        ) {
+            QalaIcon(QalaIcons.ChevronLeft, "Back", size = 22.dp, tint = c.fg)
+        }
+        Column(Modifier.weight(1f).padding(top = 2.dp)) {
+            if (eyebrow != null) GroupLabel(eyebrow, Modifier.padding(bottom = 2.dp))
+            QalaText(title, Modifier.semantics { heading() }, QalaType.stageTitle, c.fg)
+        }
     }
 }

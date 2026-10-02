@@ -226,11 +226,15 @@ private fun notchedOutline(
     path.close()
 }
 
-/** A white surface with a 2 dp border and 6 dp radius. Flat at rest; [hero] carries the card shadow. */
+/**
+ * A white surface with a 2 dp border and 6 dp radius. Flat at rest; [hero] carries the card shadow. [contentPadding] is
+ * the space inside the border: 20 dp on a phone page, less where a control has to be wide (the check-in's strips).
+ */
 @Composable
 fun Card(
     modifier: Modifier = Modifier,
     hero: Boolean = false,
+    contentPadding: Dp = 20.dp,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val c = Qala.colors
@@ -238,7 +242,7 @@ fun Card(
         modifier = modifier
             .fillMaxWidth()
             .beamerSurface(c.bgSurface, c.border, QalaTokens.radiusMd, if (hero) c.shadowCard else null)
-            .padding(QalaTokens.borderWidth + 20.dp),
+            .padding(QalaTokens.borderWidth + contentPadding),
         content = content,
     )
 }
