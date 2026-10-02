@@ -12,7 +12,7 @@ Written 2026-10-01 night, after implementing the refined desktop look on `main`.
 ## What changed
 
 - A numbered sidebar under the Qk icon, a toolbar (search, week switcher, Workout view), and a lede card on every desktop page (kicker, title, ink rule). Cards have a resting shadow, tables are dense with LIFT and RUN tags and PR and note pills.
-- Overview is now Week in review. The week chart shows three weeks with one in focus (week 2 left, week 3 now, week 4 right): everything before today on a gray wash, today on an ember edge, the future week dashed, the focused week at full strength.
+- Overview is now Week in review. The week chart shows three weeks with one in focus (week 2 left, week 3 now, week 4 right): everything before today on a gray wash, today on an ember wash with an ember day letter, the future week dashed, the focused week at full strength.
 - Body uses the real recovery map, front and back side by side, with the fatigue curve under it.
 - Lifts, Running, History, Programs, Exercises, Coach memory, Calibration and Settings were redesigned from what each page already held. Lift, run, session and muscle detail pages got the new header only.
 - Decisions are recorded as L16 and U20 to U23 in `DECISIONS.md`, and DESIGN.md 3.1, 6.3 and 7.15 are updated.

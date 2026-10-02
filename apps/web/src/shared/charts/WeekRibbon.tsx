@@ -3,19 +3,52 @@
  * Each bar is the same one as the single-week strip (U13): height is the
  * day's load, the fill is the part done, a glyph and a letter sit under it.
  * What is new is time. Everything behind today sits on a gray wash, today
- * carries an ember edge, and the week still to come is drawn dashed because
- * it is a plan, not a record. The focused week keeps full strength; the
- * other two go quiet. Plain HTML, like the strip. */
+ * sits on an ember wash with an ember day letter, and the week still to come
+ * is drawn dashed because it is a plan, not a record. The focused week keeps
+ * full strength; the other two go quiet. The ruler above names the weeks and
+ * the numbers live under the chart: an inspector headline always names one
+ * day (today unless another is hovered or pinned) with the focused week's
+ * totals beneath it. Bars share one baseline per week group. Plain HTML,
+ * like the strip. */
 
 import { useState } from "react";
-import { dayTime, relationLabel, weekSummary } from "../../logic/weekRibbon.ts";
+import { dayTime, weekSummary } from "../../logic/weekRibbon.ts";
 import type { WeekLoad } from "../../store/types.ts";
 import { ChartShell } from "./ChartShell.tsx";
-import { captionNums, dayLabel, describe, Glyph, n } from "./WeeklyLoad.tsx";
+import {
+  dayLabel,
+  describe,
+  Glyph,
+  n,
+  type DayView,
+} from "./WeeklyLoad.tsx";
 
 interface Pick {
   week: number;
   day: number;
+}
+
+/** Inspector figure: the day's load, or done-of-planned while in progress. */
+function dayFigure(v: DayView) {
+  if (v.state === "rest") return "Rest";
+  if (v.done === 0) return n(v.planned);
+  if (v.done >= v.planned) return n(v.done);
+  return (
+    <>
+      {n(v.done)} <small>of {n(v.planned)}</small>
+    </>
+  );
+}
+
+/** "Today", the day name in the focus week, else "Week 2 · Monday". */
+function dayContext(
+  week: WeekLoad,
+  v: DayView,
+  weekIndex: number,
+  focusIndex: number,
+) {
+  if (v.today) return "Today";
+  return weekIndex === focusIndex ? v.name : `${week.name} · ${v.name}`;
 }
 
 export function WeekRibbon(
@@ -34,9 +67,19 @@ export function WeekRibbon(
 
   const focusIndex = Math.max(0, weeks.findIndex((w) => w.id === focusId));
   const focusWeek = views[focusIndex];
-  const todayInFocus = focusWeek?.days.findIndex((d) => d.today) ?? -1;
+  const focusDays = focusWeek?.days ?? [];
+  const todayInFocus = focusDays.findIndex((d) => d.today);
+  // A week without today still inspects a real day: the most recent day of a
+  // past week, the first day of a week still to come.
+  const defaultDay = todayInFocus >= 0
+    ? todayInFocus
+    : focusWeek?.week.relation === "past"
+    ? focusDays.length - 1
+    : 0;
   const shown: Pick | null = hover ?? pinned ??
-    (todayInFocus >= 0 ? { week: focusIndex, day: todayInFocus } : null);
+    (focusWeek && defaultDay >= 0 && defaultDay < focusDays.length
+      ? { week: focusIndex, day: defaultDay }
+      : null);
   const shownDay = shown ? views[shown.week].days[shown.day] : null;
   const shownWeek = shown ? views[shown.week].week : null;
 
@@ -76,9 +119,6 @@ export function WeekRibbon(
               <span className="ribbon-name">
                 {week.name}
                 <span className="ribbon-range">{week.range}</span>
-              </span>
-              <span className="ribbon-note">
-                {relationLabel(week)} · {weekSummary(week)}
               </span>
             </button>
           ))}
@@ -135,35 +175,46 @@ export function WeekRibbon(
           ))}
         </div>
       </div>
-      <p className="week-caption" aria-live="polite">
-        {shownDay && shownWeek
+      <div className="day-focus" aria-live="polite">
+        {shownDay && shownWeek && shown
           ? (
             <>
-              <strong
-                className={shownDay.today ? "week-caption-today" : undefined}
-              >
-                {shownDay.today
-                  ? "Today"
-                  : `${shownWeek.name} · ${shownDay.name}`}
-                {" · "}
-                {shownDay.session}
-              </strong>
-              {shownDay.state === "rest"
-                ? null
-                : (
-                  <span className="week-caption-nums">
-                    {" · "}
-                    {captionNums(shownDay)}
-                  </span>
-                )}
+              <span className="figure">{dayFigure(shownDay)}</span>
+              <span className="day-focus-label">
+                {shownDay.state === "rest"
+                  ? dayContext(shownWeek, shownDay, shown.week, focusIndex)
+                  : (
+                    <>
+                      <strong
+                        className={shownDay.today
+                          ? "day-focus-today"
+                          : undefined}
+                      >
+                        {dayContext(
+                          shownWeek,
+                          shownDay,
+                          shown.week,
+                          focusIndex,
+                        )}
+                      </strong>
+                      {" · "}
+                      {shownDay.session}
+                      {shownDay.done === 0
+                        ? " · planned"
+                        : shownDay.done >= shownDay.planned
+                        ? " · done"
+                        : null}
+                    </>
+                  )}
+              </span>
             </>
           )
           : (
-            <strong>
+            <span className="day-focus-label">
               {focusWeek?.week.name} · {focusWeek?.week.range}
-            </strong>
+            </span>
           )}
-      </p>
+      </div>
       <p className="week-total kbd-hint">
         {focusWeek?.week.name}: {focusWeek ? weekSummary(focusWeek.week) : ""}
       </p>

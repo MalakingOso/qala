@@ -490,13 +490,15 @@
   opacity: 0.72;
   min-width: 0;
 }
+.ribbon-label:hover {
+  opacity: 1;
+}
+/* Focus reads through strength (full opacity, ink text), not a rule: the old
+ * underline floated a gap above the bars and read as a stray line. The
+ * current week keeps its ember name below as its one signal. */
 .ribbon-label.focus {
   opacity: 1;
   color: var(--fg);
-  box-shadow: inset 0 -2px 0 var(--ink);
-}
-.ribbon-label.focus.current {
-  box-shadow: inset 0 -2px 0 var(--accent);
 }
 .ribbon-name {
   font-size: 12px;
@@ -510,12 +512,6 @@
   margin-left: 8px;
   font-weight: 400;
   color: var(--fg-muted);
-}
-.ribbon-note {
-  font-size: 11px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 .ribbon-strip {
   margin-top: 8px;
@@ -542,12 +538,16 @@
 .ribbon .week-day[aria-pressed="true"] {
   background: var(--bg-hover);
 }
+/* Today sits on the ember wash as part of its week, not fenced off by an
+ * edge. The bar fill stays teal so fill always means done; today reads via
+ * the wash, the ember day letter (base rule) and the ember caption. */
 .ribbon .week-day.today {
   background: var(--accent-subtle);
-  box-shadow: inset 2px 0 0 var(--accent);
+  color: var(--progress-fill);
 }
 .ribbon .week-track {
   height: 112px;
+  border-bottom: 1px solid var(--soft);
 }
 .ribbon .week-bar {
   max-width: 22px;
@@ -564,8 +564,36 @@
 .ribbon .week-letter {
   font-size: 10px;
 }
-.page-lede .ribbon + .week-caption {
-  margin-top: 10px;
+/* Inspector headline under the ribbon: one day's load as a figure with its
+ * context beside it. Today unless another day is hovered or pinned. */
+.day-focus {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin: 14px 0 0;
+  min-height: 36px;
+}
+.day-focus .figure {
+  font-size: 30px;
+  line-height: 1.2;
+}
+.day-focus .figure small {
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--fg-muted);
+}
+.day-focus-label {
+  font-size: 13px;
+  color: var(--fg-secondary);
+}
+.day-focus-label strong {
+  color: var(--fg);
+  font-weight: 600;
+}
+.day-focus-label .day-focus-today {
+  color: var(--accent);
 }
 
 /* ---------- Tables, tags, pills ---------- */
