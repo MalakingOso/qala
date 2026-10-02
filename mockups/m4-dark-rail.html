@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>M4 dark rail options</title>
+<link rel="stylesheet" href="m4-core.css">
+<style id="dk-vars"></style>
+<style>
+  .m4.wide { max-width: 1700px; }
+  .tablewrap { max-width: 100%; overflow-x: auto; margin-top: 14px; border: 2px solid var(--bd); border-radius: 8px; background: var(--surface); }
+  table.vals { border-collapse: collapse; width: 100%; min-width: 760px; font-size: 12px; }
+  table.vals th, table.vals td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--bd); vertical-align: middle; }
+  table.vals thead th { font-size: 11px; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); background: var(--recessed); border-bottom: 2px solid var(--bd); position: sticky; top: 0; }
+  table.vals tr:last-child td { border-bottom: 0; }
+  table.vals td.k { font-weight: 650; white-space: nowrap; }
+  table.vals td code { font: 400 11px var(--mono); color: var(--fg-2); }
+  .cellv { display: flex; align-items: center; gap: 8px; }
+  .sw { flex: none; width: 22px; height: 22px; border-radius: 4px; border: 1px solid var(--bd-s); background-image: linear-gradient(45deg, #888 25%, transparent 25%, transparent 75%, #888 75%), linear-gradient(45deg, #888 25%, transparent 25%, transparent 75%, #888 75%); background-size: 8px 8px; background-position: 0 0, 4px 4px; position: relative; overflow: hidden; }
+  .sw i { position: absolute; inset: 0; }
+  .minstrips { display: grid; grid-template-columns: repeat(auto-fit, 130px); gap: 22px; margin-top: 14px; }
+  .minstrip { padding: 14px 16px; border: 2px solid var(--bd); border-radius: 8px; background: var(--bg); color: var(--fg); }
+  .minstrip .strip { position: relative; top: auto; transform: none; margin: 0; }
+  .minstrip p { margin: 10px 0 0; font-size: 11px; color: var(--muted); line-height: 1.5; }
+  .dotkey { font-size: 11px; color: var(--muted); line-height: 1.7; margin: 8px 0 0; }
+  .dotrow { display: flex; gap: 22px; margin-top: 12px; flex-wrap: wrap; }
+  .legend { margin: 0; padding: 0; list-style: none; font-size: 11.5px; color: var(--fg-2); line-height: 2; }
+</style>
+</head>
+<body>
+<div class="m4 wide">
+  <div class="m4-top"><a href="m4-index.html">&larr; M4 options</a><div data-themebar></div></div>
+  <h1>Dark pass: rail strip, menu and notch seam</h1>
+  <p class="lede"><b>The spec has no dark values for the strip, the menu or the seam; this page proposes three sets and puts the light values next to them.</b> Every frame forces its own theme, so light and dark show side by side whatever the page theme is. Dark tokens are the DESIGN.md section 2 ones: ground #0b1020, surface #121a33, ink #e8ecf6, teal #2dd4bf for done, ember #fb923c for now, and hard shadows in #2a3350 because black shadows vanish on the dark ground. Frames are real Today screens with the notched cards, the glass preview bar and, in row two, the menu open on Run.</p>
+  <div class="note-box"><b>What the dark pass found in the light spec.</b> (1) The seam stroke in the prototype is rgba(15,21,42,.24), darker than the card border (.16); the M3 plan says the seam uses the card's own border, so the light column here uses .16. (2) The selected-row text and the selected-dot halo are hard-coded white, which would stay white on a light row in dark, so they become tokens. (3) The scrim is ink at .22 in light; ink is light in dark, so the same token would lighten the screen. Dark needs a near-black scrim. (4) A later dot's border is about 1.7:1 against the strip in light; the dark sets below hold about 3:1, and light should follow.</div>
+
+  <section class="sec">
+    <h2>Strip, notch and preview</h2>
+    <p>Previewing Run: ring on the previewed dot, glass preview bar under the title, cards notched around the strip. Light is the reference.</p>
+    <div class="opts" id="row1"></div>
+  </section>
+
+  <section class="sec">
+    <h2>Menu open</h2>
+    <p>The 252 px panel over the scrim, header, six rows, Run selected, Back to now at the foot.</p>
+    <div class="opts" id="row2"></div>
+  </section>
+
+  <section class="sec">
+    <h2>Dot states</h2>
+    <p>Top to bottom: done, now, later, interlude (recover, wind down), skipped, previewed.</p>
+    <div class="minstrips" id="mini"></div>
+  </section>
+
+  <section class="sec">
+    <h2>Values</h2>
+    <p>Light on the left, the three dark proposals beside it. Swatches show the value over a checker so the alpha reads.</p>
+    <div class="tablewrap"><table class="vals" id="vals"></table></div>
+  </section>
+</div>
+
+<script src="m4-icons.js"></script>
+<script src="m4-core.js"></script>
+<script>
+  var ic = M4.ic;
+  var COLS = ['Light', 'Dark A', 'Dark B', 'Dark C'];
+  /* label, css var (null = same token in every set), then light, A, B, C */
+  var ROWS = [
+    ['Strip tint (glass)', '--strip-tint', 'rgba(255,255,255,.62)', 'rgba(18,26,51,.62)', 'rgba(31,42,77,.72)', 'rgba(5,7,15,.55)'],
+    ['Strip border', '--strip-bd', 'rgba(15,21,42,.24)', 'rgba(232,236,246,.26)', 'rgba(232,236,246,.34)', 'rgba(232,236,246,.26)'],
+    ['Strip shadow', '--strip-shadow', '2px 4px 0 0 rgba(15,21,42,.10)', '2px 4px 0 0 #2a3350', '2px 4px 0 0 #2a3350', 'none'],
+    ['Later dot fill', '--dot-off', '#dfe3ec', '#2a3350', '#3a4466', '#5d6680'],
+    ['Later dot border', '--dot-off-bd', 'rgba(15,21,42,.2)', 'rgba(232,236,246,.45)', 'rgba(232,236,246,.50)', 'rgba(232,236,246,.55)'],
+    ['Skipped ring (2 px)', '--dot-ring', '#94a0b8', '#8a93ab', '#aab4cc', '#8a93ab'],
+    ['Done dot', null, '#08a49c', '#2dd4bf', '#2dd4bf', '#2dd4bf'],
+    ['Now dot', null, '#c2410c', '#fb923c', '#fb923c', '#fb923c'],
+    ['Previewed ring', '--sel-ring', '#0f152a', '#e8ecf6', '#e8ecf6', '#e8ecf6'],
+    ['Ring gap (halo)', '--halo', 'rgba(255,255,255,.7)', 'rgba(11,16,32,.85)', 'rgba(31,42,77,.95)', 'rgba(5,7,15,.9)'],
+    ['Seam stroke', '--seam', 'rgba(15,21,42,.16)', 'rgba(232,236,246,.16)', 'rgba(232,236,246,.16)', 'rgba(232,236,246,.26)'],
+    ['Seam fill (ground)', null, '#f5f5f7', '#0b1020', '#0b1020', '#0b1020'],
+    ['Scrim', '--scrim', 'rgba(15,21,42,.22)', 'rgba(3,6,16,.60)', 'rgba(3,6,16,.60)', 'rgba(3,6,16,.70)'],
+    ['Menu panel', null, '#ffffff', '#121a33', '#121a33', '#121a33'],
+    ['Menu edge shadow', null, '4px 0 0 0 rgba(15,21,42,.10)', '4px 0 0 0 #2a3350', '4px 0 0 0 #2a3350', '4px 0 0 0 #2a3350'],
+    ['Selected row fill', '--row-sel-bg', '#0f152a', '#e8ecf6', '#1f2a4d', '#1f2a4d'],
+    ['Selected row border', '--row-sel-bd', '#0f152a', '#e8ecf6', 'rgba(232,236,246,.60)', 'transparent'],
+    ['Selected row text', '--row-sel-fg', '#ffffff', '#0b1020', '#e8ecf6', '#e8ecf6'],
+    ['Selected row detail text', '--row-sel-fg-2', 'rgba(255,255,255,.75)', 'rgba(11,16,32,.70)', '#aab4cc', '#aab4cc'],
+    ['Selected row marker', '--row-sel-shadow', 'none', 'none', 'none', 'inset 3px 0 0 0 #e8ecf6'],
+    ['Preview bar glass', '--glass', 'rgba(255,255,255,.7)', 'rgba(18,26,51,.7)', 'rgba(31,42,77,.7)', 'rgba(5,7,15,.6)']
+  ];
+  var CLS = ['t-light', 't-dark dk-a', 't-dark dk-b', 't-dark dk-c'];
+  var NAMES = ['Light (reference)', 'A · Mirror', 'B · Lifted (recommended)', 'C · Recessed'];
+  var BLURB = [
+    'The current values, with the seam stroke on the card border and the white literals turned into tokens.',
+    'Surface at .62 for the strip, as the plan says, and every light value inverted: a light slab for the selected row. Closest to the light design and the loudest selected row.',
+    'The strip lifts to the active surface at .72 so the 28 px target reads as raised chrome, dots brighten for a 3:1 outline, and the selected row is a lifted fill with a 2 px ink border instead of a bright slab.',
+    'The strip is darker than the ground, a slot cut into the screen with no hard shadow. Selection is a lifted row with a 3 px ink bar on its left edge, and the seam takes the stronger border so the notch outline matches the slot.'
+  ];
+
+  /* build the dark variant CSS from the table so the page and the table cannot drift */
+  var css = '';
+  for (var c = 1; c < 4; c++) {
+    css += '.dk-' + 'abc'[c - 1] + '{';
+    ROWS.forEach(function (r) { if (r[1]) css += r[1] + ':' + r[c + 2] + ';'; });
+    css += '}\n';
+  }
+  document.getElementById('dk-vars').textContent = css;
+
+  function frame(cls, menuOpen) {
+    var dots = ['done', 'done', 'now', 'soft', 'todo', 'soft'];
+    var rows = [
+      { label: 'Check-in', time: '6:52', status: 'done' }, { label: 'Warm-up', time: '7:00', status: 'done' },
+      { label: 'Lift', time: '7:15', status: 'now' }, { label: 'Recover', time: '12:00', status: 'soft' },
+      { label: 'Run', time: '6 pm', status: 'todo' }, { label: 'Wind down', time: '10:30', status: 'soft' }
+    ];
+    var head = '<div class="phead"><p class="eyebrow">Friday · Strength block 2, week 3</p><h2 class="ptitle">Today</h2><div class="previewbar"><span>Preview · Run</span><button type="button">Back to now</button></div></div>';
+    var cards =
+      '<div class="pcard"><p class="eyebrow">Preview · run</p><h2>Easy run · 3.0 mi</h2><p class="meta">Conversational pace · cue every half mile</p><div class="herofig">3.0 <small>mi</small></div><p class="pwhy">Legs lifted today, so keep it easy.</p><button class="btn primary" type="button">Start run</button></div>' +
+      '<div class="pcard"><p class="eyebrow">Readiness · 72 of 100</p><h2>A little under average</h2><p class="body">Squat holds at 245. Quads ready Wednesday, everything else is ready now.</p></div>' +
+      '<div class="pcard"><p class="eyebrow">This week</p><h2>Four of seven days moving</h2><div class="week"><i class="f">M</i><i class="f">T</i><i class="f">W</i><i class="f">T</i><i class="t">F</i><i>S</i><i>S</i></div></div>' +
+      '<div class="pcard"><p class="eyebrow">Body weight</p><h2>178.2 lb</h2><p class="body">7-day trend is flat.</p></div>';
+    var over = menuOpen ? M4.menu({ title: 'Friday', rows: rows, sel: 4 }) : '';
+    return '<div class="phone ' + cls + '">' + head + '<div class="band"><div class="pscroll">' + cards + '</div>' + M4.strip(dots, 4) + '</div>' + M4.tabbar('Today') + over + '</div>';
+  }
+
+  function swatch(v) {
+    if (v === 'none' || /^\d/.test(v) || /^inset/.test(v)) return '';
+    return '<span class="sw"><i style="background:' + v + '"></i></span>';
+  }
+
+  M4.ready(function () {
+    [['row1', false], ['row2', true]].forEach(function (cfg) {
+      var h = '';
+      CLS.forEach(function (cls, i) {
+        h += '<div class="opt"><div class="optcap"><span class="k">' + (i === 0 ? 'L' : 'ABC'[i - 1]) + '</span><b>' + NAMES[i] + '</b>' + (cfg[1] ? '' : '<p>' + BLURB[i] + '</p>') + '</div>' + frame(cls, cfg[1]) + '</div>';
+      });
+      M4.mount(document.getElementById(cfg[0]), h);
+    });
+
+    var mini = '';
+    CLS.forEach(function (cls, i) {
+      mini += '<div class="' + cls.split(' ').join(' ') + ' minstrip" style="background:var(--bg)">' + M4.strip(['done', 'now', 'todo', 'soft', 'skip', 'todo'], 5) + '<p>' + NAMES[i] + '</p></div>';
+    });
+    M4.mount(document.getElementById('mini'), mini);
+
+    var t = '<thead><tr><th>Token</th>' + COLS.map(function (n) { return '<th>' + n + '</th>'; }).join('') + '</tr></thead><tbody>';
+    ROWS.forEach(function (r) {
+      t += '<tr><td class="k">' + r[0] + (r[1] ? '<br><code>' + r[1] + '</code>' : '') + '</td>';
+      for (var c = 2; c < 6; c++) t += '<td><div class="cellv">' + swatch(r[c]) + '<code>' + r[c] + '</code></div></td>';
+      t += '</tr>';
+    });
+    document.getElementById('vals').innerHTML = t + '</tbody>';
+  });
+</script>
+</body>
+</html>

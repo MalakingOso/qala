@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>M4 empty states options</title>
+<link rel="stylesheet" href="m4-core.css">
+<style>
+  .pcard .linkbtn { display: inline-block; margin-top: 6px; }
+  .pcard .note { margin: 8px 0 0; font-size: 12px; color: var(--fg-2); line-height: 1.45; }
+  .ghost { color: var(--faint); }
+  .herofig.ghost { color: var(--faint); }
+  .ringsk { display: block; margin: 4px auto 6px; }
+  .steps { margin: 10px 0 4px; border: 2px solid var(--bd); border-radius: 6px; overflow: hidden; }
+  .step { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 56px; padding: 8px 10px; border: 0; background: var(--surface); text-align: left; }
+  .step + .step { border-top: 1px solid var(--bd); }
+  .step .nd { flex: none; width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--nd-bd); display: grid; place-items: center; font: 600 11px var(--sans); color: var(--muted); }
+  .step.first .nd { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+  .step b { display: block; font-size: 13.5px; font-weight: 650; line-height: 1.2; }
+  .step .sub { display: block; font-size: 11.5px; color: var(--muted); }
+  .step .ic { margin-left: auto; font-size: 18px; color: var(--muted); }
+  .pcard.cmp { padding-top: 10px; padding-bottom: 10px; }
+  .cmprow { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+  .cmprow b { font-size: 14px; font-weight: 650; }
+  .cmprow span { font-size: 12px; color: var(--muted); text-align: right; }
+  .minweek { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; margin-top: 8px; }
+  .minweek i { height: 14px; border-radius: 3px; background: var(--active); }
+  .minweek i.p { background: none; border: 2px dashed var(--bd-s); }
+  .minweek i.t { background: var(--accent); }
+</style>
+</head>
+<body>
+<div class="m4">
+  <div class="m4-top"><a href="m4-index.html">&larr; M4 options</a><div data-themebar></div></div>
+  <h1>Empty states for the five Today cards</h1>
+  <p class="lede"><b>A fresh install has nothing: no program, no check-ins, no runs, no weights.</b> With no program there is no lift day, so the rail shows the three rest-day stages (check-in, recover, wind down) and check-in is "now", the only thing Today can ask for. Training weekdays still default to Mon, Wed, Fri, Sat, and today is Friday. Copy is plain and says what fills the card in. No illustrations; the icons are the existing set. Frames are full length.</p>
+
+  <section class="sec">
+    <h2>Stage hero, next run, readiness, this week, body weight</h2>
+    <p>Same five slots in each option, in the order Today shows them.</p>
+    <div class="opts" id="opts"></div>
+  </section>
+</div>
+
+<script src="m4-icons.js"></script>
+<script src="m4-core.js"></script>
+<script>
+  var ic = M4.ic;
+  var DOTS = ['now', 'soft', 'soft'];
+  function shell(cards) {
+    return '<div class="phone auto"><div class="phead"><p class="eyebrow">Friday · No program yet</p><h2 class="ptitle">Today</h2></div>' +
+      '<div class="band"><div class="pscroll">' + cards + '</div>' + M4.strip(DOTS, 0) + '</div>' + M4.tabbar('Today') + '</div>';
+  }
+  var WEEK_TRAIN = '<div class="week"><i class="p">M</i><i>T</i><i class="p">W</i><i>T</i><i class="t">F</i><i class="p">S</i><i>S</i></div>';
+
+  /* A: quiet cards, full height, one plain line and one action each */
+  function A() {
+    return shell(
+      '<div class="pcard"><p class="eyebrow">Now · check-in</p><h2>How are you walking in?</h2><p class="body" style="margin-top:4px">Two quick questions set your readiness for the day. It takes about a minute.</p><button class="btn primary" type="button">Check in</button>' +
+        '<p class="note">No program yet. Add one in Plan and Today shows your lift.</p><button class="linkbtn" type="button">Add a program</button></div>' +
+      '<div class="pcard"><p class="eyebrow">Next run</p><h2>No run planned</h2><p class="body" style="margin-top:4px">Runs you plan show up here with distance and pace.</p><button class="linkbtn" type="button">Plan a run</button></div>' +
+      '<div class="pcard"><p class="eyebrow">Readiness</p><h2>No score yet</h2><p class="body" style="margin-top:4px">Your first check-in sets it. The 28-day average builds as you check in.</p></div>' +
+      '<div class="pcard"><p class="eyebrow">This week</p><h2>Nothing planned</h2>' + WEEK_TRAIN + '<p class="note">Dashed days are your training days: Mon, Wed, Fri, Sat. Change them in Settings.</p><button class="linkbtn" type="button">Open Settings</button></div>' +
+      '<div class="pcard"><p class="eyebrow">Body weight</p><h2>No weigh-ins yet</h2><p class="body" style="margin-top:4px">Log a weight and the 7-day trend shows up here.</p><button class="linkbtn" type="button">Log weight</button></div>'
+    );
+  }
+
+  /* B: skeleton, each card keeps the shape it will have */
+  function B() {
+    var ring = '<svg class="ringsk" width="92" height="92" viewBox="0 0 92 92" role="img" aria-label="No readiness score yet"><circle cx="46" cy="46" r="38" fill="none" style="stroke:var(--bd-s)" stroke-width="9" stroke-dasharray="3 7"/><text x="46" y="53" text-anchor="middle" font-family="Qala Test, Georgia, serif" font-weight="700" font-size="26" style="fill:var(--faint)">–</text></svg>';
+    return shell(
+      '<div class="pcard"><p class="eyebrow">Now · check-in</p><h2>No program yet</h2><p class="meta">Add one in Plan</p><div class="herofig ghost">– <small>lb × –</small></div><p class="pwhy">Your top set shows here once a program is added.</p><button class="btn primary" type="button">Check in</button></div>' +
+      '<div class="pcard"><p class="eyebrow">Next run</p><h2 class="ghost">–</h2><p class="meta">No run planned. A planned run shows its distance and pace here.</p></div>' +
+      '<div class="pcard"><p class="eyebrow">Readiness · no score</p>' + ring + '<p class="pwhy" style="margin:0">Appears after your first check-in.</p></div>' +
+      '<div class="pcard"><p class="eyebrow">This week</p><h2 class="ghost">–</h2><div class="week"><i class="p">M</i><i class="p">T</i><i class="p">W</i><i class="p">T</i><i class="p">F</i><i class="p">S</i><i class="p">S</i></div><p class="note">Nothing planned yet.</p></div>' +
+      '<div class="pcard"><p class="eyebrow">Body weight</p><div class="herofig ghost">– <small>lb</small></div><p class="pwhy" style="margin-bottom:0">The 7-day trend appears after a few weigh-ins.</p></div>'
+    );
+  }
+
+  /* C: one Start here card, the other four collapse to one-line rows */
+  function C() {
+    return shell(
+      '<div class="pcard"><p class="eyebrow">Now · check-in</p><h2>Start here</h2><p class="body" style="margin-top:4px">Three things fill Today in. Check in first.</p>' +
+        '<div class="steps">' +
+        '<button type="button" class="step first"><span class="nd">1</span><span><b>Check in</b><span class="sub">Sets today\'s readiness</span></span>' + ic('chevron-right') + '</button>' +
+        '<button type="button" class="step"><span class="nd">2</span><span><b>Add a program</b><span class="sub">Plan tab · gives Today a lift</span></span>' + ic('chevron-right') + '</button>' +
+        '<button type="button" class="step"><span class="nd">3</span><span><b>Log your weight</b><span class="sub">Body tab · starts the 7-day trend</span></span>' + ic('chevron-right') + '</button></div>' +
+        '<button class="btn primary" type="button">Check in</button></div>' +
+      '<div class="pcard cmp"><div class="cmprow"><b>Next run</b><span>No run planned</span></div></div>' +
+      '<div class="pcard cmp"><div class="cmprow"><b>Readiness</b><span>Waiting for a check-in</span></div></div>' +
+      '<div class="pcard cmp"><div class="cmprow"><b>This week</b><span>Mon · Wed · Fri · Sat open</span></div><div class="minweek"><i class="p"></i><i></i><i class="p"></i><i></i><i class="t"></i><i class="p"></i><i></i></div></div>' +
+      '<div class="pcard cmp"><div class="cmprow"><b>Body weight</b><span>Not logged yet</span></div></div>'
+    );
+  }
+
+  var OPTS = [
+    ['A', 'Quiet cards', A, 'Every card keeps its slot and its height, with one plain sentence about what fills it and one action where there is one (Add a program, Plan a run, Log weight, Open Settings). The week card shows the Mon, Wed, Fri, Sat training days as dashed cells, which ties it to the new Settings picker. Most useful and most honest, and it is five cards saying "nothing yet" in a row, so the first screen is long and a little bleak.'],
+    ['B', 'Skeleton shape', B, 'Each card is drawn as it will look with data: dashes where numbers go, a dashed readiness ring, a dashed week. The layout never jumps when the first record arrives and the page tells you what Qala will show. It has no actions except Check in, and a screen full of dashes reads as broken to anyone who does not already know the app.'],
+    ['C', 'Start here, then one-liners', C, 'A single "Start here" card merges the stage hero with a three-step list (check in, add a program, log your weight), and the other four cards shrink to one-line rows that say what they are waiting for. Shortest, one clear path, and the week keeps a mini strip of training days. It means Today has a second layout that must switch off as records arrive, and the card order changes on first run.']
+  ];
+
+  M4.ready(function () {
+    var h = '';
+    OPTS.forEach(function (o) {
+      h += '<div class="opt"><div class="optcap"><span class="k">' + o[0] + '</span><b>' + o[1] + '</b><p>' + o[3] + '</p></div>' + o[2]() + '</div>';
+    });
+    M4.mount(document.getElementById('opts'), h);
+  });
+</script>
+</body>
+</html>

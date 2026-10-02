@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>M4 skip sheet options</title>
+<link rel="stylesheet" href="m4-core.css">
+<style>
+  .reason { display: grid; grid-template-columns: 36px 1fr 22px; gap: 12px; align-items: center; width: 100%; min-height: 60px; padding: 10px 12px; margin-bottom: 8px; border: 2px solid var(--bd); border-radius: 6px; background: var(--surface); text-align: left; }
+  .reason b { display: block; font-size: 14.5px; font-weight: 650; }
+  .reason span.sub { display: block; font-size: 12px; color: var(--muted); line-height: 1.3; }
+  .reason .radio { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--bd-s); background: var(--surface); }
+  .reason.on { border-color: var(--fg); box-shadow: var(--shadow); }
+  .reason.on .radio { background: var(--fg); border-color: var(--fg); box-shadow: inset 0 0 0 3px var(--surface); }
+  .reason.on .tile-ic { background: var(--fg); color: var(--on-ink); }
+  .lbl { display: flex; justify-content: space-between; align-items: baseline; margin: 16px 2px 8px; }
+  .lbl .eyebrow { margin: 0; }
+  .lbl:first-child { margin-top: 4px; }
+  .foot { margin: 12px 2px 0; font-size: 12px; color: var(--muted); line-height: 1.5; }
+  .scale.span button { font-size: 12.5px; padding: 0 4px; min-height: 52px; }
+  .rtiles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .rtile { display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 8px 10px; border: 2px solid var(--bd); border-radius: 6px; background: var(--surface); font: 650 14px var(--sans); text-align: left; }
+  .rtile .tile-ic { width: 32px; height: 32px; font-size: 18px; }
+  .rtile.on { border-color: var(--fg); box-shadow: var(--shadow); }
+  .rtile.on .tile-ic { background: var(--fg); color: var(--on-ink); }
+  .rtile.wide { grid-column: 1 / -1; }
+  .rrow { display: grid; grid-template-columns: 36px 1fr 20px; gap: 12px; align-items: center; width: 100%; min-height: 58px; padding: 8px 12px; border: 2px solid var(--bd); border-radius: 6px; background: var(--surface); text-align: left; margin-bottom: 8px; }
+  .rrow b { display: block; font-size: 14.5px; font-weight: 650; }
+  .rrow .sub { display: block; font-size: 12px; color: var(--muted); }
+  .rrow .go { color: var(--muted); font-size: 18px; }
+  .rrow.on { border-color: var(--fg); box-shadow: var(--shadow); }
+  .rrow.on .tile-ic { background: var(--fg); color: var(--on-ink); }
+  .sheet .chips .chip { min-height: 40px; }
+  .sheet .field { min-height: 44px; }
+  .moretoggle { display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: 44px; border: 0; background: none; padding: 0 2px; font: 600 13px var(--sans); color: var(--fg-2); }
+  .moretoggle .ic { font-size: 18px; }
+  .sheetgap { height: 10px; }
+  .behind { pointer-events: none; }
+</style>
+</head>
+<body>
+<div class="m4">
+  <div class="m4-top"><a href="m4-index.html">&larr; M4 options</a><div data-themebar></div></div>
+  <h1>Skip sheet</h1>
+  <p class="lede"><b>Reason, the injured muscle only when injured, a note, a span.</b> It opens from "Skip today" on Today and from any unlogged day in Plan. Copy follows DESIGN 7.18: each reason says what happens (rests, shifts, guards) and nothing counts against you. A skip is never a miss, so there is no warning color, no count and no confirm-away dialog; Today has Undo.</p>
+
+  <section class="sec">
+    <h2>Two states for each option</h2>
+    <p>Row one is Sick, this day only (the common case). Row two is Injured for 7 days, which adds the muscle picker. Everything is tappable. The injured state in A starts with no muscle picked, so you can see the disabled Skip button; B and C start with Quads picked.</p>
+    <div class="opts" id="opts"></div>
+  </section>
+</div>
+
+<script src="m4-icons.js"></script>
+<script src="m4-core.js"></script>
+<script>
+  var ic = M4.ic;
+  var REASONS = {
+    break:      { t: 'On a Break', icon: 'sunset', blurb: 'Taking a few days off to recover.', short: 'Break', fx: 'Today rests. Your plan stays where it is.' },
+    vacation:   { t: 'On Vacation', icon: 'tree-palm', blurb: 'Away from training. The plan shifts out.', short: 'Vacation', fx: 'Away from training. Your plan shifts out by the days you are gone.' },
+    sick:       { t: 'Sick', icon: 'thermometer', blurb: 'Resting to get well. The plan shifts out.', short: 'Sick', fx: 'Resting to get well. Your plan shifts out, so nothing is lost.' },
+    injured:    { t: 'Injured', icon: 'bandage', blurb: 'Training around it.', short: 'Injured', fx: 'Direct work for the muscle pauses and lifts that lean on it run at half volume. Everything else stays.' },
+    scheduling: { t: 'Scheduling', icon: 'calendar-off', blurb: 'Could not fit it in today.', short: 'Scheduling', fx: 'Today rests. Your plan stays where it is.' }
+  };
+  var ORDER = ['break', 'vacation', 'sick', 'injured', 'scheduling'];
+  var MUSCLES = ['Quads', 'Hamstrings', 'Glutes', 'Calves', 'Chest', 'Back', 'Lats', 'Shoulders', 'Biceps', 'Triceps', 'Abs', 'Forearms'];
+  var SPANS = [['day', 'This day only', 'Skip today'], ['3', '3 days', 'Skip 3 days'], ['7', '7 days', 'Skip 7 days'], ['open', 'Until I say so', 'Skip until I say so']];
+  var FOOT = 'Skipped days rest. Vacation and sick days shift the plan out. Nothing counts against you.';
+
+  function spanScale(s) {
+    return '<div class="scale span" role="radiogroup" aria-label="How long?">' + SPANS.map(function (p) {
+      return '<button type="button" role="radio" data-act="span" data-v="' + p[0] + '" aria-checked="' + (s.span === p[0]) + '" class="' + (s.span === p[0] ? 'on' : '') + '">' + p[1] + '</button>';
+    }).join('') + '</div>';
+  }
+  function muscleChips(s, cls) {
+    return '<div class="chips ' + (cls || 'grid3') + '" role="radiogroup" aria-label="Which muscle?">' + MUSCLES.map(function (m) {
+      return '<button type="button" role="radio" class="chip' + (s.muscle === m ? ' on' : '') + '" data-act="muscle" data-v="' + m + '" aria-checked="' + (s.muscle === m) + '">' + m + '</button>';
+    }).join('') + '</div>';
+  }
+  function noteField(s) {
+    return '<input class="field" data-act="note" value="' + (s.note || '') + '" placeholder="e.g. left knee, flights Tuesday" aria-label="Note">';
+  }
+  function ctaLabel(s) {
+    if (s.reason === 'injured' && !s.muscle) return 'Pick a muscle first';
+    return SPANS.filter(function (p) { return p[0] === s.span; })[0][2];
+  }
+  function ctaOff(s) { return s.reason === 'injured' && !s.muscle; }
+  function effectLine(s) {
+    var r = REASONS[s.reason];
+    var fx = r.fx;
+    if (s.reason === 'injured' && s.muscle) fx = 'Direct ' + s.muscle.toLowerCase() + ' work pauses and lifts that lean on it run at half volume. Everything else stays.';
+    return '<div class="effect">' + ic('info') + '<div><b>What happens.</b> ' + fx + '</div></div>';
+  }
+  function head(title, eyebrow) {
+    return '<header class="flowhead"><span class="back">' + ic('chevron-left') + '</span><div class="tt"><p class="eyebrow">' + eyebrow + '</p><h1 class="ptitle">' + title + '</h1></div></header>';
+  }
+
+  /* Today behind the sheets, dimmed by the scrim */
+  function todayBehind() {
+    return '<div class="behind" style="display:contents">' +
+      '<div class="phead"><p class="eyebrow">Friday · Strength block 2, week 3</p><h2 class="ptitle">Today</h2></div>' +
+      '<div class="band"><div class="pscroll"><div class="pcard"><p class="eyebrow">Now · lift</p><h2>Lower A · Squat day</h2><p class="meta">Squat 3 × 4 at 245 · 55 min</p><div class="herofig">245 <small>lb × 4</small></div><p class="pwhy">A little under your average, so squat holds.</p><button class="btn primary" type="button">Start warm-up</button><button class="btn" type="button" style="margin-top:8px">Skip today</button></div>' +
+      '<div class="pcard"><p class="eyebrow">Then · 6 pm</p><h2>Easy run · 3.0 mi</h2></div></div>' +
+      M4.strip(['done', 'done', 'now', 'soft', 'todo', 'soft'], 2) + '</div>' +
+      M4.tabbar('Today') + '</div>';
+  }
+
+  /* A: full page, reason rows with blurbs */
+  function A(s) {
+    var rows = ORDER.map(function (k) {
+      var r = REASONS[k];
+      return '<button type="button" role="radio" aria-checked="' + (s.reason === k) + '" class="reason' + (s.reason === k ? ' on' : '') + '" data-act="reason" data-v="' + k + '"><span class="tile-ic">' + ic(r.icon) + '</span><span><b>' + r.t + '</b><span class="sub">' + r.blurb + '</span></span><span class="radio"></span></button>';
+    }).join('');
+    var inj = s.reason === 'injured' ? '<div class="lbl"><span class="eyebrow">Which muscle?</span><span class="hint">direct work pauses</span></div>' + muscleChips(s) : '';
+    return '<div class="phone auto">' + head('Skip a workout', 'Friday, Oct 2') + '<div class="flowbody">' +
+      '<div class="lbl"><span class="eyebrow">Why skip?</span></div><div role="radiogroup" aria-label="Why skip?">' + rows + '</div>' + inj +
+      '<div class="lbl"><span class="eyebrow">Note</span><span class="hint">optional, one line</span></div>' + noteField(s) +
+      '<div class="lbl"><span class="eyebrow">How long?</span></div>' + spanScale(s) +
+      '<p class="foot">' + FOOT + '</p></div>' +
+      '<div class="footbar"><button class="btn primary large' + (ctaOff(s) ? ' off' : '') + '" type="button">' + ctaLabel(s) + '</button><button class="btn" type="button">Keep training</button></div></div>';
+  }
+
+  /* B: bottom sheet over Today, reason tiles, live "what happens" line */
+  function B(s) {
+    var tiles = ORDER.map(function (k, i) {
+      var r = REASONS[k];
+      return '<button type="button" role="radio" aria-checked="' + (s.reason === k) + '" class="rtile' + (s.reason === k ? ' on' : '') + (i === 4 ? ' wide' : '') + '" data-act="reason" data-v="' + k + '"><span class="tile-ic">' + ic(r.icon) + '</span>' + r.t + '</button>';
+    }).join('');
+    var inj = s.reason === 'injured' ? '<div class="lbl"><span class="eyebrow">Which muscle?</span></div>' + muscleChips(s) : '';
+    var note = s.noteOpen || s.note ? '<div class="sheetgap"></div>' + noteField(s) : '<button type="button" class="moretoggle" data-act="notetoggle"><span>Add a note</span>' + ic('plus') + '</button>';
+    return '<div class="phone" style="--ph:840px">' + todayBehind() +
+      '<div class="sheetwrap"><div class="sheet"><div class="grab"></div>' +
+      '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px"><h2 class="sh-title">Skip today</h2><span class="hint">Friday, Oct 2</span></div>' +
+      '<div class="rtiles" role="radiogroup" aria-label="Why skip?">' + tiles + '</div>' +
+      inj + '<div class="sheetgap"></div>' + effectLine(s) +
+      '<div class="lbl"><span class="eyebrow">How long?</span></div>' + spanScale(s) + '<div class="sheetgap"></div>' + note +
+      '<div class="btnrow" style="margin-top:10px"><button class="btn" type="button">Keep training</button><button class="btn primary' + (ctaOff(s) ? ' off' : '') + '" type="button">' + ctaLabel(s) + '</button></div></div></div></div>';
+  }
+
+  /* C: one tap skips today; "More options" opens span, muscle and note */
+  function C(s) {
+    var rows = ORDER.map(function (k) {
+      var r = REASONS[k];
+      return '<button type="button" class="rrow" data-act="reason" data-v="' + k + '"><span class="tile-ic">' + ic(r.icon) + '</span><span><b>' + r.t + '</b><span class="sub">' + r.blurb + '</span></span><span class="go">' + ic('chevron-right') + '</span></button>';
+    }).join('');
+    var chips = '<div class="chips" role="radiogroup" aria-label="Why skip?" style="display:grid;grid-template-columns:repeat(3,1fr)">' + ORDER.map(function (k, i) {
+      return '<button type="button" role="radio" class="chip' + (s.reason === k ? ' on' : '') + '" data-act="reason" data-v="' + k + '" aria-checked="' + (s.reason === k) + '" style="min-height:44px;padding:6px 4px">' + REASONS[k].short + '</button>';
+    }).join('') + '</div>';
+    var inj = s.reason === 'injured' ? '<div class="lbl"><span class="eyebrow">Which muscle?</span><span class="hint">direct work pauses</span></div>' + muscleChips(s) : '';
+    var body = s.more
+      ? chips + inj + '<div class="lbl"><span class="eyebrow">How long?</span></div>' + spanScale(s) + '<div class="sheetgap"></div>' + noteField(s) + '<div class="sheetgap"></div>' + effectLine(s) +
+        '<div class="btnrow" style="margin-top:12px"><button class="btn" type="button" data-act="less">Back</button><button class="btn primary' + (ctaOff(s) ? ' off' : '') + '" type="button">' + ctaLabel(s) + '</button></div>'
+      : rows + '<button type="button" class="moretoggle" data-act="more" style="margin-top:2px"><span>Longer than today, or add a note</span>' + ic('chevron-down') + '</button><button class="btn plain" type="button">Keep training</button>';
+    var hint = s.more ? 'Pick a reason, then how long.' : (s.flash ? 'Skipped today, ' + REASONS[s.reason].short.toLowerCase() + '. Nothing counts against you. Undo is on Today.' : 'Tap a reason and today rests. Undo is on Today.');
+    return '<div class="phone" style="--ph:840px">' + todayBehind() +
+      '<div class="sheetwrap"><div class="sheet"><div class="grab"></div>' +
+      '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px"><h2 class="sh-title">Skip today</h2><span class="hint">Friday, Oct 2</span></div>' +
+      '<p class="hint" style="margin:0 0 10px">' + hint + '</p>' + body + '</div></div></div>';
+  }
+
+  var OPTS = [
+    ['A', 'Full page, reason rows', A, 'The web page redrawn in the refresh style. Five bordered rows with a blurb each, the muscle chips under Injured, a note, a four-cell span strip, then Skip and Keep training. Nothing is hidden and the blurbs carry the no-guilt copy, but it is a long scroll for what is usually a two-tap decision, and it replaces Today instead of sitting over it.'],
+    ['B', 'Bottom sheet, tiles and a result line', B, 'A sheet over Today. Reasons are compact tiles, the muscle chips appear only under Injured, and a "What happens" line rewrites itself for the picked reason and span, so the copy rule is answered before you commit. The span strip stays visible and the note hides behind "Add a note". Fits one screen for most reasons; the injured state scrolls inside the sheet.'],
+    ['C', 'One tap, details on request', C, 'The fastest path: tapping a reason skips today at once and Undo on Today is the safety net. "Longer than today, or add a note" opens span, muscle and note and swaps in an explicit Skip button. Best for the common sick day or scheduling skip, but a one-tap skip surprises people who expected a confirm, and the long and injured case costs the most taps of the three.']
+  ];
+  var STATES = [
+    { label: 'Sick · this day only', init: { reason: 'sick', span: 'day', muscle: '', note: '', more: false } },
+    { label: 'Injured · 7 days', init: function (o) { return { reason: 'injured', span: '7', muscle: o === 'A' ? '' : 'Quads', note: o === 'C' || o === 'B' ? 'left knee' : '', more: true }; } }
+  ];
+  var FN = { A: A, B: B, C: C };
+
+  M4.ready(function () {
+    var host = document.getElementById('opts');
+    var html = '';
+    STATES.forEach(function (st, si) {
+      html += '<div class="rowlabel">' + st.label + '</div>';
+      OPTS.forEach(function (o) {
+        html += '<div class="opt" data-o="' + o[0] + '" data-si="' + si + '">' +
+          (si === 0 ? '<div class="optcap"><span class="k">' + o[0] + '</span><b>' + o[1] + '</b><p>' + o[3] + '</p></div>' : '<p class="statecap">' + o[0] + ' · ' + o[1] + ' · ' + st.label.toLowerCase() + '</p>') +
+          '<div class="slot"></div></div>';
+      });
+    });
+    host.innerHTML = html;
+    host.querySelectorAll('.opt').forEach(function (el) {
+      var o = el.dataset.o, st = STATES[+el.dataset.si];
+      var init = typeof st.init === 'function' ? st.init(o) : Object.assign({}, st.init);
+      el._s = init;
+      draw(el);
+    });
+    function draw(el) {
+      var slot = el.querySelector('.slot');
+      var sheet = slot.querySelector('.sheet'), top = sheet ? sheet.scrollTop : 0;
+      M4.mount(slot, FN[el.dataset.o](el._s));
+      var sh = slot.querySelector('.sheet'); if (sh) sh.scrollTop = top;
+    }
+    host.addEventListener('click', function (e) {
+      var el = e.target.closest('.opt'); if (!el) return;
+      var t = e.target.closest('[data-act]'); if (!t) return;
+      var s = el._s, a = t.dataset.act, v = t.dataset.v;
+      if (a === 'reason') { s.reason = v; if (el.dataset.o === 'C' && !s.more) { s.flash = true; } if (v !== 'injured') s.muscle = ''; }
+      else if (a === 'span') s.span = v;
+      else if (a === 'muscle') s.muscle = v;
+      else if (a === 'notetoggle') s.noteOpen = true;
+      else if (a === 'more') { s.more = true; }
+      else if (a === 'less') { s.more = false; }
+      else return;
+      draw(el);
+    });
+    host.addEventListener('input', function (e) {
+      if (e.target.dataset.act === 'note') e.target.closest('.opt')._s.note = e.target.value;
+    });
+  });
+</script>
+</body>
+</html>

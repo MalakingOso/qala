@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>M4 status banner options</title>
+<link rel="stylesheet" href="m4-core.css">
+<style>
+  /* A: pinned strip in the head */
+  .banner { display: flex; align-items: center; gap: 10px; margin-top: 10px; padding: 8px 8px 8px 10px; border: 2px solid var(--bd-s); background: var(--recessed); border-radius: 6px; }
+  .banner .bt { flex: 1; min-width: 0; }
+  .banner .bt b { display: block; font-size: 13.5px; font-weight: 650; line-height: 1.25; }
+  .banner .bt span { display: block; font-size: 12px; color: var(--fg-2); line-height: 1.3; }
+  .banner .btn.small { min-height: 40px; padding: 6px 10px; }
+  /* B: status card in the scroll */
+  .sthead { display: flex; align-items: center; gap: 10px; margin: 2px 0 8px; }
+  .sthead h2 { font-size: 16px; }
+  .sthead .meta { margin: 0; }
+  .ask { margin-top: 12px; padding-top: 12px; border-top: 2px solid var(--bd); }
+  .ask b { display: block; font-size: 14px; font-weight: 650; }
+  .ask p { margin: 2px 0 0; font-size: 12.5px; color: var(--fg-2); line-height: 1.4; }
+  /* C: status takes the hero */
+  .bigic { flex: none; display: grid; place-items: center; width: 48px; height: 48px; border-radius: 6px; background: var(--fg); color: var(--on-ink); font-size: 26px; box-shadow: var(--shadow); }
+  .sthero { display: flex; align-items: center; gap: 12px; margin: 4px 0 10px; }
+  .sthero .ptitle { font-size: 30px; }
+  .sthero .meta { margin: 2px 0 0; }
+  .toastline { margin-top: 10px; font-size: 12.5px; color: var(--fg-2); }
+</style>
+</head>
+<body>
+<div class="m4">
+  <div class="m4-top"><a href="m4-index.html">&larr; M4 options</a><div data-themebar></div></div>
+  <h1>Today status banner and "Feeling better?"</h1>
+  <p class="lede"><b>The banner says which status is on and what it means, and carries Undo.</b> Four states: sick, vacation, injured with the muscle named, break. Copy comes from DESIGN 7.18: it says what happens (rests, shifts, guards) and counts nothing against you. Today keeps the rail, so the skipped stages show hollow rings, and "now" has nowhere to land, so no ember dot. An injured day is not a skipped day: the lift still runs with that muscle's direct work off, so its rail keeps normal dots. Undo ends the status.</p>
+
+  <section class="sec">
+    <h2>1. Banner, in context</h2>
+    <p>Sick since Thursday, so today is day two. The hero shows the skip line with See plan; Undo lives on the banner only, because a second Undo in the hero repeats it.</p>
+    <div class="opts" id="ctx"></div>
+  </section>
+
+  <section class="sec">
+    <h2>2. All four states</h2>
+    <p>The top of Today for each state, cropped. Same three options in each column.</p>
+    <div class="opts" id="states"></div>
+  </section>
+
+  <section class="sec">
+    <h2>3. "Feeling better?"</h2>
+    <p>Appears from the second sick day, once per session, never on the skip sheet. "I am better" ends the status and the plan picks up today. "Still sick" dismisses it until the next session. Shown over banner option B.</p>
+    <div class="opts" id="ask"></div>
+  </section>
+</div>
+
+<script src="m4-icons.js"></script>
+<script src="m4-core.js"></script>
+<script>
+  var ic = M4.ic;
+  var ST = {
+    sick:     { icon: 'thermometer', head: 'Sick', when: 'since Thu', line: 'Resting to get well. The plan shifts out.', word: 'sick', skipped: true },
+    vacation: { icon: 'tree-palm', head: 'On vacation', when: 'until Oct 9', line: 'Away from training. The plan shifts out.', word: 'vacation', skipped: true },
+    injured:  { icon: 'bandage', head: 'Injured: quads', when: 'until Oct 9', line: 'Direct quad work is off. Related lifts run at half volume.', word: 'injured', skipped: false },
+    break:    { icon: 'sunset', head: 'On a break', when: 'until Oct 4', line: 'Taking a few days off to recover. The plan holds.', word: 'break', skipped: true }
+  };
+  var LABEL = { sick: 'Sick · day 2', vacation: 'Vacation', injured: 'Injured · quads', break: 'Break' };
+  var CAP = { sick: 'Sick', vacation: 'Vacation', injured: 'Injured', break: 'Break' };
+
+  function dots(st) {
+    return st.skipped ? M4.strip(['done', 'skip', 'skip', 'soft', 'skip', 'soft'], 2) : M4.strip(['done', 'now', 'todo', 'soft', 'todo', 'soft'], 1);
+  }
+  function bannerA(st) {
+    return '<div class="banner" role="status"><span class="tile-ic">' + ic(st.icon) + '</span><div class="bt"><b>' + st.head + ' ' + st.when + '</b><span>' + st.line + '</span></div><button class="btn small" type="button">' + ic('undo-2') + 'Undo</button></div>';
+  }
+  function cardB(st, ask) {
+    return '<div class="pcard" role="status"><div class="sthead"><span class="tile-ic">' + ic(st.icon) + '</span><div><h2>' + st.head + '</h2><p class="meta">' + cap(st.when) + '</p></div></div>' +
+      '<p class="body">' + st.line + '</p>' +
+      '<div class="btnrow"><button class="btn small" type="button" style="flex:none">' + ic('undo-2') + 'Undo</button><button class="btn small plain" type="button" style="flex:none">Change</button></div>' +
+      (ask ? '<div class="ask" data-ask><b>Feeling better?</b><p>You marked yourself sick on Oct 1. Back to training?</p><div class="btnrow"><button class="btn primary small" type="button" data-act="better">I am better</button><button class="btn small" type="button" data-act="still">Still sick</button></div></div>' : '') +
+      '</div>';
+  }
+  function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+  function cardC(st) {
+    var extra = st.skipped ? ' Lower A and the easy run are skipped.' : '';
+    return '<div class="pcard" role="status"><p class="eyebrow">Status</p><div class="sthero"><span class="bigic">' + ic(st.icon) + '</span><div><h2 class="ptitle">' + st.head.replace('On vacation', 'Vacation').replace('On a break', 'Break') + '</h2><p class="meta">' + cap(st.when) + '</p></div></div>' +
+      '<p class="body">' + st.line + extra + '</p>' +
+      '<div class="btnrow"><button class="btn" type="button">' + ic('undo-2') + 'Undo</button><button class="btn" type="button">See plan</button></div></div>';
+  }
+  function hero(st) {
+    if (!st.skipped) {
+      return '<div class="pcard"><p class="eyebrow">Now · warm-up, then lift</p><h2>Lower A · Squat day</h2><p class="meta">Adjusted around your quads</p><p class="body">Direct quad work is off today. Hamstrings and glutes carry the session.</p><button class="btn primary" type="button">Start warm-up</button></div>';
+    }
+    return '<div class="pcard"><p class="eyebrow">Lift · skipped</p><h2>Lower A · Squat day</h2><p class="meta">Skipped today (' + st.word + '). Nothing counts against you.</p><button class="btn primary" type="button">See plan</button></div>';
+  }
+  function run(st) {
+    return st.skipped
+      ? '<div class="pcard"><p class="eyebrow">Then · 6 pm</p><h2>Easy run · 3.0 mi</h2><p class="meta">Skipped today (' + st.word + ').</p></div>'
+      : '<div class="pcard"><p class="eyebrow">Then · 6 pm</p><h2>Easy run · 3.0 mi</h2><p class="meta">Conversational pace · cue every half mile</p></div>';
+  }
+  function readiness() {
+    return '<div class="pcard"><p class="eyebrow">Readiness · 72 of 100</p><h2>A little under average</h2><p class="body">Quads ready Wednesday, everything else is ready now.</p></div>';
+  }
+  function week() {
+    return '<div class="pcard"><p class="eyebrow">This week</p><h2>Plan shifts with your status</h2><div class="week"><i class="f">M</i><i class="f">T</i><i class="f">W</i><i class="f">T</i><i class="t">F</i><i class="p">S</i><i class="p">S</i></div></div>';
+  }
+
+  /* one Today frame: variant A, B or C, a state, options */
+  function frame(v, key, o) {
+    o = o || {};
+    var st = ST[key];
+    var head = '<div class="phead"><p class="eyebrow">Friday · Strength block 2, week 3</p><h2 class="ptitle">Today</h2>' + (v === 'A' ? bannerA(st) : '') + '</div>';
+    var cards;
+    if (v === 'A') cards = hero(st) + run(st) + readiness() + week();
+    else if (v === 'B') cards = cardB(st, o.ask) + hero(st) + run(st) + readiness();
+    else cards = cardC(st) + (st.skipped ? '' : hero(st)) + readiness() + week();
+    var tab = o.slice ? '' : M4.tabbar('Today');
+    var over = '';
+    if (o.modal) over = '<div class="modal"><div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="fb"><h2 id="fb">Feeling better?</h2><p>You marked yourself sick on Oct 1. Back to training?</p><div style="display:grid;gap:10px"><button class="btn primary" type="button">I am better</button><button class="btn" type="button">Still sick</button></div></div></div>';
+    if (o.sheet) over = '<div class="sheetwrap"><div class="sheet"><div class="grab"></div><h2 class="sh-title">Feeling better?</h2><p style="margin:6px 0 14px;font-size:13.5px;color:var(--fg-2);line-height:1.5">You marked yourself sick on Oct 1. If you are back to it, your plan picks up today.</p><div class="btnrow"><button class="btn" type="button">Still sick</button><button class="btn primary" type="button">I am better</button></div><div style="height:6px"></div></div></div>';
+    return '<div class="phone" style="--ph:' + (o.ph || 640) + 'px">' + head + '<div class="band"><div class="pscroll">' + cards + '</div>' + dots(st) + '</div>' + tab + over + '</div>';
+  }
+
+  var OPTS = [
+    ['A', 'Pinned strip in the head', 'A recessed strip under the page title: icon, status and span in one line, what it means in a second, and Undo on the right. It stays on screen while you scroll, so Undo is always in thumb reach, and it needs no notch because the head pins above the rail. The cost is about 70 px of permanent height on a screen that already pins a title and has a tab bar, and the dense two lines are the hardest to read.'],
+    ['B', 'Status card in the scroll', 'The first card on Today, notched around the rail like the others. Icon tile, status, the span as a meta line, the full sentence, then Undo and Change. It reads like the rest of Today and has room for the "Feeling better?" question. It scrolls away, so Undo is a scroll back up, which matters little because Today is short.'],
+    ['C', 'Status takes the hero', 'The status becomes the first hero: a 48 px icon block, the status in Qala Test, one paragraph that also names what is skipped, and Undo next to See plan. The clearest answer to "what is going on today", and the right weight for a sick day when nothing else needs doing. It is the tallest, and it pushes the day\'s cards below the fold, which is wrong for an injured day that still has a lift.']
+  ];
+
+  M4.ready(function () {
+    var ctx = document.getElementById('ctx');
+    var h = '';
+    OPTS.forEach(function (o) {
+      h += '<div class="opt"><div class="optcap"><span class="k">' + o[0] + '</span><b>' + o[1] + '</b><p>' + o[2] + '</p></div>' + frame(o[0], 'sick') + '</div>';
+    });
+    M4.mount(ctx, h);
+
+    var sh = document.getElementById('states'), hs = '';
+    Object.keys(ST).forEach(function (k) {
+      hs += '<div class="rowlabel">' + LABEL[k] + '</div>';
+      OPTS.forEach(function (o) {
+        hs += '<div class="opt"><p class="statecap">' + o[0] + ' · ' + CAP[k] + '</p>' + frame(o[0], k, { slice: true, ph: 380 }) + '</div>';
+      });
+    });
+    M4.mount(sh, hs);
+
+    var ask = document.getElementById('ask');
+    var ha = '';
+    ha += '<div class="opt"><div class="optcap"><span class="k">A</span><b>Dialog</b><p>A centered card over a scrim, as the web does it: title, one sentence, I am better and Still sick stacked. Impossible to miss and one tap either way, but it blocks Today on every session of a sick stretch, and a sick person opening the app for one number gets stopped at the door.</p></div>' + frame('B', 'sick', { modal: true }) + '</div>';
+    ha += '<div class="opt"><div class="optcap"><span class="k">B</span><b>Bottom sheet</b><p>The same question in a sheet from the bottom edge, with the buttons side by side at thumb height and Today still visible above. Softer than a dialog and easy to swipe away, which counts as Still sick. It is still a blocking layer that appears on launch.</p></div>' + frame('B', 'sick', { sheet: true }) + '</div>';
+    ha += '<div class="opt" id="inlineopt"><div class="optcap"><span class="k">C</span><b>Inline in the status card</b><p>No overlay. The question sits inside the sick status card with the two buttons under it. Nothing blocks Today, a skipped session leaves it quietly in place, and "Still sick" folds it away for the session. It can be scrolled past and ignored, which is the point, but a person who never scrolls to it is never asked.</p></div>' + frame('B', 'sick', { ask: true }) + '</div>';
+    M4.mount(ask, ha);
+
+    document.getElementById('inlineopt').addEventListener('click', function (e) {
+      var t = e.target.closest('[data-act]'); if (!t) return;
+      var a = document.querySelector('#inlineopt [data-ask]');
+      if (t.dataset.act === 'still') { a.remove(); }
+      else if (t.dataset.act === 'better') {
+        var card = a.closest('.pcard');
+        card.innerHTML = '<p class="eyebrow">Status</p><h2>Back to training</h2><p class="body">Your plan picks up today. Lower A is ready when you are.</p>';
+        M4.seamAll();
+      }
+      M4.seamAll();
+    });
+  });
+</script>
+</body>
+</html>

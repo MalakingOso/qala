@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>M4 check-in options</title>
+<link rel="stylesheet" href="m4-core.css">
+<style>
+  .srow { display: grid; grid-template-columns: 1fr 176px; gap: 10px; align-items: center; padding: 10px 0; border-top: 1px solid var(--bd); }
+  .srow:first-of-type { border-top: 0; padding-top: 2px; }
+  .srow .sl b { display: block; font-size: 14.5px; font-weight: 650; }
+  .srow .sl .hint { display: block; min-height: 15px; }
+  .tip { display: flex; gap: 10px; align-items: flex-start; margin-top: 12px; padding: 10px 12px; border: 2px solid var(--note-bd); background: var(--note); border-radius: 6px; font-size: 12.5px; color: var(--fg); line-height: 1.45; }
+  .tip .ic { font-size: 18px; color: var(--note-ink); margin-top: 1px; }
+  .tip .eyebrow { color: var(--note-ink); margin: 0 0 1px; }
+  .tip p { margin: 0; }
+
+  /* B: big numeral, stepper, dot track, tiles */
+  .stepper { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .stepper .iconbtn { width: 52px; height: 52px; font-size: 24px; }
+  .bigfig { text-align: center; font-family: var(--serif); font-weight: 700; font-size: 76px; line-height: .95; font-variant-numeric: lining-nums tabular-nums; }
+  .bigfig small { display: block; font: 500 12px var(--sans); color: var(--muted); margin-top: 4px; }
+  .ticks { display: grid; grid-template-columns: repeat(11, 1fr); margin-top: 8px; }
+  .tick { height: 40px; border: 0; background: none; display: grid; place-items: center; padding: 0; }
+  .tick i { width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--bd-s); background: var(--surface); }
+  .tick.fill i { background: var(--fg); border-color: var(--fg); }
+  .tick.on i { width: 20px; height: 20px; box-shadow: 0 0 0 3px var(--surface), 0 0 0 5px var(--fg); }
+  .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .tile { border: 2px solid var(--bd); border-radius: 8px; background: var(--surface); padding: 10px 8px 8px; box-shadow: var(--shadow); min-width: 0; }
+  .tile b { display: block; font-size: 14px; font-weight: 650; }
+  .tile .hint { display: block; margin-bottom: 8px; }
+  .tile .scale button { min-height: 40px; font-size: 13px; }
+  .tile .mean { display: block; margin-top: 6px; min-height: 15px; font-size: 11px; color: var(--fg-2); }
+
+  /* C: slider and accordion */
+  .rangewrap { margin-top: 4px; }
+  .rv { display: flex; align-items: baseline; justify-content: space-between; }
+  .rv .bigfig { font-size: 48px; text-align: left; }
+  input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 44px; background: transparent; margin: 6px 0 0; padding: 0; }
+  input[type=range]::-webkit-slider-runnable-track { height: 10px; border: 2px solid var(--bd-s); background: var(--surface); border-radius: 4px; }
+  input[type=range]::-moz-range-track { height: 10px; border: 2px solid var(--bd-s); background: var(--surface); border-radius: 4px; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 30px; height: 30px; margin-top: -11px; background: var(--fg); border: 3px solid var(--surface); border-radius: 4px; box-shadow: 0 0 0 2px var(--fg), var(--shadow); }
+  input[type=range]::-moz-range-thumb { width: 24px; height: 24px; background: var(--fg); border: 3px solid var(--surface); border-radius: 4px; box-shadow: 0 0 0 2px var(--fg), var(--shadow); }
+  .nums { display: flex; justify-content: space-between; padding: 0 12px; font: 400 10.5px var(--mono); color: var(--muted); margin-top: 2px; }
+  .acc { border: 2px solid var(--bd); border-radius: 8px; overflow: hidden; }
+  .accrow { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 12px; border: 0; background: var(--surface); text-align: left; min-height: 56px; }
+  .accrow + .accopts, .accopts + .accrow { border-top: 1px solid var(--bd); }
+  .accrow .nm { flex: 1; min-width: 0; }
+  .accrow .nm b { display: block; font-size: 14.5px; font-weight: 650; }
+  .accrow .val { font-size: 12px; color: var(--fg-2); text-align: right; max-width: 140px; line-height: 1.25; }
+  .accrow .val.none { color: var(--muted); }
+  .accrow .ic { font-size: 18px; color: var(--muted); transition: transform .15s; }
+  .accrow[aria-expanded="true"] .ic { transform: rotate(180deg); }
+  .accopts { padding: 4px 10px 10px; background: var(--recessed); display: none; }
+  .accopts.open { display: block; }
+  .o4 { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 46px; margin-top: 6px; padding: 6px 12px; border: 2px solid var(--bd); border-radius: 6px; background: var(--surface); font: 600 14px var(--sans); text-align: left; }
+  .o4 .n { flex: none; width: 24px; height: 24px; border-radius: 4px; display: grid; place-items: center; font: 500 12px var(--mono); background: var(--active); }
+  .o4.on { background: var(--fg); border-color: var(--fg); color: var(--on-ink); }
+  .o4.on .n { background: var(--on-ink); color: var(--fg); }
+</style>
+</head>
+<body>
+<div class="m4">
+  <div class="m4-top"><a href="m4-index.html">&larr; M4 options</a><div data-themebar></div></div>
+  <h1>Check-in screen</h1>
+  <p class="lede"><b>Recovery 0 to 10, soreness 1 to 4 for each muscle today's program trains, one line, Save.</b> Reached from the check-in stage on Today. Save writes the check-in, marks the stage done and goes back to Today, where the rail has already moved on. No rail on this screen. Soreness is for the muscles the day trains (five for Lower A, the four fixed ones on a rest day), and the picked cell is ink, never ember. The 0 to 10 strip cannot hold 48 px cells in 390 px, which is what separates the three options.</p>
+
+  <section class="sec">
+    <h2>Lift day and rest day</h2>
+    <p>Row one is Friday, Lower A. Row two is Sunday, a rest day, with the rest-day tip from DECISIONS U10. Cells are tappable. Frames are shown at full length; Save is pinned to the bottom of the screen in the app.</p>
+    <div class="opts" id="opts"></div>
+  </section>
+</div>
+
+<script src="m4-icons.js"></script>
+<script src="m4-core.js"></script>
+<script>
+  var ic = M4.ic;
+  var MEAN = ['never sore', 'healed well before', 'healed just in time', 'still sore now'];
+  var DAYS = {
+    lift: {
+      eyebrow: 'Friday · Lower A', rec: 6, tip: false,
+      muscles: [['Quads', 'trained Mon', 3], ['Glutes', 'trained Mon', 2], ['Hamstrings', 'trained Mon', 0], ['Calves', 'trained Mon', 1], ['Back', 'trained Wed', 0]]
+    },
+    rest: {
+      eyebrow: 'Sunday · Rest day', rec: 7, tip: 'Easy quads: 90 s foam roller each side, then a short walk.',
+      muscles: [['Quads', 'trained Fri', 3], ['Hamstrings', 'trained Fri', 2], ['Back', 'trained Sat', 0], ['Shoulders', 'trained Sat', 1]]
+    }
+  };
+
+  function head(d) {
+    return '<header class="flowhead"><span class="back">' + ic('chevron-left') + '</span><div class="tt"><p class="eyebrow">' + d.eyebrow + '</p><h1 class="ptitle">How are you walking in?</h1></div></header>';
+  }
+  function cells(n0, n1, picked) {
+    var out = '';
+    for (var v = n0; v <= n1; v++) out += '<button type="button" role="radio" data-v="' + v + '" aria-checked="' + (v === picked) + '" class="' + (v === picked ? 'on' : '') + '">' + v + '</button>';
+    return out;
+  }
+  function textField() {
+    return '<section class="card"><label class="fieldhead" for="t"><span class="eyebrow">Anything else?</span><span class="hint">one line</span></label><input class="field" id="t" placeholder="e.g. knee achy, short on time"></section>';
+  }
+  function tip(d) {
+    return d.tip ? '<div class="tip">' + ic('sun') + '<div><p class="eyebrow">Rest-day tip</p><p>' + d.tip + '</p></div></div>' : '';
+  }
+  function foot() {
+    return '<div class="footbar"><button class="btn primary large" type="button">Save check-in</button></div>';
+  }
+
+  /* A: stacked scales, one strip of 11 cells */
+  function A(day) {
+    var d = DAYS[day];
+    var rows = d.muscles.map(function (m) {
+      return '<div class="srow" data-last="' + m[1] + '"><div class="sl"><b>' + m[0] + '</b><span class="hint">' + (m[2] ? MEAN[m[2] - 1] : m[1]) + '</span></div><div class="scale s44" role="radiogroup" aria-label="' + m[0] + ' soreness">' + cells(1, 4, m[2]) + '</div></div>';
+    }).join('');
+    return '<div class="phone auto" data-v="A">' + head(d) + '<div class="flowbody">' +
+      '<section class="card"><div class="fieldhead"><span class="eyebrow">Recovery</span><span class="hint">0 to 10</span></div>' +
+      '<div class="scale" role="radiogroup" aria-label="Recovery">' + cells(0, 10, d.rec) + '</div>' +
+      '<div class="anchors"><span>worse session</span><span>normal</span><span>better</span></div></section>' +
+      '<section class="card"><div class="fieldhead"><span class="eyebrow">Soreness</span><span class="hint">muscles today trains</span></div>' + rows + '</section>' +
+      textField() + tip(d) + '</div>' + foot() + '</div>';
+  }
+
+  /* B: big numeral with stepper and a dot track, soreness as two-column tiles */
+  function B(day) {
+    var d = DAYS[day];
+    var ticks = '';
+    for (var v = 0; v <= 10; v++) ticks += '<button type="button" class="tick' + (v <= d.rec ? ' fill' : '') + (v === d.rec ? ' on' : '') + '" data-v="' + v + '" aria-label="' + v + '"><i></i></button>';
+    var tiles = d.muscles.map(function (m) {
+      return '<div class="tile" data-last="' + m[1] + '"><b>' + m[0] + '</b><span class="hint">' + m[1] + '</span><div class="scale" role="radiogroup" aria-label="' + m[0] + ' soreness">' + cells(1, 4, m[2]) + '</div><span class="mean">' + (m[2] ? MEAN[m[2] - 1] : '') + '</span></div>';
+    }).join('');
+    return '<div class="phone auto" data-v="B">' + head(d) + '<div class="flowbody">' +
+      '<section class="card" data-rec><div class="fieldhead"><span class="eyebrow">Recovery</span><span class="hint">0 to 10</span></div>' +
+      '<div class="stepper"><button type="button" class="iconbtn" data-step="-1" aria-label="Lower">' + ic('minus') + '</button><div class="bigfig"><span data-rv>' + d.rec + '</span><small>of 10</small></div><button type="button" class="iconbtn" data-step="1" aria-label="Higher">' + ic('plus') + '</button></div>' +
+      '<div class="ticks" role="radiogroup" aria-label="Recovery">' + ticks + '</div>' +
+      '<div class="anchors"><span>worse session</span><span>normal</span><span>better</span></div></section>' +
+      '<div class="fieldhead" style="margin:4px 2px 8px"><span class="eyebrow">Soreness</span><span class="hint">muscles today trains</span></div>' +
+      '<div class="tiles" style="margin-bottom:12px">' + tiles + '</div>' +
+      textField() + tip(d) + '</div>' + foot() + '</div>';
+  }
+
+  /* C: slider for recovery, soreness as a summary list that opens to the four meanings */
+  function C(day) {
+    var d = DAYS[day];
+    var nums = '';
+    for (var v = 0; v <= 10; v++) nums += '<span>' + v + '</span>';
+    var rows = d.muscles.map(function (m, i) {
+      var open = i === 0;
+      var opts = MEAN.map(function (w, j) {
+        return '<button type="button" class="o4' + (m[2] === j + 1 ? ' on' : '') + '" data-v="' + (j + 1) + '"><span class="n">' + (j + 1) + '</span>' + w.charAt(0).toUpperCase() + w.slice(1) + '</button>';
+      }).join('');
+      return '<button type="button" class="accrow" aria-expanded="' + open + '"><span class="nm"><b>' + m[0] + '</b><span class="hint">' + m[1] + '</span></span>' +
+        '<span class="val' + (m[2] ? '' : ' none') + '">' + (m[2] ? m[2] + ' · ' + MEAN[m[2] - 1] : 'Tap to answer') + '</span>' + ic('chevron-down') + '</button>' +
+        '<div class="accopts' + (open ? ' open' : '') + '" role="radiogroup" aria-label="' + m[0] + ' soreness">' + opts + '</div>';
+    }).join('');
+    return '<div class="phone auto" data-v="C">' + head(d) + '<div class="flowbody">' +
+      '<section class="card"><div class="fieldhead"><span class="eyebrow">Recovery</span><span class="hint">drag, 0 to 10</span></div>' +
+      '<div class="rangewrap"><div class="rv"><div class="bigfig"><span data-rv>' + d.rec + '</span></div><span class="hint">out of 10</span></div>' +
+      '<input type="range" min="0" max="10" step="1" value="' + d.rec + '" aria-label="Recovery"><div class="nums">' + nums + '</div></div>' +
+      '<div class="anchors" style="margin-top:8px"><span>worse session</span><span>normal</span><span>better</span></div></section>' +
+      '<div class="fieldhead" style="margin:4px 2px 8px"><span class="eyebrow">Soreness</span><span class="hint">muscles today trains</span></div>' +
+      '<div class="acc" style="margin-bottom:12px">' + rows + '</div>' +
+      textField() + tip(d) + '</div>' + foot() + '</div>';
+  }
+
+  var OPTS = [
+    ['A', 'Stacked scales', A, 'The web layout redrawn in the refresh style. Recovery is one strip of 11 cells, about 30 px wide and 48 px tall; each muscle is a row with a 4-cell strip. Everything is visible at once and every answer is one tap, but the 0 to 10 cells are narrower than the 48 px target and the screen runs long.'],
+    ['B', 'Numeral, stepper, tiles', B, 'Recovery gets a hero numeral in Qala Test with 52 px minus and plus buttons for exact steps and a dot track for jumps. Soreness sits in two-column tiles with the meaning under each. The big controls are the easiest to hit one-handed, and the tiles save height, but the 4-cell strips shrink to about 32 px wide.'],
+    ['C', 'Slider and meanings', C, 'Recovery is a drag slider with a live numeral. Soreness is a summary list; tapping a muscle opens the four meanings as full-width rows, so people answer in words, not numbers. Compact and the least ambiguous, but every muscle costs two taps and a slider is the weakest control for hitting an exact number.']
+  ];
+
+  M4.ready(function () {
+    var host = document.getElementById('opts');
+    var html = '<div class="rowlabel">Lift day · Friday, Lower A · five muscles</div>';
+    OPTS.forEach(function (o) {
+      html += '<div class="opt"><div class="optcap"><span class="k">' + o[0] + '</span><b>' + o[1] + '</b><p>' + o[3] + '</p></div>' + o[2]('lift') + '</div>';
+    });
+    html += '<div class="rowlabel">Rest day · Sunday · quads, hamstrings, back, shoulders</div>';
+    OPTS.forEach(function (o) {
+      html += '<div class="opt"><p class="statecap">' + o[0] + ' · ' + o[1] + ' · rest day</p>' + o[2]('rest') + '</div>';
+    });
+    M4.mount(host, html);
+
+    function setRec(frame, v) {
+      v = Math.max(0, Math.min(10, v));
+      frame.querySelectorAll('[data-rv]').forEach(function (n) { n.textContent = v; });
+      frame.querySelectorAll('.tick').forEach(function (t) {
+        var n = +t.dataset.v;
+        t.classList.toggle('fill', n <= v);
+        t.classList.toggle('on', n === v);
+      });
+      var r = frame.querySelector('input[type=range]'); if (r) r.value = v;
+      frame.dataset.rec = v;
+    }
+    host.addEventListener('click', function (e) {
+      var frame = e.target.closest('.phone'); if (!frame) return;
+      var tk = e.target.closest('.tick'); if (tk) setRec(frame, +tk.dataset.v);
+      var st = e.target.closest('[data-step]'); if (st) setRec(frame, (+frame.dataset.rec || +frame.querySelector('[data-rv]').textContent) + +st.dataset.step);
+      var row = e.target.closest('.accrow');
+      if (row) {
+        var panel = row.nextElementSibling;
+        var open = row.getAttribute('aria-expanded') === 'true';
+        row.setAttribute('aria-expanded', !open);
+        panel.classList.toggle('open', !open);
+      }
+      var o = e.target.closest('.o4');
+      if (o) {
+        var panel2 = o.parentNode, r2 = panel2.previousElementSibling, v = +o.dataset.v;
+        panel2.querySelectorAll('.o4').forEach(function (b) { b.classList.toggle('on', b === o); });
+        var val = r2.querySelector('.val'); val.classList.remove('none'); val.textContent = v + ' · ' + MEAN[v - 1];
+        panel2.classList.remove('open'); r2.setAttribute('aria-expanded', 'false');
+      }
+    });
+    host.addEventListener('input', function (e) {
+      if (e.target.matches('input[type=range]')) setRec(e.target.closest('.phone'), +e.target.value);
+    });
+    host.addEventListener('m4pick', function (e) {
+      var scale = e.target, frame = scale.closest('.phone');
+      var holder = scale.closest('.srow, .tile'); if (holder) {
+        var v = +e.detail.value;
+        var h = holder.querySelector('.hint'), mean = holder.querySelector('.mean');
+        if (frame.dataset.v === 'A') h.textContent = MEAN[v - 1]; else if (mean) mean.textContent = MEAN[v - 1];
+      } else if (scale.getAttribute('aria-label') === 'Recovery') { frame.querySelectorAll('[data-rv]').forEach(function (n) { n.textContent = e.detail.value; }); }
+    });
+  });
+</script>
+</body>
+</html>

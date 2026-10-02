@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>M4 training weekdays options</title>
+<link rel="stylesheet" href="m4-core.css">
+<style>
+  .explain { margin: 0 0 12px; font-size: 12.5px; color: var(--fg-2); line-height: 1.4; }
+  .sumline { display: flex; justify-content: space-between; align-items: baseline; margin: 10px 0 0; font-size: 12.5px; }
+  .sumline b { font-weight: 650; }
+  .sumline span { color: var(--muted); }
+  .daystrip button { min-height: 52px; font-size: 12.5px; padding: 0; }
+  .warnline { margin: 8px 0 0; font-size: 12px; color: var(--fg-2); min-height: 17px; }
+  .prev { margin-top: 12px; border: 2px solid var(--bd); border-radius: 6px; overflow: hidden; }
+  .prev .pr { display: grid; grid-template-columns: 52px 22px 1fr; gap: 8px; align-items: center; padding: 8px 10px; background: var(--surface); font-size: 13px; }
+  .prev .pr + .pr { border-top: 1px solid var(--bd); }
+  .prev .pr .dn { font: 500 12px var(--mono); color: var(--fg-2); }
+  .prev .pr .ic { font-size: 16px; color: var(--fg); }
+  .prev .pr.rest { background: var(--recessed); color: var(--muted); }
+  .prev .pr.rest .ic { color: var(--faint); }
+  .prev .pr b { font-weight: 650; }
+  .prev .pr.today .dn { color: var(--accent); font-weight: 500; }
+  .dayrow b { display: block; font-size: 14.5px; font-weight: 650; }
+  .dayrow .sub { display: block; font-size: 12px; color: var(--muted); }
+  .gh .sumr { font-size: 11.5px; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="m4">
+  <div class="m4-top"><a href="m4-index.html">&larr; M4 options</a><div data-themebar></div></div>
+  <h1>Training weekdays</h1>
+  <p class="lede"><b>Seven Mon to Sun toggles, default Mon, Wed, Fri, Sat, with one line saying what it changes.</b> The setting decides which weekdays are lift days; every other weekday is a rest day (three rail stages, the four fixed check-in muscles). The program's days follow in order, so changing it moves upcoming days and leaves logged days alone. The picker lives in Settings under the Training status group, and at least one day stays on. Cells and toggles are tappable.</p>
+
+  <section class="sec">
+    <h2>In Settings</h2>
+    <p>Row one is the default. Row two is the edge: only Saturday is left, so its control is held on and says why.</p>
+    <div class="opts" id="opts"></div>
+  </section>
+</div>
+
+<script src="m4-icons.js"></script>
+<script src="m4-core.js"></script>
+<script>
+  var ic = M4.ic;
+  var SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  var LONG = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  var SEQ = ['Lower A', 'Upper B', 'Lower B', 'Upper A'];
+  var TODAY = 4; // Friday
+  var EXPLAIN = 'Lifts land on these days. The rest are rest days.';
+
+  function summary(days) {
+    var n = days.length;
+    return n + (n === 1 ? ' day' : ' days') + ' a week';
+  }
+  function names(days) { return days.map(function (d) { return SHORT[d]; }).join(', '); }
+
+  function head() {
+    return '<header class="flowhead"><span class="back">' + ic('chevron-left') + '</span><div class="tt"><h1 class="ptitle">Settings</h1></div></header>';
+  }
+  function statusGroup() {
+    return '<div class="group"><div class="gh"><span class="eyebrow">Training status</span></div><div class="grow-row"><div><b style="font-size:14.5px;font-weight:650">Active</b><div class="hint">Training on your usual days.</div></div><button class="btn small" type="button">Change</button></div></div>';
+  }
+  function warn(days) {
+    return days.length === 1 ? 'Keep at least one training day.' : '';
+  }
+
+  /* A: strip of seven ink cells */
+  function A(days) {
+    var cells = SHORT.map(function (s, i) {
+      var on = days.indexOf(i) >= 0;
+      return '<button type="button" role="checkbox" aria-checked="' + on + '" aria-label="' + LONG[i] + '" data-d="' + i + '" class="' + (on ? 'on' : '') + '">' + s + '</button>';
+    }).join('');
+    return '<div class="phone auto" data-o="A">' + head() + '<div class="flowbody">' + statusGroup() +
+      '<div class="group"><div class="gh"><span class="eyebrow">Training days</span></div><div class="pad">' +
+      '<p class="explain">' + EXPLAIN + '</p>' +
+      '<div class="scale daystrip" data-multi role="group" aria-label="Training days">' + cells + '</div>' +
+      '<div class="sumline"><b data-sum>' + summary(days) + '</b><span data-names>' + names(days) + '</span></div>' +
+      '<p class="warnline" data-warn>' + warn(days) + '</p></div></div></div></div>';
+  }
+
+  /* B: the same strip, plus the next seven days it produces */
+  function previewRows(days) {
+    var seq = 0, out = '';
+    for (var k = 0; k < 7; k++) {
+      var d = (TODAY + k) % 7, lift = days.indexOf(d) >= 0;
+      var label = k === 0 ? 'Today' : SHORT[d];
+      out += '<div class="pr ' + (lift ? 'lift' : 'rest') + (k === 0 ? ' today' : '') + '"><span class="dn">' + label + '</span>' + ic(lift ? 'dumbbell' : 'bed') + '<span>' + (lift ? '<b>' + SEQ[seq++ % 4] + '</b>' : 'Rest day') + '</span></div>';
+    }
+    return out;
+  }
+  function B(days) {
+    var cells = SHORT.map(function (s, i) {
+      var on = days.indexOf(i) >= 0;
+      return '<button type="button" role="checkbox" aria-checked="' + on + '" aria-label="' + LONG[i] + '" data-d="' + i + '" class="' + (on ? 'on' : '') + '">' + s + '</button>';
+    }).join('');
+    return '<div class="phone auto" data-o="B">' + head() + '<div class="flowbody">' + statusGroup() +
+      '<div class="group"><div class="gh"><span class="eyebrow">Training days</span><span class="sumr" data-sum>' + summary(days) + '</span></div><div class="pad">' +
+      '<p class="explain">' + EXPLAIN + '</p>' +
+      '<div class="scale daystrip" data-multi role="group" aria-label="Training days">' + cells + '</div>' +
+      '<p class="warnline" data-warn>' + warn(days) + '</p>' +
+      '<div class="eyebrow" style="margin:6px 0 0">Your next seven days</div>' +
+      '<div class="prev" data-prev>' + previewRows(days) + '</div></div></div></div></div>';
+  }
+
+  /* C: seven settings rows with square toggles */
+  function C(days) {
+    var rows = LONG.map(function (l, i) {
+      var on = days.indexOf(i) >= 0, locked = on && days.length === 1;
+      return '<div class="grow-row dayrow"><div><b>' + l + '</b><span class="sub" data-sub="' + i + '">' + (on ? 'Lift day' : 'Rest day') + '</span></div><button type="button" class="tgl" role="switch" aria-checked="' + on + '" aria-label="' + l + '" data-d="' + i + '"' + (locked ? ' disabled' : '') + '></button></div>';
+    }).join('');
+    return '<div class="phone auto" data-o="C">' + head() + '<div class="flowbody">' + statusGroup() +
+      '<div class="group"><div class="gh"><span class="eyebrow">Training days</span><span class="sumr" data-sum>' + summary(days) + '</span></div>' +
+      '<div class="pad" style="padding-bottom:4px"><p class="explain" style="margin:0">' + EXPLAIN + '</p></div>' + rows +
+      '<div class="pad" style="padding-top:8px;padding-bottom:10px"><p class="warnline" data-warn style="margin:0">' + warn(days) + '</p></div></div></div></div>';
+  }
+
+  var OPTS = [
+    ['A', 'Day strip', A, 'One bordered strip of seven cells labelled Mon to Sun, picked days filled with ink like every other picker. The week reads as a pattern in one glance, and a summary line under it names the days. It is the smallest control of the three (cells about 46 px wide) and shows nothing about what the days become.'],
+    ['B', 'Day strip with the next seven days', B, 'The same strip plus a list of the coming week: which program day lands on which weekday and which days rest. It answers "what does this change" with the result, not a sentence, and it updates as you tap. It is the longest of the three and the preview duplicates what Plan already shows.'],
+    ['C', 'Seven rows with toggles', C, 'A normal Settings group: a row per weekday with the square ember toggle on the right and "Lift day" or "Rest day" under the name. Matches every other Settings control, the largest touch targets and the cleanest for TalkBack (seven switches). The weekly pattern is harder to see in seven stacked rows, and the group runs about 440 px tall.']
+  ];
+  var STATES = [{ label: 'Default · Mon, Wed, Fri, Sat', days: [0, 2, 4, 5] }, { label: 'Edge · only Saturday left', days: [5] }];
+  var FN = { A: A, B: B, C: C };
+
+  M4.ready(function () {
+    var host = document.getElementById('opts'), h = '';
+    STATES.forEach(function (st, si) {
+      h += '<div class="rowlabel">' + st.label + '</div>';
+      OPTS.forEach(function (o) {
+        h += '<div class="opt" data-o="' + o[0] + '"><div class="slotcap">' +
+          (si === 0 ? '<div class="optcap"><span class="k">' + o[0] + '</span><b>' + o[1] + '</b><p>' + o[3] + '</p></div>' : '<p class="statecap">' + o[0] + ' · ' + o[1] + '</p>') +
+          '</div><div class="slot"></div></div>';
+      });
+    });
+    host.innerHTML = h;
+    var idx = 0;
+    host.querySelectorAll('.opt').forEach(function (el) {
+      var st = STATES[Math.floor(idx / 3)]; idx++;
+      el._days = st.days.slice();
+      M4.mount(el.querySelector('.slot'), FN[el.dataset.o](el._days));
+    });
+    host.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-d]'); if (!b) return;
+      e.preventDefault();
+      var el = b.closest('.opt'), days = el._days, d = +b.dataset.d, at = days.indexOf(d);
+      var phone = el.querySelector('.phone');
+      if (at >= 0 && days.length === 1) { phone.querySelector('[data-warn]').textContent = 'Keep at least one training day.'; return; }
+      if (at >= 0) days.splice(at, 1); else days.push(d);
+      days.sort(function (a, b2) { return a - b2; });
+      /* repaint controls in place */
+      phone.querySelectorAll('[data-d]').forEach(function (c) {
+        var on = days.indexOf(+c.dataset.d) >= 0;
+        c.setAttribute('aria-checked', on);
+        if (c.classList.contains('tgl')) c.disabled = on && days.length === 1; else c.classList.toggle('on', on);
+        var sub = phone.querySelector('[data-sub="' + c.dataset.d + '"]'); if (sub) sub.textContent = on ? 'Lift day' : 'Rest day';
+      });
+      var sum = phone.querySelector('[data-sum]'); if (sum) sum.textContent = summary(days);
+      var nm = phone.querySelector('[data-names]'); if (nm) nm.textContent = names(days);
+      var pv = phone.querySelector('[data-prev]'); if (pv) { pv.innerHTML = previewRows(days); M4.hydrate(pv); }
+      phone.querySelector('[data-warn]').textContent = warn(days);
+    });
+  });
+</script>
+</body>
+</html>
