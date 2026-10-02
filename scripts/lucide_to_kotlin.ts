@@ -78,6 +78,14 @@ export const ICONS = [
   "list-checks",
   "clock",
   "x",
+  // Skip and status (M4): the five reasons, Undo, and the chevron of a sheet row.
+  "sunset",
+  "tree-palm",
+  "thermometer",
+  "bandage",
+  "calendar-off",
+  "undo-2",
+  "chevron-right",
 ];
 
 type Attrs = Record<string, string | number>;
