@@ -31,3 +31,6 @@ apps/android/**/build/
 apps/android/local.properties
 *.keystore
 *.jks
+
+# Mantaflow wavelet-noise cache Blender writes into the cwd (intro dust render); regenerates on demand.
+waveletNoiseTile.bin

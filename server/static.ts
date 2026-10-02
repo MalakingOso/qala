@@ -1,5 +1,6 @@
-// Static file serving for the built PWA in `apps/web/dist` (PLAN.md 7).
+// Static file serving for the built PWA in `apps/web/dist` (docs/PLAN.md 7).
 // Single-page-app fallback: extensionless app routes serve index.html.
+// Byte ranges (206 / 416) are served too; iOS Safari needs them to play video.
 
 const MIME: Record<string, string> = {
   ".html": "text/html; charset=utf-8",
@@ -13,6 +14,8 @@ const MIME: Record<string, string> = {
   ".jpg": "image/jpeg",
   ".jpeg": "image/jpeg",
   ".webp": "image/webp",
+  ".mp4": "video/mp4",
+  ".webm": "video/webm",
   ".ico": "image/x-icon",
   ".woff2": "font/woff2",
   ".woff": "font/woff",
@@ -48,6 +51,51 @@ export function resolveStaticPath(
     : `${base}/${parts.join("/")}`;
 }
 
+type ByteRange = { start: number; end: number } | "unsatisfiable" | null;
+
+/**
+ * Parse a single `Range: bytes=a-b`, `a-` or `-n` against a file of `size`
+ * bytes. Null means serve the whole file (no header, an unknown unit, several
+ * ranges, or syntax we do not understand, all of which RFC 9110 lets us ignore).
+ */
+export function parseRange(header: string | null, size: number): ByteRange {
+  if (header === null) return null;
+  const m = /^bytes=(\d*)-(\d*)$/.exec(header.trim());
+  if (!m || (m[1] === "" && m[2] === "")) return null;
+  if (m[1] === "") {
+    // suffix: the last n bytes
+    const n = Number(m[2]);
+    if (n === 0 || size === 0) return "unsatisfiable";
+    return { start: Math.max(0, size - n), end: size - 1 };
+  }
+  const start = Number(m[1]);
+  const end = m[2] === "" ? size - 1 : Math.min(Number(m[2]), size - 1);
+  if (start >= size) return "unsatisfiable";
+  if (end < start) return null; // a malformed range is ignored, not an error
+  return { start, end };
+}
+
+async function readSlice(
+  filePath: string,
+  start: number,
+  length: number,
+): Promise<Uint8Array<ArrayBuffer>> {
+  const file = await Deno.open(filePath, { read: true });
+  try {
+    await file.seek(start, Deno.SeekMode.Start);
+    const buf = new Uint8Array(length);
+    let got = 0;
+    while (got < length) {
+      const n = await file.read(buf.subarray(got));
+      if (n === null) break;
+      got += n;
+    }
+    return buf.subarray(0, got) as Uint8Array<ArrayBuffer>;
+  } finally {
+    file.close();
+  }
+}
+
 async function serveFile(
   req: Request,
   filePath: string,
@@ -67,10 +115,36 @@ async function serveFile(
   const headers = new Headers({
     "content-type": contentType(filePath),
     "content-length": String(stat.size),
+    "accept-ranges": "bytes",
     "cache-control": filePath.endsWith("index.html")
       ? "no-cache"
       : "public, max-age=31536000, immutable",
   });
+  // iOS Safari will not play a video without byte ranges. We carry no ETag,
+  // so an If-Range cannot be validated: serve the whole file then.
+  const range = req.headers.has("if-range")
+    ? null
+    : parseRange(req.headers.get("range"), stat.size);
+  if (range === "unsatisfiable") {
+    headers.set("content-range", `bytes */${stat.size}`);
+    headers.set("content-length", "0");
+    return new Response(null, { status: 416, headers });
+  }
+  if (range) {
+    const length = range.end - range.start + 1;
+    headers.set(
+      "content-range",
+      `bytes ${range.start}-${range.end}/${stat.size}`,
+    );
+    headers.set("content-length", String(length));
+    if (req.method === "HEAD") {
+      return new Response(null, { status: 206, headers });
+    }
+    return new Response(await readSlice(filePath, range.start, length), {
+      status: 206,
+      headers,
+    });
+  }
   if (req.method === "HEAD") return new Response(null, { headers });
   const bytes = await Deno.readFile(filePath);
   const body = bytes.buffer.slice(

@@ -20,6 +20,8 @@ along the bar's axis on screen:
 
 `--only ez` renders just the EZ parts (pack them with `pack_sprites.py ... --merge`).
 `--icon` instead renders the app icon candidates and stops (see make_icons.py).
+`--save-blend PATH` (with `--icon`) also writes a .blend of the Qk icon plate, the one
+`build_intro.py` animates. Add `--only icon_qk_both --samples 1 --size 128` to skip the big renders.
 
 Everything is real geometry: the plate profile (raised lip, recessed groove,
 lower field, raised hub ring), raised lettering, steel insert, polished
@@ -42,6 +44,7 @@ args = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 OUT = args[args.index("--out") + 1] if "--out" in args else "/tmp/qala-sprites"
 ONLY = set(args[args.index("--only") + 1].split(",")) if "--only" in args else None
 SAMPLES = int(args[args.index("--samples") + 1]) if "--samples" in args else 96
+SAVE_BLEND = args[args.index("--save-blend") + 1] if "--save-blend" in args else None
 HERE = os.path.dirname(os.path.abspath(__file__))
 FONT_PATH = os.path.join(HERE, "Montserrat-Bold.ttf")
 os.makedirs(OUT, exist_ok=True)
@@ -770,6 +773,11 @@ if "--icon" in args:
         if lettering:
             letter_plate(fr, T - 0.08, lettering, **lay)
         render(name, [fr], make_camera(0.0, 0.0, SIZE / PPI), size=SIZE)
+        if SAVE_BLEND and name == "icon_qk_both":
+            os.makedirs(os.path.dirname(os.path.abspath(SAVE_BLEND)), exist_ok=True)
+            show([fr])
+            bpy.ops.wm.save_as_mainfile(filepath=SAVE_BLEND, copy=True, relative_remap=False)
+            print("saved", SAVE_BLEND)
         delete_tree(fr)
 
     for nm, ttf, c in (("icon_q_mont800", "Montserrat-ExtraBold.ttf", 2.2), ("icon_q_mont800_snug", "Montserrat-ExtraBold.ttf", 1.8)):

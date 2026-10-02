@@ -1805,6 +1805,72 @@ table.data tr.row-link a:focus-visible {
   color: var(--fg-muted);
   margin-top: 24px;
 }
+.landing-header .brand img {
+  display: block;
+  width: 40px;
+  height: 40px;
+}
+.landing-header .brand-name em {
+  font-style: normal;
+  color: var(--accent);
+}
+/* The intro (U26, shared/intro/IntroHero.tsx): the clip is 1080 x 720 rendered on
+ * the page colour, so it is capped at its own width, never upscaled, and has no
+ * edge. The wordmark sits in the band above the plate (intro.json) and fades in
+ * once the plate has settled; sized in cqw so it follows the clip. */
+.intro-hero {
+  container-type: inline-size;
+  position: relative;
+  max-width: 1080px;
+  margin: 24px auto 0;
+  aspect-ratio: 3 / 2;
+  background: var(--bg);
+  overflow: hidden;
+}
+.intro-frame {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* the decoded clip can land a level off the page colour: feather its edges */
+  mask-image:
+    linear-gradient(to right, transparent, #000 8%, #000 92%, transparent),
+    linear-gradient(to bottom, transparent, #000 10%, #000 92%, transparent);
+  mask-composite: intersect;
+  -webkit-mask-image:
+    linear-gradient(to right, transparent, #000 8%, #000 92%, transparent),
+    linear-gradient(to bottom, transparent, #000 10%, #000 92%, transparent);
+  -webkit-mask-composite: source-in;
+}
+.intro-cal {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+.intro-wordmark {
+  position: absolute;
+  left: 50%;
+  transform: translate(-50%, -100%) translateY(4cqw);
+  font-size: 12cqw;
+  line-height: 1;
+  white-space: nowrap;
+  color: var(--fg);
+  opacity: 0;
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.intro-wordmark em {
+  font-style: normal;
+  color: var(--accent);
+}
+.intro-hero.is-settled .intro-wordmark {
+  opacity: 1;
+  transform: translate(-50%, -100%);
+}
+.intro-hero.is-static .intro-wordmark {
+  transition: none;
+}
 /* Device morph (shared/DeviceMorph.tsx). Sizes are in a 450 x 400 box scaled
  * by --u, so the whole drawing follows the column width. The static look
  * (reduced motion) is the laptop. 15s loop: phone, laptop, desktop, app only. */
@@ -3435,6 +3501,9 @@ select.field {
   }
   .landing-header .toolbar-link {
     font-size: 10px;
+  }
+  .intro-hero {
+    margin-top: 8px;
   }
   .landing-hero {
     grid-template-columns: 1fr;

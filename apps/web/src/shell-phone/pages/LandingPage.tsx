@@ -1,20 +1,26 @@
-/* A wide entry page with a real chart preview and entry points to both shells. */
+/* A wide entry page: the plate-drop intro, an editorial hero with a device
+ * morph, and entry points to both shells (DESIGN 7.17). */
 
 import { ArrowRight, TrendingUp } from "../../shared/icons.ts";
 import { DeviceMorph } from "../../shared/DeviceMorph.tsx";
+import { IntroHero } from "../../shared/intro/IntroHero.tsx";
 
 export function LandingPage() {
   return (
     <div className="landing-page">
       <header className="landing-header">
         <a className="brand" href="#/" aria-label="Qala home">
-          <span className="brand-name title">Qala</span>
+          <img src="/icons/icon-96.png" alt="" width={40} height={40} />
+          <span className="brand-name title">
+            Qala<em>.</em>
+          </span>
         </a>
         <a className="toolbar-link" href="#/desktop/overview">
           Training workspace <ArrowRight size={16} />
         </a>
       </header>
       <main>
+        <IntroHero />
         <section className="landing-hero">
           <div className="landing-copy">
             <p className="group-label page-eyebrow">
