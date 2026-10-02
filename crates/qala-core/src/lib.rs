@@ -5,6 +5,7 @@ pub mod adapter;
 pub mod api;
 pub mod availability;
 pub mod derived;
+pub mod derived_api;
 pub mod engine;
 pub mod hlc;
 pub mod js;

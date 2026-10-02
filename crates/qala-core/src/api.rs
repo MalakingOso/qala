@@ -52,17 +52,13 @@ pub fn ok(result: Value) -> ApiResult {
     Ok(serde_json::json!({ "v": VERSION, "result": result }).to_string())
 }
 
-fn todo(name: &str) -> ApiResult {
+pub(crate) fn todo(name: &str) -> ApiResult {
     Err(ApiError::Internal(format!("{name}: not implemented yet")))
 }
 
 pub fn log_session(_request: &str) -> ApiResult { todo("log_session") }
 pub fn calibrate(_request: &str) -> ApiResult { todo("calibrate") }
 pub fn predict_readiness(_request: &str) -> ApiResult { todo("predict_readiness") }
-pub fn build_engine_state(_request: &str) -> ApiResult { todo("build_engine_state") }
-pub fn readiness_summary(_request: &str) -> ApiResult { todo("readiness_summary") }
-pub fn week_load(_request: &str) -> ApiResult { todo("week_load") }
-pub fn weight_trend(_request: &str) -> ApiResult { todo("weight_trend") }
 pub fn classify_day(_request: &str) -> ApiResult { todo("classify_day") }
 pub fn reason_on(_request: &str) -> ApiResult { todo("reason_on") }
 pub fn injured_on(_request: &str) -> ApiResult { todo("injured_on") }
@@ -72,3 +68,6 @@ pub fn hlc_compare(_request: &str) -> ApiResult { todo("hlc_compare") }
 pub fn hlc_tick(_request: &str) -> ApiResult { todo("hlc_tick") }
 pub fn hlc_receive(_request: &str) -> ApiResult { todo("hlc_receive") }
 pub fn hlc_merge_field(_request: &str) -> ApiResult { todo("hlc_merge_field") }
+
+// Adapter and derived numbers live in derived_api.rs.
+pub use crate::derived_api::{build_engine_state, readiness_summary, week_load, weight_trend};
