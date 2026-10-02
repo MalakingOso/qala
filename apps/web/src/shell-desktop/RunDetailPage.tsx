@@ -3,7 +3,8 @@
  * single hard-coded run this page used to always show. */
 
 import { useQala } from "../store/qalaStore.tsx";
-import { Card, StatTiles } from "../shared/ui.tsx";
+import { Card } from "../shared/ui.tsx";
+import { Bunch, PageHeader } from "./parts.tsx";
 import { DenseSeries, SplitsTable } from "../shared/charts/index.ts";
 
 export function RunDetailPage({ id }: { id?: string }) {
@@ -13,35 +14,38 @@ export function RunDetailPage({ id }: { id?: string }) {
   if (!run || !run.run) {
     return (
       <div>
-        <p className="breadcrumb">
-          <a href="#/desktop/running">Running</a>
-        </p>
-        <p>No run logged yet.</p>
+        <PageHeader
+          kicker={<a href="#/desktop/running">← Running</a>}
+          title="No run yet"
+        >
+          <p>No run logged yet.</p>
+        </PageHeader>
       </div>
     );
   }
   const t = run.run.pace.map((_, i) => i * 15);
   return (
     <div>
-      <p className="breadcrumb">
-        <a href="#/desktop/running">Running</a> <span>/</span>{" "}
-        <span>{run.date}</span>
-      </p>
-      <div className="page-head">
-        <div>
-          <h1 className="page-title title">{run.label}</h1>
-          <p className="page-subtitle">
-            {run.date} · {run.run.distanceMi.toFixed(1)} miles
-          </p>
-        </div>
-      </div>
-      <StatTiles
-        tiles={[
-          { value: run.run.distanceMi.toFixed(1), label: "distance · mi" },
-          { value: String(run.sRPE), label: "session RPE" },
-          { value: String(run.run.rtss), label: "running load · rTSS" },
-        ]}
-      />
+      <PageHeader
+        kicker={
+          <>
+            <a href="#/desktop/running">← Running</a>
+            {` \u00b7 ${run.date}`}
+          </>
+        }
+        title={run.label}
+      >
+        <Bunch
+          items={[
+            {
+              value: run.run.distanceMi.toFixed(1),
+              label: "distance \u00b7 mi",
+            },
+            { value: String(run.sRPE), label: "session RPE" },
+            { value: String(run.run.rtss), label: "running load \u00b7 rTSS" },
+          ]}
+        />
+      </PageHeader>
       <p className="kbd-hint">
         Drag to zoom. Pace, heart rate, and elevation share the same time
         window.

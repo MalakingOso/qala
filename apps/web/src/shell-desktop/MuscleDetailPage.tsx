@@ -6,16 +6,19 @@
 import { Card, DataTable } from "../shared/ui.tsx";
 import { DenseSeries } from "../shared/charts/index.ts";
 import { sampleMuscles } from "../store/sample.ts";
+import { PageHeader } from "./parts.tsx";
 
 export function MuscleDetailPage({ muscle }: { muscle: string }) {
   const m = sampleMuscles.find((s) => s.muscle === muscle);
   if (!m) {
     return (
       <div>
-        <p className="breadcrumb">
-          <a href="#/desktop/body">Body</a> <span>/</span> <span>{muscle}</span>
-        </p>
-        <p>No stats for "{muscle}" yet.</p>
+        <PageHeader
+          kicker={<a href="#/desktop/body">← Body</a>}
+          title="Muscle not found"
+        >
+          <p>No stats for "{muscle}" yet.</p>
+        </PageHeader>
       </div>
     );
   }
@@ -24,18 +27,16 @@ export function MuscleDetailPage({ muscle }: { muscle: string }) {
   const pct = (v: number) => `${(v / max) * 100}%`;
   return (
     <div>
-      <p className="breadcrumb">
-        <a href="#/desktop/body">Body</a> <span>/</span> <span>{m.muscle}</span>
-      </p>
-      <div className="page-head">
-        <h1
-          className="page-title title"
-          style={{ textTransform: "capitalize" }}
-        >
-          {m.muscle}
-        </h1>
-        <span className="kbd-hint">ready {m.readyDay}</span>
-      </div>
+      <PageHeader
+        kicker={
+          <>
+            <a href="#/desktop/body">← Body</a>
+            {` \u00b7 ready ${m.readyDay}`}
+          </>
+        }
+        title={m.muscle.charAt(0).toUpperCase() + m.muscle.slice(1)}
+        ruleless
+      />
       <Card title="This week vs band">
         <p className="kbd-hint">
           {total} sets this week · band {m.band[0]}-{m.band[1]}

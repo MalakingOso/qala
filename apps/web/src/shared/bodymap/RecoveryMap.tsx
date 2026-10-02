@@ -74,9 +74,14 @@ function nameOf(view: "front" | "back", id: string) {
   return view === "front" && id === "back" ? "Traps" : NAMES[id] ?? id;
 }
 
-export function RecoveryMap({ muscles, now = new Date() }: {
+export function RecoveryMap({ muscles, now = new Date(), flat, both }: {
   muscles: MuscleRecovery[];
   now?: Date;
+  /** Skip the card chrome when a parent card supplies it. */
+  flat?: boolean;
+  /** Draw the front and back side by side instead of behind a toggle
+   * (the desktop lede, DECISIONS U21). */
+  both?: boolean;
 }) {
   // Longest recovery first: the order you step through with the arrows.
   const order = [...muscles].sort((a, b) => b.hours - a.hours);
@@ -94,30 +99,121 @@ export function RecoveryMap({ muscles, now = new Date() }: {
     pick(order[(i + by + order.length) % order.length].id);
   }
 
-  const parts = BODY[view].parts.filter((p) => p.anchors && byId.has(p.id));
-  parts.sort((a, b) => a.anchors!.l[1] - b.anchors!.l[1]);
-  const callouts = parts.map((p, i) => {
-    const side = i % 2 === 0 ? "l" : "r";
-    const [ax, ay] = p.anchors![side];
-    return { id: p.id, side, ax, ay, y: ay - BOX_H / 2 };
-  });
-  for (const side of ["l", "r"]) {
-    let floor = 2;
-    for (const c of callouts.filter((c) => c.side === side)) {
-      c.y = Math.max(c.y, floor);
-      floor = c.y + BOX_H + GAP;
-    }
-  }
-
   const styles: Record<string, MuscleStyle> = {};
   for (const m of muscles) {
-    styles[m.id] = { ...style(m.hours), stroke: m.id === sel ? "var(--fg)" : undefined };
+    styles[m.id] = {
+      ...style(m.hours),
+      stroke: m.id === sel ? "var(--fg)" : undefined,
+    };
   }
-  const [, , vw, vh] = BODY[view].viewBox.split(" ").map(Number);
+
+  function layout(v: "front" | "back") {
+    const parts = BODY[v].parts.filter((p) => p.anchors && byId.has(p.id));
+    parts.sort((a, b) => a.anchors!.l[1] - b.anchors!.l[1]);
+    const callouts = parts.map((p, i) => {
+      const side = i % 2 === 0 ? "l" : "r";
+      const [ax, ay] = p.anchors![side];
+      return { id: p.id, side, ax, ay, y: ay - BOX_H / 2 };
+    });
+    for (const side of ["l", "r"]) {
+      let floor = 2;
+      for (const c of callouts.filter((c) => c.side === side)) {
+        c.y = Math.max(c.y, floor);
+        floor = c.y + BOX_H + GAP;
+      }
+    }
+    const [, , vw, vh] = BODY[v].viewBox.split(" ").map(Number);
+    return { callouts, vw, vh };
+  }
+
+  function renderMap(v: "front" | "back") {
+    const L = layout(v);
+    return (
+      <svg
+        viewBox={`${-SIDE_W} 0 ${L.vw + 2 * SIDE_W} ${L.vh}`}
+        role="group"
+        aria-label={`Body, ${v} view`}
+        style={{ width: "100%", height: "auto", display: "block" }}
+      >
+        <BodyMap
+          view={v}
+          muscles={styles}
+          label=""
+          asGroup
+          onSelect={(id) => byId.has(id) && pick(id)}
+        />
+        {L.callouts.map((c) => {
+          const m = byId.get(c.id)!;
+          const left = c.side === "l";
+          const bx = left ? -SIDE_W + 2 : L.vw + SIDE_W - 2 - BOX_W;
+          const ex = left ? bx + BOX_W : bx;
+          const active = c.id === sel;
+          const hue = tone(m.hours);
+          return (
+            <g
+              key={c.id}
+              role="button"
+              tabIndex={0}
+              aria-pressed={active}
+              aria-label={`${nameOf(v, c.id)}: ${readyText(m.hours, now)}`}
+              style={{ cursor: "pointer" }}
+              onClick={() => pick(c.id)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  pick(c.id);
+                }
+              }}
+            >
+              <line
+                x1={c.ax}
+                y1={c.ay}
+                x2={ex}
+                y2={c.y + BOX_H / 2}
+                stroke={active ? "var(--fg)" : "var(--fg-muted)"}
+                strokeWidth={active ? 0.8 : 0.5}
+              />
+              <circle cx={c.ax} cy={c.ay} r={1.6} fill="var(--fg)" />
+              <rect
+                x={bx}
+                y={c.y}
+                width={BOX_W}
+                height={BOX_H}
+                rx={4}
+                fill={`color-mix(in srgb, ${hue} 12%, var(--bg-surface))`}
+                stroke={active
+                  ? "var(--fg)"
+                  : `color-mix(in srgb, ${hue} 40%, var(--bg-surface))`}
+                strokeWidth={active ? 1.2 : 0.6}
+              />
+              <text
+                x={bx + 8}
+                y={c.y + 11.5}
+                fontSize={8.5}
+                fontWeight={500}
+                fill="var(--fg)"
+              >
+                {nameOf(v, c.id)}
+              </text>
+              <text
+                x={bx + 8}
+                y={c.y + 21}
+                fontSize={6.5}
+                fill="var(--fg-secondary)"
+              >
+                {readyText(m.hours, now)}
+              </text>
+            </g>
+          );
+        })}
+      </svg>
+    );
+  }
 
   return (
     <ChartShell
       title="Recovery map"
+      flat={flat}
       head={["Muscle", "Ready"]}
       rows={order.map((m) => [NAMES[m.id] ?? m.id, readyText(m.hours, now)])}
       label={`Recovery by muscle. ${
@@ -125,97 +221,37 @@ export function RecoveryMap({ muscles, now = new Date() }: {
           .join(", ")
       }.`}
     >
-      <div style={{ display: "flex", justifyContent: "center", whiteSpace: "nowrap" }}>
-        <SegmentedControl
-          label="Body view"
-          value={view}
-          onPick={setView}
-          options={[{ value: "front", label: "Front" }, {
-            value: "back",
-            label: "Back",
-          }]}
-        />
-      </div>
-      <div style={{ maxWidth: 480, margin: "20px auto 0" }}>
-        <svg
-          viewBox={`${-SIDE_W} 0 ${vw + 2 * SIDE_W} ${vh}`}
-          role="group"
-          aria-label={`Body, ${view} view`}
-          style={{ width: "100%", height: "auto", display: "block" }}
-        >
-          <BodyMap
-            view={view}
-            muscles={styles}
-            label=""
-            asGroup
-            onSelect={(id) => byId.has(id) && pick(id)}
-          />
-          {callouts.map((c) => {
-            const m = byId.get(c.id)!;
-            const left = c.side === "l";
-            const bx = left ? -SIDE_W + 2 : vw + SIDE_W - 2 - BOX_W;
-            const ex = left ? bx + BOX_W : bx;
-            const active = c.id === sel;
-            const hue = tone(m.hours);
-            return (
-              <g
-                key={c.id}
-                role="button"
-                tabIndex={0}
-                aria-pressed={active}
-                aria-label={`${nameOf(view, c.id)}: ${readyText(m.hours, now)}`}
-                style={{ cursor: "pointer" }}
-                onClick={() => pick(c.id)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    pick(c.id);
-                  }
-                }}
-              >
-                <line
-                  x1={c.ax}
-                  y1={c.ay}
-                  x2={ex}
-                  y2={c.y + BOX_H / 2}
-                  stroke={active ? "var(--fg)" : "var(--fg-muted)"}
-                  strokeWidth={active ? 0.8 : 0.5}
-                />
-                <circle cx={c.ax} cy={c.ay} r={1.6} fill="var(--fg)" />
-                <rect
-                  x={bx}
-                  y={c.y}
-                  width={BOX_W}
-                  height={BOX_H}
-                  rx={4}
-                  fill={`color-mix(in srgb, ${hue} 12%, var(--bg-surface))`}
-                  stroke={active
-                    ? "var(--fg)"
-                    : `color-mix(in srgb, ${hue} 40%, var(--bg-surface))`}
-                  strokeWidth={active ? 1.2 : 0.6}
-                />
-                <text
-                  x={bx + 8}
-                  y={c.y + 11.5}
-                  fontSize={8.5}
-                  fontWeight={500}
-                  fill="var(--fg)"
-                >
-                  {nameOf(view, c.id)}
-                </text>
-                <text
-                  x={bx + 8}
-                  y={c.y + 21}
-                  fontSize={6.5}
-                  fill="var(--fg-secondary)"
-                >
-                  {readyText(m.hours, now)}
-                </text>
-              </g>
-            );
-          })}
-        </svg>
-      </div>
+      {both
+        ? (
+          <div className="map-pair">
+            {renderMap("front")}
+            {renderMap("back")}
+          </div>
+        )
+        : (
+          <>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                whiteSpace: "nowrap",
+              }}
+            >
+              <SegmentedControl
+                label="Body view"
+                value={view}
+                onPick={setView}
+                options={[{ value: "front", label: "Front" }, {
+                  value: "back",
+                  label: "Back",
+                }]}
+              />
+            </div>
+            <div style={{ maxWidth: 480, margin: "20px auto 0" }}>
+              {renderMap(view)}
+            </div>
+          </>
+        )}
       <div
         aria-hidden="true"
         style={{
@@ -235,7 +271,11 @@ export function RecoveryMap({ muscles, now = new Date() }: {
                 width: 22,
                 height: 8,
                 background: `var(--rec-${k})`,
-                borderRadius: k === 0 ? "4px 0 0 4px" : k === STEPS.length - 1 ? "0 4px 4px 0" : 0,
+                borderRadius: k === 0
+                  ? "4px 0 0 4px"
+                  : k === STEPS.length - 1
+                  ? "0 4px 4px 0"
+                  : 0,
               }}
             />
           ))}
@@ -244,7 +284,7 @@ export function RecoveryMap({ muscles, now = new Date() }: {
       </div>
       {byId.has(sel) && (
         <DecayPanel
-          name={nameOf(view, sel)}
+          name={both && sel === "back" ? "Back" : nameOf(view, sel)}
           hours={byId.get(sel)!.hours}
           index={order.findIndex((m) => m.id === sel)}
           count={order.length}
@@ -274,7 +314,9 @@ function DecayPanel({ name, hours, index, count, now, onStep }: {
   const y = (v: number) => T + (1 - v / top) * (H - T - B);
   let d = "";
   for (let h = 0; h <= FULL; h += 3) {
-    d += `${h ? "L" : "M"}${x(h).toFixed(1)} ${y(l0 * Math.exp(-h / TAU)).toFixed(1)}`;
+    d += `${h ? "L" : "M"}${x(h).toFixed(1)} ${
+      y(l0 * Math.exp(-h / TAU)).toFixed(1)
+    }`;
   }
   const day = (h: number) =>
     new Date(now.getTime() + h * 3600_000).toLocaleDateString("en-US", {
@@ -282,6 +324,7 @@ function DecayPanel({ name, hours, index, count, now, onStep }: {
     });
   return (
     <div
+      className="decay-panel"
       style={{
         marginTop: 24,
         borderTop: "var(--border-width, 1px) solid var(--border)",
@@ -297,17 +340,38 @@ function DecayPanel({ name, hours, index, count, now, onStep }: {
       }}
       onPointerCancel={() => (down.current = null)}
     >
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-        <button type="button" className="link-btn" style={{ fontSize: 28, lineHeight: 1, padding: "4px 14px" }} aria-label="Previous muscle" onClick={() => onStep(-1)}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 8,
+        }}
+      >
+        <button
+          type="button"
+          className="link-btn"
+          style={{ fontSize: 28, lineHeight: 1, padding: "4px 14px" }}
+          aria-label="Previous muscle"
+          onClick={() => onStep(-1)}
+        >
           ‹
         </button>
         <div style={{ textAlign: "center" }}>
-          <div className="title" style={{ fontSize: 18, color: "var(--fg)" }}>{name}</div>
+          <div className="title" style={{ fontSize: 18, color: "var(--fg)" }}>
+            {name}
+          </div>
           <div className="kbd-hint">
             {readyText(hours, now)} · {index + 1} of {count}
           </div>
         </div>
-        <button type="button" className="link-btn" style={{ fontSize: 28, lineHeight: 1, padding: "4px 14px" }} aria-label="Next muscle" onClick={() => onStep(1)}>
+        <button
+          type="button"
+          className="link-btn"
+          style={{ fontSize: 28, lineHeight: 1, padding: "4px 14px" }}
+          aria-label="Next muscle"
+          onClick={() => onStep(1)}
+        >
           ›
         </button>
       </div>
@@ -346,9 +410,31 @@ function DecayPanel({ name, hours, index, count, now, onStep }: {
           Good to train
         </text>
         <line x1={L} x2={L} y1={T} y2={H - B} stroke="var(--fg-faint)" />
-        <line x1={L} x2={W - R} y1={H - B} y2={H - B} stroke="var(--fg-faint)" />
-        <text x={L - 6} y={T + 8} fontSize={9} textAnchor="end" fill="var(--fg-muted)">High</text>
-        <text x={L - 6} y={H - B - 2} fontSize={9} textAnchor="end" fill="var(--fg-muted)">Low</text>
+        <line
+          x1={L}
+          x2={W - R}
+          y1={H - B}
+          y2={H - B}
+          stroke="var(--fg-faint)"
+        />
+        <text
+          x={L - 6}
+          y={T + 8}
+          fontSize={9}
+          textAnchor="end"
+          fill="var(--fg-muted)"
+        >
+          High
+        </text>
+        <text
+          x={L - 6}
+          y={H - B - 2}
+          fontSize={9}
+          textAnchor="end"
+          fill="var(--fg-muted)"
+        >
+          Low
+        </text>
         <text
           transform={`translate(9 ${(T + H - B) / 2}) rotate(-90)`}
           fontSize={10}
@@ -357,7 +443,13 @@ function DecayPanel({ name, hours, index, count, now, onStep }: {
         >
           Fatigue
         </text>
-        <path d={d} fill="none" stroke={tone(hours)} strokeWidth={2.5} strokeLinecap="round" />
+        <path
+          d={d}
+          fill="none"
+          stroke={tone(hours)}
+          strokeWidth={2.5}
+          strokeLinecap="round"
+        />
         <circle cx={x(0)} cy={y(l0)} r={4} fill={tone(hours)} />
         {!ready && (
           <g>
@@ -393,7 +485,10 @@ function DecayPanel({ name, hours, index, count, now, onStep }: {
           </text>
         ))}
       </svg>
-      <p className="kbd-hint" style={{ margin: "12px 0 0", textAlign: "center" }}>
+      <p
+        className="kbd-hint"
+        style={{ margin: "12px 0 0", textAlign: "center" }}
+      >
         Tap a muscle or swipe to compare.
       </p>
     </div>

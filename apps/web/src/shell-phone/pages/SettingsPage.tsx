@@ -11,15 +11,19 @@ import {
   Toggle,
 } from "../../shared/ui.tsx";
 
-export function SettingsPage() {
+/** `embedded` drops the page title, for the desktop shell that supplies its own
+ * header (DECISIONS U21). */
+export function SettingsPage({ embedded }: { embedded?: boolean } = {}) {
   const { settings: s, updateSettings: u } = useQala();
   const flipEq = (k: keyof typeof s.equipment) =>
     u((p) => ({ ...p, equipment: { ...p.equipment, [k]: !p.equipment[k] } }));
   return (
     <div>
-      <div className="page-head">
-        <h1 className="page-title title">Settings</h1>
-      </div>
+      {embedded ? null : (
+        <div className="page-head">
+          <h1 className="page-title title">Settings</h1>
+        </div>
+      )}
       <Group label="Units">
         <GroupRow>
           <span>Weight</span>

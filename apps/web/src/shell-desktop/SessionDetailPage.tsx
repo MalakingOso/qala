@@ -5,6 +5,7 @@
 import { useState } from "react";
 import { useQala } from "../store/qalaStore.tsx";
 import { Card, DataTable } from "../shared/ui.tsx";
+import { Bunch, PageHeader } from "./parts.tsx";
 
 export function SessionDetailPage({ id }: { id: string }) {
   const { sessions, setSessionNotes, dismissSessionFlag } = useQala();
@@ -15,41 +16,47 @@ export function SessionDetailPage({ id }: { id: string }) {
   if (!session) {
     return (
       <div>
-        <p className="breadcrumb">
-          <a href="#/desktop/history">History</a>
-        </p>
-        <p>No session "{id}" on file.</p>
+        <PageHeader
+          kicker={<a href="#/desktop/history">← History</a>}
+          title="Session not found"
+        >
+          <p>No session "{id}" on file.</p>
+        </PageHeader>
       </div>
     );
   }
   if (session.type === "run") {
     return (
       <div>
-        <p className="breadcrumb">
-          <a href="#/desktop/history">History</a>
-        </p>
-        <p>
-          {session.date} · {session.label} is a run — see it on{" "}
-          <a href={`#/desktop/running/${session.id}`}>the Running page</a>.
-        </p>
+        <PageHeader
+          kicker={<a href="#/desktop/history">← History</a>}
+          title={`${session.date} \u00b7 ${session.label}`}
+        >
+          <p>
+            That one is a run. See it on{" "}
+            <a href={`#/desktop/running/${session.id}`}>the Running page</a>.
+          </p>
+        </PageHeader>
       </div>
     );
   }
 
   return (
     <div>
-      <p className="breadcrumb">
-        <a href="#/desktop/history">History</a> <span>/</span>{" "}
-        <span>{session.date}</span>
-      </p>
-      <div className="page-head">
-        <h1 className="page-title title">
-          {session.date} · {session.label}
-        </h1>
-        <span className="kbd-hint">
-          {((session.loadLb ?? 0) / 1000).toFixed(1)}k lb · sRPE {session.sRPE}
-        </span>
-      </div>
+      <PageHeader
+        kicker={<a href="#/desktop/history">← History</a>}
+        title={`${session.date} \u00b7 ${session.label}`}
+      >
+        <Bunch
+          items={[
+            {
+              value: (session.loadLb ?? 0).toLocaleString("en-US"),
+              label: "lb lifted",
+            },
+            { value: String(session.sRPE), label: "session RPE" },
+          ]}
+        />
+      </PageHeader>
       {session.flagged
         ? (
           <div className="banner">

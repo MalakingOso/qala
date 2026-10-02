@@ -107,11 +107,12 @@ export function FatigueByMuscle({ muscles }: {
 }
 
 export function RunSpark(
-  { points, label }: { points: number[]; label: string },
+  { points, label, flat }: { points: number[]; label: string; flat?: boolean },
 ) {
   return (
     <ChartShell
       title="Running fitness"
+      flat={flat}
       head={["Week", "VDOT"]}
       rows={points.map((p, i) => [`w${i + 1}`, p.toFixed(1)])}
       label={label}
@@ -132,7 +133,11 @@ export function RunSpark(
  * Bars from zero would draw 8:58 and 9:11 as near-identical lengths and
  * make the slowest mile the longest bar. */
 export function SplitsTable(
-  { splits }: { splits: { mile: number; sec: number }[] },
+  { splits, title = "Splits", flat }: {
+    splits: { mile: number; sec: number }[];
+    title?: string;
+    flat?: boolean;
+  },
 ) {
   const avg = splits.length
     ? splits.reduce((a, s) => a + s.sec, 0) / splits.length
@@ -140,7 +145,8 @@ export function SplitsTable(
   const maxDev = Math.max(5, ...splits.map((s) => Math.abs(s.sec - avg)));
   return (
     <ChartShell
-      title="Splits"
+      title={title}
+      flat={flat}
       head={["Split", "Pace", "vs average"]}
       rows={splits.map((s) => [
         `Mile ${s.mile}`,

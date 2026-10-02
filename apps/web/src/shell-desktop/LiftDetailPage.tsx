@@ -5,34 +5,42 @@
 import { Card, DataTable } from "../shared/ui.tsx";
 import { BulletNl85, DenseSeries } from "../shared/charts/index.ts";
 import { sampleLifts } from "../store/sample.ts";
+import { Bunch, PageHeader } from "./parts.tsx";
 
 export function LiftDetailPage({ id }: { id: string }) {
   const lift = sampleLifts.find((l) => l.id === id);
   if (!lift) {
     return (
       <div>
-        <p className="breadcrumb">
-          <a href="#/desktop/lifts">Lifts</a> <span>/</span> <span>{id}</span>
-        </p>
-        <p>No stats for "{id}" yet.</p>
+        <PageHeader
+          kicker={<a href="#/desktop/lifts">← Lifts</a>}
+          title="Lift not found"
+        >
+          <p>No stats for "{id}" yet.</p>
+        </PageHeader>
       </div>
     );
   }
   const x = lift.fullHistory.map((h) => h.session);
   return (
     <div>
-      <p className="breadcrumb">
-        <a href="#/desktop/lifts">Lifts</a> <span>/</span>{" "}
-        <span>{lift.name}</span>
-      </p>
-      <div className="page-head">
-        <h1 className="page-title title">{lift.name}</h1>
-        <span className="kbd-hint">
-          e1RM {lift.e1rm} · Kalman {lift.kalman} ·{" "}
-          {lift.weekDeltaPct >= 0 ? "+" : ""}
-          {lift.weekDeltaPct}% this block
-        </span>
-      </div>
+      <PageHeader
+        kicker={<a href="#/desktop/lifts">← Lifts</a>}
+        title={lift.name}
+      >
+        <Bunch
+          items={[
+            { value: String(lift.e1rm), label: "lb e1RM" },
+            { value: String(lift.kalman), label: "Kalman" },
+            {
+              value: `${lift.weekDeltaPct >= 0 ? "+" : "\u2212"}${
+                Math.abs(lift.weekDeltaPct)
+              }%`,
+              label: "this block",
+            },
+          ]}
+        />
+      </PageHeader>
       <DenseSeries
         title={`${lift.name} e1RM, full history`}
         x={x}

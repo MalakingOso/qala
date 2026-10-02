@@ -1,30 +1,13 @@
-/* Desktop shell (PLAN 9, DESIGN 7.15-7.16, reworked for the "more than an
- * author tool" pass): a Stats group (Overview, Lifts, Running, Body,
- * History) drives the desktop's stats-first landing; an Author group below
- * it keeps the original program editor, exercise DB, coach memory and
- * calibration tools. Routes take an optional id segment
- * (`#/desktop/lifts/squat`) for drill-down detail pages. Shares theme, type,
- * icons and charts with the phone shell. */
+/* Desktop shell (PLAN 9, DESIGN 7.15-7.16, DECISIONS U21): the refined look.
+ * A numbered sidebar under the Qala mark (Training, Workspace, Settings), a
+ * toolbar with search and a week switcher, and pages that open on a lede card.
+ * Routes take an optional id segment (`#/desktop/lifts/squat`) for drill-down
+ * detail pages. Shares theme, charts and data with the phone shell; every
+ * desktop-only rule lives in theme/desktop.css under `.page-desktop`. */
 
 import { useEffect, useState } from "react";
 import { useQala } from "../store/qalaStore.tsx";
 import { OfflineBadge } from "../shared/ui.tsx";
-import { SettingsPage } from "../shell-phone/pages/SettingsPage.tsx";
-import {
-  Activity,
-  Cylinder,
-  Dumbbell,
-  History,
-  LayoutGrid,
-  ListChecks,
-  Menu,
-  MessageSquareText,
-  Settings,
-  SlidersHorizontal,
-  Smartphone,
-  SportShoe,
-  X,
-} from "../shared/icons.ts";
 import { OverviewPage } from "./OverviewPage.tsx";
 import { LiftsPage } from "./LiftsPage.tsx";
 import { LiftDetailPage } from "./LiftDetailPage.tsx";
@@ -38,50 +21,60 @@ import { ExerciseDbPage } from "./ExerciseDbPage.tsx";
 import { CoachMemoryPage } from "./CoachMemoryPage.tsx";
 import { CalibrationPage } from "./CalibrationPage.tsx";
 import { RunDetailPage } from "./RunDetailPage.tsx";
-
-const STATS_NAV = [
-  { id: "overview", label: "Overview", icon: LayoutGrid },
-  { id: "lifts", label: "Lifts", icon: Dumbbell },
-  { id: "running", label: "Running", icon: SportShoe },
-  { id: "body", label: "Body", icon: Activity },
-  { id: "history", label: "History", icon: History },
-];
-
-const AUTHOR_NAV = [
-  { id: "programs", label: "Programs", icon: ListChecks },
-  { id: "exercises", label: "Exercises", icon: Cylinder },
-  { id: "memory", label: "Coach memory", icon: MessageSquareText },
-  { id: "calibration", label: "Calibration", icon: SlidersHorizontal },
-];
+import { DesktopSettingsPage } from "./SettingsDesktopPage.tsx";
+import { type NavItem, TRAINING_NAV, WORKSPACE_NAV } from "./nav.ts";
+import { ToolbarSearch } from "./ToolbarSearch.tsx";
+import { useWeekFocus, WeekFocusProvider } from "./weekFocus.tsx";
 
 function NavGroup(
-  { label, items, part }: {
-    label: string;
-    items: typeof STATS_NAV;
-    part: string;
-  },
+  { label, items, part }: { label: string; items: NavItem[]; part: string },
 ) {
   return (
-    <div className="sidebar-group">
-      <span className="sidebar-group-label">{label}</span>
-      {items.map((n) => {
-        const Icon = n.icon;
-        const active = part === n.id;
-        return (
-          <a
-            key={n.id}
-            href={`#/desktop/${n.id}`}
-            aria-current={active ? "page" : undefined}
-          >
-            <Icon size={18} /> {n.label}
-          </a>
-        );
-      })}
+    <div className="dx-group">
+      <span className="dx-group-label">{label}</span>
+      {items.map((n) => (
+        <a
+          key={n.id}
+          className="dx-nav"
+          href={`#/desktop/${n.id}`}
+          aria-current={part === n.id ? "page" : undefined}
+        >
+          <span className="no" aria-hidden="true">{n.no}</span>
+          {n.label}
+        </a>
+      ))}
     </div>
   );
 }
 
-export function DesktopShell({ route }: { route: string }) {
+/** Previous / next week and the range in view. It moves the focus the
+ * Overview ribbon follows; on other pages it only reads. */
+function WeekSwitcher() {
+  const { focus, step, canStep } = useWeekFocus();
+  return (
+    <div className="dx-week" role="group" aria-label="Week in focus">
+      <button
+        type="button"
+        aria-label="Previous week"
+        disabled={!canStep(-1)}
+        onClick={() => step(-1)}
+      >
+        {"←"}
+      </button>
+      <span aria-live="polite">{focus.range.replace("-", "–")}</span>
+      <button
+        type="button"
+        aria-label="Next week"
+        disabled={!canStep(1)}
+        onClick={() => step(1)}
+      >
+        {"→"}
+      </button>
+    </div>
+  );
+}
+
+function Shell({ route }: { route: string }) {
   const { online, outbox } = useQala();
   const [navOpen, setNavOpen] = useState(false);
   useEffect(() => setNavOpen(false), [route]);
@@ -120,11 +113,7 @@ export function DesktopShell({ route }: { route: string }) {
       body = <ProgramEditorPage />;
       break;
     case "settings":
-      body = (
-        <div className="desktop-settings">
-          <SettingsPage />
-        </div>
-      );
+      body = <DesktopSettingsPage />;
       break;
     default:
       body = <OverviewPage />;
@@ -142,69 +131,68 @@ export function DesktopShell({ route }: { route: string }) {
       >
         Skip to content
       </a>
-      <div className="desktop-layout">
+      <div className="dx-layout">
         <nav
-          className={`sidebar${navOpen ? " is-open" : ""}`}
+          className={`dx-sidebar${navOpen ? " is-open" : ""}`}
           id="desktop-navigation"
           aria-label="Desktop"
         >
           <a
-            className="brand sidebar-brand"
+            className="dx-lockup"
             href="#/desktop/overview"
             aria-label="Qala overview"
           >
-            <span className="brand-name title">Qala</span>
+            <img src="/icons/icon-96.png" alt="" width={40} height={40} />
+            <span>
+              <span className="dx-brand title">
+                Qala<em>.</em>
+              </span>
+              <span className="dx-brand-sub">training record</span>
+            </span>
           </a>
-          <NavGroup label="Training" items={STATS_NAV} part={part} />
-          <NavGroup label="Workspace" items={AUTHOR_NAV} part={part} />
-          <div className="sidebar-foot">
-            <a
-              href="#/desktop/settings"
-              aria-current={part === "settings" ? "page" : undefined}
-            >
-              <Settings size={18} /> Settings
-            </a>
-            <a href="#/phone/today">
-              <Smartphone size={18} /> Workout view
-            </a>
-            <div className="sidebar-status">
-              <OfflineBadge online={online} pending={outbox.length} />
-            </div>
+          <NavGroup label="Training" items={TRAINING_NAV} part={part} />
+          <NavGroup label="Workspace" items={WORKSPACE_NAV} part={part} />
+          <a
+            className="dx-nav set"
+            href="#/desktop/settings"
+            aria-current={part === "settings" ? "page" : undefined}
+          >
+            <span className="no" aria-hidden="true" />
+            Settings
+          </a>
+          <div className="dx-foot">
+            <OfflineBadge online={online} pending={outbox.length} />
           </div>
         </nav>
-        <div className="desktop-workspace">
-          <header className="desktop-toolbar">
-            <div className="toolbar-location">
-              <button
-                className="icon-btn nav-menu"
-                type="button"
-                aria-label={navOpen ? "Close navigation" : "Open navigation"}
-                aria-expanded={navOpen}
-                aria-controls="desktop-navigation"
-                onClick={() => setNavOpen((v) => !v)}
-              >
-                {navOpen ? <X size={20} /> : <Menu size={20} />}
-              </button>
-              <span className="group-label">
-                {AUTHOR_NAV.some((n) => n.id === part)
-                  ? "Workspace"
-                  : "Training"}
-              </span>
-              <span className="toolbar-divider" aria-hidden="true">/</span>
-              <span>
-                {[...STATS_NAV, ...AUTHOR_NAV].find((n) => n.id === part)
-                  ?.label ?? (part === "settings" ? "Settings" : "Overview")}
-              </span>
-            </div>
-            <a className="toolbar-link" href="#/desktop/programs">
-              <ListChecks size={16} /> Your program
-            </a>
+        <div className="dx-main">
+          <header className="dx-bar">
+            <button
+              className="dx-menu"
+              type="button"
+              aria-label={navOpen ? "Close navigation" : "Open navigation"}
+              aria-expanded={navOpen}
+              aria-controls="desktop-navigation"
+              onClick={() => setNavOpen((v) => !v)}
+            >
+              {navOpen ? "Close" : "Menu"}
+            </button>
+            <ToolbarSearch />
+            <WeekSwitcher />
+            <a className="dx-bar-link" href="#/phone/today">Workout view</a>
           </header>
-          <main id="desktop-content" className="desktop-content" tabIndex={-1}>
+          <main id="desktop-content" className="dx-body" tabIndex={-1}>
             {body}
           </main>
         </div>
       </div>
     </div>
+  );
+}
+
+export function DesktopShell({ route }: { route: string }) {
+  return (
+    <WeekFocusProvider>
+      <Shell route={route} />
+    </WeekFocusProvider>
   );
 }

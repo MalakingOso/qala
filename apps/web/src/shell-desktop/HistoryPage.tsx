@@ -1,36 +1,41 @@
-/* Desktop history: every logged session, linking into its full detail
- * (lift sessions to SessionDetailPage, runs to RunDetailPage). Previously a
- * flat table of unlinked sample text. */
+/* Desktop history (DECISIONS U21): every logged session in one dense table,
+ * filterable, with the coach's flag and your note under the row they belong
+ * to. Rows link into SessionDetailPage (lifts) and RunDetailPage (runs). */
 
+import { useState } from "react";
 import { useQala } from "../store/qalaStore.tsx";
-import { Card, DataTable } from "../shared/ui.tsx";
+import { FilterChips, PageHeader } from "./parts.tsx";
+import { SessionsTable } from "./SessionsTable.tsx";
+import {
+  filterSessions,
+  SESSION_FILTERS,
+  type SessionFilter,
+} from "./sessions.ts";
 
 export function DesktopHistoryPage() {
   const { sessions } = useQala();
-  const rows = sessions.map((s) => [
-    s.date,
-    `${s.label}${
-      s.type === "run" ? ` · ${s.run!.distanceMi.toFixed(1)} mi` : ""
-    }`,
-    s.type === "lift" ? `${((s.loadLb ?? 0) / 1000).toFixed(1)}k lb` : "—",
-    String(s.sRPE),
-    s.prCount > 0 ? `${s.prCount} PR` : (s.notes ? "note" : ""),
-  ]);
-  const rowHrefs = sessions.map((s) =>
-    s.type === "run" ? `#/desktop/running/${s.id}` : `#/desktop/history/${s.id}`
-  );
+  const [filter, setFilter] = useState<SessionFilter>("all");
+  const shown = filterSessions(sessions, filter);
+  const prs = sessions.reduce((n, s) => n + s.prCount, 0);
+  const first = sessions[sessions.length - 1];
+  const last = sessions[0];
   return (
     <div>
-      <div className="page-head">
-        <h1 className="page-title title">History</h1>
-      </div>
-      <Card>
-        <DataTable
-          head={["Date", "Session", "Load", "sRPE", "Notes"]}
-          rows={rows}
-          rowHrefs={rowHrefs}
+      <PageHeader
+        kicker={`${first?.date ?? ""} to ${
+          last?.date ?? ""
+        } · ${sessions.length} sessions · ${prs} ${prs === 1 ? "PR" : "PRs"}`}
+        title="History"
+      >
+        <FilterChips
+          label="Filter sessions"
+          options={SESSION_FILTERS}
+          value={filter}
+          onPick={setFilter}
+          aside={`${shown.length} of ${sessions.length} sessions`}
         />
-      </Card>
+        <SessionsTable sessions={shown} detail />
+      </PageHeader>
     </div>
   );
 }
