@@ -1,0 +1,24 @@
+{
+  "fn": "hlc_compare",
+  "version": 1,
+  "oracle": "manual",
+  "reason": "Hand-worked: total order by (wallMs, counter, nodeId). The expected value is -1, 0 or 1 for a compared with b. The string form must sort the same way, so a replayer also checks the order of the two toString forms.",
+  "notes": "input {a, b} are clock values. Node ids compare as strings by character (ASCII only, so byte order equals UTF-16 order). Clock values are {wallMs, counter, nodeId}. Canonical range: wallMs 0..=9999999999999, counter 0..=99999, nodeId non-empty ASCII graphic. W is 1790911800000 (2026-10-02T03:30:00Z). A day of drift is 86400000 ms. Results are {\"ok\": value} or {\"error\": kind}; error kinds are invalid_format, invalid_node_id, wall_out_of_range, counter_overflow, clock_drift.",
+  "cases": [
+    {"name": "wall time decides over counter and node", "input": {"a": {"wallMs": 1790911800000, "counter": 99999, "nodeId": "z"}, "b": {"wallMs": 1790911800001, "counter": 0, "nodeId": "a"}}, "expected": -1},
+    {"name": "wall time decides, reversed", "input": {"a": {"wallMs": 1790911800001, "counter": 0, "nodeId": "a"}, "b": {"wallMs": 1790911800000, "counter": 99999, "nodeId": "z"}}, "expected": 1},
+    {"name": "same wall: counter decides over node", "input": {"a": {"wallMs": 1790911800000, "counter": 1, "nodeId": "n2"}, "b": {"wallMs": 1790911800000, "counter": 2, "nodeId": "n1"}}, "expected": -1},
+    {"name": "same wall and counter: node decides", "input": {"a": {"wallMs": 1790911800000, "counter": 3, "nodeId": "n1"}, "b": {"wallMs": 1790911800000, "counter": 3, "nodeId": "n2"}}, "expected": -1},
+    {"name": "node decide, reversed", "input": {"a": {"wallMs": 1790911800000, "counter": 3, "nodeId": "n2"}, "b": {"wallMs": 1790911800000, "counter": 3, "nodeId": "n1"}}, "expected": 1},
+    {"name": "equal clocks", "input": {"a": {"wallMs": 1790911800000, "counter": 3, "nodeId": "n1"}, "b": {"wallMs": 1790911800000, "counter": 3, "nodeId": "n1"}}, "expected": 0},
+    {"name": "counter compares as a number, 9 before 10", "input": {"a": {"wallMs": 1790911800000, "counter": 9, "nodeId": "n1"}, "b": {"wallMs": 1790911800000, "counter": 10, "nodeId": "n1"}}, "expected": -1},
+    {"name": "counter at the cap beats 99998", "input": {"a": {"wallMs": 1790911800000, "counter": 99999, "nodeId": "n1"}, "b": {"wallMs": 1790911800000, "counter": 99998, "nodeId": "n1"}}, "expected": 1},
+    {"name": "a node id that is a prefix sorts first", "input": {"a": {"wallMs": 1790911800000, "counter": 3, "nodeId": "n1"}, "b": {"wallMs": 1790911800000, "counter": 3, "nodeId": "n10"}}, "expected": -1},
+    {"name": "node ids compare by character, n10 before n2", "input": {"a": {"wallMs": 1790911800000, "counter": 3, "nodeId": "n10"}, "b": {"wallMs": 1790911800000, "counter": 3, "nodeId": "n2"}}, "expected": -1},
+    {"name": "upper case sorts before lower case", "input": {"a": {"wallMs": 1790911800000, "counter": 3, "nodeId": "N1"}, "b": {"wallMs": 1790911800000, "counter": 3, "nodeId": "n1"}}, "expected": -1},
+    {"name": "hyphen sorts before a letter", "input": {"a": {"wallMs": 1790911800000, "counter": 3, "nodeId": "a-b"}, "b": {"wallMs": 1790911800000, "counter": 3, "nodeId": "ab"}}, "expected": -1},
+    {"name": "short wall time (small number) sorts first", "input": {"a": {"wallMs": 9, "counter": 0, "nodeId": "n1"}, "b": {"wallMs": 10, "counter": 0, "nodeId": "n1"}}, "expected": -1},
+    {"name": "zero clock is the minimum", "input": {"a": {"wallMs": 0, "counter": 0, "nodeId": "n1"}, "b": {"wallMs": 1, "counter": 0, "nodeId": "a"}}, "expected": -1},
+    {"name": "uuid node ids", "input": {"a": {"wallMs": 1790911800000, "counter": 0, "nodeId": "3f2b8c1e-5d4a-4b7e-9c0d-1a2b3c4d5e6f"}, "b": {"wallMs": 1790911800000, "counter": 0, "nodeId": "3f2b8c1e-5d4a-4b7e-9c0d-1a2b3c4d5e70"}}, "expected": -1}
+  ]
+}

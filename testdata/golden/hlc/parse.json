@@ -1,0 +1,26 @@
+{
+  "fn": "hlc_parse",
+  "version": 1,
+  "oracle": "manual",
+  "reason": "Hand-worked: parsing is strict, exactly 13 digits, a hyphen, exactly 5 digits, a hyphen, then a non-empty ASCII graphic node id, so that parse and toString are inverses and the text order equals the clock order.",
+  "notes": "input is a string; expected is {ok: clock} or {error: kind}. Clock values are {wallMs, counter, nodeId}. Canonical range: wallMs 0..=9999999999999, counter 0..=99999, nodeId non-empty ASCII graphic. W is 1790911800000 (2026-10-02T03:30:00Z). A day of drift is 86400000 ms. Results are {\"ok\": value} or {\"error\": kind}; error kinds are invalid_format, invalid_node_id, wall_out_of_range, counter_overflow, clock_drift.",
+  "cases": [
+    {"name": "typical", "input": "1790911800000-00007-phone", "expected": {"ok": {"wallMs": 1790911800000, "counter": 7, "nodeId": "phone"}}},
+    {"name": "zero clock", "input": "0000000000000-00000-n1", "expected": {"ok": {"wallMs": 0, "counter": 0, "nodeId": "n1"}}},
+    {"name": "maximum values", "input": "9999999999999-99999-n1", "expected": {"ok": {"wallMs": 9999999999999, "counter": 99999, "nodeId": "n1"}}},
+    {"name": "node id keeps its hyphens", "input": "1790911800000-00012-a-b-c", "expected": {"ok": {"wallMs": 1790911800000, "counter": 12, "nodeId": "a-b-c"}}},
+    {"name": "empty string", "input": "", "expected": {"error": "invalid_format"}},
+    {"name": "missing node part", "input": "1790911800000-00007", "expected": {"error": "invalid_format"}},
+    {"name": "empty node id", "input": "1790911800000-00007-", "expected": {"error": "invalid_node_id"}},
+    {"name": "wall time one digit short", "input": "179091180000-00007-n1", "expected": {"error": "invalid_format"}},
+    {"name": "wall time one digit long", "input": "17909118000000-00007-n1", "expected": {"error": "invalid_format"}},
+    {"name": "counter one digit short", "input": "1790911800000-0007-n1", "expected": {"error": "invalid_format"}},
+    {"name": "counter one digit long", "input": "1790911800000-000007-n1", "expected": {"error": "invalid_format"}},
+    {"name": "plus sign in the counter", "input": "1790911800000-+0007-n1", "expected": {"error": "invalid_format"}},
+    {"name": "letter in the wall time", "input": "179091180000a-00007-n1", "expected": {"error": "invalid_format"}},
+    {"name": "leading space", "input": " 1790911800000-00007-n1", "expected": {"error": "invalid_format"}},
+    {"name": "space in the node id", "input": "1790911800000-00007-n 1", "expected": {"error": "invalid_node_id"}},
+    {"name": "trailing newline", "input": "1790911800000-00007-n1\n", "expected": {"error": "invalid_node_id"}},
+    {"name": "non-ASCII node id", "input": "1790911800000-00007-n\u00f3", "expected": {"error": "invalid_node_id"}}
+  ]
+}

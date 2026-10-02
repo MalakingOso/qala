@@ -1,0 +1,28 @@
+{
+  "fn": "hlc_tick",
+  "version": 1,
+  "oracle": "manual",
+  "reason": "Hand-worked from Kulkarni et al. (2014): a local event sets wall = max(local wall, now) and the counter to local counter + 1 when the wall did not advance, else 0. The result is always greater than the input and keeps the node id.",
+  "notes": "input {local, nowMs}; expected {ok: clock} or {error: kind}. A counter that would pass 99999 is counter_overflow (never a wrap). Clock values are {wallMs, counter, nodeId}. Canonical range: wallMs 0..=9999999999999, counter 0..=99999, nodeId non-empty ASCII graphic. W is 1790911800000 (2026-10-02T03:30:00Z). A day of drift is 86400000 ms. Results are {\"ok\": value} or {\"error\": kind}; error kinds are invalid_format, invalid_node_id, wall_out_of_range, counter_overflow, clock_drift.",
+  "cases": [
+    {"name": "physical time ahead: wall moves, counter resets", "input": {"local": {"wallMs": 1790911800000, "counter": 5, "nodeId": "n1"}, "nowMs": 1790911800010}, "expected": {"ok": {"wallMs": 1790911800010, "counter": 0, "nodeId": "n1"}}},
+    {"name": "physical time equal: counter bumps", "input": {"local": {"wallMs": 1790911800000, "counter": 5, "nodeId": "n1"}, "nowMs": 1790911800000}, "expected": {"ok": {"wallMs": 1790911800000, "counter": 6, "nodeId": "n1"}}},
+    {"name": "physical clock went backwards: wall stays, counter bumps", "input": {"local": {"wallMs": 1790911800000, "counter": 5, "nodeId": "n1"}, "nowMs": 1790911797000}, "expected": {"ok": {"wallMs": 1790911800000, "counter": 6, "nodeId": "n1"}}},
+    {"name": "physical clock at zero", "input": {"local": {"wallMs": 1790911800000, "counter": 0, "nodeId": "n1"}, "nowMs": 0}, "expected": {"ok": {"wallMs": 1790911800000, "counter": 1, "nodeId": "n1"}}},
+    {"name": "negative physical time", "input": {"local": {"wallMs": 1790911800000, "counter": 0, "nodeId": "n1"}, "nowMs": -5}, "expected": {"ok": {"wallMs": 1790911800000, "counter": 1, "nodeId": "n1"}}},
+    {"name": "zero clock, real time", "input": {"local": {"wallMs": 0, "counter": 0, "nodeId": "n1"}, "nowMs": 1790911800000}, "expected": {"ok": {"wallMs": 1790911800000, "counter": 0, "nodeId": "n1"}}},
+    {"name": "zero clock, time zero", "input": {"local": {"wallMs": 0, "counter": 0, "nodeId": "n1"}, "nowMs": 0}, "expected": {"ok": {"wallMs": 0, "counter": 1, "nodeId": "n1"}}},
+    {"name": "zero clock, negative time", "input": {"local": {"wallMs": 0, "counter": 0, "nodeId": "n1"}, "nowMs": -5}, "expected": {"ok": {"wallMs": 0, "counter": 1, "nodeId": "n1"}}},
+    {"name": "counter one below the cap", "input": {"local": {"wallMs": 1790911800000, "counter": 99998, "nodeId": "n1"}, "nowMs": 1790911800000}, "expected": {"ok": {"wallMs": 1790911800000, "counter": 99999, "nodeId": "n1"}}},
+    {"name": "counter at the cap, time equal", "input": {"local": {"wallMs": 1790911800000, "counter": 99999, "nodeId": "n1"}, "nowMs": 1790911800000}, "expected": {"error": "counter_overflow"}},
+    {"name": "counter at the cap, clock behind", "input": {"local": {"wallMs": 1790911800000, "counter": 99999, "nodeId": "n1"}, "nowMs": 1790911799999}, "expected": {"error": "counter_overflow"}},
+    {"name": "counter at the cap, time ahead is fine", "input": {"local": {"wallMs": 1790911800000, "counter": 99999, "nodeId": "n1"}, "nowMs": 1790911800001}, "expected": {"ok": {"wallMs": 1790911800001, "counter": 0, "nodeId": "n1"}}},
+    {"name": "counter past the cap on the input", "input": {"local": {"wallMs": 1790911800000, "counter": 100000, "nodeId": "n1"}, "nowMs": 1790911800001}, "expected": {"error": "counter_overflow"}},
+    {"name": "now past the 13 digit range", "input": {"local": {"wallMs": 0, "counter": 0, "nodeId": "n1"}, "nowMs": 10000000000000}, "expected": {"error": "wall_out_of_range"}},
+    {"name": "now at the top of the range", "input": {"local": {"wallMs": 0, "counter": 0, "nodeId": "n1"}, "nowMs": 9999999999999}, "expected": {"ok": {"wallMs": 9999999999999, "counter": 0, "nodeId": "n1"}}},
+    {"name": "local wall at the top, now behind", "input": {"local": {"wallMs": 9999999999999, "counter": 0, "nodeId": "n1"}, "nowMs": 0}, "expected": {"ok": {"wallMs": 9999999999999, "counter": 1, "nodeId": "n1"}}},
+    {"name": "local wall negative", "input": {"local": {"wallMs": -3, "counter": 0, "nodeId": "n1"}, "nowMs": 1790911800000}, "expected": {"error": "wall_out_of_range"}},
+    {"name": "empty node id", "input": {"local": {"wallMs": 0, "counter": 0, "nodeId": ""}, "nowMs": 1790911800000}, "expected": {"error": "invalid_node_id"}},
+    {"name": "keeps the local node id", "input": {"local": {"wallMs": 1790911800000, "counter": 0, "nodeId": "3f2b8c1e-5d4a-4b7e-9c0d-1a2b3c4d5e6f"}, "nowMs": 1790911800000}, "expected": {"ok": {"wallMs": 1790911800000, "counter": 1, "nodeId": "3f2b8c1e-5d4a-4b7e-9c0d-1a2b3c4d5e6f"}}}
+  ]
+}

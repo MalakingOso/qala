@@ -1,0 +1,18 @@
+{
+  "fn": "hlc_merge_tombstone",
+  "version": 1,
+  "oracle": "manual",
+  "reason": "Hand-worked: a record's deleted flag is a clocked field, so a delete is a write of true and a restore a later write of false. Higher clock wins; equal clocks resolve to deleted so the merge is commutative even for a bad pair of equal clocks.",
+  "notes": "input {local, remote} are fields whose value is a boolean (the deleted flag); expected is the merged field.",
+  "cases": [
+    {"name": "a later delete wins", "input": {"local": {"value": false, "hlc": {"wallMs": 1790911800000, "counter": 0, "nodeId": "n1"}}, "remote": {"value": true, "hlc": {"wallMs": 1790911800000, "counter": 1, "nodeId": "n2"}}}, "expected": {"value": true, "hlc": {"wallMs": 1790911800000, "counter": 1, "nodeId": "n2"}}},
+    {"name": "a later delete wins, reversed", "input": {"local": {"value": true, "hlc": {"wallMs": 1790911800000, "counter": 1, "nodeId": "n2"}}, "remote": {"value": false, "hlc": {"wallMs": 1790911800000, "counter": 0, "nodeId": "n1"}}}, "expected": {"value": true, "hlc": {"wallMs": 1790911800000, "counter": 1, "nodeId": "n2"}}},
+    {"name": "a later restore wins over a delete", "input": {"local": {"value": true, "hlc": {"wallMs": 1790911800000, "counter": 1, "nodeId": "n2"}}, "remote": {"value": false, "hlc": {"wallMs": 1790911800005, "counter": 0, "nodeId": "n1"}}}, "expected": {"value": false, "hlc": {"wallMs": 1790911800005, "counter": 0, "nodeId": "n1"}}},
+    {"name": "a later restore wins, reversed", "input": {"local": {"value": false, "hlc": {"wallMs": 1790911800005, "counter": 0, "nodeId": "n1"}}, "remote": {"value": true, "hlc": {"wallMs": 1790911800000, "counter": 1, "nodeId": "n2"}}}, "expected": {"value": false, "hlc": {"wallMs": 1790911800005, "counter": 0, "nodeId": "n1"}}},
+    {"name": "a stale delete loses to a newer restore", "input": {"local": {"value": false, "hlc": {"wallMs": 1790911800005, "counter": 0, "nodeId": "n1"}}, "remote": {"value": true, "hlc": {"wallMs": 1790911799995, "counter": 0, "nodeId": "n2"}}}, "expected": {"value": false, "hlc": {"wallMs": 1790911800005, "counter": 0, "nodeId": "n1"}}},
+    {"name": "equal clocks resolve to deleted (local live)", "input": {"local": {"value": false, "hlc": {"wallMs": 1790911800000, "counter": 1, "nodeId": "n1"}}, "remote": {"value": true, "hlc": {"wallMs": 1790911800000, "counter": 1, "nodeId": "n1"}}}, "expected": {"value": true, "hlc": {"wallMs": 1790911800000, "counter": 1, "nodeId": "n1"}}},
+    {"name": "equal clocks resolve to deleted (local deleted)", "input": {"local": {"value": true, "hlc": {"wallMs": 1790911800000, "counter": 1, "nodeId": "n1"}}, "remote": {"value": false, "hlc": {"wallMs": 1790911800000, "counter": 1, "nodeId": "n1"}}}, "expected": {"value": true, "hlc": {"wallMs": 1790911800000, "counter": 1, "nodeId": "n1"}}},
+    {"name": "both live", "input": {"local": {"value": false, "hlc": {"wallMs": 1790911800000, "counter": 0, "nodeId": "n1"}}, "remote": {"value": false, "hlc": {"wallMs": 1790911800001, "counter": 0, "nodeId": "n1"}}}, "expected": {"value": false, "hlc": {"wallMs": 1790911800001, "counter": 0, "nodeId": "n1"}}},
+    {"name": "identical deletes", "input": {"local": {"value": true, "hlc": {"wallMs": 1790911800000, "counter": 1, "nodeId": "n2"}}, "remote": {"value": true, "hlc": {"wallMs": 1790911800000, "counter": 1, "nodeId": "n2"}}}, "expected": {"value": true, "hlc": {"wallMs": 1790911800000, "counter": 1, "nodeId": "n2"}}}
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "fn": "hlc_merge_field",
+  "version": 1,
+  "oracle": "manual",
+  "reason": "Hand-worked: the field with the higher clock wins; equal clocks keep local. The one equal-clock case with different values only fixes the tie rule, since a real device never issues one clock twice.",
+  "notes": "input {local, remote} are fields {value, hlc}; the value is any JSON. expected is the merged field.",
+  "cases": [
+    {"name": "remote has the higher counter", "input": {"local": {"value": "lb", "hlc": {"wallMs": 1790911800000, "counter": 1, "nodeId": "n1"}}, "remote": {"value": "kg", "hlc": {"wallMs": 1790911800000, "counter": 2, "nodeId": "n1"}}}, "expected": {"value": "kg", "hlc": {"wallMs": 1790911800000, "counter": 2, "nodeId": "n1"}}},
+    {"name": "local has the higher counter", "input": {"local": {"value": "kg", "hlc": {"wallMs": 1790911800000, "counter": 2, "nodeId": "n1"}}, "remote": {"value": "lb", "hlc": {"wallMs": 1790911800000, "counter": 1, "nodeId": "n1"}}}, "expected": {"value": "kg", "hlc": {"wallMs": 1790911800000, "counter": 2, "nodeId": "n1"}}},
+    {"name": "higher wall time wins over a higher counter", "input": {"local": {"value": "old", "hlc": {"wallMs": 1790911800000, "counter": 99999, "nodeId": "n2"}}, "remote": {"value": "new", "hlc": {"wallMs": 1790911800001, "counter": 0, "nodeId": "n1"}}}, "expected": {"value": "new", "hlc": {"wallMs": 1790911800001, "counter": 0, "nodeId": "n1"}}},
+    {"name": "same wall and counter: higher node id wins (remote)", "input": {"local": {"value": "n1 wrote", "hlc": {"wallMs": 1790911800000, "counter": 5, "nodeId": "n1"}}, "remote": {"value": "n2 wrote", "hlc": {"wallMs": 1790911800000, "counter": 5, "nodeId": "n2"}}}, "expected": {"value": "n2 wrote", "hlc": {"wallMs": 1790911800000, "counter": 5, "nodeId": "n2"}}},
+    {"name": "same wall and counter: higher node id wins (local)", "input": {"local": {"value": "n2 wrote", "hlc": {"wallMs": 1790911800000, "counter": 5, "nodeId": "n2"}}, "remote": {"value": "n1 wrote", "hlc": {"wallMs": 1790911800000, "counter": 5, "nodeId": "n1"}}}, "expected": {"value": "n2 wrote", "hlc": {"wallMs": 1790911800000, "counter": 5, "nodeId": "n2"}}},
+    {"name": "identical copies", "input": {"local": {"value": "lb", "hlc": {"wallMs": 1790911800000, "counter": 1, "nodeId": "n1"}}, "remote": {"value": "lb", "hlc": {"wallMs": 1790911800000, "counter": 1, "nodeId": "n1"}}}, "expected": {"value": "lb", "hlc": {"wallMs": 1790911800000, "counter": 1, "nodeId": "n1"}}},
+    {"name": "equal clocks with different values keep local (rule only, a real node never does this)", "input": {"local": {"value": "local", "hlc": {"wallMs": 1790911800000, "counter": 5, "nodeId": "n1"}}, "remote": {"value": "remote", "hlc": {"wallMs": 1790911800000, "counter": 5, "nodeId": "n1"}}}, "expected": {"value": "local", "hlc": {"wallMs": 1790911800000, "counter": 5, "nodeId": "n1"}}},
+    {"name": "structured values", "input": {"local": {"value": {"unit": "lb", "days": [0, 2]}, "hlc": {"wallMs": 1790911800000, "counter": 0, "nodeId": "n1"}}, "remote": {"value": {"unit": "kg", "days": [1]}, "hlc": {"wallMs": 1790911800000, "counter": 1, "nodeId": "n2"}}}, "expected": {"value": {"unit": "kg", "days": [1]}, "hlc": {"wallMs": 1790911800000, "counter": 1, "nodeId": "n2"}}},
+    {"name": "a later null clears the field", "input": {"local": {"value": "x", "hlc": {"wallMs": 1790911800000, "counter": 0, "nodeId": "n1"}}, "remote": {"value": null, "hlc": {"wallMs": 1790911800001, "counter": 0, "nodeId": "n1"}}}, "expected": {"value": null, "hlc": {"wallMs": 1790911800001, "counter": 0, "nodeId": "n1"}}},
+    {"name": "numbers", "input": {"local": {"value": 81.35, "hlc": {"wallMs": 1790911800000, "counter": 0, "nodeId": "phone"}}, "remote": {"value": 80.9, "hlc": {"wallMs": 1790911860000, "counter": 0, "nodeId": "web"}}}, "expected": {"value": 80.9, "hlc": {"wallMs": 1790911860000, "counter": 0, "nodeId": "web"}}}
+  ]
+}

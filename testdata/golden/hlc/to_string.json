@@ -1,0 +1,14 @@
+{
+  "fn": "hlc_to_string",
+  "version": 1,
+  "oracle": "manual",
+  "reason": "Hand-worked: the compact form is {wallMs padded to 13 digits}-{counter padded to 5 digits}-{nodeId}.",
+  "notes": "input is a clock value in the canonical range; expected is the string.",
+  "cases": [
+    {"name": "typical", "input": {"wallMs": 1790911800000, "counter": 7, "nodeId": "phone"}, "expected": "1790911800000-00007-phone"},
+    {"name": "zero clock", "input": {"wallMs": 0, "counter": 0, "nodeId": "n1"}, "expected": "0000000000000-00000-n1"},
+    {"name": "small wall time pads to 13 digits", "input": {"wallMs": 42, "counter": 3, "nodeId": "a"}, "expected": "0000000000042-00003-a"},
+    {"name": "maximum values", "input": {"wallMs": 9999999999999, "counter": 99999, "nodeId": "n1"}, "expected": "9999999999999-99999-n1"},
+    {"name": "node id with hyphens", "input": {"wallMs": 1790911800000, "counter": 12, "nodeId": "3f2b8c1e-5d4a-4b7e-9c0d-1a2b3c4d5e6f"}, "expected": "1790911800000-00012-3f2b8c1e-5d4a-4b7e-9c0d-1a2b3c4d5e6f"}
+  ]
+}
