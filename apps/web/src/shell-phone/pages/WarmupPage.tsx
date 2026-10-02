@@ -14,13 +14,8 @@ import {
   planPlates,
 } from "../../../../../packages/core/plates.ts";
 import { useQala } from "../../store/qalaStore.tsx";
-import {
-  ArrowRight,
-  Bike,
-  Check,
-  Cylinder,
-  Vibrate,
-} from "../../shared/icons.ts";
+import { ArrowRight, Bike, Check } from "../../shared/icons.ts";
+import { GearImage, type GearName } from "../../shared/gear.tsx";
 
 const RAMP: {
   load: number;
@@ -35,12 +30,19 @@ const RAMP: {
   { load: 215, reps: 1, rest: "2:00" },
 ];
 
-const TISSUE = [
+const TISSUE: {
+  id: string;
+  what: string;
+  tool: string;
+  gear: GearName;
+  time: string;
+  why: string;
+}[] = [
   {
     id: "quads",
     what: "Quads",
     tool: "Foam roller",
-    icon: Cylinder,
+    gear: "roller",
     time: "2:00 a side",
     why: "sore (4)*",
   },
@@ -48,7 +50,7 @@ const TISSUE = [
     id: "glutes",
     what: "Glutes",
     tool: "Theragun",
-    icon: Vibrate,
+    gear: "theragun",
     time: "1:00 a side",
     why: "your preference*",
   },
@@ -84,10 +86,11 @@ function Step(
 }
 
 function CheckRow(
-  { done, onFlip, children }: {
+  { done, onFlip, children, aside }: {
     done: boolean;
     onFlip: () => void;
     children: ReactNode;
+    aside?: ReactNode;
   },
 ) {
   return (
@@ -102,6 +105,9 @@ function CheckRow(
         {done ? <Check size={16} /> : null}
       </span>
       <span className="check-body">{children}</span>
+      {aside
+        ? <span className="check-aside" aria-hidden="true">{aside}</span>
+        : null}
     </button>
   );
 }
@@ -142,22 +148,19 @@ export function WarmupPage() {
       </Step>
 
       <Step n={2} title="Soft tissue" time="6 min">
-        {TISSUE.map((t) => {
-          const Icon = t.icon;
-          return (
-            <CheckRow
-              key={t.id}
-              done={!!done[t.id]}
-              onFlip={() => flip(t.id)}
-            >
-              <strong>{t.what}</strong>
-              <span className="kbd-hint">
-                <Icon size={13} aria-hidden="true" /> {t.tool} · {t.time} ·{" "}
-                {t.why}
-              </span>
-            </CheckRow>
-          );
-        })}
+        {TISSUE.map((t) => (
+          <CheckRow
+            key={t.id}
+            done={!!done[t.id]}
+            onFlip={() => flip(t.id)}
+            aside={<GearImage name={t.gear} w={72} h={44} />}
+          >
+            <strong>{t.what}</strong>
+            <span className="kbd-hint">
+              {t.tool} · {t.time} · {t.why}
+            </span>
+          </CheckRow>
+        ))}
       </Step>
 
       <Step n={3} title="Mobility" time="2 drills × 10">

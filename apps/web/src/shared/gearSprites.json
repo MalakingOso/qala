@@ -1,0 +1,17 @@
+{
+  "roller": {
+    "file": "roller.webp",
+    "w": 360,
+    "h": 194
+  },
+  "theragun": {
+    "file": "theragun.webp",
+    "w": 360,
+    "h": 331
+  },
+  "treadmill": {
+    "file": "treadmill.webp",
+    "w": 283,
+    "h": 360
+  }
+}

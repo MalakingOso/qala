@@ -7,6 +7,7 @@ import { Group, GroupRow, SecondaryButton } from "../../shared/ui.tsx";
 import { ReadinessLine } from "../../shared/charts/index.ts";
 import { RecoveryMap } from "../../shared/bodymap/RecoveryMap.tsx";
 import { sampleRecovery } from "../../store/sample.ts";
+import { GearSlot } from "../../shared/gear.tsx";
 
 const SORENESS: { muscle: string; level: number }[] = [
   { muscle: "quads", level: 4 },
@@ -71,11 +72,17 @@ export function BodyPage() {
         }
       >
         <GroupRow>
-          <span>Foam roller</span>
+          <span className="eq-label">
+            <GearSlot name="roller" />
+            <span>Foam roller</span>
+          </span>
           <span className="kbd-hint">warm-up and rest days</span>
         </GroupRow>
         <GroupRow>
-          <span>Theragun</span>
+          <span className="eq-label">
+            <GearSlot name="theragun" />
+            <span>Theragun</span>
+          </span>
           <span className="kbd-hint">preferred where allowed</span>
         </GroupRow>
       </Group>

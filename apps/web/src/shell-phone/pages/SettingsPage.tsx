@@ -2,6 +2,7 @@
  * Equipment; Warm-up; Rest timer; Check-ins; Running; Coach; Appearance. */
 
 import { useQala } from "../../store/qalaStore.tsx";
+import { GEAR_FOR, GearSlot } from "../../shared/gear.tsx";
 import {
   Group,
   GroupRow,
@@ -38,6 +39,10 @@ export function SettingsPage() {
           <span className="kbd-hint">{s.defaultBar} lb</span>
         </GroupRow>
         <GroupRow>
+          <span>EZ bar</span>
+          <span className="kbd-hint">{s.ezBar} lb</span>
+        </GroupRow>
+        <GroupRow>
           <span>Collars</span>
           <span className="kbd-hint">{s.collarWeight} lb</span>
         </GroupRow>
@@ -62,7 +67,10 @@ export function SettingsPage() {
           ] as const
         ).map(([k, label]) => (
           <GroupRow key={k}>
-            <span>{label}</span>
+            <span className="eq-label">
+              <GearSlot name={GEAR_FOR[k]} />
+              <span>{label}</span>
+            </span>
             <Toggle
               on={s.equipment[k]}
               onFlip={() => flipEq(k)}
