@@ -42,6 +42,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -65,6 +66,8 @@ private fun StripCell(
     first: Boolean,
     height: Dp,
     modifier: Modifier,
+    fontSize: TextUnit = 14.sp,
+    maxLines: Int = 1,
 ) {
     val c = Qala.colors
     val divider = QalaTokens.borderWidth
@@ -78,10 +81,10 @@ private fun StripCell(
     ) {
         QalaText(
             label,
-            style = QalaType.button.copy(fontSize = 14.sp, lineHeight = 17.sp),
+            style = QalaType.button.copy(fontSize = fontSize, lineHeight = fontSize * 1.2f),
             color = if (picked) onInk() else c.fg,
             textAlign = TextAlign.Center,
-            maxLines = 1,
+            maxLines = maxLines,
         )
     }
 }
@@ -101,6 +104,8 @@ fun ScalePicker(
     modifier: Modifier = Modifier,
     cellHeight: Dp = 48.dp,
     describe: (Int) -> String = { labels[it] },
+    fontSize: TextUnit = 14.sp,
+    maxLines: Int = 1,
 ) {
     val c = Qala.colors
     Row(
@@ -118,6 +123,8 @@ fun ScalePicker(
                 picked = i == selected,
                 first = i == 0,
                 height = cellHeight,
+                fontSize = fontSize,
+                maxLines = maxLines,
                 modifier = Modifier
                     .weight(1f)
                     .selectable(

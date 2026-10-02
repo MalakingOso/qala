@@ -2,6 +2,8 @@ package com.qala.app.today
 
 import com.qala.app.checkin.CheckInPlan
 import com.qala.app.checkin.checkInPlan
+import com.qala.app.skip.SkipRequest
+import com.qala.app.skip.skipRequest
 import com.qala.data.core.ReadinessSummary
 import com.qala.data.core.TrendDirection
 import com.qala.data.engine.EngineSnapshot
@@ -25,7 +27,7 @@ import kotlin.math.roundToInt
  */
 
 /** Where a button on Today goes. The shell turns each into a route or a tab. */
-enum class Destination { CheckIn, WarmUp, Workout, Run, Plan, Body, Settings }
+enum class Destination { CheckIn, WarmUp, Workout, Run, Plan, Body, Settings, Skip }
 
 /** A button's icon, named here so this file needs no Compose. */
 enum class CtaIcon { None, CircleCheck, Flame, Dumbbell, SportShoe }
@@ -58,6 +60,8 @@ data class Hero(
     val detail: String? = null,
     val cta: Cta? = null,
     val ctaEnabled: Boolean = true,
+    /** The quiet "Skip today" under the button, on the stage the day is on while nothing is skipped. */
+    val skip: Cta? = null,
     /** True when this is the stage the day is on, so the kicker reads in the accent colour. */
     val now: Boolean = false,
 )
@@ -123,6 +127,9 @@ class TodayModel(private val snapshot: EngineSnapshot, val plan: TodayPlan, priv
 
     /** What the check-in screen asks about today. */
     val checkIn: CheckInPlan = checkInPlan(snapshot, plan)
+
+    /** What the skip sheet opens with: a new skip, or a change of the status already on today. */
+    val skip: SkipRequest = skipRequest(snapshot.date, snapshot.status)
 
     fun hero(viewing: Int): Hero = heroFor(snapshot, plan, viewing, nowIndex, use24h)
 }
@@ -262,7 +269,11 @@ fun heroFor(snapshot: EngineSnapshot, plan: TodayPlan, viewing: Int, nowIndex: I
             ctaEnabled = live,
         )
     }
-    return hero.copy(now = isNow && stage.state != StageState.DONE && stage.state != StageState.SKIPPED)
+    val open = stage.state == StageState.NOW
+    return hero.copy(
+        now = isNow && stage.state != StageState.DONE && stage.state != StageState.SKIPPED,
+        skip = if (isNow && open && !stage.passive && plan.liftDay && snapshot.status == null) Cta("Skip today", Destination.Skip) else null,
+    )
 }
 
 private fun kicker(stage: DayStage, isNow: Boolean): String {

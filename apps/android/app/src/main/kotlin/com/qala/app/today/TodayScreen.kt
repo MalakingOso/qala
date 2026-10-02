@@ -49,6 +49,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import com.qala.app.skip.SkipSheetState
 import com.qala.design.Card
 import com.qala.design.CardNotch
 import com.qala.design.DayMenu
@@ -81,9 +82,13 @@ class TodayUiState {
     var previewing by mutableStateOf<String?>(null)
     var menuOpen by mutableStateOf(false)
 
+    /** The skip sheet, composed by the shell over the whole window like the menu. */
+    val skip = SkipSheetState()
+
     fun reset() {
         previewing = null
         menuOpen = false
+        skip.close()
     }
 
     /** Moves the preview to the stage at [index] (the now stage clears it). */
@@ -290,6 +295,10 @@ private fun HeroContent(hero: Hero, onGo: (Destination) -> Unit) {
     hero.cta?.let {
         Spacer(Modifier.height(18.dp))
         PrimaryButton(it.label, onClick = { onGo(it.to) }, large = true, icon = it.icon.vector(), enabled = hero.ctaEnabled)
+    }
+    hero.skip?.let {
+        Spacer(Modifier.height(8.dp))
+        SecondaryButton(it.label, onClick = { onGo(it.to) })
     }
 }
 

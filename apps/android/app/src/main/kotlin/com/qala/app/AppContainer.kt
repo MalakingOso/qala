@@ -1,7 +1,13 @@
 package com.qala.app
 
 import android.content.Context
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
+import com.qala.data.core.QalaCore
+import com.qala.data.core.shiftsPlan
+import com.qala.data.model.SkipReason
 import com.qala.data.db.QalaDatabase
 import com.qala.data.engine.EngineCompute
 import com.qala.data.engine.EngineRepository
@@ -49,6 +55,15 @@ class AppContainer(
     val programs = ProgramRepository(database, writer, env)
 
     val programEngine = ProgramEngine()
+
+    /** Whether each skip reason pushes the plan out, as the core's `shifts_plan` answers (vacation and sick do). Five tiny calls, made once. */
+    val shiftRules: Map<SkipReason, Boolean> by lazy { SkipReason.entries.associateWith { QalaCore.shiftsPlan(it) } }
+
+    /**
+     * Whether "Feeling better?" has been answered this session. A plain in-memory flag: the container lives as long as the
+     * process, so it holds across a recreated activity and is forgotten with the process, which is "once per session".
+     */
+    var feelingBetterAsked by mutableStateOf(false)
 
     /** The derived state the Today cards read: engine state, readiness, week load, weight trend, today's stages. */
     val engine = EngineRepository(

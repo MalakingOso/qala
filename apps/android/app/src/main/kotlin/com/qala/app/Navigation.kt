@@ -73,4 +73,5 @@ fun Nav.go(to: Destination): Nav = when (to) {
     Destination.Plan -> selectTab(Route.Plan)
     Destination.Body -> selectTab(Route.Body)
     Destination.Settings -> push(Route.Settings)
+    Destination.Skip -> this          // opens the skip sheet over Today: the shell handles it, nothing navigates
 }

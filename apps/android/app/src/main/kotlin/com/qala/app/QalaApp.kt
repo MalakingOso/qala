@@ -28,6 +28,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.zIndex
+import com.qala.app.skip.SkipSheet
+import com.qala.app.today.Destination
+import com.qala.app.today.TodayLoad
 import com.qala.app.today.TodayMenu
 import com.qala.app.today.TodayUiState
 import com.qala.app.today.todayLoad
@@ -101,7 +104,9 @@ fun QalaApp() {
                                     modifier = modifier,
                                 )
                             },
-                            onGo = { nav = nav.go(it) },
+                            onGo = { to ->
+                                if (to == Destination.Skip) (today as? TodayLoad.Ready)?.let { ui.skip.show(it.model.skip) } else nav = nav.go(to)
+                            },
                             onBack = { nav.back()?.let { nav = it } },
                         )
                     }
@@ -112,7 +117,10 @@ fun QalaApp() {
                     onSelect = { nav = nav.selectTab(Route.tabs[it]) },
                 )
             }
-            if (nav.route == Route.Today) TodayMenu(today, ui, Modifier.zIndex(2f))
+            if (nav.route == Route.Today) {
+                TodayMenu(today, ui, Modifier.zIndex(2f))
+                SkipSheet(ui.skip, Modifier.zIndex(3f))
+            }
         }
     }
 }
