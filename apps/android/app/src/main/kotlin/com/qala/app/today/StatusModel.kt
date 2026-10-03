@@ -34,10 +34,7 @@ class StatusCard(
     val ask: FeelingBetterAsk?,
     /** True when the status is a one-day skip (Undo is `undoSkip`) and false for a span (Undo ends it). */
     val oneDay: Boolean,
-) {
-    /** Said as one thing when the card appears or changes. */
-    val announcement: String get() = "$head. $whenLine. $line"
-}
+) {}
 
 private fun head(reason: SkipReason, muscle: String?): String = when (reason) {
     SkipReason.Sick -> "Sick"

@@ -5,6 +5,8 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -23,6 +25,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -45,6 +48,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 /*
  * The small controls the check-in, the skip sheet and Settings share (DESIGN 5, 5a). The picked cell, chip or day is ink
@@ -264,12 +269,19 @@ fun QalaTextField(
     val c = Qala.colors
     var focused by remember { mutableStateOf(false) }
     val shape = RoundedCornerShape(QalaTokens.radiusMd)
+    val bringIntoView = remember { BringIntoViewRequester() }
+    val scope = rememberCoroutineScope()
     BasicTextField(
         value = value,
         onValueChange = onValueChange,
         modifier = modifier
             .fillMaxWidth()
-            .onFocusChanged { focused = it.isFocused }
+            .bringIntoViewRequester(bringIntoView)
+            .onFocusChanged {
+                focused = it.isFocused
+                // The keyboard slides in after focus lands and shrinks the scroll area; once it has, show the whole field, not just its cursor line.
+                if (it.isFocused) scope.launch { delay(350); bringIntoView.bringIntoView() }
+            }
             .background(c.bgSurface, shape)
             .border(QalaTokens.borderWidth, if (focused) c.accent else c.border, shape)
             .defaultMinSize(minHeight = 48.dp)

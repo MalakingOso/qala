@@ -19,6 +19,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -69,8 +70,13 @@ class SkipSheetState {
     var request by mutableStateOf<SkipRequest?>(null)
         private set
 
+    /** Counts openings, so each one starts from the request's draft even when the request is the same object as last time. */
+    var opening by mutableIntStateOf(0)
+        private set
+
     fun show(request: SkipRequest) {
         this.request = request
+        opening += 1
         open = true
     }
 
@@ -98,8 +104,8 @@ fun SkipSheet(state: SkipSheetState, modifier: Modifier = Modifier) {
     val request = state.request ?: return
     val container = LocalAppContainer.current
     // A fresh draft for each opening; the sheet keeps composing while it slides away, so a close does not reset it.
-    var draft by remember(request) { mutableStateOf(request.draft) }
-    var noteOpen by remember(request) { mutableStateOf(request.draft.note.isNotEmpty()) }
+    var draft by remember(request, state.opening) { mutableStateOf(request.draft) }
+    var noteOpen by remember(request, state.opening) { mutableStateOf(request.draft.note.isNotEmpty()) }
     val focus = LocalFocusManager.current
 
     fun confirm() {

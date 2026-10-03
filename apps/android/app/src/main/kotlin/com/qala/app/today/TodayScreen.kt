@@ -319,7 +319,8 @@ private fun HeroContent(hero: Hero, onGo: (Destination) -> Unit) {
 /**
  * The status card (mockups/m4-status-banner.html option B, with the question inline): the reason, how long, what it means
  * for the plan, Undo and Change. From a sick span's second day the "Feeling better?" question sits under them, once per
- * session. The head is a polite live region, so a status appearing, changing or ending is spoken.
+ * session. The head is a heading and a polite live region, so a status appearing or changing is spoken and the card stays
+ * reachable by heading navigation.
  */
 @Composable
 private fun StatusContent(card: StatusCard, model: TodayModel, ui: TodayUiState) {
@@ -331,11 +332,11 @@ private fun StatusContent(card: StatusCard, model: TodayModel, ui: TodayUiState)
     // Writes run on the container's scope: the card goes away when the snapshot catches up, and a Room write must not be cancelled with it.
     fun end() = container.scope.launch { container.availability.apply(undoWrites(status, date)) }
 
-    Column(Modifier.semantics(mergeDescendants = true) { liveRegion = LiveRegionMode.Polite; contentDescription = card.announcement }) {
+    Column {
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
             IconTile(skipIcon(card.reason))
             Column {
-                QalaText(card.head, Modifier.semantics { heading() }, QalaType.cardTitle)
+                QalaText(card.head, Modifier.semantics { heading(); liveRegion = LiveRegionMode.Polite }, QalaType.cardTitle)
                 QalaText(card.whenLine, style = QalaType.hint, color = c.fgMuted)
             }
         }

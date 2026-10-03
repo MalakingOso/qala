@@ -59,10 +59,10 @@ class StatusModelTest {
     }
 
     @Test
-    fun theSpanLineAndTheAnnouncementAreSpoken() {
+    fun theSpanLineSaysWhenItBeganAndEnds() {
         val card = statusCard(status(SkipReason.Vacation, StatusSpan.Range("2026-10-05", "2026-10-11")), today)!!
         assertEquals("Since Monday, until Sunday", card.whenLine)
-        assertEquals("On vacation. Since Monday, until Sunday. Away from training. The plan shifts out.", card.announcement)
+        assertEquals("On vacation", card.head)
     }
 
     @Test
