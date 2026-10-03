@@ -108,6 +108,8 @@ data class EngineSnapshot(
     val sessionMuscles: List<String> = emptyList(),
     /** The local day each muscle was last trained in the last two weeks, from real sessions. */
     val lastTrained: Map<String, String> = emptyMap(),
+    /** Whether any run is on the plan, so "no next run" can tell a paused plan from an empty one. */
+    val hasRunPlan: Boolean = false,
     /** Set when the build failed; the other fields are then empty. */
     val error: String? = null,
 )
@@ -182,6 +184,7 @@ class EngineCompute(private val programs: ProgramEngine = ProgramEngine()) {
             injured = injured,
             sessionMuscles = sessionMuscles,
             lastTrained = lastTrained(input.liftSessions, today, trained),
+            hasRunPlan = input.runPlan.days.isNotEmpty(),
             liftHero = if (evaluated != null && input.program != null && plan.liftDay && plan.programDay != null) {
                 programs.liftHero(evaluated, plan.programDay, input.settings.mainLifts, input.program.name)
             } else {

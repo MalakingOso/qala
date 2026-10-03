@@ -469,6 +469,10 @@ fun readyDatesSentence(readiness: ReadinessSummary, today: String): String {
 
 fun nextRunCard(snapshot: EngineSnapshot): InfoCard {
     val next = snapshot.nextRun
+    if (next == null && snapshot.hasRunPlan && snapshot.status != null) {
+        // A plan exists but every day ahead is off: the runs are waiting, not missing.
+        return InfoCard("Next run", "Paused", lines = listOf("Runs wait while you are off. They come back when the status ends."))
+    }
     if (next == null) {
         return InfoCard(
             "Next run", "No run planned",
@@ -509,6 +513,17 @@ fun weekCard(snapshot: EngineSnapshot): WeekCard {
     val done = cells.sumOf { it.done }
     if (planned <= 0.0 && done <= 0.0) {
         val days = cells.filter { it.training }.map { it.dayName.take(3) }
+        val off = cells.firstNotNullOfOrNull { it.reason }
+        // Every training day is off (a status covers the week): the days are set, they are just skipped, so Settings is no help.
+        if (days.isEmpty() && off != null) {
+            return WeekCard(
+                kicker = "This week",
+                title = "Nothing planned",
+                cells = cells,
+                caption = "This week is skipped (${reasonWord(off)}). ${if (snapshot.status?.shifts == true) "The plan shifts out." else "The plan holds."}",
+                empty = true,
+            )
+        }
         return WeekCard(
             kicker = "This week",
             title = "Nothing planned",

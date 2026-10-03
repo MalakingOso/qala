@@ -201,6 +201,7 @@ fun TodayScreen(
                     onOpenMenu = { ui.menuOpen = true },
                     onBandChanged = { band.value = it },
                     modifier = Modifier.align(Alignment.CenterStart),
+                    excludeGestures = !ui.menuOpen && !ui.skip.open,          // a modal over the rail gives Back its edge back
                 )
             }
         }

@@ -163,4 +163,33 @@ class StatusModelTest {
         assertEquals("Today is skipped (sick). The plan shifts out.", sick.caption)
         assertEquals("Today is skipped (break). The plan holds.", weekCard(weekWithSkip(SkipReason.Break, shifts = false)).caption)
     }
+
+    @Test
+    fun aWeekWhollySkippedSaysSoInsteadOfSendingYouToSettings() {
+        // A sick status over the whole week: every training day is off, but the days are set.
+        val days = (0..6).map { i ->
+            val date = com.qala.data.IsoTime.addDays("2026-10-05", i.toLong())
+            DayPlan(date, i, DayKind.REST, null, null, if (i in setOf(0, 2, 4, 5)) SkipReason.Sick else null, false)
+        }
+        val snapshot = fullSnapshot(restPlan(today, reason = SkipReason.Sick), hero = null).copy(
+            week = WeekPlan("2026-10-05", days),
+            weekLoad = com.qala.data.core.WeekLoadResult(List(7) { 0.0 }, List(7) { 0.0 }),
+            status = status(SkipReason.Sick, StatusSpan.Range("2026-10-05", null)),
+        )
+        val card = weekCard(snapshot)
+        assertTrue(card.empty)
+        assertEquals("This week is skipped (sick). The plan shifts out.", card.caption)
+        assertNull("Settings cannot help: the training days are set", card.action)
+    }
+
+    @Test
+    fun aRunPlanWhoseDaysAreAllOffIsPausedNotMissing() {
+        val off = fullSnapshot(next = null).copy(hasRunPlan = true, status = status(SkipReason.Sick, StatusSpan.Range("2026-10-05", null)))
+        val card = nextRunCard(off)
+        assertEquals("Paused", card.title)
+        assertFalse(card.empty)
+        assertNull(card.action)
+        assertTrue("with no plan at all it is still the empty state", nextRunCard(off.copy(hasRunPlan = false)).empty)
+        assertTrue(nextRunCard(fullSnapshot(next = null)).empty)
+    }
 }

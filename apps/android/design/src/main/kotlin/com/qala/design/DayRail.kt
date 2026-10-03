@@ -102,6 +102,11 @@ fun DayRail(
     onOpenMenu: () -> Unit,
     onBandChanged: (Rect) -> Unit,
     modifier: Modifier = Modifier,
+    /**
+     * Whether the strip claims the system back gesture on its edge. Turn it off while something modal (the menu, the
+     * skip sheet) is over the rail: the scrim covers it, and Back has to work everywhere on the screen, including here.
+     */
+    excludeGestures: Boolean = true,
 ) {
     val c = Qala.colors
     val rail = railColors()
@@ -119,7 +124,7 @@ fun DayRail(
 
     Box(
         modifier
-            .systemGestureExclusion()
+            .then(if (excludeGestures) Modifier.systemGestureExclusion() else Modifier)
             .semantics(mergeDescendants = true) {
                 role = Role.Button
                 contentDescription = railDescription(stages)
