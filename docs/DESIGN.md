@@ -368,7 +368,7 @@ The toolbar holds a search that jumps to a page, lift, exercise or session (Ctrl
 
 Every page opens on a lede card: a kicker line, the title in Qala Test, an ink rule (2px, `--fg`), then whatever leads the page. Cards below use a serif heading over the same ink rule. Cards are white on the off-white ground with the Beamer border and a resting `--shadow-card`; tokens.css is untouched and every color is a token, so dark mode comes with it. Tables are dense: 10px uppercase headers, 12px cells, a LIFT or RUN tag, DM Mono numerals right-aligned, and PR and note pills; a session's coach flag and note sit under its row.
 
-- Overview opens on the load zoom (6.3, 6.5), which fills the lede card and opens at Month. The kicker is the day and date at the left, with the block name and week ("Strength B2 · Week 3 of 6", just the week at Block) quietly at the right; the deload week is not shown. The Day / Week / Month / Block picker sits at the right of the title row as a soft pill track with a sliding ink thumb (left and right step it), and the title names the view: Today, This week, the month's name (September: the month holding most of the focus week), or the block's name. A day's lift and run share an edge with no gap, and the join is a gentle arc (the lift domes up into the run by about 14% of the bar's width, 5px at most) instead of a flat line. The estimated 1RMs sit in a card beside the lede (a 320px column that stacks under it below 1100px) with no readiness line, which lives on the phone and the body page, and the sessions with filter chips run full width below.
+- Overview opens on the load zoom (6.3, 6.5), which fills the lede card and opens at Month. The kicker is the day and date at the left, with the block name and week ("Strength B2 · Week 3 of 6", just the week at Block) quietly at the right; the deload week is not shown. The Day / Week / Month / Block picker sits at the right of the title row as a soft pill track with a sliding ink thumb (left and right step it), and the title names the view: Today, This week, the month's name (September: the month holding most of the focus week), or the block's name. A day's lift and run share one flat edge with no gap. Edges are drawn on the device pixel grid (hairlines are whole device pixels wide, a future week's hatch is a stair of single pixels, not a rotated tile), so bars stay crisp at 1x, 1.25x, 1.5x and 2x. The estimated 1RMs sit in a card beside the lede (a 320px column that stacks under it below 1100px) with no readiness line, which lives on the phone and the body page, and the sessions with filter chips run full width below.
 - Lifts leads with the average e1RM gain and a ranked gain bar per lift, then one card per lift.
 - Running leads with VDOT and its trend, then the runs and the latest run's splits against its own average (U17).
 - Body leads with the recovery map, front and back side by side with the selected muscle's fatigue curve under them, then readiness by weekday, sets by muscle and the deload status.
@@ -404,12 +404,15 @@ cancels with a colour matrix on the intro.
 
 The intro is the full first view, not a section you can scroll back to. A
 fixed overlay holds the page still while it stands; the first downward scroll
-(wheel, touch or key) or the "Scroll to explore" hint hands off: the intro
-cross-fades out, the nav bar slides in from the side, and the content rises
-fade-up, over 700 ms. The intro then unmounts, so returning to the top never
-brings it back. Under reduced motion the hand-off is instant. The nav bar is
-the Qk icon beside "Qala." (the desktop lockup, without "training record") and
-a "Training workspace" link, on a solid band of the page colour.
+(wheel, touch or key) or the "Scroll to explore" hint hands off: the plate
+shrinks and travels onto the nav bar's Q mark — measured at hand-off and
+aimed with a transform on the clip, whose own scale is derived from the
+plate's bounding box in `intro.json`, so the plate lands exactly on the mark —
+while the nav fades in and the content rises, over 900 ms. The intro then
+unmounts, so returning to the top never brings it back. Under reduced motion
+the hand-off is instant. The nav bar is the Qk icon beside "Qala." (the
+desktop lockup, without "training record") and a "Training workspace" link,
+on a solid band of the page colour.
 
 Below it: a wide editorial hero, "Train with the
 whole picture.", concise supporting copy that says what the engine reads and
@@ -423,11 +426,14 @@ motion), to show where Qala runs.
 engine is built from: seven cards covering the fitness-fatigue model, the
 Kalman e1RM estimate, the check-in readiness measures, autoregulation,
 per-muscle recovery, concurrent running and lifting, and deload triggers,
-each with its key citations. Second, what you can do with it: seven rows,
-each pairing a sentence with a real capture of the app screen
-(`shared/landing/*.webp`, taken from the built PWA — Today, Overview,
-Workout, Body, Running, Programs, Coach). Rows alternate the capture left and
-right on wide screens and stack on phones. Open Qala enters the desktop
+each with its key citations. Second, what you can do with it, as three tabs —
+Lifting, Running, Coach (arrow-key navigable, `aria-selected`). Each panel
+pairs a copy block and a feature list with a stage: the desktop capture in a
+light window chrome, and an Android capture in a CSS device shell (a thin
+bezel, a punch-hole camera, side keys and a gesture bar) overlapping its
+lower corner like a phone on a desk. All captures are taken from the built
+PWA (`shared/landing/*.webp`). The panel fades and rises on tab change; the
+stage collapses to one column under 900 px. Open Qala enters the desktop
 workspace on wide screens and Today on phones. AGPL and liftosaur credit
 remain in the footer.
 

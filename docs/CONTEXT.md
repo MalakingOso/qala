@@ -71,3 +71,23 @@ _Avoid_: Assistant, chatbot (both imply unbounded actions, which Coach doesn't h
 **Mobility (warm-up)** vs **mobility (check-in)**:
 Two different things that share a word. The warm-up generator's *dynamic mobility* block (PLAN 6.7) is a structured, tracked set of drills before a lift. Check-in's *mobility* is an untracked suggestion line shown on rest days, drawn from soreness answers and owned equipment — not a stage, not logged.
 _Avoid_: writing "mobility" alone in a context where both could apply
+
+### Beginners
+
+**Beginner**:
+A lifter with no meaningful training history, as opposed to someone returning after a break (who is covered by skip and training status, not by the beginner path). The beginner path plans from RP's novice landmarks and a starting weight rather than a reference 1RM, and every engine rule that needs a baseline says "no baseline" instead of firing. `docs/PLAN.md` 16d.
+_Avoid_: New (a plan can be new without the lifter being a beginner), Novice (fine in speech, but the code uses one word)
+
+**Walk-run session**:
+A run made of alternating running and walking intervals, prescribed by duration and ratio rather than by pace. It is how a first-time runner is trained (`docs/PLAN.md` 16c), and it cannot be expressed in the current `RunWorkout` schema.
+_Avoid_: Interval run (which in the existing schema means a quality session at or above critical speed), Beginner run
+
+### Body composition
+
+**Weight trend**:
+A rolling mean of recent daily weights, shown with its spread, instead of a single morning number. Daily weight moves by more than a beginner's monthly change, so the number is never shown on its own. `docs/PLAN.md` 16f.
+_Avoid_: Weight (which is a single reading), Weight change
+
+**Reference scan**:
+A periodic body-composition measurement, DXA preferred, that later measurements are compared against. It is a record with a date and a method, not a number that is continuously estimated. "Lean mass" in a scan report is not the same thing as muscle, and the app does not present it as such.
+_Avoid_: Body fat percentage (a scan's output, not the tracked thing), Progress (too broad)

@@ -37,8 +37,9 @@ the Nothing Phone, TTS ducking) still need the real phone (docs/PLAN.md 14).
 - `docs/`: LS++ (`ls-plus-plus.md`), the Rust core plan (`rust-core.md`),
   the Android plan (`android-native.md`), the accounts plan
   (`plan-accounts-logins.md`), the pending-decision queue
-  (`decisions-pending.md`), decision records (`adr/`), and the research
-  evidence (`research/`).
+  (`decisions-pending.md`), decision records (`adr/`), the research
+  evidence and briefs (`research/`), the owner's blog drafts (`blog/`),
+  and the beginner podcast scripts (`podcast/`).
 - `assets/fonts/`: the source font files. The web app serves copies from
   `apps/web/public/fonts/`.
 - `mockups/`: hand-drawn review canvas. Not app code.

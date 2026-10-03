@@ -245,6 +245,64 @@ The owner goes through this file with an agent, one item at a time. The agent ru
 - Blocks: PLAN 16b; the plate calculator's bar picker scope.
 - Record in: `docs/DECISIONS.md` L13, `docs/PLAN.md` 16b, `docs/DESIGN.md` 5.8a.
 
+## Roadmap additions (2026-10-02)
+
+These come from the four new roadmap sections in `docs/PLAN.md` 16c to 16f. None of them blocks v1; each one blocks a piece of the work it belongs to.
+
+### D25 Which run plan ships first (R7)
+
+- Status: [ ] open
+- Question: track 1 (walk-run, Couch to 5K shape) or track 2 (10K and marathon)? And is the walk-run plan one fixed program the way the NHS writes it, or generated per person?
+- Options: track 1 first / track 2 first / both, sequenced; fixed program or generated.
+- Default: track 1 first, generated per person, because track 2 needs a threshold pace or a recent race time that a cold runner does not have. The fixed program is the fallback if the brief shows generation buys nothing at interval level.
+- Blocks: `runPlans` schema work (the `walk` step kind and the week advance rule are shared, so they do not wait on this).
+- Record in: `docs/DECISIONS.md` R7, `docs/PLAN.md` 16c, `docs/research/RESEARCH-run-plans-beginner-and-races.md` 3 and 4.
+
+### D26 In-app breathing fallback (R8)
+
+- Status: [ ] open
+- Question: does Qala ship a 60-second paced breathing routine for people who do not want to install Headspace or Waking Up, or does the recommendation stop at the two links?
+- Options: ship the routine / links only / decide after the brief's breath-work read.
+- Default: decide after the brief. The acute breath-work evidence is a different literature from mindfulness practice over weeks and should be read before anything is built.
+- Blocks: nothing until the mindfulness work starts.
+- Record in: `docs/DECISIONS.md` R8, `docs/PLAN.md` 16e item 5, `docs/research/RESEARCH-mindfulness.md` 2 and 5.
+
+### D27 Where the beginner exposition lives (T12)
+
+- Status: [ ] open
+- Question: how much beginner exposition is written text in the app, and how much is the Coach answering in session? Does the novice path ship before or after the podcast and blog exist?
+- Options: mostly in-app text / mostly the Coach / the long form in the podcast and blog with the app keeping to one-liners; ship order either way.
+- Default: in-app one-liners and the Coach for in-session questions, with the long exposition in the podcast and blog, which is one research effort serving three surfaces. The order is open because the podcast scripts are blocked on the brief either way.
+- Blocks: the novice path's copy work.
+- Record in: `docs/DECISIONS.md` T12, `docs/PLAN.md` 16d item 6.
+
+### D28 Podcast audio and delivery (P7)
+
+- Status: [ ] open
+- Question: where do the rendered episodes live (served by the Deno server from outside the working tree, or content-addressed like GPS tracks)? Is an in-app player wanted, given it has to work with the screen locked? Which Kokoro voice is the narrator?
+- Options: per question. Pick the voice by listening to two or three, and pin it, since Sonoro's round-robin bug made a re-render sound like a different narrator.
+- Default: served from outside the repo, no in-app player until there are episodes, one pinned voice.
+- Blocks: nothing until the first script is finished.
+- Record in: `docs/DECISIONS.md` P7, `docs/PLAN.md` 16f items 2 to 4.
+
+### D29 Blog home and cadence (P8)
+
+- Status: [ ] open
+- Question: where do the posts get published, and how often? Drafts stay in `docs/blog/` until this is answered.
+- Options: name a home (own repo, hosted platform, or a page on the Qala site) and a rough cadence.
+- Default: none. Nothing is published before the owner picks a home.
+- Blocks: nothing; writing can start.
+- Record in: `docs/DECISIONS.md` P8, `docs/PLAN.md` 16f items 7 and 8.
+
+### D30 Body photos (P7)
+
+- Status: [ ] open
+- Question: does `bodyMeasures` hold progress photos at all? A body photo is the most sensitive thing this app would hold, and S9's content-addressed blob story was designed for GPS tracks.
+- Options: no photos / photos as blobs with a retention rule the owner sets / photos local to the device only, never synced.
+- Default: no photos until this is answered. Every other part of the body-composition thread can ship without them.
+- Blocks: the `bodyMeasures` schema, nothing else.
+- Record in: `docs/DECISIONS.md` P7, `docs/PLAN.md` 16f item 5, `docs/research/RESEARCH-body-composition.md` 5.
+
 ## Validations (not decisions; real-data gates)
 
 These need the owner's data or device, not an opinion. They stay open until measured.
