@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Load zoom C · week-bars + cut</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Faustina:wght@500;700&display=swap">
+<link rel="stylesheet" href="load-zoom-core.css">
+</head>
+<body>
+<div class="wrap">
+  <div class="opt"><h1>C · Week-bars + cut</h1>
+  <p>Day → Week → 3 wk morph like B, but Block is 6 week-bars on a week scale. <b>Look at:</b> the 3 wk → Block cut (a hard swap with a fade pulse, no morph) and whether the week bars earn the break. The caption says "week scale" where the scale changes.</p></div>
+  <div class="card"><div class="hero">
+    <div class="head"><div><div class="k">Sunday · Block 2 · Week 3</div><div class="t">Lower A · Squat day</div></div>
+    <button class="glyph" id="glyph" aria-label="Next view"></button></div>
+    <div class="stage"><div class="module" id="module"><svg class="plot" id="plot" role="img"></svg></div></div>
+    <div class="cap"><span class="fig" id="capFig"></span><span class="line" id="capLine"></span></div>
+    <div class="steps" id="steps"><button>Day</button><button>Week</button><button>3 wk</button><button>Block</button></div>
+  </div></div>
+  <div class="card sess"><div class="k">Today's sessions</div>
+    <div class="row"><span>Back Squat · 245 × 4</span><span>2 of 3 sets</span></div>
+    <div class="row"><span>Easy run · 3.0 mi</span><span>6 pm</span></div></div>
+</div>
+<script src="load-zoom-core.js"></script>
+<script>
+var views = ["day", "week", "ribbon", "weeks"];
+var cur = 0, busy = false;
+var module = document.getElementById("module"), svg = document.getElementById("plot"),
+  glyph = document.getElementById("glyph"), fig = document.getElementById("capFig"),
+  line = document.getElementById("capLine"), steps = document.getElementById("steps");
+function paint(v) {
+  var r = LZ.render(views[v]);
+  svg.setAttribute("viewBox", "0 0 358 " + r.h);
+  svg.innerHTML = r.svg;
+  LZ.setCap(fig, line, views[v]);
+  glyph.innerHTML = LZ.icon(views[v]);
+  LZ.mark(steps, v);
+}
+function enter() {
+  svg.classList.remove("enter"); void svg.getBoundingClientRect();
+  var bars = svg.querySelectorAll(".bar");
+  for (var i = 0; i < bars.length; i++) bars[i].style.animationDelay = Math.min(i * 12, 420) + "ms";
+  svg.classList.add("enter");
+  setTimeout(function () { svg.classList.remove("enter"); }, 800);
+}
+paint(0);
+function morph(n, done) {
+  var out = module.animate(
+    [{ opacity: 1, transform: "translateY(0)" }, { opacity: 0, transform: "translateY(10px)" }],
+    { duration: 160, easing: "ease-in", fill: "forwards" });
+  out.finished.then(function () {
+    paint(n); enter();
+    var inn = module.animate(
+      [{ opacity: 0, transform: "translateY(-6px)" }, { opacity: 1, transform: "translateY(0)" }],
+      { duration: 260, easing: "ease-out", fill: "forwards" });
+    inn.finished.then(function () {
+      module.getAnimations().forEach(function (a) { a.cancel(); });
+      done();
+    });
+  }).catch(done);
+}
+function cut(n, done) {
+  paint(n);
+  var p = module.animate([{ opacity: 0.15 }, { opacity: 1 }], { duration: 140, fill: "forwards" });
+  p.finished.then(function () {
+    module.getAnimations().forEach(function (a) { a.cancel(); });
+    done();
+  }).catch(done);
+}
+function go(n) {
+  if (n === cur || busy) return; busy = true;
+  if (LZ.RM) { paint(n); cur = n; busy = false; return; }
+  var adjacent = Math.abs(n - cur) === 1 && n < 3 && cur < 3;
+  var finish = function () { cur = n; busy = false; };
+  if (adjacent) morph(n, finish); else cut(n, finish);
+}
+glyph.onclick = function () { go((cur + 1) % 4); };
+LZ.bindSteps(steps, go);
+</script>
+</body>
+</html>

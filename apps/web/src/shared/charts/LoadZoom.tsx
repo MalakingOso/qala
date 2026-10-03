@@ -236,47 +236,78 @@ function useZoomTween(level: Level, anchor: number, count: number) {
   };
 }
 
+/** The device-pixel grid: `px` snaps a length in CSS px to whole device
+ * pixels, and `hair` is a hairline's width in CSS px, a whole number of device
+ * pixels. Edges drawn on it are single crisp pixels at 1x, 1.25x, 1.5x or 2x. */
+interface Grid {
+  px: (v: number) => number;
+  hair: number;
+}
+
+function gridFor(dpr: number): Grid {
+  return {
+    px: (v) => Math.round(v * dpr) / dpr,
+    hair: Math.max(1, Math.round(dpr)) / dpr,
+  };
+}
+
+/** Future weeks are hatched with a 45 degree stair of single device pixels,
+ * not a rotated tile: a rotated pattern is resampled and goes soft. */
+const HATCH = 6;
+function hatchPath(u: number) {
+  let d = "";
+  for (let i = 0; i < HATCH; i++) {
+    d += `M${i * u},${(HATCH - 1 - i) * u}h${u}v${u}h${-u}z`;
+  }
+  return d;
+}
+
+/** The page's device pixel ratio; browser zoom changes it (and fires resize). */
+function useDpr() {
+  const read = () =>
+    typeof window === "undefined" ? 1 : window.devicePixelRatio || 1;
+  const [dpr, setDpr] = useState(read);
+  useEffect(() => {
+    const on = () => setDpr(read());
+    window.addEventListener("resize", on);
+    return () => window.removeEventListener("resize", on);
+  }, []);
+  return dpr;
+}
+
 /** One piece: planned tint inside a hairline, the part done filled from the
- * baseline, hatched instead when its week is still to come. A piece resting on
- * another loses its bottom pixel to a surface-coloured seam; `cap` is how much
- * of the top hairline and rounded corners shows. */
-function PieceMark({ bar, hatch }: { bar: Bar; hatch: string }) {
-  const x = Math.round(bar.x);
-  const w = Math.max(1, Math.round(bar.x + bar.w) - x);
+ * baseline, hatched instead when its week is still to come. `cap` is how much
+ * of the top hairline and rounded corners shows. Every edge sits on the device
+ * grid, and stacked pieces share one, so no seam shows between them. */
+function PieceMark(
+  { bar, hatch, grid }: { bar: Bar; hatch: string; grid: Grid },
+) {
+  const { px, hair } = grid;
+  const x = px(bar.x);
+  const w = Math.max(hair, px(bar.x + bar.w) - x);
+  const y = px(bar.y);
+  const bottom = px(bar.y + bar.h);
   if (bar.kind === "rest") {
     return (
-      <rect className="lz-rest" x={x} y={bar.y} width={w} height={bar.h} />
+      <rect
+        className="lz-rest"
+        x={x}
+        y={y}
+        width={w}
+        height={Math.max(hair, bottom - y)}
+      />
     );
   }
-  // Stacked pieces share an edge, so snap both edges to whole pixels: a
-  // fractional edge lets the page show through as a faint line between them.
-  const y = Math.round(bar.y);
-  const bottom = Math.round(bar.y + bar.h);
   const h = bottom - y;
-  if (h < 1) return null;
+  if (h < hair) return null;
+  const half = hair / 2;
   const r = Math.min(3, w / 2, h / 2) * bar.cap;
-  // A day's lift domes up into its run, whose bottom is hollowed to match: one
-  // gentle curve between the two. `sag` is how far the middle moves, and it
-  // can't be more than the piece can spare.
-  const sag = Math.min(bar.joint, h / 2);
-  const mid = x + w / 2;
-  const domed = bar.kind === "lift" && sag > 0.1;
-  const hollow = bar.kind === "run" && sag > 0.1;
-  const top = domed
-    ? `V${y} Q${mid},${y - 2 * sag} ${x + w},${y}`
-    : `V${y + r} Q${x},${y} ${x + r},${y} H${x + w - r} Q${x + w},${y} ${
-      x + w
-    },${y + r}`;
-  const foot = hollow ? `Q${mid},${bottom - 2 * sag} ${x},${bottom}` : "";
-  const shape = `M${x},${bottom} ${top} V${bottom} ${foot} Z`;
+  const shape = `M${x},${bottom} V${y + r} Q${x},${y} ${x + r},${y} H${
+    x + w - r
+  } Q${x + w},${y} ${x + w},${y + r} V${bottom} Z`;
   const fh = Math.min(bar.fillH, h);
-  // A run part-done fills from its hollow up, so it never fills less than the
-  // hollow is deep.
-  const partial = hollow
-    ? `M${x},${bottom} Q${mid},${bottom - 2 * sag} ${x + w},${bottom} V${
-      bottom - Math.max(fh, sag)
-    } H${x} Z`
-    : `M${x},${bottom} V${bottom - fh} H${x + w} V${bottom} Z`;
+  const fillTop = px(bottom - fh);
+  const stroke = { strokeWidth: hair };
   return (
     <>
       <path
@@ -288,13 +319,16 @@ function PieceMark({ bar, hatch }: { bar: Bar; hatch: string }) {
         ? (
           <path
             className="lz-fill"
-            d={fh >= h - 0.5 ? shape : partial}
+            d={fh >= h - 0.5
+              ? shape
+              : `M${x},${bottom} V${fillTop} H${x + w} V${bottom} Z`}
           />
         )
         : null}
       <path
         className="lz-hair"
-        d={`M${x + 0.5},${bottom} V${y + r} M${x + w - 0.5},${bottom} V${
+        style={stroke}
+        d={`M${x + half},${bottom} V${y + r} M${x + w - half},${bottom} V${
           y + r
         }`}
       />
@@ -302,10 +336,13 @@ function PieceMark({ bar, hatch }: { bar: Bar; hatch: string }) {
         ? (
           <path
             className="lz-hair"
+            style={stroke}
             opacity={bar.cap}
-            d={`M${x + 0.5},${y + r} Q${x + 0.5},${y + 0.5} ${x + r},${
-              y + 0.5
-            } H${x + w - r} Q${x + w - 0.5},${y + 0.5} ${x + w - 0.5},${y + r}`}
+            d={`M${x + half},${y + r} Q${x + half},${y + half} ${x + r},${
+              y + half
+            } H${x + w - r} Q${x + w - half},${y + half} ${x + w - half},${
+              y + r
+            }`}
           />
         )
         : null}
@@ -315,7 +352,10 @@ function PieceMark({ bar, hatch }: { bar: Bar; hatch: string }) {
 
 /** A day letter, week number or session name under the plot. Today's is
  * reversed out of an ember square (U25). */
-function TextMark({ label, plotH }: { label: Label; plotH: number }) {
+function TextMark(
+  { label, plotH, grid }: { label: Label; plotH: number; grid: Grid },
+) {
+  const cx = grid.px(label.x);
   const cls = `${label.today ? " today" : ""}${label.muted ? " muted" : ""}${
     label.knockout ? " knockout" : ""
   }${label.session ? " session" : ""}`;
@@ -325,7 +365,7 @@ function TextMark({ label, plotH }: { label: Label; plotH: number }) {
         ? (
           <rect
             className="lz-knock"
-            x={label.x - 8}
+            x={cx - 8}
             y={plotH + 6}
             width={16}
             height={15}
@@ -335,7 +375,7 @@ function TextMark({ label, plotH }: { label: Label; plotH: number }) {
         : null}
       <text
         className={`lz-letter${cls}`}
-        x={label.x}
+        x={cx}
         y={plotH + 17}
         textAnchor="middle"
       >
@@ -377,6 +417,12 @@ export function LoadZoom(
   useEffect(() => setHover(null), [level]);
   const liveId = useId();
   const hatch = `lz-hatch-${useId().replace(/[^\w-]/g, "")}`;
+
+  // Edges are snapped to whole device pixels (the browser already puts the
+  // svg's own origin on one), so bars and hairlines stay single crisp pixels at
+  // 1x, 1.25x, 1.5x and 2x.
+  const dpr = useDpr();
+  const grid = useMemo(() => gridFor(dpr), [dpr]);
 
   // ?z= pins the camera for screenshots (dev builds only).
   const forced = useMemo(
@@ -691,12 +737,15 @@ export function LoadZoom(
                   <defs>
                     <pattern
                       id={hatch}
-                      width={7}
-                      height={7}
+                      width={grid.hair * HATCH}
+                      height={grid.hair * HATCH}
                       patternUnits="userSpaceOnUse"
-                      patternTransform="rotate(45)"
                     >
-                      <rect className="lz-hatch" width={3} height={7} />
+                      <path
+                        className="lz-hatch"
+                        shapeRendering="crispEdges"
+                        d={hatchPath(grid.hair)}
+                      />
                     </pattern>
                   </defs>
                   <g transform={`translate(0 ${TOP})`}>
@@ -704,10 +753,10 @@ export function LoadZoom(
                       ? (
                         <rect
                           className="lz-pick"
-                          x={Math.max(pick.x, 0)}
+                          x={grid.px(Math.max(pick.x, 0))}
                           y={-6}
-                          width={Math.min(pick.x + pick.w, width) -
-                            Math.max(pick.x, 0)}
+                          width={grid.px(Math.min(pick.x + pick.w, width)) -
+                            grid.px(Math.max(pick.x, 0))}
                           height={height + LABEL_H + 6}
                           rx={4}
                         />
@@ -717,8 +766,9 @@ export function LoadZoom(
                       <line
                         key={d.key}
                         className="lz-divider"
-                        x1={d.x}
-                        x2={d.x}
+                        style={{ strokeWidth: grid.hair }}
+                        x1={grid.px(d.x) + grid.hair / 2}
+                        x2={grid.px(d.x) + grid.hair / 2}
                         y1={0}
                         y2={height + LABEL_H}
                         opacity={d.opacity}
@@ -726,10 +776,11 @@ export function LoadZoom(
                     ))}
                     <line
                       className="lz-base"
+                      style={{ strokeWidth: grid.hair }}
                       x1={0}
                       x2={width}
-                      y1={height + 0.5}
-                      y2={height + 0.5}
+                      y1={grid.px(height) + grid.hair / 2}
+                      y2={grid.px(height) + grid.hair / 2}
                     />
                     {f.bars.filter((b) => b.opacity > 0.004).map((b) => (
                       <g
@@ -739,11 +790,16 @@ export function LoadZoom(
                         }${lifted(b) ? " lifted" : ""}`}
                         opacity={b.opacity}
                       >
-                        <PieceMark bar={b} hatch={hatch} />
+                        <PieceMark bar={b} hatch={hatch} grid={grid} />
                       </g>
                     ))}
                     {f.labels.filter((l) => l.row === "text").map((l) => (
-                      <TextMark key={l.key} label={l} plotH={height} />
+                      <TextMark
+                        key={l.key}
+                        label={l}
+                        plotH={height}
+                        grid={grid}
+                      />
                     ))}
                   </g>
                 </svg>

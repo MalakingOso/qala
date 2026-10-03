@@ -1764,6 +1764,152 @@ table.data tr.row-link a:focus-visible {
   min-height: 100px;
   border-bottom: var(--border-width) solid var(--border);
 }
+/* The nav bar fades in as the plate docks, so its Q mark holds still and
+ * the plate can aim at it. A solid, even band of the page colour. */
+.landing-topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 60;
+  min-height: 0;
+  background: var(--bg);
+  border-bottom: var(--border-width) solid var(--border);
+  opacity: 0;
+  transform: translateY(-6px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+  pointer-events: none;
+}
+.landing-page[data-docking] .landing-topbar,
+.landing-page[data-phase="content"] .landing-topbar {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+/* Keep the bar's contents on the same 1280 px measure as the page. The
+ * header is a flex row, so the inner must be told to fill it. */
+.landing-topbar-inner {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  max-width: 1280px;
+  min-height: 72px;
+  margin: 0 auto;
+  padding: 0 48px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .landing-topbar {
+    transition: none;
+  }
+  .landing-page[data-phase="content"] .landing-intro-wrap {
+    display: none;
+  }
+}
+/* The intro is the first full view, not a section you can scroll back to.
+ * It is a fixed overlay over the content; a downward scroll fades it out
+ * while the nav bar slides in, then it unmounts and never returns. */
+.landing-intro-wrap {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: var(--bg);
+  transition: opacity 0.7s ease;
+}
+/* A definite width so the figure's aspect-ratio can size it inside the
+ * flex overlay. The 1080 px cap keeps it at its native resolution. */
+.landing-intro-wrap .intro-hero {
+  width: 100%;
+  max-width: min(1080px, 100%);
+  max-height: 100%;
+  margin: 0;
+}
+/* The dock: the whole scene fades, the plate shrinks and travels onto the
+ * nav mark, and the wordmark and hint slip away first. */
+.landing-page[data-docking] .landing-intro-wrap {
+  background: transparent;
+  pointer-events: none;
+  transition: background 0.5s ease;
+}
+.landing-page[data-docking] .intro-hero {
+  transform:
+    translate(var(--dock-x, 0), var(--dock-y, 0))
+    scale(var(--dock-s, 0.1));
+  transition: transform 0.9s cubic-bezier(0.45, 0.02, 0.25, 1);
+}
+.landing-page[data-docking] .intro-hero .intro-wordmark,
+.landing-page[data-docking] .intro-scroll {
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+/* Freeze the wordmark's settled transform so it only fades, never slides. */
+.landing-page[data-docking] .intro-hero.is-settled .intro-wordmark {
+  opacity: 0;
+}
+.landing-page[data-phase="content"] .landing-intro-wrap {
+  display: none;
+}
+/* The content rises into place as the intro hands off. */
+.landing-page[data-phase="content"] main,
+.landing-page[data-phase="content"] .landing-footer {
+  animation: landing-rise 0.7s ease both;
+}
+@keyframes landing-rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+/* The hint under the plate; the only affordance on the intro view. */
+.intro-scroll {
+  position: absolute;
+  left: 50%;
+  bottom: 40px;
+  transform: translateX(-50%);
+  border: 0;
+  background: transparent;
+  color: var(--fg-muted);
+  font: inherit;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  animation: intro-bob 2.4s ease-in-out infinite;
+}
+.intro-scroll:hover,
+.intro-scroll:focus-visible {
+  color: var(--fg);
+}
+@keyframes intro-bob {
+  0%,
+  100% {
+    transform: translate(-50%, 0);
+  }
+  50% {
+    transform: translate(-50%, 6px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .landing-intro-wrap {
+    transition: none;
+  }
+  .landing-page[data-phase="content"] main,
+  .landing-page[data-phase="content"] .landing-footer {
+    animation: none;
+  }
+  .intro-scroll {
+    animation: none;
+  }
+}
 .landing-hero {
   display: grid;
   grid-template-columns: 1.1fr 1fr;
@@ -1780,6 +1926,17 @@ table.data tr.row-link a:focus-visible {
   color: var(--fg-secondary);
   max-width: 46ch;
   line-height: 1.9;
+}
+/* The literature note under the intro copy: a touch of accent to mark it as
+ * the "why", separate from the marketing line above. */
+.landing-evidence {
+  max-width: 48ch;
+  margin-top: 20px;
+  padding-left: 16px;
+  border-left: 2px solid var(--accent);
+  color: var(--fg-muted);
+  font-size: 13px;
+  line-height: 1.7;
 }
 .landing-actions {
   display: flex;
@@ -2193,24 +2350,312 @@ table.data tr.row-link a:focus-visible {
   line-height: 1.2;
   margin: 12px 0 40px;
 }
-.landing-grid {
+/* The expanded "Grounded in the literature" section
+ * (shared/landing/LandingEvidence.tsx): a lede, then the published work the
+ * engine is built from, then what you can do with it, shown with real
+ * captures of the app screens. */
+.evidence {
+  padding-bottom: 88px;
+}
+.evidence-lede {
+  max-width: 68ch;
+  margin: -20px 0 8px;
+  color: var(--fg-secondary);
+  font-size: 15px;
+  line-height: 1.85;
+}
+.evidence-subhead {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  margin: 56px 0 28px;
+  font-size: 20px;
+  font-weight: 600;
+}
+.evidence-no {
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  letter-spacing: .08em;
+  color: var(--accent);
+}
+.evidence-cards {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 40px;
+  gap: 32px 40px;
 }
-.feature-number {
-  color: var(--fg-muted);
+.evidence-card {
+  border-top: var(--border-width) solid var(--border);
+  padding-top: 16px;
+}
+.evidence-tag {
+  display: inline-block;
   font-size: 10px;
-  letter-spacing: .08em;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--accent);
 }
-.landing-grid h3 {
-  font-size: 24px;
-  margin: 16px 0 12px;
+.evidence-card h4 {
+  font-size: 19px;
+  margin: 10px 0 10px;
+  line-height: 1.25;
 }
-.landing-grid p {
+.evidence-card p {
   color: var(--fg-secondary);
   font-size: 13px;
   line-height: 1.8;
+  margin: 0 0 10px;
+}
+.evidence-cite {
+  color: var(--fg-muted);
+  font-size: 11px;
+  letter-spacing: .01em;
+}
+/* The app half: three tabs (Lifting, Running, Coach). Each panel pairs a
+ * block of copy with a stage — the desktop window behind, the Android phone
+ * overlapping its corner, like a real device on a desk. */
+.evidence-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-bottom: 20px;
+  margin-bottom: 36px;
+  border-bottom: var(--border-width) solid var(--border);
+}
+.evidence-tab {
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--fg-muted);
+  background: transparent;
+  border: 0;
+  border-radius: 99px;
+  padding: 9px 18px;
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+.evidence-tab:hover {
+  color: var(--fg);
+}
+.evidence-tab[aria-selected="true"] {
+  color: var(--bg);
+  background: var(--accent);
+}
+.evidence-tab:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.evidence-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  gap: clamp(32px, 5vw, 72px);
+  align-items: center;
+  animation: evidence-fade 0.4s ease both;
+}
+@keyframes evidence-fade {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.evidence-copy h4 {
+  font-size: 28px;
+  margin: 0 0 14px;
+  line-height: 1.15;
+}
+.evidence-copy p {
+  color: var(--fg-secondary);
+  font-size: 15px;
+  line-height: 1.85;
+  margin: 0 0 20px;
+  max-width: 46ch;
+}
+.evidence-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 48ch;
+}
+.evidence-list li {
+  position: relative;
+  padding-left: 24px;
+  color: var(--fg-secondary);
+  font-size: 14px;
+  line-height: 1.6;
+}
+.evidence-list li::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: 0.62em;
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+  background: var(--accent);
+}
+/* The stage: a desktop window with the phone overlapping its lower corner. */
+.evidence-stage {
+  position: relative;
+  padding-bottom: 44px;
+}
+.evidence-stage .evidence-device {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  width: min(190px, 42%);
+  filter: drop-shadow(-14px 22px 30px rgb(0 0 0 / 0.32));
+}
+/* Desktop capture in a light window chrome. */
+.evidence-shot {
+  margin: 0;
+  border: var(--border-width) solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--bg-surface);
+  box-shadow: 0 18px 40px -28px rgb(0 0 0 / 0.35);
+}
+.evidence-shot.is-window .window-bar {
+  display: flex;
+  gap: 7px;
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+}
+.window-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--border-strong, var(--border));
+  opacity: 0.5;
+}
+.evidence-shot img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* A phone capture inside an Android shell: a thin, even bezel, a centred
+ * punch-hole camera, and the Android gesture bar. */
+.evidence-device {
+  margin: 0;
+}
+.evidence-device .device-body {
+  position: relative;
+  padding: 3.4%;
+  border-radius: 8.5% / 4.4%;
+  background: linear-gradient(150deg, #43464d, #1d1f23 48%, #33363c);
+  box-shadow:
+    inset 0 0 0 2px rgb(255 255 255 / 0.09),
+    0 26px 54px -24px rgb(0 0 0 / 0.55);
+}
+.evidence-device.tone-light .device-body {
+  background: linear-gradient(150deg, #f4f5f7, #dadde2 48%, #eef0f3);
+  box-shadow:
+    inset 0 0 0 2px rgb(0 0 0 / 0.07),
+    0 26px 54px -24px rgb(0 0 0 / 0.38);
+}
+/* Side buttons, drawn as part of the body. */
+.device-key {
+  position: absolute;
+  right: -1.6%;
+  width: 1.6%;
+  border-radius: 0 3px 3px 0;
+  background: inherit;
+}
+.device-key-power {
+  top: 20%;
+  height: 12%;
+}
+.device-key-volume {
+  top: 9%;
+  height: 8%;
+  right: auto;
+  left: -1.6%;
+  border-radius: 3px 0 0 3px;
+}
+.evidence-device.tone-light .device-key {
+  filter: brightness(0.92);
+}
+.evidence-device .device-screen {
+  position: relative;
+  overflow: hidden;
+  border-radius: 6% / 3.1%;
+  background: #000;
+  aspect-ratio: 390 / 844;
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.65);
+}
+.evidence-device .device-screen img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+}
+/* Android: small centred punch-hole camera. */
+.evidence-device .device-camera {
+  position: absolute;
+  top: 1.7%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4.2%;
+  height: 1.9%;
+  border-radius: 50%;
+  background: #05070a;
+  box-shadow:
+    inset 0 0 0 1px rgb(255 255 255 / 0.14),
+    0 0 0 1.5px rgb(0 0 0 / 0.35);
+}
+/* Android gesture bar (a short pill) at the bottom. */
+.device-home {
+  position: absolute;
+  bottom: 1.4%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 30%;
+  height: 0.65%;
+  border-radius: 99px;
+  background: rgb(0 0 0 / 0.32);
+}
+.evidence-device.tone-dark .device-home {
+  background: rgb(255 255 255 / 0.42);
+}
+@media (max-width: 900px) {
+  .evidence-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .evidence-panel {
+    grid-template-columns: 1fr;
+  }
+  .evidence-stage {
+    padding-bottom: 40px;
+  }
+  .evidence-stage .evidence-device {
+    width: min(170px, 38%);
+  }
+}
+@media (max-width: 760px) {
+  .evidence-cards {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+  .evidence-tabs {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    scrollbar-width: none;
+  }
+  .evidence-stage .evidence-device {
+    width: min(150px, 46%);
+  }
+  .evidence-copy h4 {
+    font-size: 22px;
+  }
 }
 .landing-footer {
   display: flex;
@@ -3502,13 +3947,17 @@ select.field {
   .landing-header .toolbar-link {
     font-size: 10px;
   }
-  .intro-hero {
-    margin-top: 8px;
-  }
   .landing-hero {
     grid-template-columns: 1fr;
     padding: 48px 0;
     gap: 40px;
+  }
+  .landing-topbar-inner {
+    padding: 0 24px;
+    min-height: 64px;
+  }
+  .intro-hero {
+    margin-top: 8px;
   }
   .landing-hero h1 {
     font-size: clamp(42px, 9vw, 64px);
@@ -3518,10 +3967,6 @@ select.field {
   }
   .landing-actions .landing-desktop-entry {
     display: none;
-  }
-  .landing-grid {
-    grid-template-columns: 1fr;
-    gap: 32px;
   }
 }
 @media (max-width: 380px) {

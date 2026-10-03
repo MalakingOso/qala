@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Load zoom D · alternating-axis flip</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Faustina:wght@500;700&display=swap">
+<link rel="stylesheet" href="load-zoom-core.css">
+<style>.module { backface-visibility: hidden; }</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="opt"><h1>D · Alternating-axis flip</h1>
+  <p>Each boundary flips on its own axis: Day → Week tips <b>up (X)</b>, Week → 3 wk swings <b>sideways (Y)</b>, 3 wk → Block tips <b>down (X)</b>. <b>Look at:</b> whether a different rotation per level reads as travel or as gimmick.</p></div>
+  <div class="card"><div class="hero">
+    <div class="head"><div><div class="k">Sunday · Block 2 · Week 3</div><div class="t">Lower A · Squat day</div></div>
+    <button class="glyph" id="glyph" aria-label="Next view"></button></div>
+    <div class="stage"><div class="module" id="module"><svg class="plot" id="plot" role="img"></svg></div></div>
+    <div class="cap"><span class="fig" id="capFig"></span><span class="line" id="capLine"></span></div>
+    <div class="steps" id="steps"><button>Day</button><button>Week</button><button>3 wk</button><button>Block</button></div>
+  </div></div>
+  <div class="card sess"><div class="k">Today's sessions</div>
+    <div class="row"><span>Back Squat · 245 × 4</span><span>2 of 3 sets</span></div>
+    <div class="row"><span>Easy run · 3.0 mi</span><span>6 pm</span></div></div>
+</div>
+<script src="load-zoom-core.js"></script>
+<script>
+var views = ["day", "week", "ribbon", "dense"];
+var axes = ["x", "y", "x"]; // boundary 0: X up, 1: Y swing, 2: X down
+var cur = 0, busy = false;
+var module = document.getElementById("module"), svg = document.getElementById("plot"),
+  glyph = document.getElementById("glyph"), fig = document.getElementById("capFig"),
+  line = document.getElementById("capLine"), steps = document.getElementById("steps");
+function paint(v) {
+  var r = LZ.render(views[v]);
+  svg.setAttribute("viewBox", "0 0 358 " + r.h);
+  svg.innerHTML = r.svg;
+  LZ.setCap(fig, line, views[v]);
+  glyph.innerHTML = LZ.icon(views[v]);
+  LZ.mark(steps, v);
+}
+paint(0);
+function go(n) {
+  if (n === cur || busy) return; busy = true;
+  if (LZ.RM) { paint(n); cur = n; busy = false; return; }
+  var boundary = n > cur ? Math.min(n - 1, 2) : Math.min(n, 2);
+  var prop = axes[boundary] === "x" ? "rotateX" : "rotateY";
+  var fwd = n > cur ? 1 : -1;
+  var out = module.animate(
+    [{ transform: prop + "(0deg)", opacity: 1 }, { transform: prop + "(" + (-90 * fwd) + "deg)", opacity: 0.25 }],
+    { duration: 200, easing: "ease-in", fill: "forwards" });
+  out.finished.then(function () {
+    paint(n);
+    var inn = module.animate(
+      [{ transform: prop + "(" + (90 * fwd) + "deg)", opacity: 0.25 }, { transform: prop + "(0deg)", opacity: 1 }],
+      { duration: 240, easing: "ease-out", fill: "forwards" });
+    inn.finished.then(function () {
+      module.getAnimations().forEach(function (a) { a.cancel(); });
+      cur = n; busy = false;
+    });
+  }).catch(function () { paint(n); cur = n; busy = false; });
+}
+glyph.onclick = function () { go((cur + 1) % 4); };
+LZ.bindSteps(steps, go);
+</script>
+</body>
+</html>

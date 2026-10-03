@@ -1,0 +1,40 @@
+/* Shared styles for the load-zoom transition artifacts. Mockups only. */
+body { margin: 0; background: #f5f5f7; font-family: "DM Mono", ui-monospace, monospace; color: #0f152a; }
+.wrap { width: 390px; margin: 0 auto; padding: 16px 0 40px; }
+.opt h1 { font-family: "Qala Test", "Faustina", Georgia, serif; font-size: 22px; margin: 6px 16px 4px; }
+.opt p { margin: 0 16px 12px; font-size: 12px; color: #4a5578; line-height: 1.5; }
+.opt p b { color: #0f152a; }
+.card { background: #fff; border: 2px solid rgba(15,21,42,.10); border-radius: 6px; margin: 0 12px; box-shadow: 2px 4px 0 0 rgba(15,21,42,.10); }
+.hero { padding: 12px; }
+.k { font-size: 11px; letter-spacing: .09em; text-transform: uppercase; color: #64708b; font-weight: 500; }
+.head { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.t { font-family: "Qala Test", "Faustina", Georgia, serif; font-weight: 700; font-size: 20px; line-height: 1.15; margin-top: 2px; }
+.glyph { width: 44px; height: 44px; flex: none; border: 2px solid rgba(15,21,42,.22); border-radius: 4px; background: #fff; color: #0f152a; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; }
+.glyph:active { background: #0f152a; color: #fff; }
+.glyph svg { width: 22px; height: 22px; }
+.stage { perspective: 900px; margin-top: 10px; }
+.module { position: relative; }
+.module.fixed { height: 168px; }
+svg.plot { display: block; width: 100%; height: auto; }
+.lbl { font-family: "DM Mono", monospace; font-size: 10px; fill: #64708b; }
+.lbl.b { fill: #0f152a; font-weight: 500; }
+.lbl.e { fill: #c2410c; font-weight: 700; }
+.lbl.n { font-size: 11px; fill: #0f152a; font-weight: 500; }
+.lbl.s { font-size: 9px; }
+.cap { display: flex; align-items: baseline; gap: 8px; margin-top: 8px; min-height: 30px; }
+.cap .fig { font-family: "Qala Test", "Faustina", Georgia, serif; font-weight: 700; font-size: 24px; white-space: nowrap; }
+.cap .fig small { font-size: 12px; color: #64708b; font-weight: 500; }
+.cap .line { font-size: 12px; color: #4a5578; }
+.steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 2px solid rgba(15,21,42,.10); border-radius: 6px; overflow: hidden; margin-top: 10px; }
+.steps button { height: 40px; border: 0; background: #fff; color: #64708b; font: 500 12px "DM Mono", monospace; cursor: pointer; border-left: 2px solid rgba(15,21,42,.10); padding: 0; }
+.steps button:first-child { border-left: 0; }
+.steps button.on { background: #0f152a; color: #fff; }
+.sess { margin-top: 12px; padding: 10px 14px; font-size: 12px; }
+.sess .row { display: flex; justify-content: space-between; padding: 7px 0; border-top: 2px solid rgba(15,21,42,.10); }
+.sess .k + .row { border-top: 0; }
+svg.enter .bar { animation: grow .3s both; }
+svg.enter .lbl { animation: fadein .35s both; }
+.bar { transform-box: fill-box; transform-origin: 50% 100%; }
+@keyframes grow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+@keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }

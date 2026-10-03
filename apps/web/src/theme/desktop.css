@@ -534,7 +534,7 @@
 /* Hatch, not a dashed border, which dithered at this size. */
 .page-desktop .lz-hatch {
   fill: var(--fg-faint);
-  fill-opacity: 0.16;
+  fill-opacity: 0.4;
 }
 .page-desktop .lz-rest {
   fill: var(--border-strong);

@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Load zoom F · dolly</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Faustina:wght@500;700&display=swap">
+<link rel="stylesheet" href="load-zoom-core.css">
+<style>
+.stack { position: relative; height: 168px; transform-style: preserve-3d; transition: transform .65s cubic-bezier(.2,.7,.25,1); pointer-events: none; }
+.layer { position: absolute; inset: 0; display: flex; align-items: center; opacity: 0; transition: opacity .3s; pointer-events: none; }
+.layer svg { width: 100%; }
+.layer.front { opacity: 1; }
+.flying .layer { opacity: .3; transition: opacity .2s; }
+.flying .layer.front { opacity: 1; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="opt"><h1>F · Dolly</h1>
+  <p>All four views stacked in depth; the camera dollies back and the next one comes forward. <b>Look at:</b> the zoom-out travel mid-flight (the stack ghosts through, like the reference's messy frame); the fixed-height box; the settle to one sharp view.</p></div>
+  <div class="card"><div class="hero">
+    <div class="head"><div><div class="k">Sunday · Block 2 · Week 3</div><div class="t">Lower A · Squat day</div></div>
+    <button class="glyph" id="glyph" aria-label="Next view"></button></div>
+    <div class="stage"><div class="module fixed"><div class="stack" id="stack"></div></div></div>
+    <div class="cap"><span class="fig" id="capFig"></span><span class="line" id="capLine"></span></div>
+    <div class="steps" id="steps"><button>Day</button><button>Week</button><button>3 wk</button><button>Block</button></div>
+  </div></div>
+  <div class="card sess"><div class="k">Today's sessions</div>
+    <div class="row"><span>Back Squat · 245 × 4</span><span>2 of 3 sets</span></div>
+    <div class="row"><span>Easy run · 3.0 mi</span><span>6 pm</span></div></div>
+</div>
+<script src="load-zoom-core.js"></script>
+<script>
+var views = ["day", "week", "ribbon", "dense"];
+var DEPTH = 240;
+var cur = 0, busy = false;
+var stack = document.getElementById("stack"),
+  glyph = document.getElementById("glyph"), fig = document.getElementById("capFig"),
+  line = document.getElementById("capLine"), steps = document.getElementById("steps");
+views.forEach(function (v, i) {
+  var r = LZ.render(v, { plotH: 120 });
+  var layer = document.createElement("div");
+  layer.className = "layer" + (i === 0 ? " front" : "");
+  layer.style.transform = "translateZ(" + (-DEPTH * i) + "px)";
+  layer.innerHTML = '<svg class="plot" viewBox="0 0 358 ' + r.h + '">' + r.svg + "</svg>";
+  stack.appendChild(layer);
+});
+var layers = stack.querySelectorAll(".layer");
+function paint(v) {
+  LZ.setCap(fig, line, views[v]);
+  glyph.innerHTML = LZ.icon(views[v]);
+  LZ.mark(steps, v);
+}
+paint(0);
+function go(n) {
+  if (n === cur || busy) return; busy = true;
+  for (var i = 0; i < layers.length; i++) layers[i].classList.toggle("front", i === n);
+  if (LZ.RM) {
+    stack.style.transition = "none";
+    stack.style.transform = "translateZ(" + (DEPTH * n) + "px)";
+    paint(n); cur = n; busy = false; return;
+  }
+  stack.classList.add("flying");
+  stack.style.transform = "translateZ(" + (DEPTH * n) + "px)";
+  setTimeout(function () { paint(n); }, 350);
+  setTimeout(function () {
+    stack.classList.remove("flying");
+    cur = n; busy = false;
+  }, 700);
+}
+glyph.onclick = function () { go((cur + 1) % 4); };
+LZ.bindSteps(steps, go);
+</script>
+</body>
+</html>

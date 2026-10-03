@@ -49,10 +49,6 @@ export const QUIET = 0.55;
 const CROSSFADE_FROM = 0.9;
 /** Day level: how far apart a day's lift and run pieces sit, in pixels. */
 export const SESSION_GAP = 104;
-/** A lift-run join bulges by this share of the bar's width, at most
- * JOINT_MAX px: a little more curve than flat. */
-const JOINT_SHARE = 0.14;
-const JOINT_MAX = 5;
 
 export const PINCH_PER_LEVEL = 1.8;
 export const TWEEN_MS_PER_LEVEL = 380;
@@ -550,10 +546,6 @@ export interface Bar {
   /** 0 to 1: how much of the top hairline and rounded corners shows. Falls to
    * 0 as another piece covers the top. */
   cap: number;
-  /** Px: how far the join to the neighbouring piece bulges. The lift's top
-   * domes up into the run, whose bottom hollows to match, so a day's two
-   * pieces meet along one gentle curve instead of a flat line. 0 is flat. */
-  joint: number;
   opacity: number;
 }
 
@@ -613,11 +605,6 @@ export interface Frame {
   window: { start: number; days: number };
   /** The y-scale's top, in load. */
   yMax: number;
-}
-
-/** The join's bulge for a bar this wide over a run piece this tall. */
-function jointFor(width: number, runH: number) {
-  return Math.max(0, Math.min(JOINT_MAX, width * JOINT_SHARE, runH / 2));
 }
 
 /** Bar thickness for a slot width: the slot less a gap, at most `max`. */
@@ -731,7 +718,6 @@ export function frame(model: BlockModel, cam: Camera, box: Box): Frame {
           fillH: 0,
           future: false,
           cap: 1,
-          joint: 0,
           opacity: op,
         });
       }
@@ -761,9 +747,6 @@ export function frame(model: BlockModel, cam: Camera, box: Box): Frame {
         const covered = kind === "lift" && day.runSize > 0 ? sessionSlide : 0;
         const top = topOfWeek[day.week];
         const isTop = top.kind === kind && top.abs === day.abs;
-        const joint = day.liftSize > 0 && day.runSize > 0
-          ? jointFor(dayBar, day.runSize * ppl) * sessionSlide * (1 - rise)
-          : 0;
         out.bars.push({
           key: `p${day.abs}-${kind}`,
           layer: "day",
@@ -777,7 +760,6 @@ export function frame(model: BlockModel, cam: Camera, box: Box): Frame {
           fillH: future || sess.size <= 0 ? 0 : (sess.done / sess.size) * h,
           future,
           cap: (1 - covered) * (isTop ? 1 : 1 - rise),
-          joint,
           opacity: dayIn * wo,
         });
         if (sessionLabels > 0) {
@@ -837,9 +819,6 @@ export function frame(model: BlockModel, cam: Camera, box: Box): Frame {
           fillH: future || size <= 0 ? 0 : (done / size) * h,
           future,
           cap,
-          joint: week.liftSize > 0 && week.runSize > 0
-            ? jointFor(dayBar, week.runSize * ppl)
-            : 0,
           opacity: weekIn,
         });
       };
@@ -857,7 +836,6 @@ export function frame(model: BlockModel, cam: Camera, box: Box): Frame {
           fillH: 0,
           future: false,
           cap: 1,
-          joint: 0,
           opacity: weekIn,
         });
       } else {

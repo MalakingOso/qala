@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Load zoom E · cube</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Faustina:wght@500;700&display=swap">
+<link rel="stylesheet" href="load-zoom-core.css">
+<style>
+.rotor { position: relative; height: 168px; transform-style: preserve-3d; transition: transform .6s cubic-bezier(.2,.7,.25,1); pointer-events: none; }
+.face { position: absolute; inset: 0; background: #fff; backface-visibility: hidden; display: flex; align-items: center; pointer-events: none; }
+.face svg { width: 100%; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="opt"><h1>E · Cube</h1>
+  <p>The module is a four-sided box; each tap turns it 90° to the next face. <b>Look at:</b> the box turn with the next view riding the side face; the fixed-height box (nothing below slides); stepper jumps spin through the faces between.</p></div>
+  <div class="card"><div class="hero">
+    <div class="head"><div><div class="k">Sunday · Block 2 · Week 3</div><div class="t">Lower A · Squat day</div></div>
+    <button class="glyph" id="glyph" aria-label="Next view"></button></div>
+    <div class="stage"><div class="module fixed"><div class="rotor" id="rotor"></div></div></div>
+    <div class="cap"><span class="fig" id="capFig"></span><span class="line" id="capLine"></span></div>
+    <div class="steps" id="steps"><button>Day</button><button>Week</button><button>3 wk</button><button>Block</button></div>
+  </div></div>
+  <div class="card sess"><div class="k">Today's sessions</div>
+    <div class="row"><span>Back Squat · 245 × 4</span><span>2 of 3 sets</span></div>
+    <div class="row"><span>Easy run · 3.0 mi</span><span>6 pm</span></div></div>
+</div>
+<script src="load-zoom-core.js"></script>
+<script>
+var views = ["day", "week", "ribbon", "dense"];
+var cur = 0, busy = false;
+var rotor = document.getElementById("rotor"),
+  glyph = document.getElementById("glyph"), fig = document.getElementById("capFig"),
+  line = document.getElementById("capLine"), steps = document.getElementById("steps");
+var half = Math.max(rotor.clientWidth / 2, 100);
+views.forEach(function (v, i) {
+  var r = LZ.render(v, { plotH: 120 });
+  var face = document.createElement("div");
+  face.className = "face";
+  face.style.transform = "rotateY(" + (i * 90) + "deg) translateZ(" + half.toFixed(1) + "px)";
+  face.innerHTML = '<svg class="plot" viewBox="0 0 358 ' + r.h + '">' + r.svg + "</svg>";
+  rotor.appendChild(face);
+});
+// Center the box on its layout plane so the front face sits at z=0 instead
+// of floating half a side toward the viewer (where it eats header taps).
+var rest = "translateZ(" + (-half).toFixed(1) + "px) ";
+rotor.style.transform = rest + "rotateY(0deg)";
+function paint(v) {
+  LZ.setCap(fig, line, views[v]);
+  glyph.innerHTML = LZ.icon(views[v]);
+  LZ.mark(steps, v);
+}
+paint(0);
+function go(n) {
+  if (n === cur || busy) return; busy = true;
+  if (LZ.RM) { rotor.style.transition = "none"; rotor.style.transform = rest + "rotateY(" + (-90 * n) + "deg)"; paint(n); cur = n; busy = false; return; }
+  rotor.style.transform = rest + "rotateY(" + (-90 * n) + "deg)";
+  setTimeout(function () { paint(n); }, 300);
+  setTimeout(function () { cur = n; busy = false; }, 650);
+}
+glyph.onclick = function () { go((cur + 1) % 4); };
+LZ.bindSteps(steps, go);
+</script>
+</body>
+</html>
