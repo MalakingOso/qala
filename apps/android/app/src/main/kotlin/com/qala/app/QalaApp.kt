@@ -111,6 +111,8 @@ fun QalaApp() {
                                 if (to == Destination.Skip) (today as? TodayLoad.Ready)?.let { ui.skip.show(it.model.skip) } else nav = nav.go(to)
                             },
                             onBack = { nav.back()?.let { nav = it } },
+                            onPlates = { nav = nav.push(Route.Plates) },
+                            onEditPlates = { nav = nav.push(Route.Settings) },
                         )
                     }
                 }

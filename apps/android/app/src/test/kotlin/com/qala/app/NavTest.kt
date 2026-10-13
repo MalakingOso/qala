@@ -7,7 +7,7 @@ import org.junit.Test
 class NavTest {
     @Test
     fun idsRoundTrip() {
-        for (route in Route.tabs + Route.History + Route.Settings + Route.CheckIn + Route.WarmUp + Route.Workout + Route.Run) {
+        for (route in Route.tabs + Route.History + Route.Settings + Route.Plates + Route.CheckIn + Route.WarmUp + Route.Workout + Route.Run) {
             assertEquals(route, Route.fromId(route.id))
         }
     }
@@ -15,6 +15,14 @@ class NavTest {
     @Test
     fun unknownIdFallsBackToToday() {
         assertEquals(Route.Today, Route.fromId("nope"))
+    }
+
+    @Test
+    fun platesIsPushedAndHighlightsToday() {
+        assertEquals(Route.Today, Route.Plates.tab)
+        val nav = Nav().push(Route.Settings).push(Route.Plates)
+        assertEquals(Route.Plates, nav.route)
+        assertEquals("Back from plates returns to the tab settings came from", Nav(), nav.back())
     }
 
     @Test

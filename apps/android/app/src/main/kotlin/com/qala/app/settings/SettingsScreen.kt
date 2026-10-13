@@ -1,9 +1,11 @@
 package com.qala.app.settings
 
 import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -17,6 +19,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.liveRegion
@@ -24,12 +27,17 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.qala.app.LocalAppContainer
+import com.qala.app.plates.EzBarWeight
+import com.qala.app.plates.fmtWeight
 import com.qala.data.model.SettingsRecord
 import com.qala.design.Card
 import com.qala.design.DayStrip
 import com.qala.design.FlowHead
 import com.qala.design.Group
+import com.qala.design.GroupRow
 import com.qala.design.Qala
+import com.qala.design.QalaIcon
+import com.qala.design.QalaIcons
 import com.qala.design.QalaText
 import com.qala.design.QalaType
 import kotlinx.coroutines.launch
@@ -41,7 +49,7 @@ import kotlinx.coroutines.launch
  * catches up, so two quick taps do not undo each other.
  */
 @Composable
-fun SettingsScreen(scroll: ScrollState, onBack: () -> Unit) {
+fun SettingsScreen(scroll: ScrollState, onBack: () -> Unit, onPlates: () -> Unit) {
     val c = Qala.colors
     val container = LocalAppContainer.current
     val stored by container.settings.settings.collectAsState(initial = SettingsRecord())
@@ -90,8 +98,35 @@ fun SettingsScreen(scroll: ScrollState, onBack: () -> Unit) {
             }
         }
 
+        Group("Bars and plates", Modifier.padding(top = 14.dp)) {
+            GroupRow {
+                QalaText("Default bar", style = QalaType.body)
+                Spacer(Modifier.weight(1f))
+                QalaText("45 lb", style = QalaType.hint, color = c.fgMuted)
+            }
+            GroupRow {
+                QalaText("EZ bar", style = QalaType.body)
+                Spacer(Modifier.weight(1f))
+                QalaText("${fmtWeight(EzBarWeight)} lb", style = QalaType.hint, color = c.fgMuted)
+            }
+            GroupRow {
+                QalaText("Collars", style = QalaType.body)
+                Spacer(Modifier.weight(1f))
+                QalaText("0 lb", style = QalaType.hint, color = c.fgMuted)
+            }
+            GroupRow(
+                Modifier.clickable(role = Role.Button, onClickLabel = "Open plate calculator") { onPlates() },
+                last = true,
+            ) {
+                QalaIcon(QalaIcons.Calculator, null, size = 20.dp)
+                QalaText("Calculator", style = QalaType.bodyStrong)
+                Spacer(Modifier.weight(1f))
+                QalaIcon(QalaIcons.ChevronRight, null, size = 20.dp)
+            }
+        }
+
         Card(Modifier.padding(top = 14.dp)) {
-            QalaText("Units, equipment and the title font arrive with the rest of A1.", style = QalaType.hint, color = c.fgMuted)
+            QalaText("Units and the title font arrive with the rest of A1. The bars above are the defaults the calculator plans with; an editable inventory is still to come.", style = QalaType.hint, color = c.fgMuted)
         }
     }
 }

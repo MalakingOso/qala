@@ -18,6 +18,7 @@ sealed interface Route {
     data object Coach : Route { override val id = "coach" }
     data object History : Route { override val id = "history" }
     data object Settings : Route { override val id = "settings" }
+    data object Plates : Route { override val id = "plates" }
     data object CheckIn : Route { override val id = "check-in" }
     data object WarmUp : Route { override val id = "warm-up" }
     data object Workout : Route { override val id = "workout" }
@@ -25,7 +26,7 @@ sealed interface Route {
 
     companion object {
         val tabs: List<Route> = listOf(Today, Plan, Body, Progress, Coach)
-        private val all: List<Route> = tabs + History + Settings + CheckIn + WarmUp + Workout + Run
+        private val all: List<Route> = tabs + History + Settings + Plates + CheckIn + WarmUp + Workout + Run
 
         fun fromId(id: String): Route = all.firstOrNull { it.id == id } ?: Today
     }
@@ -33,7 +34,7 @@ sealed interface Route {
 
 val Route.isPushed: Boolean
     get() = when (this) {
-        Route.History, Route.Settings, Route.CheckIn, Route.WarmUp, Route.Workout, Route.Run -> true
+        Route.History, Route.Settings, Route.Plates, Route.CheckIn, Route.WarmUp, Route.Workout, Route.Run -> true
         else -> false
     }
 
