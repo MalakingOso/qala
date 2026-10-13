@@ -26,7 +26,15 @@ enum class SoftTissueTool(val label: String) { FoamRoller("Foam roller"), Percus
 data class RampStep(val load: Double, val reps: Int, val restSec: Int, val bar: Boolean = false, val extra: Boolean = false)
 
 /** An exercise's ramp: the steps up to the first work set. */
-data class Ramp(val exerciseId: String, val name: String, val workWeight: Double?, val workReps: String, val steps: List<RampStep>)
+data class Ramp(
+    val exerciseId: String,
+    val name: String,
+    val workWeight: Double?,
+    val workReps: String,
+    val steps: List<RampStep>,
+    /** Whether the lift is loaded with plates on a bar, so its steps get plate hints. */
+    val barbell: Boolean = false,
+)
 
 /** What the warm-up reads about one exercise of the day. */
 data class WarmupExercise(
@@ -289,7 +297,7 @@ fun planWarmup(input: WarmupInput): WarmupPlan {
             rampSets(RampInput(e.weight, intensity, e.cls == ExerciseClass.Isolation, first, alreadyTrained, extra), unit, if (e.barbell) bar else 0.0)
         }
         trained += e.muscles
-        Ramp(e.exerciseId, e.name, e.weight, e.repsLabel, ramp)
+        Ramp(e.exerciseId, e.name, e.weight, e.repsLabel, ramp, barbell = PlateMath.applies(unit, e.barbell))
     }
     return WarmupPlan(blocks, ramps, blocks.sumOf { it.minutes }, heavy)
 }

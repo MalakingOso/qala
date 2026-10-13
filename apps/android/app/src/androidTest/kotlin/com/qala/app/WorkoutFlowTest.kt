@@ -138,9 +138,14 @@ class WorkoutFlowTest {
         assertEquals(day, plan.day)
         val total = plan.totalSets
 
+        // Every set of a barbell lift says what goes on the bar, from the Rust plate math.
+        waitForText("per side", substring = true)
+
         // The first set: Rest opens on the clock's own time, shows the next set and the ledger, and +30 s lengthens it.
         rule.onNodeWithText("Log set 1").performClick()
         waitForText("Ready early")
+        waitForText("PER SIDE")                                                         // the plates for set 2, once the plate math has answered
+        rule.onNodeWithText("Same as last set, leave the plates on.").assertExists()
         rule.onNodeWithContentDescription("3 minutes 0 seconds left").assertExists()      // the clock does not move, so the countdown holds at the full rest
         rule.onNodeWithText("of 3:00").assertExists()
         rule.onNodeWithText("NEXT · SET 2").assertExists()

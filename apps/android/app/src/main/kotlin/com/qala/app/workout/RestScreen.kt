@@ -50,16 +50,13 @@ import com.qala.design.SecondaryButton
  * early is the one primary (it reads "Start set 3" once the time is up) and +30 s lengthens the rest. Going back, or
  * starting the set, returns to the workout, which is already on the next set.
  *
- * [perSide] and [plateInstruction] are the plates seam: what goes on each side for the next set, heaviest first, and the
- * change from what is on the bar ("take off 5, add 25 each side"). Null hides them, and they are null until the plates
- * work provides them; today a plate shows as its weight, with no drawing.
+ * The next set's plates come from the running rest ([RestState.perSide] and [RestState.plateInstruction], computed by the
+ * store off the main thread from the Rust plate math): what goes on each side, heaviest first, and the change from
+ * what is on the bar ("take off 5, add 25 each side"). They are absent for a lift with no plates, and until the plate
+ * math has answered. A plate shows as its weight; the sprites are not drawn here.
  */
 @Composable
-fun RestScreen(
-    onBack: () -> Unit,
-    perSide: List<Double>? = null,
-    plateInstruction: String? = null,
-) {
+fun RestScreen(onBack: () -> Unit) {
     val container = LocalAppContainer.current
     val store = container.workout
     val all by store.state.collectAsState()
@@ -81,6 +78,8 @@ fun RestScreen(
 
     val from = state.restLogged()
     val next = state.restNext()
+    val perSide = rest.perSide
+    val plateInstruction = rest.plateInstruction
     val ready = onBack            // the workout is already on the next set; a rest left behind is replaced by the next one
 
     Column(Modifier.fillMaxSize()) {
@@ -139,8 +138,8 @@ fun RestScreen(
                     }
                     if (next.newExercise) QalaText("Set ${next.setNumber} of ${next.setCount}", Modifier.padding(top = 2.dp), QalaType.hint, c.fgMuted)
                     if (perSide != null) PlateWeights(perSide)
-                    if (plateInstruction != null) QalaText(plateInstruction, Modifier.padding(top = 8.dp), QalaType.hint, c.fgMuted)
-                    else if (next.sameWeight && perSide != null) QalaText("Same as last set, leave the plates on.", Modifier.padding(top = 8.dp), QalaType.hint, c.fgMuted)
+                    if (plateInstruction != null) QalaText(plateChangeLine(plateInstruction), Modifier.padding(top = 8.dp), QalaType.hint, c.fgMuted)
+                    else if (next.sameWeight && perSide != null) QalaText(plateChangeLine("no change"), Modifier.padding(top = 8.dp), QalaType.hint, c.fgMuted)
                 }
             } else {
                 QalaText("That was the last set.", Modifier.padding(top = 16.dp), QalaType.hint, c.fgMuted)

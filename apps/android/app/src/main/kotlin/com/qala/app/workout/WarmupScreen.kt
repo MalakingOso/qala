@@ -182,7 +182,8 @@ private fun WarmupSteps(view: WarmupView, ticked: Set<String>, flip: (String) ->
                 }
                 if (ramp.steps.isEmpty()) QalaText("No ramp needed: it is light.", style = QalaType.hint, color = c.fgMuted)
                 ramp.steps.forEach { step ->
-                    RampRow(step, view.unit, plateShorthand = null)      // the plates branch fills this: QalaCore.platesShorthand(per side of this step)
+                    val hint = if (ramp.barbell && !step.bar) view.plateHints[step.load] else null
+                    RampRow(step, view.unit, plateShorthand = hint?.let { plateLine(step.load, it) })
                 }
             }
         }

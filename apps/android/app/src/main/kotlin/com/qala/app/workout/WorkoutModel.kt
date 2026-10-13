@@ -65,7 +65,12 @@ data class ExerciseState(
     val selected: Int = 0,
     /** Last time's work sets on one line, null when this exercise has not been lifted before. */
     val lastTime: String? = null,
+    /** `barbell`, `dumbbell`, `cable`... as the LS++ entry names it; null when it does not say (an older draft). */
+    val equipment: String? = null,
 ) {
+    /** Whether the lift is loaded with plates on a bar, which is what plate hints are for. */
+    val barbell: Boolean get() = PlateMath.applies(unit, equipment == "barbell")
+
     val doneCount: Int get() = sets.count { it.done }
     val complete: Boolean get() = sets.isNotEmpty() && sets.all { it.done }
 
@@ -89,6 +94,10 @@ data class RestState(
     val seconds: Int,
     /** The "Why" ledger: base first, then each adjustment, in signed seconds. */
     val rows: List<RestRow>,
+    /** The plates for each side of the next set, heaviest first, once the plate math has answered; null for a lift with no plates. */
+    val perSide: List<Double>? = null,
+    /** What to take off and put on to get there from the set just done ("take off 5, add 25 each side"), when both are plate-loaded. */
+    val plateInstruction: String? = null,
 ) {
     val timer: RestTimer get() = RestTimer(startedAtMs, seconds)
     fun plus(extra: Int): RestState = copy(seconds = seconds + extra)
@@ -257,6 +266,17 @@ data class WorkoutState(
         )
     }
 
+    // ---- plates ----
+
+    /** The distinct weights of the sets that get plate hints: pounds on a barbell. */
+    fun plateWeights(): List<Double> = exercises.filter { it.barbell }.flatMap { ex -> ex.sets.mapNotNull { it.weight } }.distinct()
+
+    /** Puts the plate answer into the rest after [logged], if that rest is still the one running. */
+    fun withRestPlates(logged: SetRef, perSide: List<Double>?, instruction: String?): WorkoutState {
+        val r = rest ?: return this
+        return if (r.logged == logged) copy(rest = r.copy(perSide = perSide, plateInstruction = instruction)) else this
+    }
+
     // ---- what the screen says around the logger ----
 
     /** The set the logger is on, null when the exercise has none. */
@@ -355,6 +375,7 @@ data class WorkoutState(
                     entry = ex.entry,
                     sets = ex.sets.map { SetState.of(it) },
                     lastTime = lastTime(ex.exerciseId),
+                    equipment = ex.equipment,
                 )
             },
         )

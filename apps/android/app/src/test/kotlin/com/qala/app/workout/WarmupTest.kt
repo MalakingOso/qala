@@ -18,14 +18,22 @@ class WarmupTest {
     // ---- rounding ----
 
     @Test
-    fun aWeightRoundsToTheNearestLoadableWithHalvesUpAndNeverUnderTheBar() {
+    fun poundsOnABarRoundThroughTheRustPlateMathWithTiesGoingBelow() {
         assertEquals(100.0, roundLoadable(101.25, WeightUnit.Lb), 0.0)
-        assertEquals(125.0, roundLoadable(122.5, WeightUnit.Lb), 0.0)
-        assertEquals(70.0, roundLoadable(67.5, WeightUnit.Lb), 0.0)
-        assertEquals(45.0, roundLoadable(30.0, WeightUnit.Lb), 0.0)
+        assertEquals("a tie goes to the lighter load", 120.0, roundLoadable(122.5, WeightUnit.Lb), 0.0)
+        assertEquals(65.0, roundLoadable(67.5, WeightUnit.Lb), 0.0)
+        assertEquals(70.0, roundLoadable(68.0, WeightUnit.Lb), 0.0)
+        assertEquals("never under the bar", 45.0, roundLoadable(30.0, WeightUnit.Lb), 0.0)
+        assertEquals("a different bar is a parameter, not a constant", 35.0, roundLoadable(20.0, WeightUnit.Lb, barWeight = 35.0), 0.0)
+        assertEquals(215.0, roundLoadable(213.0, WeightUnit.Lb), 0.0)
+    }
+
+    @Test
+    fun kilogramsAndLiftsWithNoBarStayOnThePlaceholder() {
         assertEquals(42.5, roundLoadable(42.4, WeightUnit.Kg), 0.0)
         assertEquals(20.0, roundLoadable(8.0, WeightUnit.Kg), 0.0)
-        assertEquals("a different bar is a parameter, not a constant", 35.0, roundLoadable(20.0, WeightUnit.Lb, barWeight = 35.0), 0.0)
+        assertEquals("the placeholder rounds halves up", 70.0, roundLoadable(67.5, WeightUnit.Lb, barWeight = 0.0), 0.0)
+        assertEquals(40.0, roundLoadable(40.0, WeightUnit.Lb, barWeight = 0.0), 0.0)
         assertEquals(45.0, defaultBarWeight(WeightUnit.Lb), 0.0)
         assertEquals(20.0, defaultBarWeight(WeightUnit.Kg), 0.0)
     }
@@ -84,7 +92,7 @@ class WarmupTest {
     fun soreMusclesOrALowRecoveryInsertAnExtraStepBetweenTheFirstTwo() {
         val plain = ramp(225.0, 265.0)
         val extra = ramp(225.0, 265.0, extra = true)
-        assertEquals(listOf(100.0, 125.0, 145.0, 190.0), loads(extra))
+        assertEquals("the mean of 100 and 145 is 122.5, a tie, so the lighter 120", listOf(100.0, 120.0, 145.0, 190.0), loads(extra))
         assertEquals(5, extra[1].reps)
         assertTrue(extra[1].extra)
         assertEquals(plain.size + 1, extra.size)
@@ -203,10 +211,11 @@ class WarmupTest {
     fun theRampsComeFromEachExercisesOwnWorkingWeight() {
         val p = plan(squat, bench, pulldown)
         val squatRamp = p.ramps[0].steps
-        // 150 of a 200 max is 75%: tier 2 (45%, 65%, 85%) rounded to 5 lb.
-        assertEquals(listOf(70.0, 100.0, 130.0), squatRamp.map { it.load })
+        // 150 of a 200 max is 75%: tier 2 (45%, 65%, 85%) is 67.5, 97.5 and 127.5, each a tie that rounds down to a loadable weight.
+        assertEquals(listOf(65.0, 95.0, 125.0), squatRamp.map { it.load })
         assertEquals(150.0, p.ramps[0].workWeight!!, 0.0)
         assertEquals("3", p.ramps[0].workReps)
+        assertEquals(listOf(true, true, false), p.ramps.map { it.barbell })
         // The bench shares no muscle with the squat, and 100 of 150 is 67%: tier 1.
         assertEquals(listOf(50.0, 80.0), p.ramps[1].steps.map { it.load })
         // The pulldown is an isolation lift on a new muscle: one easy set, with no bar to round up to.

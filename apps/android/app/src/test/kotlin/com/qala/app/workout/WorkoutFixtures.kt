@@ -34,13 +34,13 @@ object WorkoutFixtures {
     fun sets(count: Int, weight: Double?, reps: Double, amrapLast: Boolean = false, unit: WeightUnit = WeightUnit.Lb, timerSec: Int? = null, rpe: Double? = null) =
         List(count) { PlannedSet(weight, unit, reps, null, amrap = amrapLast && it == count - 1, rpe = rpe, timerSec = timerSec) }
 
-    fun exercise(key: String, id: String, name: String, index: Int, sets: List<PlannedSet>, cls: ExerciseClass = ExerciseClass.Secondary) =
-        LiftExercise(key, id, name, index, "barbell", sets, entry(sets), cls)
+    fun exercise(key: String, id: String, name: String, index: Int, sets: List<PlannedSet>, cls: ExerciseClass = ExerciseClass.Secondary, equipment: String = "barbell") =
+        LiftExercise(key, id, name, index, equipment, sets, entry(sets), cls)
 
     fun day(unit: WeightUnit = WeightUnit.Lb): PlannedDay {
         val squat = exercise("t1-squat_barbell", "squat", "Squat", 0, sets(5, 150.0, 3.0, amrapLast = true, unit = unit), ExerciseClass.Main)
         val bench = exercise("t2-bench_barbell", "benchPress", "Bench Press", 1, sets(3, 100.0, 10.0, unit = unit))
-        val pulldown = exercise("t3-lat_cable", "latPulldown", "Lat Pulldown", 2, sets(3, 80.0, 15.0, amrapLast = true, unit = unit, timerSec = 90), ExerciseClass.Isolation)
+        val pulldown = exercise("t3-lat_cable", "latPulldown", "Lat Pulldown", 2, sets(3, 80.0, 15.0, amrapLast = true, unit = unit, timerSec = 90), ExerciseClass.Isolation, equipment = "cable")
         return PlannedDay(
             programId = "program-1",
             plan = LiftPlan(1, "Day 1", "gzclp", listOf(squat, bench, pulldown)),

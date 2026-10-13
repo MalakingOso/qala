@@ -38,6 +38,43 @@ class WorkoutModelTest {
         assertNull("never lifted", open.exercises[1].lastTime)
     }
 
+    // ---- plates ----
+
+    @Test
+    fun onlyBarbellLiftsInPoundsGetPlateHints() {
+        assertEquals(listOf(true, true, false), open.exercises.map { it.barbell })
+        assertEquals("the cable pulldown's 80 lb is not a plate load", listOf(150.0, 100.0), open.plateWeights())
+        val kg = WorkoutFixtures.open(WeightUnit.Kg)
+        assertEquals(listOf(false, false, false), kg.exercises.map { it.barbell })
+        assertEquals(emptyList<Double>(), kg.plateWeights())
+    }
+
+    @Test
+    fun theStepperMovesTheWeightsThatWantPlates() {
+        assertEquals(listOf(155.0, 150.0, 100.0), open.stepWeight(1).plateWeights())
+    }
+
+    @Test
+    fun thePlatesOfTheNextSetAreAddedToTheRestThatIsStillRunning() {
+        val logged = open.log(1)!!
+        val resting = logged.state.startRest(logged.ref, logged.next, 1)
+        val withPlates = resting.withRestPlates(logged.ref, listOf(45.0, 45.0, 10.0), "take off 5, add 25 each side")
+        assertEquals(listOf(45.0, 45.0, 10.0), withPlates.rest!!.perSide)
+        assertEquals("take off 5, add 25 each side", withPlates.rest?.plateInstruction)
+        // An answer for an older rest is dropped: a second set has been logged since.
+        assertEquals(resting, resting.withRestPlates(SetRef(1, 1), listOf(45.0), null))
+        assertEquals(open, open.withRestPlates(logged.ref, listOf(45.0), null))
+        assertEquals("the plates survive the JSON round trip", withPlates, WorkoutState.fromJson(withPlates.toJson()))
+    }
+
+    @Test
+    fun anOlderDraftWithoutEquipmentOrPlatesStillLoads() {
+        val old = open.toJson().replace(Regex(",\"equipment\":\"[a-z]*\""), "")
+        assertTrue(!old.contains("equipment"))
+        val back = WorkoutState.fromJson(old)!!
+        assertEquals(listOf(false, false, false), back.exercises.map { it.barbell })
+    }
+
     // ---- the logger ----
 
     @Test

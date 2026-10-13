@@ -136,6 +136,7 @@ private fun WorkoutBody(state: WorkoutState, store: WorkoutStore, onBack: () -> 
     }
 
     val now by rememberNow(container.env.clock, state.startedAtMs)
+    val plates by store.plateHints.collectAsState()
 
     Box(Modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize().semantics { if (finishOpen) hideFromAccessibility() }) {
@@ -159,7 +160,7 @@ private fun WorkoutBody(state: WorkoutState, store: WorkoutStore, onBack: () -> 
                     modifier = Modifier.weight(1f).fillMaxWidth(),
                     key = { it },
                 ) { page ->
-                    ExercisePage(state, page, store)
+                    ExercisePage(state, page, store, plates)
                 }
             }
             FlowBottomBar {
@@ -305,7 +306,7 @@ private fun NeighbourButton(name: String?, description: String, leading: Boolean
 // ---- one exercise ----
 
 @Composable
-private fun ExercisePage(state: WorkoutState, page: Int, store: WorkoutStore) {
+private fun ExercisePage(state: WorkoutState, page: Int, store: WorkoutStore, plates: Map<Double, PlateHint>) {
     val ex = state.exercises[page]
     val unit = ex.unit
     val scroll = rememberScrollState()
@@ -328,7 +329,7 @@ private fun ExercisePage(state: WorkoutState, page: Int, store: WorkoutStore) {
                     unit = unit,
                     selected = selected,
                     last = i == ex.sets.lastIndex,
-                    plateShorthand = null,        // the plates branch fills this: QalaCore.platesShorthand(per side of this set's weight)
+                    plateShorthand = if (ex.barbell && set.weight != null) plates[set.weight]?.let { plateLine(set.weight, it) } else null,
                     onClick = { store.pickSet(i) },
                 ) {
                     Logger(set, unit, store)

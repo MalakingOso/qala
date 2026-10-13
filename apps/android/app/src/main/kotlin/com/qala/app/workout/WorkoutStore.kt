@@ -50,11 +50,24 @@ class WorkoutStore(
     /** The workout in progress, null before one is opened and after it is finished or discarded. */
     val state: StateFlow<WorkoutState?> = _state
 
+    private val _plateHints = MutableStateFlow<Map<Double, PlateHint>>(emptyMap())
+
+    /**
+     * The plates for every weight a barbell set shows, by weight (pounds on a barbell only), filled in off the main
+     * thread as weights appear: a stepper that lands on a new weight shows its plates a moment later.
+     */
+    val plateHints: StateFlow<Map<Double, PlateHint>> = _plateHints
+
+    private val plateTried = HashSet<Double>()
+
     private val openLock = Mutex()
     private val scriptLock = Mutex()
     private val diskLock = Mutex()
 
     init {
+        scope.launch {
+            _state.collect { s -> if (s != null) fillPlateHints(s) }
+        }
         // One writer for the draft. A write that is no longer the current state is skipped, so a late write never
         // brings back a draft that a finish has just cleared.
         scope.launch {
@@ -62,6 +75,14 @@ class WorkoutStore(
                 if (s != null) diskLock.withLock { if (_state.value == s) drafts.save(s.toJson()) }
             }
         }
+    }
+
+    /** Asks the plate math (Rust, so off the main thread) for each barbell weight in [s] it has not answered yet. */
+    private suspend fun fillPlateHints(s: WorkoutState) {
+        val missing = s.plateWeights().filter { it !in _plateHints.value && plateTried.add(it) }
+        if (missing.isEmpty()) return
+        val answers = withContext(env.work) { missing.mapNotNull { w -> PlateMath.hint(w)?.let { w to it } }.toMap() }
+        if (answers.isNotEmpty()) _plateHints.update { it + answers }
     }
 
     /** True when a stored workout still stands for this day: the same program and day, started in the last [DraftHours] hours. */
@@ -122,6 +143,7 @@ class WorkoutStore(
             }
         }
         logged?.let { runUpdateScript(it) }
+        if (result == AfterLog.Rest) _state.value?.rest?.let { restPlates(it.logged, it.next) }
         return result
     }
 
@@ -134,6 +156,33 @@ class WorkoutStore(
                 val updated = withContext(env.work) { service.afterSet(s.day, ex.key, entry, ref.set) }
                 if (updated != entry) _state.update { it?.withUpdatedEntry(ref.exercise, updated) }
             }
+        }
+    }
+
+    /**
+     * The plates for the set the rest is for, and how to get there from the set just done, put into the running rest. Both
+     * need a barbell in pounds: moving to a dumbbell or a cable leaves them out, and the instruction needs the set before it
+     * to have been on a bar too.
+     */
+    private fun restPlates(logged: SetRef, next: SetRef?) {
+        if (next == null) return
+        scope.launch {
+            val s = _state.value ?: return@launch
+            val nextEx = s.exercises.getOrNull(next.exercise) ?: return@launch
+            val nextWeight = nextEx.sets.getOrNull(next.set)?.weight
+            if (!nextEx.barbell || nextWeight == null) return@launch
+            val (perSide, instruction) = withContext(env.work) {
+                val hint = PlateMath.hint(nextWeight) ?: return@withContext null to null
+                val doneEx = s.exercises[logged.exercise]
+                val doneWeight = doneEx.sets.getOrNull(logged.set)?.weight
+                val change = if (doneEx.barbell && doneWeight != null) {
+                    PlateMath.hint(doneWeight)?.let { PlateMath.change(it.perSide, nextWeight)?.instruction }
+                } else {
+                    null
+                }
+                hint.perSide to change
+            }
+            if (perSide != null) _state.update { it?.withRestPlates(logged, perSide, instruction) }
         }
     }
 
@@ -198,11 +247,15 @@ class WorkoutStore(
                 barbell = ex.equipment == "barbell",
             )
         }
+        val plan = planWarmup(WarmupInput(exercises, planned.unit, soreness, checkIn?.recovery, equipment))
+        val hints = plan.ramps.filter { it.barbell }.flatMap { r -> r.steps.filter { !it.bar }.map { it.load } }.distinct()
+            .mapNotNull { w -> PlateMath.hint(w)?.let { w to it } }.toMap()
         WarmupView(
             dayName = planned.plan.dayName,
             programName = planned.plan.programName,
             unit = planned.unit,
-            plan = planWarmup(WarmupInput(exercises, planned.unit, soreness, checkIn?.recovery, equipment)),
+            plan = plan,
+            plateHints = hints,
         )
     }
 
@@ -213,4 +266,11 @@ class WorkoutStore(
 }
 
 /** The warm-up screen's content. */
-class WarmupView(val dayName: String, val programName: String, val unit: WeightUnit, val plan: WarmupPlan)
+class WarmupView(
+    val dayName: String,
+    val programName: String,
+    val unit: WeightUnit,
+    val plan: WarmupPlan,
+    /** The plates for each ramp step of a barbell lift, by load. */
+    val plateHints: Map<Double, PlateHint> = emptyMap(),
+)

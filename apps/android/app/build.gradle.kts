@@ -9,6 +9,12 @@ plugins {
 // native library and the bindings by depending on it.
 val targetAbi: String = providers.gradleProperty("qala.abi").getOrElse("arm64-v8a")
 
+// JVM unit tests load the host build of libqala_ffi through JNA, as :data's do: the warm-up's rounding is Rust now.
+tasks.withType<Test>().configureEach {
+    dependsOn(":data:cargoHostBuild")
+    systemProperty("jna.library.path", File(rootProject.projectDir.parentFile.parentFile, "target/debug").absolutePath)
+}
+
 android {
     namespace = "com.qala.app"
     // Compose 1.12.1 (BOM 2026.09.00) needs compileSdk 37.
@@ -60,6 +66,7 @@ dependencies {
     implementation("androidx.compose.ui:ui")
 
     testImplementation("junit:junit:4.13.2")
+    testImplementation("net.java.dev.jna:jna:5.17.0")
 
     androidTestImplementation(platform("androidx.compose:compose-bom:2026.09.00"))
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
