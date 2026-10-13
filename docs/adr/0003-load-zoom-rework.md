@@ -56,7 +56,9 @@ the Week level) and U20 (ribbon becomes the 3-week level).
   (`logic/loadZoom.ts`) and gesture and tween code (`LoadZoom.tsx`) as its
   parts and redrew them, so the branch is a parts donor, still unmerged.
   The ribbon is replaced on the desktop only; the phone keeps the U13
-  strip.
+  strip. Closed 2026-10-13: the branch and its worktree were deleted
+  unmerged (tip `8c1fda3`, commits `784dcff` and `8c1fda3`), since U27
+  took every part it needed and rejects the phone hero it carried.
 - Q2: capture the action, not the clip (owner: "i don't want the video
   i want the action that the video is capturing"). The heroes get the
   toggle-driven view morph, user-driven and coded from data; no video,
