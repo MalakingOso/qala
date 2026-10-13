@@ -77,7 +77,7 @@ Plans: `docs/android-native.md` 10, `docs/rust-core.md` 4 and 5, `docs/plan-acco
 | Coach route that builds the prompt and validates the reply | not started | android-native 10 | D10 |
 | Glyph and sprite routes for the map style, or bundle them in the app | not started | android-native 7, 10 | D12 |
 | Serve the region `.pmtiles` for download | route already supports Range | android-native 10 | A5 |
-| Fix `deploy/qala.service` | open | `ExecStart` names `server/main.ts`, which has never existed | |
+| Fix `deploy/qala.service` | done 2026-10-13 | `ExecStart` now runs `deno run server/mod.ts`; it named `server/main.ts`, which never existed | |
 
 ## Web and desktop
 

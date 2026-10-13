@@ -3,9 +3,8 @@ Description=Qala workout server
 After=network.target
 
 [Service]
-ExecStart=/home/berkley/.deno/bin/deno serve --allow-all /home/berkley/Programming/qala/server/main.ts
-Environment=PORT=8500
-Environment=HOST=127.0.0.1
+# server/mod.ts starts itself under import.meta.main and binds 127.0.0.1:8500 (BIND_HOSTNAME, BIND_PORT).
+ExecStart=/home/berkley/.deno/bin/deno run --allow-all /home/berkley/Programming/qala/server/mod.ts
 Restart=on-failure
 
 [Install]

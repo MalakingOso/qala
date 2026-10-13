@@ -23,7 +23,7 @@ Risks:
 - Scripts: 16 files in `scripts/` plus 5 `gen_*.ts` in `crates/qala-lspp/testdata/unit/`. 29 distinct `Deno.*` names across server and scripts. About 10 of the 16 scripts are liftoscript-specific and go with the oracle.
 - Workspace: root `deno.json` (14 tasks, fmt and lint scopes), a `deno.json` per package, `deno.lock`, 8 workspace members.
 - Rust bridge: `scripts/build_wasm.sh` emits `wasm-bindgen --target deno`.
-- Deploy: `deploy/qala.service` runs `deno serve ... server/main.ts`. That file has never existed in git history, and `server/mod.ts` starts itself under `import.meta.main`, so the unit can't start as written.
+- Deploy: `deploy/qala.service` runs `deno serve ... server/main.ts`. That file has never existed in git history, and `server/mod.ts` starts itself under `import.meta.main`, so the unit couldn't start as written (fixed 2026-10-13: it now runs `deno run ... server/mod.ts`).
 - Docs: `docs/plan-accounts-logins.md` is written against Deno's `node:sqlite`, argon2 through npm compat and the JSR build of `@simplewebauthn/server`.
 
 ### Start gate
@@ -37,7 +37,7 @@ The LS++ port is complete and `packages/liftoscript` is retired as the oracle. N
 3. Pure packages. Codemod `Deno.test(` to `test(` from `bun:test` in `engine`, `generator`, `run`, `llm`, then `apps/web/src/logic`. Match `**/*_test.ts` so no file is renamed. Confirm the pass count still matches.
 4. Scripts and wasm. Port the scripts that survive the LS++ retirement: `dem_fetch`, `tiles_extract`, `tokens_to_kotlin`, `lucide_to_kotlin`, and look at `golden_engine.ts` and `wasm_smoke.ts`. `Deno.args` becomes `process.argv.slice(2)`, `Deno.exit` becomes `process.exit`, the one `Deno.Command` becomes `child_process`. Switch `build_wasm.sh` off `--target deno` (`nodejs` or `bundler`; verify under Bun). The 7 GB heap flag in `gen_liftoscript_testdata.sh` only matters if a heavy generator survives. Rerun the Rust fixtures through `scripts/cargo-test-safe.sh`.
 5. S11, then the server. Land record sync so `sync.ts` and `ws.ts` disappear. Port the rest of `server/` to `Bun.serve` and `node:fs` (`Deno.open` with `SeekMode` becomes `fs.open` and positional reads), and port `server/*_test.ts` (they use `Deno.serve` and `Deno.connect`).
-6. Cut over. Fix `deploy/qala.service` with a real entry point. Run `bun fmt` once as its own commit and add it to `.git-blame-ignore-revs`. Drop `deno.json` and `deno.lock`. Update README and PLAN. Rewrite the Deno-specific parts of `docs/plan-accounts-logins.md`.
+6. Cut over. Point `deploy/qala.service` at Bun. Run `bun fmt` once as its own commit and add it to `.git-blame-ignore-revs`. Drop `deno.json` and `deno.lock`. Update README and PLAN. Rewrite the Deno-specific parts of `docs/plan-accounts-logins.md`.
 7. Record it. Amend S1 in `docs/DECISIONS.md` and write `docs/adr/0004` for the runtime change.
 
 ### Open
