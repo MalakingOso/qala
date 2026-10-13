@@ -11,6 +11,7 @@ import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.isHeading
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
@@ -249,7 +250,7 @@ class WorkoutFlowTest {
     }
 
     @Test
-    fun anExerciseIsReachedByNameFromTheNeighbourButtonAndTheOverview() = runBlocking {
+    fun anExerciseIsReachedByNameFromTheNeighbourButtonAndTheGrid() = runBlocking {
         val container = container()
         reachTheLift(container)
         startWorkout()
@@ -257,11 +258,67 @@ class WorkoutFlowTest {
         rule.onNodeWithContentDescription("Next exercise, ${names[1]}").performClick()
         waitFor { container.workout.state.value!!.current == 1 }
         rule.onNodeWithContentDescription("Previous exercise, ${names[0]}").assertExists()
-        // The zoom-out lists every exercise; picking one goes there.
+        // The zoom-out is its own screen; picking an exercise there goes to it in the workout.
         rule.onNodeWithContentDescription("All exercises").performClick()
-        rule.onNodeWithText("All exercises. Tap one", substring = true).assertExists()
-        rule.onNodeWithContentDescription("1, ${names[0]}", substring = true).performClick()
+        rule.onNode(isHeading() and hasText("All exercises")).assertExists()
+        rule.onNode(hasContentDescription("1, ${names[0]}", substring = true)).performClick()
         waitFor { container.workout.state.value!!.current == 0 }
+        waitForText("Log set 1")
+        rule.onNodeWithText("Workout").assertIsDisplayed()
+        container.database.close()
+    }
+
+    @Test
+    fun theGridShowsTheWorkoutLiveFromTheWorkoutAndFromRestAndBackReturnsToWhereItWasOpened() = runBlocking {
+        val container = container()
+        reachTheLift(container)
+        startWorkout()
+        val names = container.workout.state.value!!.exercises.map { it.name }
+        val firstSets = container.workout.state.value!!.exercises[0].sets.size
+        logSet()
+        waitForText("Log set 2")
+
+        // From the workout: the logged set is filled in, and Back is the workout.
+        rule.onNodeWithContentDescription("All exercises").performClick()
+        rule.onNode(isHeading() and hasText("All exercises")).assertExists()
+        rule.onNode(hasContentDescription("1, ${names[0]}", substring = true) and hasContentDescription("1 of $firstSets sets done", substring = true)).assertExists()
+        rule.onNode(hasContentDescription("2, ${names[1]}", substring = true) and hasContentDescription("0 of ", substring = true)).assertExists()
+        rule.onNodeWithContentDescription("Back").performClick()
+        waitForText("Log set 2")
+
+        // From Rest: the same grid, and Back is Rest, still counting; a card then leaves Rest for that exercise.
+        rule.onNodeWithText("Log set 2").performClick()
+        waitForText("Ready early")
+        rule.onNodeWithContentDescription("All exercises").performClick()
+        rule.onNode(hasContentDescription("1, ${names[0]}", substring = true) and hasContentDescription("2 of $firstSets sets done", substring = true)).assertExists()
+        rule.onNodeWithContentDescription("Back").performClick()
+        waitForText("Ready early")
+        rule.onNodeWithContentDescription("All exercises").performClick()
+        rule.onNode(hasContentDescription("3, ${names[2]}", substring = true)).performClick()
+        waitFor { container.workout.state.value!!.current == 2 }
+        waitForText("Log set 1")
+        rule.onNodeWithText("Workout").assertIsDisplayed()
+        container.database.close()
+    }
+
+    @Test
+    fun theGridShowsTheDayDuringTheWarmUpWithoutStartingTheWorkout() = runBlocking {
+        val container = container()
+        showApp(container)
+        waitForText("GZCLP DAY", substring = true)
+        container.checkIns.save(7.0)
+        railSays("Day stages: warm-up now, 1 of 6 done")
+        rule.onNodeWithText("Start warm-up").performClick()
+        waitForText("Easy cardio")
+        rule.onNodeWithContentDescription("All exercises").performClick()
+        rule.onNode(isHeading() and hasText("All exercises")).assertExists()
+        waitFor { rule.onAllNodes(hasContentDescription("0 of ", substring = true)).fetchSemanticsNodes().isNotEmpty() }
+        waitForText("exercises ·", substring = true)
+        // There is no workout to jump into yet: the cards are not buttons, and nothing was opened.
+        assertTrue(rule.onAllNodes(hasContentDescription("sets done", substring = true) and hasClickAction()).fetchSemanticsNodes().isEmpty())
+        assertNull(container.workout.state.value)
+        rule.onNodeWithContentDescription("Back").performClick()
+        waitForText("Easy cardio")
         container.database.close()
     }
 

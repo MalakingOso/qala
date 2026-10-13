@@ -7,7 +7,7 @@ import org.junit.Test
 class NavTest {
     @Test
     fun idsRoundTrip() {
-        for (route in Route.tabs + Route.History + Route.Settings + Route.Plates + Route.CheckIn + Route.WarmUp + Route.Workout + Route.Rest + Route.Run) {
+        for (route in Route.tabs + Route.History + Route.Settings + Route.Plates + Route.CheckIn + Route.WarmUp + Route.Workout + Route.Rest + Route.Run + Route.AllExercises) {
             assertEquals(route, Route.fromId(route.id))
         }
     }
@@ -15,6 +15,41 @@ class NavTest {
     @Test
     fun unknownIdFallsBackToToday() {
         assertEquals(Route.Today, Route.fromId("nope"))
+    }
+
+    @Test
+    fun allExercisesSitsOverTheFlowScreenThatOpenedItAndBackReturnsThere() {
+        assertEquals(Route.Today, Route.AllExercises.tab)
+        for (from in listOf(Route.WarmUp, Route.Workout)) {
+            val grid = Nav().push(from).push(Route.AllExercises)
+            assertEquals(Route.AllExercises, grid.route)
+            assertEquals("Back from the grid is the screen it was opened from", Nav(from, Route.Today), grid.back())
+            assertEquals("and from there it is Today", Nav(), grid.back()!!.back())
+        }
+    }
+
+    @Test
+    fun allExercisesOverRestGoesBackToRestAndThenToTheWorkout() {
+        val grid = Nav().selectTab(Route.Plan).push(Route.Workout).push(Route.Rest).push(Route.AllExercises)
+        val rest = grid.back()!!
+        assertEquals(Nav(Route.Rest, Route.Plan), rest)
+        assertEquals(Nav(Route.Workout, Route.Plan), rest.back())
+    }
+
+    @Test
+    fun aCardJumpsFromTheGridToTheWorkoutAndBackThenLeavesForToday() {
+        val jumped = Nav().push(Route.Workout).push(Route.Rest).push(Route.AllExercises).push(Route.Workout)
+        assertEquals("the grid and the rest above the workout are left behind", Nav(Route.Workout, Route.Today), jumped)
+        assertEquals(Nav(), jumped.back())
+    }
+
+    @Test
+    fun theParentOfTheGridSurvivesSavedState() {
+        val saver = Nav.Saver
+        val scope = androidx.compose.runtime.saveable.SaverScope { true }
+        val grid = Nav().push(Route.Workout).push(Route.Rest).push(Route.AllExercises)
+        assertEquals(grid, saver.restore(saver.run { scope.save(grid)!! }))
+        assertEquals("a state saved before the grid had a parent still restores", Nav(Route.Workout), saver.restore(listOf("workout", "today")))
     }
 
     @Test
@@ -68,7 +103,7 @@ class NavTest {
 
     @Test
     fun theLiftingFlowDropsTheTabBarAndNothingElseDoes() {
-        assertEquals(listOf(Route.WarmUp, Route.Workout, Route.Rest), (Route.tabs + Route.History + Route.Settings + Route.CheckIn + Route.WarmUp + Route.Workout + Route.Rest + Route.Run).filter { it.isFocus })
+        assertEquals(listOf(Route.WarmUp, Route.Workout, Route.Rest, Route.AllExercises), (Route.tabs + Route.History + Route.Settings + Route.CheckIn + Route.WarmUp + Route.Workout + Route.Rest + Route.Run + Route.AllExercises).filter { it.isFocus })
     }
 
     @Test

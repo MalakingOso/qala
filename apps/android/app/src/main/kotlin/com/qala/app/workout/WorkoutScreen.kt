@@ -1,6 +1,5 @@
 package com.qala.app.workout
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -83,7 +82,7 @@ private fun rpeMeaning(rpe: Double): String = when (rpe) {
 
 /**
  * The workout (DESIGN 7.5, DECISIONS U5 and U18): one exercise at a time, swiped between or jumped to from the segments
- * or the overview, each set a row you can tap, the selected one open with weight and reps steppers, the AMRAP flag and
+ * or the All exercises grid, each set a row you can tap, the selected one open with weight and reps steppers, the AMRAP flag and
  * the one RPE strip, and Log set pinned under it. Logging opens Rest. The workout itself lives in the container's
  * [com.qala.app.workout.WorkoutStore], so leaving this screen and coming back, or rotating, loses nothing.
  *
@@ -91,7 +90,7 @@ private fun rpeMeaning(rpe: Double): String = when (rpe) {
  * Today, whether the workout was finished or only left.
  */
 @Composable
-fun WorkoutScreen(day: Int?, onBack: () -> Unit, onRest: () -> Unit) {
+fun WorkoutScreen(day: Int?, onBack: () -> Unit, onRest: () -> Unit, onAllExercises: () -> Unit) {
     val container = LocalAppContainer.current
     val store = container.workout
     val all by store.state.collectAsState()
@@ -102,7 +101,7 @@ fun WorkoutScreen(day: Int?, onBack: () -> Unit, onRest: () -> Unit) {
     KeepScreenOn()
     Column(Modifier.fillMaxSize()) {
         when {
-            state != null -> WorkoutBody(state, store, onBack, onRest)
+            state != null -> WorkoutBody(state, store, onBack, onRest, onAllExercises)
             opened == Opened.NoDay -> Notice("Nothing to lift today", "The program has no exercise for this day.", onBack)
             else -> Notice("Getting your workout ready", null, onBack)
         }
@@ -120,12 +119,10 @@ private fun Notice(title: String, detail: String?, onBack: () -> Unit) {
 }
 
 @Composable
-private fun WorkoutBody(state: WorkoutState, store: WorkoutStore, onBack: () -> Unit, onRest: () -> Unit) {
+private fun WorkoutBody(state: WorkoutState, store: WorkoutStore, onBack: () -> Unit, onRest: () -> Unit, onAllExercises: () -> Unit) {
     val container = LocalAppContainer.current
     val c = Qala.colors
-    var overview by rememberSaveable { mutableStateOf(false) }
     var finishOpen by rememberSaveable { mutableStateOf(false) }
-    BackHandler(enabled = overview && !finishOpen) { overview = false }
 
     val pager = rememberPagerState(initialPage = state.current) { state.exercises.size }
     // The model is the truth: a jump (Prev, Next, a segment, the next set after a log) moves the pager; a swipe that
@@ -144,28 +141,23 @@ private fun WorkoutBody(state: WorkoutState, store: WorkoutStore, onBack: () -> 
                 Header(
                     state = state,
                     elapsedSec = ((now - state.startedAtMs) / 1000).toInt(),
-                    overview = overview,
                     onBack = onBack,
-                    onOverview = { overview = !overview },
+                    onAllExercises = onAllExercises,
                     onFinish = { finishOpen = true },
                 )
-                ExerciseSegments(state) { i -> store.show(i); overview = false }
-                if (!overview) NeighbourRow(state, onPrev = store::prev, onNext = store::next)
+                ExerciseSegments(state) { i -> store.show(i) }
+                NeighbourRow(state, onPrev = store::prev, onNext = store::next)
             }
-            if (overview) {
-                Overview(state, Modifier.weight(1f)) { i -> store.show(i); overview = false }
-            } else {
-                HorizontalPager(
-                    state = pager,
-                    modifier = Modifier.weight(1f).fillMaxWidth(),
-                    key = { it },
-                ) { page ->
-                    ExercisePage(state, page, store, plates)
-                }
+            HorizontalPager(
+                state = pager,
+                modifier = Modifier.weight(1f).fillMaxWidth(),
+                key = { it },
+            ) { page ->
+                ExercisePage(state, page, store, plates)
             }
             FlowBottomBar {
                 val hint = state.restHint()
-                if (hint != null && !overview) {
+                if (hint != null) {
                     Row(Modifier.padding(bottom = 8.dp).fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
                         QalaIcon(QalaIcons.Hourglass, null, size = 14.dp, tint = c.fgMuted)
                         QalaText(hint, Modifier.padding(start = 6.dp), QalaType.hint, c.fgMuted, maxLines = 1)
@@ -177,7 +169,6 @@ private fun WorkoutBody(state: WorkoutState, store: WorkoutStore, onBack: () -> 
                         if (state.allDone && state.selectedSet?.done == true) {
                             finishOpen = true
                         } else {
-                            overview = false
                             when (store.log()) {
                                 AfterLog.Rest -> onRest()
                                 AfterLog.Finish -> finishOpen = true
@@ -215,9 +206,8 @@ private fun WorkoutBody(state: WorkoutState, store: WorkoutStore, onBack: () -> 
 private fun Header(
     state: WorkoutState,
     elapsedSec: Int,
-    overview: Boolean,
     onBack: () -> Unit,
-    onOverview: () -> Unit,
+    onAllExercises: () -> Unit,
     onFinish: () -> Unit,
 ) {
     Row(Modifier.fillMaxWidth().padding(bottom = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Top) {
@@ -226,7 +216,7 @@ private fun Header(
             GroupLabel("${state.programName} · ${state.dayName} · ${formatClock(elapsedSec)} in")
             QalaText("Workout", Modifier.semantics { heading() }, QalaType.stageTitle, Qala.colors.fg, maxLines = 1)
         }
-        FlowIconButton(QalaIcons.LayoutGrid, if (overview) "Back to one exercise" else "All exercises", onOverview, on = overview)
+        FlowIconButton(QalaIcons.LayoutGrid, "All exercises", onAllExercises)
         FlowIconButton(QalaIcons.Check, "Finish workout", onFinish)
     }
 }
@@ -472,45 +462,6 @@ private fun Tools(jointPain: Boolean, onJointPain: () -> Unit) {
     ) {
         QalaIcon(QalaIcons.TriangleAlert, null, size = 18.dp, tint = if (jointPain) c.danger else c.fgMuted)
         QalaText(if (jointPain) "Joint pain flagged on this set" else "Joint pain on this set", style = QalaType.button.copy(fontSize = 13.sp), color = if (jointPain) c.danger else c.fgSecondary)
-    }
-}
-
-// ---- all exercises ----
-
-/** The zoom-out (DESIGN 7.7): numbered cards two to a row with a box per set, the current one outlined; tap to jump. */
-@Composable
-private fun Overview(state: WorkoutState, modifier: Modifier, onPick: (Int) -> Unit) {
-    val c = Qala.colors
-    Column(modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        QalaText("All exercises. Tap one to go there; out of order is fine.", style = QalaType.hint, color = c.fgMuted)
-        state.exercises.chunked(2).forEachIndexed { row, pair ->
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                pair.forEachIndexed { col, ex ->
-                    val i = row * 2 + col
-                    val current = i == state.current
-                    Column(
-                        Modifier
-                            .weight(1f)
-                            .heightIn(min = 96.dp)
-                            .background(c.bgSurface, RoundedCornerShape(QalaTokens.radiusMd))
-                            .border(QalaTokens.borderWidth, if (current) c.accent else c.border, RoundedCornerShape(QalaTokens.radiusMd))
-                            .clickable(role = Role.Button, onClickLabel = "Go to ${ex.name}") { onPick(i) }
-                            .semantics(mergeDescendants = true) { contentDescription = "${i + 1}, ${ex.name}, ${ex.doneCount} of ${ex.sets.size} sets done" }
-                            .padding(12.dp),
-                        verticalArrangement = Arrangement.spacedBy(6.dp),
-                    ) {
-                        GroupLabel("${i + 1}", color = if (current) c.accent else c.fgMuted)
-                        QalaText(ex.name, style = QalaType.cardTitle, color = c.fg, maxLines = 2)
-                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.padding(top = 2.dp)) {
-                            ex.sets.forEach { set ->
-                                Box(Modifier.size(14.dp).background(if (set.done) c.progressFill else androidx.compose.ui.graphics.Color.Transparent, RoundedCornerShape(3.dp)).border(QalaTokens.borderWidth, if (set.done) c.progressFill else c.borderStrong, RoundedCornerShape(3.dp)))
-                            }
-                        }
-                    }
-                }
-                if (pair.size == 1) Spacer(Modifier.weight(1f))
-            }
-        }
     }
 }
 

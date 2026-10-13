@@ -12,6 +12,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.qala.app.allex.AllExercisesScreen
 import com.qala.app.checkin.CheckInScreen
 import com.qala.app.history.HistoryScreen
 import com.qala.app.plates.PlatesScreen
@@ -35,7 +36,8 @@ import kotlinx.coroutines.launch
 /**
  * The screen for [route], filling the shell's content box. Today brings its own scroll column and fixed layers, and so
  * do the lifting screens (a pinned bar under their own scroll); every other screen is the same header over a padded
- * column. [onPush] opens a screen over this one (Workout opens Rest, the warm-up opens Workout).
+ * column. [onPush] opens a screen over this one (Workout opens Rest, the warm-up opens Workout, and each of the three
+ * opens All exercises, whose Back returns to it).
  */
 @Composable
 fun Screen(
@@ -61,10 +63,14 @@ fun Screen(
         Route.Settings -> SettingsScreen(scroll, onBack, onPlates)
         Route.Plates -> PlatesScreen(scroll, onBack, onEditPlates)
         Route.CheckIn -> CheckInRoute(today, scroll, topBar, onBack)
-        Route.WarmUp -> WarmupScreen(programDay(today), onBack, onStart = { onPush(Route.Workout) }, onSkip = { onPush(Route.Workout) })
-        Route.Workout -> WorkoutScreen(programDay(today), onBack, onRest = { onPush(Route.Rest) })
-        Route.Rest -> RestScreen(onBack)
+        Route.WarmUp -> WarmupScreen(
+            programDay(today), onBack,
+            onStart = { onPush(Route.Workout) }, onSkip = { onPush(Route.Workout) }, onAllExercises = { onPush(Route.AllExercises) },
+        )
+        Route.Workout -> WorkoutScreen(programDay(today), onBack, onRest = { onPush(Route.Rest) }, onAllExercises = { onPush(Route.AllExercises) })
+        Route.Rest -> RestScreen(onBack, onAllExercises = { onPush(Route.AllExercises) })
         Route.Run -> Plain(scroll, topBar) { RunStub(onBack) }
+        Route.AllExercises -> AllExercisesScreen(programDay(today), onBack, onWorkout = { onPush(Route.Workout) })
     }
 }
 

@@ -36,9 +36,11 @@ import com.qala.data.model.WeightUnit
 import com.qala.design.Card
 import com.qala.design.FlowBottomBar
 import com.qala.design.FlowHead
+import com.qala.design.FlowIconButton
 import com.qala.design.GroupLabel
 import com.qala.design.PrimaryButton
 import com.qala.design.Qala
+import com.qala.design.QalaIcons
 import com.qala.design.QalaText
 import com.qala.design.QalaTokens
 import com.qala.design.QalaType
@@ -56,7 +58,7 @@ import com.qala.design.SecondaryButton
  * math has answered. A plate shows as its weight; the sprites are not drawn here.
  */
 @Composable
-fun RestScreen(onBack: () -> Unit) {
+fun RestScreen(onBack: () -> Unit, onAllExercises: () -> Unit) {
     val container = LocalAppContainer.current
     val store = container.workout
     val all by store.state.collectAsState()
@@ -91,7 +93,10 @@ fun RestScreen(onBack: () -> Unit) {
                 .statusBarsPadding()
                 .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 16.dp),
         ) {
-            FlowHead("Rest", onBack, eyebrow = from?.let { "${it.exerciseName} · set ${it.setNumber} logged" })
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.Top) {
+                FlowHead("Rest", onBack, Modifier.weight(1f), eyebrow = from?.let { "${it.exerciseName} · set ${it.setNumber} logged" })
+                FlowIconButton(QalaIcons.LayoutGrid, "All exercises", onAllExercises)
+            }
 
             Card(hero = true) {
                 if (from != null) {

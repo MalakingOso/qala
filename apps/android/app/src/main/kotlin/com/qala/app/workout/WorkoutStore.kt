@@ -109,6 +109,14 @@ class WorkoutStore(
         Opened.Ready
     }
 
+    /**
+     * The program's [day] as a workout not yet started, every set at its prescription: what the All exercises grid shows
+     * before the workout is opened (during the warm-up). It is not kept and starts nothing. Null when the day has no exercise.
+     */
+    suspend fun preview(day: Int): WorkoutState? = withContext(env.work) {
+        service.plan(day)?.let { WorkoutState.open(it, sessionId = "preview", startedAtMs = env.clock.nowMs()) }
+    }
+
     private fun edit(change: (WorkoutState) -> WorkoutState) = _state.update { it?.let(change) }
 
     // ---- moving about and the logger ----

@@ -68,10 +68,11 @@ private sealed interface WarmupLoad {
  * Soft tissue and mobility are check rows. Start workout marks the warm-up stage done, as the stub's Mark done did, and
  * goes to the workout; Skip goes there without a mark, and Back leaves with nothing recorded.
  *
- * [onStart] and [onSkip] push the workout. [day] is today's program day, null while Today is still loading.
+ * [onStart] and [onSkip] push the workout; [onAllExercises] pushes the grid of the day's exercises. [day] is today's
+ * program day, null while Today is still loading.
  */
 @Composable
-fun WarmupScreen(day: Int?, onBack: () -> Unit, onStart: () -> Unit, onSkip: () -> Unit) {
+fun WarmupScreen(day: Int?, onBack: () -> Unit, onStart: () -> Unit, onSkip: () -> Unit, onAllExercises: () -> Unit) {
     val container = LocalAppContainer.current
     var load by remember { mutableStateOf<WarmupLoad>(WarmupLoad.Loading) }
     LaunchedEffect(day) {
@@ -99,7 +100,10 @@ fun WarmupScreen(day: Int?, onBack: () -> Unit, onStart: () -> Unit, onSkip: () 
                     GroupLabel(if (ready != null) "Before ${ready.dayName} · ${ready.plan.minutes} min" else "Before the lift", Modifier.padding(bottom = 2.dp))
                     QalaText("Warm-up", Modifier.semantics { heading() }, QalaType.stageTitle, c.fg)
                 }
-                if (ready != null) SecondaryButton("Skip", onSkip, small = true)
+                if (ready != null) {
+                    FlowIconButton(QalaIcons.LayoutGrid, "All exercises", onAllExercises)
+                    SecondaryButton("Skip", onSkip, Modifier.padding(top = 2.dp), small = true)
+                }
             }
             when (load) {
                 WarmupLoad.Loading -> QalaText("Getting your warm-up ready.", style = QalaType.hint, color = c.fgMuted)
