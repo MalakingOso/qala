@@ -1,5 +1,7 @@
 # Handoff: phone rail + type refresh
 
+Status 2026-10-13: historical. Built as M3 and M4 of `docs/PLAN-rail-refresh.md` for the native Android app only; the web was left alone (DECISIONS S23), which overrides this file's web-first guidance. Kept where it is because `DayMenu.kt` cites it for the motion tokens.
+
 Branch `phone-refresh`, worktree `qala-phone-refresh`. Visual exploration only:
 no app code touched. Everything below is decided except the Parked section.
 Mockups live in `mockups/` next to this doc; open

@@ -1,5 +1,7 @@
 # Desktop look update: notes for the morning
 
+Status 2026-10-13: historical, except that the seven questions below are still open and recorded nowhere else. The work is on main (the `qala-main` worktree is gone); its decisions are DECISIONS L16 and U20 to U23. Question 1 is queue item D02. Questions 4, 5 and 7 touch things the load zoom (U27) later rebuilt, so they may be overtaken, but the owner hasn't said so. `docs/ROADMAP.md` lists them under owner decisions.
+
 Written 2026-10-01 night, after implementing the refined desktop look on `main`. This is the list of things I was unsure about and what I did instead of asking. Skim the first section, then the questions.
 
 ## Where the work is

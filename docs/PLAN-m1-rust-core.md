@@ -1,5 +1,7 @@
 # M1: Rust core and FFI
 
+Status 2026-10-13: done and merged (M1 of the native refresh). Kept where it is because comments in `crates/qala-core` and `apps/android/data` cite it by path. Its "Out of scope" list is still open: the volume, rest and warm-up ports, `recommend_next_session`, the run pipeline and the sync endpoint.
+
 Detail doc for milestone M1 of `docs/PLAN-rail-refresh.md`. Branch `phone-refresh`. Read with `docs/rust-core.md` (sections 3, 7 R3, 9) and `docs/android-native.md`.
 
 ## Deliverables

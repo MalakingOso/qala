@@ -2,6 +2,8 @@
 
 Every choice the owner still has to make, in one list. `docs/DECISIONS.md` is the log of choices already made; this file is the queue. An item leaves the queue only through the session protocol below, which writes the answer into the source documents at the moment it is given, so the queue and the docs can never disagree.
 
+`docs/ROADMAP.md` groups the open items by what each one blocks.
+
 ## How to run a session (agent instructions)
 
 The owner goes through this file with an agent, one item at a time. The agent running the session follows this protocol exactly.

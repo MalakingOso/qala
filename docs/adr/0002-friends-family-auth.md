@@ -1,7 +1,8 @@
 # ADR 0002: Friends-and-family logins without Tailscale
 
-Status: exploration (branch `explore/accounts-logins`). Owner-settled points are
-marked (owner); the rest is recommended shape for review, not decided.
+Status 2026-10-13: partly decided, not built. Owner-settled points are marked
+(owner) and recorded as DECISIONS S22; the rest is recommended shape for review,
+not decided. No branch named `explore/accounts-logins` exists now.
 
 ## Settled (owner, 2026-10-01)
 

@@ -1,6 +1,8 @@
 # Native phone refresh: master plan
 
-Branch `phone-refresh`, worktree `../qala-phone-refresh`. Plan only, nothing
+Status 2026-10-13: done. M1 to M4 are merged into main (by 2026-10-03) and the `phone-refresh` branch is gone. The file stays where it is because DECISIONS rows (S23, U9, L19) and code comments cite it by path. Below is the plan as written, so "plan only, nothing built yet" and the Phase 0 steps are history. Still open from it: the real-phone pass (everything ran on the emulator), Haze backdrop blur (parked), the coach radial, and the Warm-up, Workout and Run screens (stubs on main, in flight on `workout`).
+
+When written: branch `phone-refresh`, worktree `../qala-phone-refresh`, plan only, nothing
 built yet. Detail docs per milestone (`docs/PLAN-m1-rust-core.md` etc.) are
 written when each milestone starts, so detail isn't written against facts that
 will move.

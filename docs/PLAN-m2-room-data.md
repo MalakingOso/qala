@@ -1,5 +1,7 @@
 # M2: Room data module
 
+Status 2026-10-13: done and merged (M2; merge commit `8597550`). Kept where it is because comments in `apps/android` cite it by path. Its "Out of scope" list is still open: the sync endpoint and client, raw GPS fixes, a persisted engine cache.
+
 Detail doc for milestone M2 of `docs/PLAN-rail-refresh.md`. Needs M1 merged (the `qala-ffi` library, records and `api` functions in `docs/PLAN-m1-rust-core.md`). Read `docs/android-native.md` section 4 (data) and `docs/rust-core.md` section 4 (records and HLC).
 
 ## Deliverables

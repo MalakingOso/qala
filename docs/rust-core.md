@@ -1,8 +1,10 @@
 # Rust core: migration plan
 
-Status 2026-10-02: partly built. The LS++ port (section 8) is merged and green; the Android shell, toolchain and FFI path are verified (`docs/android-native.md` 11). The run, math and engine ports, record sync and blob routes are still proposed. Read with `docs/android-native.md` (the Kotlin app); the spike report is appendix A and the open questions appendix B. Decision rows are DECISIONS S6 to S17, plus S18 to S21 for LS++ and S22 for accounts (S22 will change the auth sentences in sections 4 and 5 when it ships; `docs/plan-accounts-logins.md` 10). Revised 2026-09-30 after the owner asked for liftoscript in Rust and asked whether something beats Automerge: Automerge is out, record-based sync is in (section 4), and there is no quickjs interim (section 6).
+Status 2026-10-13: in progress. Built and merged: LS++ (R5, section 8); `qala-core` with the engine port (state, decay, e1RM, Kalman, running, readiness, `log_session`, `calibrate`), availability, HLC, the record types, the history-to-engine adapter, the Today numbers, and plate math with rounding (2026-10-13, vectors in `testdata/golden/plates`), all exported to Kotlin through `qala-ffi`. Not built: the run pipeline and `RunRecorder` (R1), the engine's volume, rest and warm-up modules and `recommend_next_session` (the rest of R3), record sync and blob routes on the server, and the generator (R4, deferred). Read with `docs/android-native.md` (the Kotlin app); the spike report is appendix A and the open questions appendix B. Decision rows are DECISIONS S6 to S17, plus S18 to S21 for LS++ and S22 for accounts (S22 will change the auth sentences in sections 4 and 5 when it ships; `docs/plan-accounts-logins.md` 10). Revised 2026-09-30 after the owner asked for liftoscript in Rust and asked whether something beats Automerge: Automerge is out, record-based sync is in (section 4), and there is no quickjs interim (section 6).
 
-## Status (2026-10-01)
+## Status (2026-10-01, LS++ snapshot)
+
+This section is the LS++ port as of 2026-10-01; the current overall status is the paragraph at the top.
 
 The liftoscript evaluation path is ported in `crates/qala-lspp` (about 27k lines including tests) and matches the TS oracle on the golden suite:
 - All 60 built-in programs, both stages (planner parse and full evaluation), in lb, plus 5 in kg.
@@ -13,7 +15,7 @@ The liftoscript evaluation path is ported in `crates/qala-lspp` (about 27k lines
 
 Two bugs found while finishing it. First, a lone backslash made the planner parser loop forever, pushing empty nodes until the OOM killer fired; fixed with a progress check in `program()`. That cause is inferred from timing (the parser file changed one minute before the first OOM) and from the test inputs, and confirmed on the 34 inputs of `bad_input_does_not_panic`, not proven for every input. The second OOM at 05:12 was my own `cargo test` at the start of a session. Second, `numberOfSets` had no upper bound, so `numberOfSets = 1e9` would allocate tens of GB: it is now capped at `MAX_SETS = 30` in `script_eval.rs` (the owner's limit), with a script error past it, and index writes past the cap are dropped. This is a deliberate divergence from TS, which allows any count; the oracle's own corpus sets `numberOfSets` from weights like 135, and 14 of 12,290 generated cases are exempted for that reason in `script_eval_tests.rs`. Run tests only through `scripts/cargo-test-safe.sh -p qala-lspp`.
 
-Since that writeup the port, the rename and the S21 extensions were merged (`2b92d93`, `415fb07`, `32cb81c`); the UniFFI and wasm shims exist (`crates/qala-lspp-ffi`, `crates/qala-lspp-wasm`), and the generated `cases_*.json` are gitignored and regenerated with the Deno scripts. Still open: the private duplicate helpers in `program_exercise.rs` and `program_to_planner.rs` that belong in `planner_program_exercise.rs` and `program_set.rs`; a program-level differential fuzz; FFI exports of the six S21 functions (wasm has them, UniFFI does not yet).
+Since that writeup the port, the rename and the S21 extensions were merged (`2b92d93`, `415fb07`, `32cb81c`); the UniFFI and wasm shims exist (`crates/qala-lspp-ffi`, `crates/qala-lspp-wasm`), and the generated `cases_*.json` are gitignored and regenerated with the Deno scripts. Still open: the private duplicate helpers in `program_exercise.rs` and `program_to_planner.rs` that belong in `planner_program_exercise.rs` and `program_set.rs`; a program-level differential fuzz; FFI exports of the six S21 functions (the wasm crate has all six; on 2026-10-13 `qala-ffi` has `diagnose_planner` and `diagnose_script`, and `dry_run`, `unresolved_sets`, `lint_planner` and `format_planner` are still wasm only).
 
 ## 1. Conclusions
 
@@ -58,6 +60,8 @@ crates/
 ```
 
 `docs/archive/spike-qcore/` is a throwaway. The real crates are written fresh against the golden vectors.
+
+As built (2026-10-13): `qala-core`, `qala-ffi`, `qala-lspp`, `qala-lspp-json` and `qala-lspp-wasm`. `qala-lspp-ffi` was folded into `qala-ffi`. There is no `qala-wasm`: `qala-core` has no wasm shim, and neither `apps/web` nor `server/` loads the LS++ wasm build yet.
 
 **Boundary.** Each exported function takes and returns a JSON string with a top-level `"v": 1`. Columnar fix data (the hot path) uses one `ByteArray` or `Float64Array` of little-endian f64 columns, matching the existing delta-encoded track layout. The spike showed UniFFI boxes `Vec<f64>` per element, so large arrays never cross as lists.
 
@@ -126,6 +130,14 @@ Also stays TS: `packages/llm`. It needs the network (the model runs on callisto)
 ## 7. Porting order and acceptance
 
 Each step leaves the TS package in place and passing. A Rust module counts as done only when every acceptance line is met against golden vectors (section 9).
+
+Status by step, 2026-10-13:
+
+- R0 is partly done. `qala-core`, `js.rs` and the `qala-ffi` shim exist and build for Android. There is no wasm shim for `qala-core`, so the Deno and web legs of the round-trip acceptance have not been run.
+- R1 (`run`) is not started. Nothing in `qala-core` touches fixes, splits or the recorder.
+- R2 (`core` math): plates, `round_weight` and `describe_change` are ported with vectors (`testdata/golden/plates`). The 1,000,000-input differential fuzz in the acceptance line is not in the repo.
+- R3 (`engine`): ported are state, decay, e1RM with the RTS table, Kalman, running, readiness, `log_session` and `calibrate`, with vectors in `testdata/golden/engine`. Native readiness decays to an explicit `now` (DECISIONS S26). Not ported: volume, rest, warm-up and `recommend_next_session`. The `workout` branch builds rest and warm-up planning in Kotlin instead (unmerged). The differential fuzz is not in the repo.
+- R4 (`generator`) is deferred. R5 (LS++) is done. R6 (`llm`) stays TS.
 
 **R0. Foundations.** Workspace, pinned toolchain, `js.rs` helpers, the vector generator and format, `qala-ffi` and `qala-wasm` shims with a `version()` call, `deno task` entries.
 Accept: one trivial function round-trips the same vector through `cargo test`, Deno wasm, and a Kotlin instrumented test on the phone. arm64 `.so` under 2 MB stripped, 16 KB aligned.

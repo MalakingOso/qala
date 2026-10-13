@@ -1,8 +1,12 @@
 # Native Android app: plan
 
-Status: the Kotlin direction (DECISIONS S7) is **decided** as of 2026-10-01, and `apps/android` exists and builds: a Gradle project with an `app` and a `design` module, the generated design tokens, fonts and icons, and a navigation shell around a stub Today screen. Everything below that point is still proposed. This replaced the Capacitor wrapper (`apps/phone`, DECISIONS S2), which has been deleted. The shared logic comes from the Rust core in `docs/rust-core.md`; what was and wasn't verified is in its appendix A, and the open questions are in appendix B. Decision rows are DECISIONS S6 to S17, plus S18 to S21 for LS++ and S22 for accounts. Revised 2026-09-30: sync is records over HTTP (no Automerge), and LS++ is the Rust port (no quickjs).
+Status 2026-10-13: in progress. The Kotlin direction (DECISIONS S7) was decided 2026-10-01 and `apps/android` builds. Merged to main: the toolchain (A0, section 11), the design system and shell (A1), the Capacitor removal (A7), the Rust core and FFI, the Room data layer, Today with the day rail, check-in, the skip sheet and status, the weekday picker (the native refresh M1 to M4, `docs/PLAN-rail-refresh.md`), and the plate calculator. In flight and unmerged: History and All exercises (branch `history`), Warm-up, Workout and Rest (`workout`), Plan (`plan`). Not started: run recording (A2), record sync (A3), charts and map (A5), Coach (A6). Everything has run on the emulator only; none of the section 5 gates has run on the phone. `docs/ROADMAP.md` has the order and what each item waits on.
+
+Sections 5 to 7 (run recorder, sync, charts and map) are still proposals: DECISIONS S9, S10 and S14 to S16, and queue items D07 and D11 to D13. This replaced the Capacitor wrapper (`apps/phone`, DECISIONS S2), which has been deleted. The shared logic comes from the Rust core in `docs/rust-core.md`; what was and wasn't verified is in its appendix A, and the open questions are in appendix B. Decision rows are DECISIONS S6 to S17, plus S18 to S21 for LS++ and S22 for accounts. Revised 2026-09-30: sync is records over HTTP (no Automerge), and LS++ is the Rust port (no quickjs).
 
 ## 1. Where things stand
+
+This section describes the starting point on 2026-09-30. The native app has since replaced the Capacitor half (A7), and the React phone shell is the frozen PWA (DECISIONS S13). The web app still has no `fetch`, `WebSocket` or IndexedDB call in `apps/web/src` (checked 2026-10-13).
 
 The phone shell is a prototype. `apps/web/src/shell-phone` (about 3,300 lines of pages, plus about 2,300 of shared UI and charts) runs entirely on `store/sample.ts`. It calls one `packages/*` module (`core/plates.ts`). There is no `fetch`, `WebSocket` or IndexedDB anywhere in `apps/web/src`, the offline outbox in `localStorage` is write-only, and the run pages are stubs on a fake `setInterval` ticker.
 
@@ -36,7 +40,7 @@ apps/android/
 
 KMP and Compose Multiplatform would keep iOS open (PLAN 3 says iOS waits for a friend who wants runs). I'm not adopting it. The structure keeps `core/`, `data/` and `run/` free of Compose imports, which is the cheap part of keeping the door open.
 
-Only `app` and `design` exist so far. Dependency injection: constructor injection through a hand-written `AppContainer` until it hurts; it isn't introduced yet. Navigation: the A1 shell has no navigation library. A sealed `Route` held in `rememberSaveable` plus a `BackHandler` covers five tabs and two pushed screens. Navigation Compose versus Navigation 3 stays open until A4, where real back stacks and arguments appear. Both are still unverified for September 2026.
+`app`, `design` and `data` exist (2026-10-13). There is no separate `core/` module: the UniFFI bindings and the Gradle task that builds the Rust library live in `data/` (moved there in M2). `run/` doesn't exist yet. Dependency injection: constructor injection through a hand-written `AppContainer` (built in `MainActivity`, exposed by a CompositionLocal). Navigation: no navigation library. A sealed `Route` held in `rememberSaveable` plus a `BackHandler` covers five tabs and the pushed screens (seven on main on 2026-10-13: History, Settings, Plates, CheckIn, WarmUp, Workout, Run, the last three still stubs). Navigation Compose versus Navigation 3 stays open until A4, where real back stacks and arguments appear. Both are still unverified for September 2026.
 
 ## 4. Design system
 
@@ -80,7 +84,7 @@ Don't put recording in WorkManager or JobScheduler; Android 16 tightened their r
 - **Records.** Room holds synced records (sessions, sets, runs, notes, settings) with a hybrid logical clock per field, merged by "higher HLC wins" with the compare and merge in Rust (`qala-core` `hlc.rs`, DECISIONS S11; rust-core.md section 4). Repositories expose typed reads as `Flow`s. The engine call needs JSON, which the repository builds straight from rows; there is no document to hydrate.
 - **Engine state.** A derived cache rebuilt from history on the device. Not synced.
 - **Tracks.** Room per fix, then content-addressed blob upload (rust-core.md section 5).
-- **Sync.** `POST /api/sync` over HTTPS to the Qala server on the owner's VPS (DECISIONS S22, no Tailscale; the base URL is a setting, not hard-coded), one round trip sending local changes and receiving everything past the cursor. Runs on app open, run end and workout end. No background sync in v1. The web's `offlineQueue.ts` shape (enqueue, acknowledge, backoff 1 s doubling to 60 s) becomes a Room outbox table plus a WorkManager job for blob uploads.
+- **Sync.** `POST /api/sync` over HTTPS to the Qala server on the owner's VPS (DECISIONS S22, no Tailscale; the base URL is a setting, not hard-coded), one round trip sending local changes and receiving everything past the cursor. Runs on app open, run end and workout end. No background sync in v1. The web's `offlineQueue.ts` shape (enqueue, acknowledge, backoff 1 s doubling to 60 s) becomes a Room outbox table plus a WorkManager job for blob uploads. Built so far (M2): the outbox, the clock sidecar and the HLC wrapper. There is no HTTP client, and the server has no `/api/sync` yet.
 - **Workout flow owner.** A `WorkoutPlanner` in `data/` runs PLAN 10 on the phone: read the check-in, call Rust `predict_readiness`, build the engine bindings, call the Rust LS++ evaluator for today's program, then map the result to screen state and call Rust `recommend_next_session` for the numbers. Phase A4 builds it; nothing else owns the sequence.
 - **Hot path.** Rust calls are synchronous and cheap per call. Engine and LS++ calls happen at workout start, set logged, session end and check-in, not per frame, so a JSON boundary is fine. Plates and clock formatting are the only per-render calls and are pure Rust or plain Kotlin.
 - **Coach.** A server route builds the prompt and validates the response (S14); the phone sends context and gets a validated, enveloped suggestion. Needs the network, so offline behavior is "coach offline", as PLAN 14 already says.
@@ -115,6 +119,8 @@ Sequence by dependency, not by line count. Line counts are the existing React pa
 | A6 coach | Coach (119) | Needs the server route. |
 | skip | Landing (150) | Marketing page, not part of the phone logger. |
 
+Status 2026-10-13. Built and merged: Today, Check-in and Plate calc (M3, M4 and the plates work), and Settings with the weekday picker only (the Training status group, the editable plate inventory with the 55 lb row, and bar defaults are open). In flight: History and All exercises on `history`, Warm-up, Workout and Rest on `workout`, Plan on `plan`. Not started: the run screens, Session complete, Progress, Body, Coach.
+
 ## 9. Phases and gates
 
 Sizes are relative (S, M, L), not calendar estimates, except where a research report gave one.
@@ -123,8 +129,6 @@ Sizes are relative (S, M, L), not calendar estimates, except where a research re
 |---|---|---|---|
 | A0 | Provision the Android toolchain (below). Run the five spike checks in `rust-core.md` appendix A. Run the Vico and Canvas run-series spike. Run the L5 check. | All five spike checks pass, or the documented exit is taken. | M |
 | A1 | Design system, tokens generator, fonts, icons, navigation shell on sample data. In parallel with A2. | Contrast test passes on generated tokens; screenshots of Settings and a stub Today against DESIGN. | M |
-
-A1 status, 2026-10-01: the tokens generator, fonts, icons, design components and navigation shell are built, and the first gate is met. The second is half met: the stub Today was compared against the web at 390 dp on an x86_64 emulator, and it matches in fonts, spacing, shadows and colors. Settings, All exercises and History are titled stubs, not screens, and nothing has run on the owner's phone yet.
 | A2 | `qala-core` R0 and R1 (run), recorder service, Room, live and summary screens, HR, cues. | The four gates in section 5. | L |
 | A3 | `schemaVersion` migration (tracks out), Room records with HLC, `POST /api/sync` and blob routes on the server (both with `requireUser`), web and Kotlin clients. | Phone and desktop converge on edits made offline on both; a conflicting field edit resolves to the higher HLC; airplane-mode session syncs on reconnect (PLAN 14). | L |
 | R5 (parallel with A2 and A3) | The Rust LS++ port, oracle first (rust-core.md section 8). Not an Android phase; it must land before A4. | 60 built-ins and the GZCLP progression match the oracle. Landed 2026-10-01, merged; A4 consumes it through `qala-lspp-ffi` (now `qala-ffi`, which also exports `qala-core`). | L |
@@ -133,9 +137,24 @@ A1 status, 2026-10-01: the tokens generator, fonts, icons, design components and
 | A6 | Coach route and screen, release signing, sideload build. | Coach offline state; signed APK installs. | S |
 | A7 | Retire `apps/phone` and the Capacitor dependencies. Freeze the React phone shell as a PWA (S13). | Done 2026-10-01, ahead of the native run gate, at the owner's request. | S |
 
+Status by phase, 2026-10-13:
+
+| Phase | State |
+|---|---|
+| A0 | Toolchain installed (section 11). Spike check 1 (arm64 `.so`, size and alignment) and check 5 (LS++ against the oracle) pass. Checks 2 to 4, the Vico and Canvas run-series spike and the L5 check have not been run; nothing in the repo does them. |
+| A1 | Built: tokens generator, fonts, icons, design components, navigation shell. The stub Today was compared against the web at 390 dp on an x86_64 emulator and matches in fonts, spacing, shadows and colors (2026-10-01). Settings has the weekday picker only; History and All exercises are in flight on `history`. |
+| A2 | Not started. Waits on D11. |
+| A3 | Not started. The outbox, clock sidecar and HLC wrapper exist; there is no sync endpoint or client. Waits on D06, D07 and D22. |
+| R5 | Done 2026-10-01. |
+| A4 | Rust side done for what Today needs (engine, availability, readiness, plates). Screens: Today, Check-in and Plate calc built; Warm-up, Workout and Rest in flight on `workout`; Plan in flight on `plan`. The `workout` branch writes rest and warm-up planning in Kotlin, where section 6 and `docs/rust-core.md` 7 (R3) put them in Rust. |
+| A5, A6 | Not started. |
+| A7 | Done 2026-10-01. |
+
+Nothing has run on the owner's phone. Every check so far used the `qala-test` emulator.
+
 ## 10. Server changes
 
-The existing server needs additions, not rewrites. Auth stays Tailscale identity headers.
+The existing server needs additions, not rewrites. Auth is the Tailscale identity header today (`server/auth.ts`); S22 replaces it with session cookies, which `docs/plan-accounts-logins.md` plans and nothing builds yet. New routes call `requireUser` either way.
 
 - `POST /api/sync` (records, cursor, idempotent on record, field and HLC) with per-user SQLite storage, replacing `server/sync.ts` and `server/ws.ts`. The server rejects writes more than a day ahead of its own clock.
 - Content-addressed blob upload and download for tracks: resumable, immutable, keyed by hash under the user. Both new routes must call `requireUser`; today only the old `/sync` socket does, and `/api/llm/chat`, `/api/elevation` and `/tiles` rely on the tailnet.

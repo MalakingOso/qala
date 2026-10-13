@@ -2,6 +2,8 @@
 
 This document is the build plan. It records every decision made with berkley (the owner) in design sessions on 2026-09-13, the environment facts verified on this machine, and the research numbers the engine is built on. Two companion files carry the rest: `docs/DECISIONS.md` is the owner's decision log (what was chosen, what it replaced, what's still open) and wins over older wording anywhere else; `docs/DESIGN.md` is the design system and the screen-by-screen spec behind the mockups. Evidence lives in `docs/research/RESEARCH-*.md`. Do not re-litigate settled decisions; where something is marked "assumption", it was chosen without asking and can be changed cheaply.
 
+Status 2026-10-13: the v1 web build exists and the Android app is in progress; `docs/ROADMAP.md` says where things stand. This file is the 2026-09-13 handoff plan, kept current in places. Sections 6 (engine rules), 12 (generator), 14 (gates) and 16a to 16f (roadmap items) are still the reference. Sections 2 to 4 and 7 to 9 describe the original plan, and several parts are superseded: the Capacitor phone (S2), the Automerge document and WebSocket sync (S3, S11), and Tailscale-header auth (S22). When this file and `docs/DECISIONS.md` disagree, DECISIONS wins.
+
 ## 1. Goal
 
 A self-hosted workout app for lifting and running (strength/powerlifting, hypertrophy/bodybuilding, and Runkeeper-style run recording and run plans, all feeding one fatigue model) built around LS++ (Liftoscript++, section 5; programs as code, edited in the browser, synced to the phone), with an adaptive training engine (fitness/fatigue state, per-muscle soreness check-ins, evidence-based volume and deload rules), a local Gemma model for the conversational and explanatory layer, and a goal-driven program generator like Evolve AI's "engine". Look comes from the owner's Beamer app (off-white ground, 2px borders, hard offset shadows) with an ember accent and a dark variant, DM Mono for text and the owner's own Qala Test face for titles and big numbers, plus a light touch of Runkeeper on the run screens only (big stacked numerals, periwinkle route line). The plan and workout screens take their structure from the Volt app reference (week navigator, a tab per day, one exercise at a time with a zoomed-out overview), drawn in Beamer's style. Served from the machine `callisto` over Tailscale now; several users, some on iOS, later.
@@ -56,7 +58,7 @@ Name: **Qala**. Location: `/home/berkley/Programming/qala`. Systemd unit `qala.s
 
 ```
 qala/
-  deno.json                 workspace; tasks: dev, build, test, serve, vendor, build:android (Gradle `assembleDebug` of `apps/android`), gen:android (Kotlin tokens and icons from the web sources), tiles:extract (pmtiles extract + unpack to z/x/y), dem:fetch (GLO-30 tiles for the region), golden:liftoscript and gen:liftoscript (oracle goldens), build:wasm and smoke:wasm (the LS++ wasm build)
+  deno.json                 workspace; tasks: dev, build, test, serve, vendor, build:android (Gradle `assembleDebug` of `apps/android`), gen:android (Kotlin tokens and icons from the web sources), tiles:extract (pmtiles extract + unpack to z/x/y), dem:fetch (GLO-30 tiles for the region), golden:liftoscript, golden:engine, golden:plates and gen:liftoscript (oracle goldens), build:wasm and smoke:wasm (the LS++ wasm build)
   LICENSE (AGPL-3.0), NOTICE (liftosaur, fonts, Lucide, visx, uPlot attributions), README.md
   assets/fonts/             QalaTest-*, DMMono-*, Faustina-* faces; qala-test/work/ (font build scripts)
   mockups/                  build.mjs and the generated review canvas; not app code
@@ -67,17 +69,18 @@ qala/
     generator/              rules -> LS++ program text
     llm/                    prompt builders, JSON schemas, response validation; transport injected; the import edit-list schema, matcher and emitter
     run/                    pure TS: GPS fix filter, distance, pace smoothing, auto-pause, splits, grade-adjusted pace, run load, guided-workout step machine
-  crates/                   Rust LS++ port: qala-lspp, qala-lspp-json (shared JSON boundary), qala-lspp-wasm (web, Deno), qala-lspp-ffi (Kotlin via UniFFI)
+  crates/                   Rust: qala-core (pure logic: engine, availability, HLC, records, plate math), qala-ffi (UniFFI for Kotlin, exports qala-core and LS++), and the LS++ port: qala-lspp, qala-lspp-json (shared JSON boundary), qala-lspp-wasm (web, Deno)
   apps/web/                 React 19 PWA: src/shell-desktop, src/shell-phone, src/shared (charts/ on visx and uPlot), src/theme (tokens.css, fonts.css)
-  apps/android/             native Kotlin and Jetpack Compose phone app: app/ (activity, navigation, screens), design/ (generated tokens and icons, fonts, Beamer components); core/, data/, run/ follow (docs/android-native.md 3)
-  server/                   Deno: automerge-repo sync, auth, /api/llm proxy, static files, tiles/ (PMTiles + unpacked z/x/y), elevation.ts (GLO-30)
-  deploy/                   qala.service (systemd --user), tailscale-serve.md
-  docs/                     PLAN.md (this plan), DECISIONS.md (the owner's decision log), DESIGN.md (the design system and screens),
+  apps/android/             native Kotlin and Jetpack Compose phone app: app/ (activity, navigation, screens), design/ (generated tokens and icons, fonts, Beamer components), data/ (Room, repositories, the Rust build and UniFFI bindings); run/ follows (docs/android-native.md 3)
+  server/                   Deno: automerge-repo sync (to be replaced by record sync, S11), Tailscale-header auth (to be replaced by accounts, S22), /api/llm proxy, /api/import/text, static files, tiles/ (PMTiles + unpacked z/x/y), elevation.ts (GLO-30)
+  deploy/                   qala.service (systemd --user; its ExecStart names server/main.ts, which does not exist), tailscale-serve.md
+  docs/                     README.md (index), ROADMAP.md (where we are and what's next), PLAN.md (this plan), DECISIONS.md (the owner's decision log), DESIGN.md (the design system and screens),
                             CONTEXT.md (the glossary), ls-plus-plus.md (the language), rust-core.md (the Rust core plan),
                             android-native.md (the Kotlin app), plan-accounts-logins.md (accounts),
                             decisions-pending.md (the open choices), adr/ (decision records), research/ (RESEARCH-*.md; finished
                             evidence reports and RESEARCH-*.md briefs, which are open questions and are not findings),
-                            blog/ (the owner's writing, drafts), podcast/ (episode scripts for beginners; audio is not in git)
+                            blog/ (the owner's writing, drafts), podcast/ (episode scripts for beginners; audio is not in git),
+                            archive/ (finished handoffs and spikes)
 ```
 
 ## 5. Milestone M1: vendor liftoscript (`packages/liftoscript`, now the LS++ oracle)

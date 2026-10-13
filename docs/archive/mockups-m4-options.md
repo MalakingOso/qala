@@ -1,5 +1,7 @@
 # M4 mockup options
 
+Status: historical; archived 2026-10-13. M4 is built and merged. This records the options that were on the table, and the build may differ from the recommendations.
+
 Design-only options for the M4 screens, from the parallel mockup track in
 `docs/PLAN-rail-refresh.md`. Open `mockups/m4-index.html`. Every page shows its
 options side by side in 390 px phone frames, light and dark (a theme switch in

@@ -1,5 +1,7 @@
 # Handoff: make the intro's impact dust look real
 
+Status: done 2026-10-02 (see Outcome below); archived 2026-10-13. The `docs/handoff-intro-dust/` folder it mentions is untracked and local to the owner's machine.
+
 Qala's landing page opens with a Blender-rendered video: the red Qk bumper plate drops spinning, slaps flat, hops once, wobbles like an Euler's disk and settles with the Q upright. Dust kicks up at the impact. The plate, camera and timing are in good shape. The dust is not. The grains are far too big and the smoke reads as lumpy blobs instead of fine powder. Your job is the dust only.
 
 Look at `docs/handoff-intro-dust/current-light-dark.mp4` (the whole clip, light page left, dark page right) and `docs/handoff-intro-dust/current-dust-1to1.png` (1:1 crops of frames 31, 34, 40 and 50 on both pages) before reading further.

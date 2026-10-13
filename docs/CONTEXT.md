@@ -60,7 +60,7 @@ A direct set trains a muscle as its target. A fractional set also counts synergi
 One step of a day's plan shown on the Today rail — check-in, warm-up, lift, recover, run, wind down. A day only shows the stages it actually has; a rest day shows check-in, recover, wind down.
 
 **Rail**:
-The Today screen's left-edge timeline of the day's stages. Flicks between stage cards to preview or look back; snaps to "now" 10 s after left idle.
+The Today screen's left-edge timeline of the day's stages. Flicks between stage cards to preview or look back. On the web it snaps to "now" 10 s after left idle (DECISIONS U9); the native app's rail is a fixed strip with a menu and goes back to now only on request (S23).
 
 ### Coach
 

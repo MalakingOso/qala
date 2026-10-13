@@ -1,7 +1,9 @@
 # Plan: friends-and-family accounts + logins (explore/accounts-logins)
 
-Target branch: `explore/accounts-logins`. Audience: Claude Code implementing
-the work. Status: plan, not decided, except section 1 settled points which
+Status 2026-10-13: planned, not started. No branch named `explore/accounts-logins` exists and nothing here is built: `server/auth.ts` still reads only the Tailscale header and `deploy/` still holds the Tailscale notes. DECISIONS S22 records the settled points. Blocked on D21 (the public domain and a DNS date). If the Deno to Bun move happens (`docs/PLAN-bun-migration.md`), the Deno-specific parts of this plan need rewriting.
+
+Target branch (never created): `explore/accounts-logins`. Audience: Claude Code implementing
+the work. Status when written: plan, not decided, except section 1 settled points which
 mirror `docs/adr/0002-friends-family-auth.md` verbatim in intent.
 
 Evidence note: the workflow research agents returned no usable evidence,
