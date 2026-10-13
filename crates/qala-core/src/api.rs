@@ -283,6 +283,100 @@ pub fn hlc_merge_field(request: &str) -> ApiResult {
     respond(&hlc::merge_field(&r.local, &r.remote))
 }
 
+// ---------------------------------------------------------------------------
+// Plates (plates.rs; docs/rust-core.md R2)
+// ---------------------------------------------------------------------------
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct PlanPlatesReq {
+    requested_total: f64,
+    bar_weight: f64,
+    #[serde(default)]
+    collar_weight: f64,
+    plates: Vec<crate::plates::PlateEntry>,
+}
+
+/// `{v, requestedTotal, barWeight, collarWeight?, plates}` -> `PlatePlan`.
+pub fn plan_plates(request: &str) -> ApiResult {
+    let r: PlanPlatesReq = parse_request(request)?;
+    respond(&crate::plates::plan_plates(
+        r.requested_total,
+        r.bar_weight,
+        &r.plates,
+        r.collar_weight,
+    ))
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct RoundWeightReq {
+    target_weight: f64,
+    bar_weight: f64,
+    #[serde(default)]
+    collar_weight: f64,
+    plates: Vec<crate::plates::PlateEntry>,
+}
+
+/// `{v, targetWeight, barWeight, collarWeight?, plates}` -> the loadable total.
+pub fn round_weight(request: &str) -> ApiResult {
+    let r: RoundWeightReq = parse_request(request)?;
+    respond(&crate::plates::round_weight(
+        r.target_weight,
+        r.bar_weight,
+        &r.plates,
+        r.collar_weight,
+    ))
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct ChooseNextReq {
+    current_per_side: Vec<f64>,
+    next_total: f64,
+    bar_weight: f64,
+    #[serde(default)]
+    collar_weight: f64,
+    plates: Vec<crate::plates::PlateEntry>,
+}
+
+/// `{v, currentPerSide, nextTotal, barWeight, collarWeight?, plates}` -> `NextPlateChoice` or null.
+pub fn choose_next_plates(request: &str) -> ApiResult {
+    let r: ChooseNextReq = parse_request(request)?;
+    respond(&crate::plates::choose_next_plates(
+        &r.current_per_side,
+        r.next_total,
+        r.bar_weight,
+        &r.plates,
+        r.collar_weight,
+    ))
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct DescribeChangeReq {
+    current_per_side: Vec<f64>,
+    next_per_side: Vec<f64>,
+}
+
+/// `{v, currentPerSide, nextPerSide}` -> e.g. "take off 5, add 25 each side".
+pub fn describe_change(request: &str) -> ApiResult {
+    let r: DescribeChangeReq = parse_request(request)?;
+    respond(&crate::plates::describe_change(&r.current_per_side, &r.next_per_side))
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct ShorthandReq {
+    per_side: Vec<f64>,
+}
+
+/// `{v, perSide}` -> "per side 45 · 45 · 10", or "bar".
+pub fn plates_shorthand(request: &str) -> ApiResult {
+    let r: ShorthandReq = parse_request(request)?;
+    respond(&crate::plates::plates_shorthand(&r.per_side))
+}
+
 // Adapter and derived numbers live in derived_api.rs.
 pub use crate::derived_api::{build_engine_state, readiness_summary, week_load, weight_trend};
 

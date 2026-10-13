@@ -1,0 +1,1767 @@
+{
+ "fn": "plates",
+ "version": 1,
+ "oracle": "ts",
+ "cases": [
+  {
+   "name": "plan_plates: 245 lb on a 45 lb bar",
+   "input": {
+    "call": "plan_plates",
+    "requestedTotal": 245,
+    "barWeight": 45,
+    "collarWeight": 0,
+    "plates": [
+     {
+      "weight": 45,
+      "pairs": "enough",
+      "color": "blue"
+     },
+     {
+      "weight": 35,
+      "pairs": "enough",
+      "color": "yellow"
+     },
+     {
+      "weight": 25,
+      "pairs": "enough",
+      "color": "green"
+     },
+     {
+      "weight": 10,
+      "pairs": "enough",
+      "color": "white"
+     },
+     {
+      "weight": 5,
+      "pairs": "enough",
+      "color": "charcoal"
+     },
+     {
+      "weight": 2.5,
+      "pairs": "enough",
+      "color": "silver"
+     },
+     {
+      "weight": 1.25,
+      "pairs": 0,
+      "color": "silver"
+     }
+    ]
+   },
+   "expected": {
+    "requestedTotal": 245,
+    "barWeight": 45,
+    "collarWeight": 0,
+    "perSideTarget": 100,
+    "exact": {
+     "perSide": [
+      45,
+      45,
+      10
+     ],
+     "perSideTotal": 100,
+     "total": 245,
+     "barWeight": 45,
+     "collarWeight": 0
+    },
+    "below": {
+     "perSide": [
+      45,
+      45,
+      5,
+      2.5
+     ],
+     "perSideTotal": 97.5,
+     "total": 240,
+     "barWeight": 45,
+     "collarWeight": 0
+    },
+    "above": {
+     "perSide": [
+      45,
+      45,
+      10,
+      2.5
+     ],
+     "perSideTotal": 102.5,
+     "total": 250,
+     "barWeight": 45,
+     "collarWeight": 0
+    }
+   }
+  },
+  {
+   "name": "nearest_loadable: 245 lb on a 45 lb bar",
+   "input": {
+    "call": "nearest_loadable",
+    "requestedTotal": 245,
+    "barWeight": 45,
+    "collarWeight": 0,
+    "plates": [
+     {
+      "weight": 45,
+      "pairs": "enough",
+      "color": "blue"
+     },
+     {
+      "weight": 35,
+      "pairs": "enough",
+      "color": "yellow"
+     },
+     {
+      "weight": 25,
+      "pairs": "enough",
+      "color": "green"
+     },
+     {
+      "weight": 10,
+      "pairs": "enough",
+      "color": "white"
+     },
+     {
+      "weight": 5,
+      "pairs": "enough",
+      "color": "charcoal"
+     },
+     {
+      "weight": 2.5,
+      "pairs": "enough",
+      "color": "silver"
+     },
+     {
+      "weight": 1.25,
+      "pairs": 0,
+      "color": "silver"
+     }
+    ]
+   },
+   "expected": {
+    "perSide": [
+     45,
+     45,
+     10
+    ],
+    "perSideTotal": 100,
+    "total": 245,
+    "barWeight": 45,
+    "collarWeight": 0
+   }
+  },
+  {
+   "name": "round_weight: 245 lb on a 45 lb bar",
+   "input": {
+    "call": "round_weight",
+    "targetWeight": 245,
+    "barWeight": 45,
+    "collarWeight": 0,
+    "plates": [
+     {
+      "weight": 45,
+      "pairs": "enough",
+      "color": "blue"
+     },
+     {
+      "weight": 35,
+      "pairs": "enough",
+      "color": "yellow"
+     },
+     {
+      "weight": 25,
+      "pairs": "enough",
+      "color": "green"
+     },
+     {
+      "weight": 10,
+      "pairs": "enough",
+      "color": "white"
+     },
+     {
+      "weight": 5,
+      "pairs": "enough",
+      "color": "charcoal"
+     },
+     {
+      "weight": 2.5,
+      "pairs": "enough",
+      "color": "silver"
+     },
+     {
+      "weight": 1.25,
+      "pairs": 0,
+      "color": "silver"
+     }
+    ]
+   },
+   "expected": 245
+  },
+  {
+   "name": "shorthand: 245 per side",
+   "input": {
+    "call": "shorthand",
+    "perSide": [
+     45,
+     45,
+     10
+    ]
+   },
+   "expected": "per side 45 · 45 · 10"
+  },
+  {
+   "name": "shorthand: bar only",
+   "input": {
+    "call": "shorthand",
+    "perSide": []
+   },
+   "expected": "bar"
+  },
+  {
+   "name": "plan_plates: one pair of 45s, 245 lb",
+   "input": {
+    "call": "plan_plates",
+    "requestedTotal": 245,
+    "barWeight": 45,
+    "collarWeight": 0,
+    "plates": [
+     {
+      "weight": 45,
+      "pairs": 1,
+      "color": "blue"
+     },
+     {
+      "weight": 35,
+      "pairs": "enough",
+      "color": "yellow"
+     },
+     {
+      "weight": 25,
+      "pairs": "enough",
+      "color": "green"
+     },
+     {
+      "weight": 10,
+      "pairs": "enough",
+      "color": "white"
+     },
+     {
+      "weight": 5,
+      "pairs": "enough",
+      "color": "charcoal"
+     },
+     {
+      "weight": 2.5,
+      "pairs": "enough",
+      "color": "silver"
+     },
+     {
+      "weight": 1.25,
+      "pairs": "enough",
+      "color": "silver"
+     }
+    ]
+   },
+   "expected": {
+    "requestedTotal": 245,
+    "barWeight": 45,
+    "collarWeight": 0,
+    "perSideTarget": 100,
+    "exact": {
+     "perSide": [
+      45,
+      35,
+      10,
+      10
+     ],
+     "perSideTotal": 100,
+     "total": 245,
+     "barWeight": 45,
+     "collarWeight": 0
+    },
+    "below": {
+     "perSide": [
+      45,
+      25,
+      25,
+      2.5,
+      1.25
+     ],
+     "perSideTotal": 98.75,
+     "total": 242.5,
+     "barWeight": 45,
+     "collarWeight": 0
+    },
+    "above": {
+     "perSide": [
+      45,
+      35,
+      10,
+      10,
+      1.25
+     ],
+     "perSideTotal": 101.25,
+     "total": 247.5,
+     "barWeight": 45,
+     "collarWeight": 0
+    }
+   }
+  },
+  {
+   "name": "nearest_loadable: one pair of 45s, 245 lb",
+   "input": {
+    "call": "nearest_loadable",
+    "requestedTotal": 245,
+    "barWeight": 45,
+    "collarWeight": 0,
+    "plates": [
+     {
+      "weight": 45,
+      "pairs": 1,
+      "color": "blue"
+     },
+     {
+      "weight": 35,
+      "pairs": "enough",
+      "color": "yellow"
+     },
+     {
+      "weight": 25,
+      "pairs": "enough",
+      "color": "green"
+     },
+     {
+      "weight": 10,
+      "pairs": "enough",
+      "color": "white"
+     },
+     {
+      "weight": 5,
+      "pairs": "enough",
+      "color": "charcoal"
+     },
+     {
+      "weight": 2.5,
+      "pairs": "enough",
+      "color": "silver"
+     },
+     {
+      "weight": 1.25,
+      "pairs": "enough",
+      "color": "silver"
+     }
+    ]
+   },
+   "expected": {
+    "perSide": [
+     45,
+     35,
+     10,
+     10
+    ],
+    "perSideTotal": 100,
+    "total": 245,
+    "barWeight": 45,
+    "collarWeight": 0
+   }
+  },
+  {
+   "name": "round_weight: one pair of 45s, 245 lb",
+   "input": {
+    "call": "round_weight",
+    "targetWeight": 245,
+    "barWeight": 45,
+    "collarWeight": 0,
+    "plates": [
+     {
+      "weight": 45,
+      "pairs": 1,
+      "color": "blue"
+     },
+     {
+      "weight": 35,
+      "pairs": "enough",
+      "color": "yellow"
+     },
+     {
+      "weight": 25,
+      "pairs": "enough",
+      "color": "green"
+     },
+     {
+      "weight": 10,
+      "pairs": "enough",
+      "color": "white"
+     },
+     {
+      "weight": 5,
+      "pairs": "enough",
+      "color": "charcoal"
+     },
+     {
+      "weight": 2.5,
+      "pairs": "enough",
+      "color": "silver"
+     },
+     {
+      "weight": 1.25,
+      "pairs": "enough",
+      "color": "silver"
+     }
+    ]
+   },
+   "expected": 245
+  },
+  {
+   "name": "plan_plates: unreachable 200 lb, 45s only",
+   "input": {
+    "call": "plan_plates",
+    "requestedTotal": 200,
+    "barWeight": 45,
+    "collarWeight": 0,
+    "plates": [
+     {
+      "weight": 45,
+      "pairs": "enough",
+      "color": "blue"
+     }
+    ]
+   },
+   "expected": {
+    "requestedTotal": 200,
+    "barWeight": 45,
+    "collarWeight": 0,
+    "perSideTarget": 77.5,
+    "exact": null,
+    "below": {
+     "perSide": [
+      45
+     ],
+     "perSideTotal": 45,
+     "total": 135,
+     "barWeight": 45,
+     "collarWeight": 0
+    },
+    "above": {
+     "perSide": [
+      45,
+      45
+     ],
+     "perSideTotal": 90,
+     "total": 225,
+     "barWeight": 45,
+     "collarWeight": 0
+    }
+   }
+  },
+  {
+   "name": "nearest_loadable: unreachable 200 lb, 45s only",
+   "input": {
+    "call": "nearest_loadable",
+    "requestedTotal": 200,
+    "barWeight": 45,
+    "collarWeight": 0,
+    "plates": [
+     {
+      "weight": 45,
+      "pairs": "enough",
+      "color": "blue"
+     }
+    ]
+   },
+   "expected": {
+    "perSide": [
+     45,
+     45
+    ],
+    "perSideTotal": 90,
+    "total": 225,
+    "barWeight": 45,
+    "collarWeight": 0
+   }
+  },
+  {
+   "name": "round_weight: unreachable 200 lb, 45s only",
+   "input": {
+    "call": "round_weight",
+    "targetWeight": 200,
+    "barWeight": 45,
+    "collarWeight": 0,
+    "plates": [
+     {
+      "weight": 45,
+      "pairs": "enough",
+      "color": "blue"
+     }
+    ]
+   },
+   "expected": 225
+  },
+  {
+   "name": "plan_plates: 30 lb below the bar",
+   "input": {
+    "call": "plan_plates",
+    "requestedTotal": 30,
+    "barWeight": 45,
+    "collarWeight": 0,
+    "plates": [
+     {
+      "weight": 45,
+      "pairs": "enough",
+      "color": "blue"
+     },
+     {
+      "weight": 35,
+      "pairs": "enough",
+      "color": "yellow"
+     },
+     {
+      "weight": 25,
+      "pairs": "enough",
+      "color": "green"
+     },
+     {
+      "weight": 10,
+      "pairs": "enough",
+      "color": "white"
+     },
+     {
+      "weight": 5,
+      "pairs": "enough",
+      "color": "charcoal"
+     },
+     {
+      "weight": 2.5,
+      "pairs": "enough",
+      "color": "silver"
+     },
+     {
+      "weight": 1.25,
+      "pairs": 0,
+      "color": "silver"
+     }
+    ]
+   },
+   "expected": {
+    "requestedTotal": 30,
+    "barWeight": 45,
+    "collarWeight": 0,
+    "perSideTarget": -7.5,
+    "exact": null,
+    "below": null,
+    "above": {
+     "perSide": [],
+     "perSideTotal": 0,
+     "total": 45,
+     "barWeight": 45,
+     "collarWeight": 0
+    }
+   }
+  },
+  {
+   "name": "nearest_loadable: 30 lb below the bar",
+   "input": {
+    "call": "nearest_loadable",
+    "requestedTotal": 30,
+    "barWeight": 45,
+    "collarWeight": 0,
+    "plates": [
+     {
+      "weight": 45,
+      "pairs": "enough",
+      "color": "blue"
+     },
+     {
+      "weight": 35,
+      "pairs": "enough",
+      "color": "yellow"
+     },
+     {
+      "weight": 25,
+      "pairs": "enough",
+      "color": "green"
+     },
+     {
+      "weight": 10,
+      "pairs": "enough",
+      "color": "white"
+     },
+     {
+      "weight": 5,
+      "pairs": "enough",
+      "color": "charcoal"
+     },
+     {
+      "weight": 2.5,
+      "pairs": "enough",
+      "color": "silver"
+     },
+     {
+      "weight": 1.25,
+      "pairs": 0,
+      "color": "silver"
+     }
+    ]
+   },
+   "expected": {
+    "perSide": [],
+    "perSideTotal": 0,
+    "total": 45,
+    "barWeight": 45,
+    "collarWeight": 0
+   }
+  },
+  {
+   "name": "round_weight: 30 lb below the bar",
+   "input": {
+    "call": "round_weight",
+    "targetWeight": 30,
+    "barWeight": 45,
+    "collarWeight": 0,
+    "plates": [
+     {
+      "weight": 45,
+      "pairs": "enough",
+      "color": "blue"
+     },
+     {
+      "weight": 35,
+      "pairs": "enough",
+      "color": "yellow"
+     },
+     {
+      "weight": 25,
+      "pairs": "enough",
+      "color": "green"
+     },
+     {
+      "weight": 10,
+      "pairs": "enough",
+      "color": "white"
+     },
+     {
+      "weight": 5,
+      "pairs": "enough",
+      "color": "charcoal"
+     },
+     {
+      "weight": 2.5,
+      "pairs": "enough",
+      "color": "silver"
+     },
+     {
+      "weight": 1.25,
+      "pairs": 0,
+      "color": "silver"
+     }
+    ]
+   },
+   "expected": 45
+  },
+  {
+   "name": "plan_plates: 243 lb snaps up",
+   "input": {
+    "call": "plan_plates",
+    "requestedTotal": 243,
+    "barWeight": 45,
+    "collarWeight": 0,
+    "plates": [
+     {
+      "weight": 45,
+      "pairs": "enough",
+      "color": "blue"
+     },
+     {
+      "weight": 35,
+      "pairs": "enough",
+      "color": "yellow"
+     },
+     {
+      "weight": 25,
+      "pairs": "enough",
+      "color": "green"
+     },
+     {
+      "weight": 10,
+      "pairs": "enough",
+      "color": "white"
+     },
+     {
+      "weight": 5,
+      "pairs": "enough",
+      "color": "charcoal"
+     },
+     {
+      "weight": 2.5,
+      "pairs": "enough",
+      "color": "silver"
+     },
+     {
+      "weight": 1.25,
+      "pairs": 0,
+      "color": "silver"
+     }
+    ]
+   },
+   "expected": {
+    "requestedTotal": 243,
+    "barWeight": 45,
+    "collarWeight": 0,
+    "perSideTarget": 99,
+    "exact": null,
+    "below": {
+     "perSide": [
+      45,
+      45,
+      5,
+      2.5
+     ],
+     "perSideTotal": 97.5,
+     "total": 240,
+     "barWeight": 45,
+     "collarWeight": 0
+    },
+    "above": {
+     "perSide": [
+      45,
+      45,
+      10
+     ],
+     "perSideTotal": 100,
+     "total": 245,
+     "barWeight": 45,
+     "collarWeight": 0
+    }
+   }
+  },
+  {
+   "name": "nearest_loadable: 243 lb snaps up",
+   "input": {
+    "call": "nearest_loadable",
+    "requestedTotal": 243,
+    "barWeight": 45,
+    "collarWeight": 0,
+    "plates": [
+     {
+      "weight": 45,
+      "pairs": "enough",
+      "color": "blue"
+     },
+     {
+      "weight": 35,
+      "pairs": "enough",
+      "color": "yellow"
+     },
+     {
+      "weight": 25,
+      "pairs": "enough",
+      "color": "green"
+     },
+     {
+      "weight": 10,
+      "pairs": "enough",
+      "color": "white"
+     },
+     {
+      "weight": 5,
+      "pairs": "enough",
+      "color": "charcoal"
+     },
+     {
+      "weight": 2.5,
+      "pairs": "enough",
+      "color": "silver"
+     },
+     {
+      "weight": 1.25,
+      "pairs": 0,
+      "color": "silver"
+     }
+    ]
+   },
+   "expected": {
+    "perSide": [
+     45,
+     45,
+     10
+    ],
+    "perSideTotal": 100,
+    "total": 245,
+    "barWeight": 45,
+    "collarWeight": 0
+   }
+  },
+  {
+   "name": "round_weight: 243 lb snaps up",
+   "input": {
+    "call": "round_weight",
+    "targetWeight": 243,
+    "barWeight": 45,
+    "collarWeight": 0,
+    "plates": [
+     {
+      "weight": 45,
+      "pairs": "enough",
+      "color": "blue"
+     },
+     {
+      "weight": 35,
+      "pairs": "enough",
+      "color": "yellow"
+     },
+     {
+      "weight": 25,
+      "pairs": "enough",
+      "color": "green"
+     },
+     {
+      "weight": 10,
+      "pairs": "enough",
+      "color": "white"
+     },
+     {
+      "weight": 5,
+      "pairs": "enough",
+      "color": "charcoal"
+     },
+     {
+      "weight": 2.5,
+      "pairs": "enough",
+      "color": "silver"
+     },
+     {
+      "weight": 1.25,
+      "pairs": 0,
+      "color": "silver"
+     }
+    ]
+   },
+   "expected": 245
+  },
+  {
+   "name": "plan_plates: 242 lb snaps down",
+   "input": {
+    "call": "plan_plates",
+    "requestedTotal": 242,
+    "barWeight": 45,
+    "collarWeight": 0,
+    "plates": [
+     {
+      "weight": 45,
+      "pairs": "enough",
+      "color": "blue"
+     },
+     {
+      "weight": 35,
+      "pairs": "enough",
+      "color": "yellow"
+     },
+     {
+      "weight": 25,
+      "pairs": "enough",
+      "color": "green"
+     },
+     {
+      "weight": 10,
+      "pairs": "enough",
+      "color": "white"
+     },
+     {
+      "weight": 5,
+      "pairs": "enough",
+      "color": "charcoal"
+     },
+     {
+      "weight": 2.5,
+      "pairs": "enough",
+      "color": "silver"
+     },
+     {
+      "weight": 1.25,
+      "pairs": 0,
+      "color": "silver"
+     }
+    ]
+   },
+   "expected": {
+    "requestedTotal": 242,
+    "barWeight": 45,
+    "collarWeight": 0,
+    "perSideTarget": 98.5,
+    "exact": null,
+    "below": {
+     "perSide": [
+      45,
+      45,
+      5,
+      2.5
+     ],
+     "perSideTotal": 97.5,
+     "total": 240,
+     "barWeight": 45,
+     "collarWeight": 0
+    },
+    "above": {
+     "perSide": [
+      45,
+      45,
+      10
+     ],
+     "perSideTotal": 100,
+     "total": 245,
+     "barWeight": 45,
+     "collarWeight": 0
+    }
+   }
+  },
+  {
+   "name": "nearest_loadable: 242 lb snaps down",
+   "input": {
+    "call": "nearest_loadable",
+    "requestedTotal": 242,
+    "barWeight": 45,
+    "collarWeight": 0,
+    "plates": [
+     {
+      "weight": 45,
+      "pairs": "enough",
+      "color": "blue"
+     },
+     {
+      "weight": 35,
+      "pairs": "enough",
+      "color": "yellow"
+     },
+     {
+      "weight": 25,
+      "pairs": "enough",
+      "color": "green"
+     },
+     {
+      "weight": 10,
+      "pairs": "enough",
+      "color": "white"
+     },
+     {
+      "weight": 5,
+      "pairs": "enough",
+      "color": "charcoal"
+     },
+     {
+      "weight": 2.5,
+      "pairs": "enough",
+      "color": "silver"
+     },
+     {
+      "weight": 1.25,
+      "pairs": 0,
+      "color": "silver"
+     }
+    ]
+   },
+   "expected": {
+    "perSide": [
+     45,
+     45,
+     5,
+     2.5
+    ],
+    "perSideTotal": 97.5,
+    "total": 240,
+    "barWeight": 45,
+    "collarWeight": 0
+   }
+  },
+  {
+   "name": "round_weight: 242 lb snaps down",
+   "input": {
+    "call": "round_weight",
+    "targetWeight": 242,
+    "barWeight": 45,
+    "collarWeight": 0,
+    "plates": [
+     {
+      "weight": 45,
+      "pairs": "enough",
+      "color": "blue"
+     },
+     {
+      "weight": 35,
+      "pairs": "enough",
+      "color": "yellow"
+     },
+     {
+      "weight": 25,
+      "pairs": "enough",
+      "color": "green"
+     },
+     {
+      "weight": 10,
+      "pairs": "enough",
+      "color": "white"
+     },
+     {
+      "weight": 5,
+      "pairs": "enough",
+      "color": "charcoal"
+     },
+     {
+      "weight": 2.5,
+      "pairs": "enough",
+      "color": "silver"
+     },
+     {
+      "weight": 1.25,
+      "pairs": 0,
+      "color": "silver"
+     }
+    ]
+   },
+   "expected": 240
+  },
+  {
+   "name": "plan_plates: 245 lb with 2.5 lb collars",
+   "input": {
+    "call": "plan_plates",
+    "requestedTotal": 245,
+    "barWeight": 45,
+    "collarWeight": 2.5,
+    "plates": [
+     {
+      "weight": 45,
+      "pairs": "enough",
+      "color": "blue"
+     },
+     {
+      "weight": 35,
+      "pairs": "enough",
+      "color": "yellow"
+     },
+     {
+      "weight": 25,
+      "pairs": "enough",
+      "color": "green"
+     },
+     {
+      "weight": 10,
+      "pairs": "enough",
+      "color": "white"
+     },
+     {
+      "weight": 5,
+      "pairs": "enough",
+      "color": "charcoal"
+     },
+     {
+      "weight": 2.5,
+      "pairs": "enough",
+      "color": "silver"
+     },
+     {
+      "weight": 1.25,
+      "pairs": 0,
+      "color": "silver"
+     }
+    ]
+   },
+   "expected": {
+    "requestedTotal": 245,
+    "barWeight": 45,
+    "collarWeight": 2.5,
+    "perSideTarget": 97.5,
+    "exact": {
+     "perSide": [
+      45,
+      45,
+      5,
+      2.5
+     ],
+     "perSideTotal": 97.5,
+     "total": 245,
+     "barWeight": 45,
+     "collarWeight": 2.5
+    },
+    "below": {
+     "perSide": [
+      45,
+      45,
+      5
+     ],
+     "perSideTotal": 95,
+     "total": 240,
+     "barWeight": 45,
+     "collarWeight": 2.5
+    },
+    "above": {
+     "perSide": [
+      45,
+      45,
+      10
+     ],
+     "perSideTotal": 100,
+     "total": 250,
+     "barWeight": 45,
+     "collarWeight": 2.5
+    }
+   }
+  },
+  {
+   "name": "nearest_loadable: 245 lb with 2.5 lb collars",
+   "input": {
+    "call": "nearest_loadable",
+    "requestedTotal": 245,
+    "barWeight": 45,
+    "collarWeight": 2.5,
+    "plates": [
+     {
+      "weight": 45,
+      "pairs": "enough",
+      "color": "blue"
+     },
+     {
+      "weight": 35,
+      "pairs": "enough",
+      "color": "yellow"
+     },
+     {
+      "weight": 25,
+      "pairs": "enough",
+      "color": "green"
+     },
+     {
+      "weight": 10,
+      "pairs": "enough",
+      "color": "white"
+     },
+     {
+      "weight": 5,
+      "pairs": "enough",
+      "color": "charcoal"
+     },
+     {
+      "weight": 2.5,
+      "pairs": "enough",
+      "color": "silver"
+     },
+     {
+      "weight": 1.25,
+      "pairs": 0,
+      "color": "silver"
+     }
+    ]
+   },
+   "expected": {
+    "perSide": [
+     45,
+     45,
+     5,
+     2.5
+    ],
+    "perSideTotal": 97.5,
+    "total": 245,
+    "barWeight": 45,
+    "collarWeight": 2.5
+   }
+  },
+  {
+   "name": "round_weight: 245 lb with 2.5 lb collars",
+   "input": {
+    "call": "round_weight",
+    "targetWeight": 245,
+    "barWeight": 45,
+    "collarWeight": 2.5,
+    "plates": [
+     {
+      "weight": 45,
+      "pairs": "enough",
+      "color": "blue"
+     },
+     {
+      "weight": 35,
+      "pairs": "enough",
+      "color": "yellow"
+     },
+     {
+      "weight": 25,
+      "pairs": "enough",
+      "color": "green"
+     },
+     {
+      "weight": 10,
+      "pairs": "enough",
+      "color": "white"
+     },
+     {
+      "weight": 5,
+      "pairs": "enough",
+      "color": "charcoal"
+     },
+     {
+      "weight": 2.5,
+      "pairs": "enough",
+      "color": "silver"
+     },
+     {
+      "weight": 1.25,
+      "pairs": 0,
+      "color": "silver"
+     }
+    ]
+   },
+   "expected": 245
+  },
+  {
+   "name": "choose_next: ramp to 100",
+   "input": {
+    "call": "choose_next",
+    "currentPerSide": [],
+    "nextTotal": 100,
+    "barWeight": 45,
+    "collarWeight": 0,
+    "plates": [
+     {
+      "weight": 45,
+      "pairs": "enough",
+      "color": "blue"
+     },
+     {
+      "weight": 35,
+      "pairs": "enough",
+      "color": "yellow"
+     },
+     {
+      "weight": 25,
+      "pairs": "enough",
+      "color": "green"
+     },
+     {
+      "weight": 10,
+      "pairs": "enough",
+      "color": "white"
+     },
+     {
+      "weight": 5,
+      "pairs": "enough",
+      "color": "charcoal"
+     },
+     {
+      "weight": 2.5,
+      "pairs": "enough",
+      "color": "silver"
+     },
+     {
+      "weight": 1.25,
+      "pairs": 0,
+      "color": "silver"
+     }
+    ]
+   },
+   "expected": {
+    "perSide": [
+     25,
+     2.5
+    ],
+    "total": 100,
+    "instruction": "add 25 + 2.5 each side",
+    "keptInner": 0,
+    "platesMoved": 2
+   }
+  },
+  {
+   "name": "choose_next: ramp to 125",
+   "input": {
+    "call": "choose_next",
+    "currentPerSide": [
+     25,
+     2.5
+    ],
+    "nextTotal": 125,
+    "barWeight": 45,
+    "collarWeight": 0,
+    "plates": [
+     {
+      "weight": 45,
+      "pairs": "enough",
+      "color": "blue"
+     },
+     {
+      "weight": 35,
+      "pairs": "enough",
+      "color": "yellow"
+     },
+     {
+      "weight": 25,
+      "pairs": "enough",
+      "color": "green"
+     },
+     {
+      "weight": 10,
+      "pairs": "enough",
+      "color": "white"
+     },
+     {
+      "weight": 5,
+      "pairs": "enough",
+      "color": "charcoal"
+     },
+     {
+      "weight": 2.5,
+      "pairs": "enough",
+      "color": "silver"
+     },
+     {
+      "weight": 1.25,
+      "pairs": 0,
+      "color": "silver"
+     }
+    ]
+   },
+   "expected": {
+    "perSide": [
+     35,
+     5
+    ],
+    "total": 125,
+    "instruction": "take off 25 + 2.5, add 35 + 5 each side",
+    "keptInner": 0,
+    "platesMoved": 4
+   }
+  },
+  {
+   "name": "choose_next: ramp to 145",
+   "input": {
+    "call": "choose_next",
+    "currentPerSide": [
+     35,
+     5
+    ],
+    "nextTotal": 145,
+    "barWeight": 45,
+    "collarWeight": 0,
+    "plates": [
+     {
+      "weight": 45,
+      "pairs": "enough",
+      "color": "blue"
+     },
+     {
+      "weight": 35,
+      "pairs": "enough",
+      "color": "yellow"
+     },
+     {
+      "weight": 25,
+      "pairs": "enough",
+      "color": "green"
+     },
+     {
+      "weight": 10,
+      "pairs": "enough",
+      "color": "white"
+     },
+     {
+      "weight": 5,
+      "pairs": "enough",
+      "color": "charcoal"
+     },
+     {
+      "weight": 2.5,
+      "pairs": "enough",
+      "color": "silver"
+     },
+     {
+      "weight": 1.25,
+      "pairs": 0,
+      "color": "silver"
+     }
+    ]
+   },
+   "expected": {
+    "perSide": [
+     45,
+     5
+    ],
+    "total": 145,
+    "instruction": "take off 35 + 5, add 45 + 5 each side",
+    "keptInner": 0,
+    "platesMoved": 4
+   }
+  },
+  {
+   "name": "choose_next: ramp to 185",
+   "input": {
+    "call": "choose_next",
+    "currentPerSide": [
+     45,
+     5
+    ],
+    "nextTotal": 185,
+    "barWeight": 45,
+    "collarWeight": 0,
+    "plates": [
+     {
+      "weight": 45,
+      "pairs": "enough",
+      "color": "blue"
+     },
+     {
+      "weight": 35,
+      "pairs": "enough",
+      "color": "yellow"
+     },
+     {
+      "weight": 25,
+      "pairs": "enough",
+      "color": "green"
+     },
+     {
+      "weight": 10,
+      "pairs": "enough",
+      "color": "white"
+     },
+     {
+      "weight": 5,
+      "pairs": "enough",
+      "color": "charcoal"
+     },
+     {
+      "weight": 2.5,
+      "pairs": "enough",
+      "color": "silver"
+     },
+     {
+      "weight": 1.25,
+      "pairs": 0,
+      "color": "silver"
+     }
+    ]
+   },
+   "expected": {
+    "perSide": [
+     45,
+     25
+    ],
+    "total": 185,
+    "instruction": "take off 5, add 25 each side",
+    "keptInner": 1,
+    "platesMoved": 2
+   }
+  },
+  {
+   "name": "choose_next: ramp to 215",
+   "input": {
+    "call": "choose_next",
+    "currentPerSide": [
+     45,
+     25
+    ],
+    "nextTotal": 215,
+    "barWeight": 45,
+    "collarWeight": 0,
+    "plates": [
+     {
+      "weight": 45,
+      "pairs": "enough",
+      "color": "blue"
+     },
+     {
+      "weight": 35,
+      "pairs": "enough",
+      "color": "yellow"
+     },
+     {
+      "weight": 25,
+      "pairs": "enough",
+      "color": "green"
+     },
+     {
+      "weight": 10,
+      "pairs": "enough",
+      "color": "white"
+     },
+     {
+      "weight": 5,
+      "pairs": "enough",
+      "color": "charcoal"
+     },
+     {
+      "weight": 2.5,
+      "pairs": "enough",
+      "color": "silver"
+     },
+     {
+      "weight": 1.25,
+      "pairs": 0,
+      "color": "silver"
+     }
+    ]
+   },
+   "expected": {
+    "perSide": [
+     45,
+     35,
+     5
+    ],
+    "total": 215,
+    "instruction": "take off 25, add 35 + 5 each side",
+    "keptInner": 1,
+    "platesMoved": 3
+   }
+  },
+  {
+   "name": "choose_next: ramp to 245",
+   "input": {
+    "call": "choose_next",
+    "currentPerSide": [
+     45,
+     35,
+     5
+    ],
+    "nextTotal": 245,
+    "barWeight": 45,
+    "collarWeight": 0,
+    "plates": [
+     {
+      "weight": 45,
+      "pairs": "enough",
+      "color": "blue"
+     },
+     {
+      "weight": 35,
+      "pairs": "enough",
+      "color": "yellow"
+     },
+     {
+      "weight": 25,
+      "pairs": "enough",
+      "color": "green"
+     },
+     {
+      "weight": 10,
+      "pairs": "enough",
+      "color": "white"
+     },
+     {
+      "weight": 5,
+      "pairs": "enough",
+      "color": "charcoal"
+     },
+     {
+      "weight": 2.5,
+      "pairs": "enough",
+      "color": "silver"
+     },
+     {
+      "weight": 1.25,
+      "pairs": 0,
+      "color": "silver"
+     }
+    ]
+   },
+   "expected": {
+    "perSide": [
+     45,
+     45,
+     10
+    ],
+    "total": 245,
+    "instruction": "take off 35 + 5, add 45 + 10 each side",
+    "keptInner": 1,
+    "platesMoved": 4
+   }
+  },
+  {
+   "name": "describe_change: 45,5 to 45,25",
+   "input": {
+    "call": "describe_change",
+    "currentPerSide": [
+     45,
+     5
+    ],
+    "nextPerSide": [
+     45,
+     25
+    ]
+   },
+   "expected": "take off 5, add 25 each side"
+  },
+  {
+   "name": "describe_change: 25,2.5 to 35,5",
+   "input": {
+    "call": "describe_change",
+    "currentPerSide": [
+     25,
+     2.5
+    ],
+    "nextPerSide": [
+     35,
+     5
+    ]
+   },
+   "expected": "take off 25 + 2.5, add 35 + 5 each side"
+  },
+  {
+   "name": "describe_change: 45 to 45,25",
+   "input": {
+    "call": "describe_change",
+    "currentPerSide": [
+     45
+    ],
+    "nextPerSide": [
+     45,
+     25
+    ]
+   },
+   "expected": "add 25 each side"
+  },
+  {
+   "name": "describe_change: 45,45,10 to 45,45,10",
+   "input": {
+    "call": "describe_change",
+    "currentPerSide": [
+     45,
+     45,
+     10
+    ],
+    "nextPerSide": [
+     45,
+     45,
+     10
+    ]
+   },
+   "expected": "no change"
+  },
+  {
+   "name": "choose_next: 185 to 215 keeps the 45",
+   "input": {
+    "call": "choose_next",
+    "currentPerSide": [
+     45,
+     25
+    ],
+    "nextTotal": 215,
+    "barWeight": 45,
+    "collarWeight": 0,
+    "plates": [
+     {
+      "weight": 45,
+      "pairs": "enough",
+      "color": "blue"
+     },
+     {
+      "weight": 35,
+      "pairs": "enough",
+      "color": "yellow"
+     },
+     {
+      "weight": 25,
+      "pairs": "enough",
+      "color": "green"
+     },
+     {
+      "weight": 10,
+      "pairs": "enough",
+      "color": "white"
+     },
+     {
+      "weight": 5,
+      "pairs": "enough",
+      "color": "charcoal"
+     },
+     {
+      "weight": 2.5,
+      "pairs": "enough",
+      "color": "silver"
+     },
+     {
+      "weight": 1.25,
+      "pairs": 0,
+      "color": "silver"
+     }
+    ]
+   },
+   "expected": {
+    "perSide": [
+     45,
+     35,
+     5
+    ],
+    "total": 215,
+    "instruction": "take off 25, add 35 + 5 each side",
+    "keptInner": 1,
+    "platesMoved": 3
+   }
+  },
+  {
+   "name": "barbell_step: default inventory",
+   "input": {
+    "call": "barbell_step",
+    "plates": [
+     {
+      "weight": 45,
+      "pairs": "enough",
+      "color": "blue"
+     },
+     {
+      "weight": 35,
+      "pairs": "enough",
+      "color": "yellow"
+     },
+     {
+      "weight": 25,
+      "pairs": "enough",
+      "color": "green"
+     },
+     {
+      "weight": 10,
+      "pairs": "enough",
+      "color": "white"
+     },
+     {
+      "weight": 5,
+      "pairs": "enough",
+      "color": "charcoal"
+     },
+     {
+      "weight": 2.5,
+      "pairs": "enough",
+      "color": "silver"
+     },
+     {
+      "weight": 1.25,
+      "pairs": 0,
+      "color": "silver"
+     }
+    ],
+    "fallback": null
+   },
+   "expected": 5
+  },
+  {
+   "name": "barbell_step: 25s and 1s",
+   "input": {
+    "call": "barbell_step",
+    "plates": [
+     {
+      "weight": 25,
+      "pairs": 1,
+      "color": "red"
+     },
+     {
+      "weight": 1,
+      "pairs": 2,
+      "color": "green"
+     }
+    ],
+    "fallback": null
+   },
+   "expected": 2
+  },
+  {
+   "name": "barbell_step: empty inventory",
+   "input": {
+    "call": "barbell_step",
+    "plates": [],
+    "fallback": null
+   },
+   "expected": 5
+  }
+ ]
+}

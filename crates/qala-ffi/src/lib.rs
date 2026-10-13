@@ -139,6 +139,31 @@ pub fn exercise_muscles(request: String) -> Result<String, QalaError> {
     Ok(core_api::exercise_muscles(&request)?)
 }
 
+#[uniffi::export]
+pub fn plan_plates(request: String) -> Result<String, QalaError> {
+    Ok(core_api::plan_plates(&request)?)
+}
+
+#[uniffi::export]
+pub fn round_weight(request: String) -> Result<String, QalaError> {
+    Ok(core_api::round_weight(&request)?)
+}
+
+#[uniffi::export]
+pub fn choose_next_plates(request: String) -> Result<String, QalaError> {
+    Ok(core_api::choose_next_plates(&request)?)
+}
+
+#[uniffi::export]
+pub fn describe_change(request: String) -> Result<String, QalaError> {
+    Ok(core_api::describe_change(&request)?)
+}
+
+#[uniffi::export]
+pub fn plates_shorthand(request: String) -> Result<String, QalaError> {
+    Ok(core_api::plates_shorthand(&request)?)
+}
+
 // LS++ evaluation API.
 #[uniffi::export]
 pub fn force_evaluate_text(request: String) -> Result<String, QalaError> {
