@@ -98,6 +98,8 @@ data class RestState(
     val perSide: List<Double>? = null,
     /** What to take off and put on to get there from the set just done ("take off 5, add 25 each side"), when both are plate-loaded. */
     val plateInstruction: String? = null,
+    /** What those plates add up to, bar included: it differs from the next set's weight when that weight cannot be loaded exactly. */
+    val plateTotal: Double? = null,
 ) {
     val timer: RestTimer get() = RestTimer(startedAtMs, seconds)
     fun plus(extra: Int): RestState = copy(seconds = seconds + extra)
@@ -272,9 +274,9 @@ data class WorkoutState(
     fun plateWeights(): List<Double> = exercises.filter { it.barbell }.flatMap { ex -> ex.sets.mapNotNull { it.weight } }.distinct()
 
     /** Puts the plate answer into the rest after [logged], if that rest is still the one running. */
-    fun withRestPlates(logged: SetRef, perSide: List<Double>?, instruction: String?): WorkoutState {
+    fun withRestPlates(logged: SetRef, perSide: List<Double>?, instruction: String?, total: Double? = null): WorkoutState {
         val r = rest ?: return this
-        return if (r.logged == logged) copy(rest = r.copy(perSide = perSide, plateInstruction = instruction)) else this
+        return if (r.logged == logged) copy(rest = r.copy(perSide = perSide, plateInstruction = instruction, plateTotal = total)) else this
     }
 
     // ---- what the screen says around the logger ----

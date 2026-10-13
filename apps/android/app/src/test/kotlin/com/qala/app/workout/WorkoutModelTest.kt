@@ -61,10 +61,23 @@ class WorkoutModelTest {
         val withPlates = resting.withRestPlates(logged.ref, listOf(45.0, 45.0, 10.0), "take off 5, add 25 each side")
         assertEquals(listOf(45.0, 45.0, 10.0), withPlates.rest!!.perSide)
         assertEquals("take off 5, add 25 each side", withPlates.rest?.plateInstruction)
+        assertEquals("an answer that gives no total leaves the note off", null, withPlates.rest?.plateTotal)
         // An answer for an older rest is dropped: a second set has been logged since.
         assertEquals(resting, resting.withRestPlates(SetRef(1, 1), listOf(45.0), null))
         assertEquals(open, open.withRestPlates(logged.ref, listOf(45.0), null))
         assertEquals("the plates survive the JSON round trip", withPlates, WorkoutState.fromJson(withPlates.toJson()))
+    }
+
+    @Test
+    fun theRestKeepsWhatTheNextSetsPlatesAddUpTo() {
+        val logged = open.log(1)!!
+        val resting = logged.state.startRest(logged.ref, logged.next, 1)
+        val withPlates = resting.withRestPlates(logged.ref, listOf(45.0, 35.0), null, total = 205.0)
+        assertEquals(205.0, withPlates.rest?.plateTotal)
+        assertEquals("the total survives the JSON round trip", withPlates, WorkoutState.fromJson(withPlates.toJson()))
+        val older = withPlates.toJson().replace(Regex(",\"plateTotal\":[0-9.]*"), "")
+        assertTrue(!older.contains("plateTotal"))
+        assertEquals("a draft saved before the total existed still loads", null, WorkoutState.fromJson(older)!!.rest?.plateTotal)
     }
 
     @Test

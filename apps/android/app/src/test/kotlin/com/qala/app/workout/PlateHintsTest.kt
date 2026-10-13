@@ -34,6 +34,15 @@ class PlateHintsTest {
     }
 
     @Test
+    fun theLoadsNoteIsThereOnlyWhenThePlatesFallShort() {
+        assertEquals("loads 205", plateLoadsNote(207.5, 205.0))
+        assertEquals("loads 197.5", plateLoadsNote(200.0, 197.5))
+        assertEquals(null, plateLoadsNote(205.0, 205.0))
+        assertEquals("a bodyweight set, or no answer yet, has nothing to say", null, plateLoadsNote(null, 205.0))
+        assertEquals(null, plateLoadsNote(207.5, null))
+    }
+
+    @Test
     fun theChangeBetweenSetsNamesWhatToTakeOffAndPutOn() {
         val now = PlateMath.hint(245.0)!!.perSide
         assertEquals("no change", PlateMath.change(now, 245.0)!!.instruction)

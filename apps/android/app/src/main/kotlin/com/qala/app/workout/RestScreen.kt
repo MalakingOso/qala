@@ -138,6 +138,10 @@ fun RestScreen(onBack: () -> Unit) {
                     }
                     if (next.newExercise) QalaText("Set ${next.setNumber} of ${next.setCount}", Modifier.padding(top = 2.dp), QalaType.hint, c.fgMuted)
                     if (perSide != null) PlateWeights(perSide)
+                    // A weight the plates cannot make says what they do make, as the set rows do ("loads 205").
+                    plateLoadsNote(next.weight, rest.plateTotal)?.let {
+                        QalaText(it, Modifier.fillMaxWidth().padding(top = 6.dp), QalaType.hint, c.fgMuted, TextAlign.Center)
+                    }
                     if (plateInstruction != null) QalaText(plateChangeLine(plateInstruction), Modifier.padding(top = 8.dp), QalaType.hint, c.fgMuted)
                     else if (next.sameWeight && perSide != null) QalaText(plateChangeLine("no change"), Modifier.padding(top = 8.dp), QalaType.hint, c.fgMuted)
                 }

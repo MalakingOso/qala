@@ -171,8 +171,8 @@ class WorkoutStore(
             val nextEx = s.exercises.getOrNull(next.exercise) ?: return@launch
             val nextWeight = nextEx.sets.getOrNull(next.set)?.weight
             if (!nextEx.barbell || nextWeight == null) return@launch
-            val (perSide, instruction) = withContext(env.work) {
-                val hint = PlateMath.hint(nextWeight) ?: return@withContext null to null
+            val answer = withContext(env.work) {
+                val hint = PlateMath.hint(nextWeight) ?: return@withContext null
                 val doneEx = s.exercises[logged.exercise]
                 val doneWeight = doneEx.sets.getOrNull(logged.set)?.weight
                 val change = if (doneEx.barbell && doneWeight != null) {
@@ -180,9 +180,9 @@ class WorkoutStore(
                 } else {
                     null
                 }
-                hint.perSide to change
+                Triple(hint.perSide, change, hint.total)
             }
-            if (perSide != null) _state.update { it?.withRestPlates(logged, perSide, instruction) }
+            if (answer != null) _state.update { it?.withRestPlates(logged, answer.first, answer.second, answer.third) }
         }
     }
 

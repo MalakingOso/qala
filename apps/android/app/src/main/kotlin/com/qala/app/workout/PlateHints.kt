@@ -39,7 +39,11 @@ object PlateMath {
  * what they do make ("per side 45 · 35 · loads 205"), so the row never promises a weight the bar will not carry.
  */
 fun plateLine(weight: Double, hint: PlateHint): String =
-    if (hint.total == weight) hint.shorthand else "${hint.shorthand} · loads ${formatWeight(hint.total)}"
+    plateLoadsNote(weight, hint.total)?.let { "${hint.shorthand} · $it" } ?: hint.shorthand
+
+/** "loads 205" when [weight] is not a weight the plates can make and [total] is what they do make; null when they add up. */
+fun plateLoadsNote(weight: Double?, total: Double?): String? =
+    if (weight == null || total == null || total == weight) null else "loads ${formatWeight(total)}"
 
 /** The change between two sets as a sentence: "Take off 5, add 25 each side." and, for the same plates, the usual line. */
 fun plateChangeLine(instruction: String): String =
