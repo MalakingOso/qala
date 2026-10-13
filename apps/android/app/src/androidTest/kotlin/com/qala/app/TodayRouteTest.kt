@@ -14,6 +14,9 @@ import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.isHeading
 import androidx.compose.ui.test.hasText
@@ -83,8 +86,12 @@ class TodayRouteTest {
         rule.onAllNodes(hasText("GZCLP DAY", substring = true)).fetchSemanticsNodes().isNotEmpty()
     }
 
+    private fun waitForText(text: String) = rule.waitUntil(timeoutMillis = 120_000) {
+        rule.onAllNodes(hasText(text)).fetchSemanticsNodes().isNotEmpty()
+    }
+
     @Test
-    fun theRailFollowsACheckInAndTheStubsMarkDone() {
+    fun theRailFollowsACheckInTheWarmUpAndTheLift() {
         showApp(container())
         waitForTheSeed()
         railSays("Day stages: check-in now, 0 of 6 done")
@@ -93,12 +100,22 @@ class TodayRouteTest {
         rule.onNodeWithText("Save check-in").performClick()
         railSays("Day stages: warm-up now, 1 of 6 done")
 
+        // The warm-up's Start workout marks its stage and opens the workout; Back from there is Today, one stage on.
         rule.onNodeWithText("Start warm-up").performClick()
-        rule.onNodeWithText("Mark done").performClick()
+        waitForText("Easy cardio")
+        rule.onNodeWithText("Start workout").performClick()
+        waitForText("Log set 1")
+        rule.runOnUiThread { rule.activity.onBackPressedDispatcher.onBackPressed() }
         railSays("Day stages: lift now, 2 of 6 done")
 
+        // One set logged and the workout finished is a real session: the lift stage is done.
         rule.onNodeWithText("Start workout").performClick()
-        rule.onNodeWithText("Mark done").performClick()
+        rule.onNodeWithText("Log set 1").performClick()
+        waitForText("Ready early")
+        rule.onNodeWithText("Ready early").performClick()
+        rule.onNodeWithContentDescription("Finish workout").performClick()
+        val sheet = SemanticsMatcher.expectValue(SemanticsProperties.PaneTitle, "Finish workout?")
+        rule.onNode(hasText("Finish workout") and hasClickAction() and hasAnyAncestor(sheet)).performClick()
         railSays("Day stages: run now, 3 of 6 done")
     }
 
@@ -119,14 +136,19 @@ class TodayRouteTest {
         rule.onNodeWithText("Check in").assertExists()
         railSays("Day stages: check-in now, 0 of 6 done")
 
-        // A stage stub has the same two ways home.
+        // The warm-up has the same two ways home.
         rule.onNodeWithText("Check in").performClick()
         rule.onNodeWithText("Save check-in").performClick()
         railSays("Day stages: warm-up now, 1 of 6 done")
         rule.onNodeWithText("Start warm-up").performClick()
-        rule.onNodeWithText("Stand-in screen".uppercase()).assertExists()
+        waitForText("Easy cardio")
         rule.runOnUiThread { rule.activity.onBackPressedDispatcher.onBackPressed() }
         rule.onNodeWithText("Start warm-up").assertExists()
+        rule.onNodeWithText("Start warm-up").performClick()
+        waitForText("Easy cardio")
+        rule.onNodeWithContentDescription("Back to Today").performClick()
+        rule.onNodeWithText("Start warm-up").assertExists()
+        railSays("Day stages: warm-up now, 1 of 6 done")             // leaving the warm-up records nothing
     }
 
     @Test

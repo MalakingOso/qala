@@ -481,7 +481,7 @@ private fun Tools(jointPain: Boolean, onJointPain: () -> Unit) {
 private fun Overview(state: WorkoutState, modifier: Modifier, onPick: (Int) -> Unit) {
     val c = Qala.colors
     Column(modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        QalaText("All exercises. Tap one to go there; out of order is fine, the log keeps the order you did them in.", style = QalaType.hint, color = c.fgMuted)
+        QalaText("All exercises. Tap one to go there; out of order is fine.", style = QalaType.hint, color = c.fgMuted)
         state.exercises.chunked(2).forEachIndexed { row, pair ->
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 pair.forEachIndexed { col, ex ->

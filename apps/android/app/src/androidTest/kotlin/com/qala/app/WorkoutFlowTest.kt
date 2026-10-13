@@ -163,7 +163,7 @@ class WorkoutFlowTest {
 
         val saved = withTimeout(60_000) {
             container.sessions.liftSessions.first { all -> all.any { it.session.startedAtMs == clock.nowMs() && !it.session.stub } }
-        }.first { it.session.startedAtMs == clock.nowMs() }
+        }.single { it.session.startedAtMs == clock.nowMs() && !it.session.stub }      // the warm-up stub shares the pinned minute
         assertFalse(saved.session.stub)
         assertNull("a real session is not a stage stub", saved.session.stage)
         assertEquals(day, saved.session.programDayIndex)
