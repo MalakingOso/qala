@@ -36,7 +36,7 @@ class StatusCard(
     val oneDay: Boolean,
 ) {}
 
-private fun head(reason: SkipReason, muscle: String?): String = when (reason) {
+internal fun statusHead(reason: SkipReason, muscle: String?): String = when (reason) {
     SkipReason.Sick -> "Sick"
     SkipReason.Vacation -> "On vacation"
     SkipReason.Break -> "On a break"
@@ -44,7 +44,7 @@ private fun head(reason: SkipReason, muscle: String?): String = when (reason) {
     SkipReason.Injured -> if (muscle != null) "Injured: ${muscleName(muscle)}" else "Injured"
 }
 
-private fun sentence(reason: SkipReason, muscle: String?): String = when (reason) {
+internal fun statusSentence(reason: SkipReason, muscle: String?): String = when (reason) {
     SkipReason.Sick -> "Resting to get well. The plan shifts out."
     SkipReason.Vacation -> "Away from training. The plan shifts out."
     SkipReason.Break -> "Taking a few days off to recover. The plan holds."
@@ -60,9 +60,9 @@ fun statusCard(status: DayStatus?, today: String): StatusCard? {
     val since = status.sickSince
     return StatusCard(
         reason = status.reason,
-        head = head(status.reason, status.muscle),
+        head = statusHead(status.reason, status.muscle),
         whenLine = spanLine(status, today),
-        line = sentence(status.reason, status.muscle),
+        line = statusSentence(status.reason, status.muscle),
         note = status.note,
         undoDescription = when (status.span) {
             StatusSpan.OneDay -> "Undo today's skip, ${reasonWord(status.reason)}"

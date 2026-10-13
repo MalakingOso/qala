@@ -99,6 +99,7 @@ fun QalaApp() {
                             route = nav.route,
                             scroll = scroll,
                             today = today,
+                            snapshot = snapshot,
                             ui = ui,
                             topBar = { modifier ->
                                 TopBar(

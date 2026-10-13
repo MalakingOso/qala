@@ -145,3 +145,37 @@ fun IconButton(
         QalaIcon(icon, contentDescription, size = size, tint = if (pressed) c.fg else c.fgSecondary)
     }
 }
+
+/**
+ * A 44 dp square with a 2 dp border and a [size] icon: the week arrows (the web's `.icon-btn.bordered`). A disabled one
+ * is dimmed and takes no touch, so the first and last week read as the end of the road.
+ */
+@Composable
+fun BorderedIconButton(
+    icon: ImageVector,
+    contentDescription: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    size: Dp = 20.dp,
+) {
+    val c = Qala.colors
+    val interaction = remember { MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
+    Row(
+        modifier = modifier
+            .alpha(if (enabled) 1f else 0.4f)
+            .clickable(interaction, indication = null, enabled = enabled, role = Role.Button, onClick = onClick)
+            .pressed(pressed)
+            .beamerSurface(
+                fill = if (pressed) c.bgActive else c.bgSurface,
+                border = if (pressed) c.borderStrong else c.border,
+                radius = QalaTokens.radiusMd,
+            )
+            .defaultMinSize(44.dp, 44.dp),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        QalaIcon(icon, contentDescription, size = size, tint = c.fg)
+    }
+}

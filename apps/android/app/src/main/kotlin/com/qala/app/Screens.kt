@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.qala.app.checkin.CheckInScreen
 import com.qala.app.plates.PlatesScreen
+import com.qala.app.plan.PlanScreen
 import com.qala.app.settings.SettingsScreen
 import com.qala.app.workout.RestScreen
 import com.qala.app.workout.WarmupScreen
@@ -22,6 +23,7 @@ import com.qala.app.today.Destination
 import com.qala.app.today.TodayLoad
 import com.qala.app.today.TodayScreen
 import com.qala.app.today.TodayUiState
+import com.qala.data.engine.EngineSnapshot
 import com.qala.design.Card
 import com.qala.design.PageHead
 import com.qala.design.Qala
@@ -39,6 +41,7 @@ fun Screen(
     route: Route,
     scroll: ScrollState,
     today: TodayLoad,
+    snapshot: EngineSnapshot,
     ui: TodayUiState,
     topBar: @Composable (Modifier) -> Unit,
     onGo: (Destination) -> Unit,
@@ -49,7 +52,7 @@ fun Screen(
 ) {
     when (route) {
         Route.Today -> TodayScreen(today, ui, scroll, topBar, onGo)
-        Route.Plan -> Plain(scroll, topBar) { StubScreen("Plan", "Week and block view. Arrives with the lifting screens (A4).") }
+        Route.Plan -> PlanScreen(snapshot, today, scroll, topBar, onGo)
         Route.Body -> Plain(scroll, topBar) { StubScreen("Body", "Measurements and recovery. Arrives with the stats screens (A5).") }
         Route.Progress -> Plain(scroll, topBar) { StubScreen("Progress", "Charts and records. Arrives with the stats screens (A5).") }
         Route.Coach -> Plain(scroll, topBar) { StubScreen("Coach", "Chat and suggestions. Arrives with the coach route (A6).") }

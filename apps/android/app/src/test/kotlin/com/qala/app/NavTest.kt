@@ -26,6 +26,13 @@ class NavTest {
     }
 
     @Test
+    fun aPlanDayLeadsToHistoryAndBackReturnsToPlan() {
+        val nav = Nav().selectTab(Route.Plan).go(com.qala.app.today.Destination.History)
+        assertEquals(Route.History, nav.route)
+        assertEquals(Nav(Route.Plan), nav.back())
+    }
+
+    @Test
     fun historyAndSettingsHighlightToday() {
         assertEquals(Route.Today, Route.History.tab)
         assertEquals(Route.Today, Route.Settings.tab)

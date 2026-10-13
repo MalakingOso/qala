@@ -29,7 +29,7 @@ import kotlin.math.roundToInt
  */
 
 /** Where a button on Today goes. The shell turns each into a route or a tab. */
-enum class Destination { CheckIn, WarmUp, Workout, Run, Plan, Body, Settings, Skip }
+enum class Destination { CheckIn, WarmUp, Workout, Run, Plan, Body, Settings, History, Skip }
 
 /** A button's icon, named here so this file needs no Compose. */
 enum class CtaIcon { None, CircleCheck, Flame, Dumbbell, SportShoe }
@@ -306,6 +306,9 @@ private fun doneLine(stage: DayStage, use24h: Boolean): String? =
 private fun skipped(id: StageId, layout: HeroLayout, kicker: String) =
     Hero(id, layout, kicker, "${id.label} skipped", lines = listOf("Not logged today. The plan carries on."))
 
+/** What an injury does to a lift day, in a sentence: the day still lifts, around the muscle. Today's hero and the Plan day say it the same way. */
+fun injuredLine(muscle: String): String = "Adjusted around your ${muscleName(muscle)}. Direct work for it is off."
+
 private fun noProgram(id: StageId, layout: HeroLayout, kicker: String, title: String, live: Boolean) = Hero(
     id, layout, kicker, title,
     lines = listOf("No program yet. Add one in Plan and Today shows your warm-up and lift."),
@@ -350,7 +353,7 @@ private fun liftHero(snapshot: EngineSnapshot, plan: TodayPlan, kicker: String, 
             HeroFigure("Your top set", trimNumber(top.weight!!), unitName(top.unit), trimNumber(top.reps) + if (top.amrap) "+" else "")
         },
         lines = listOfNotNull(
-            snapshot.injured.firstOrNull()?.let { "Adjusted around your ${muscleName(it)}. Direct work for it is off." },
+            snapshot.injured.firstOrNull()?.let { injuredLine(it) },
             readinessLine(snapshot.readiness, checkedIn = snapshot.readiness?.checkedInToday == true),
         ),
         detail = "${plural(hero.exerciseCount, "exercise")} · ${plural(hero.setCount, "set")}",
@@ -394,7 +397,7 @@ fun effortText(zone: RunZone): String = when (zone) {
     RunZone.Hard -> "Hard effort"
 }
 
-private fun plural(n: Int, word: String) = if (n == 1) "1 $word" else "$n ${word}s"
+internal fun plural(n: Int, word: String) = if (n == 1) "1 $word" else "$n ${word}s"
 
 // ---- readiness ----
 

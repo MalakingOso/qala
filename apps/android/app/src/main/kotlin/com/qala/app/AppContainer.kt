@@ -12,6 +12,7 @@ import com.qala.data.db.QalaDatabase
 import com.qala.data.engine.EngineCompute
 import com.qala.data.engine.EngineRepository
 import com.qala.data.program.LiftService
+import com.qala.data.plan.PlanCompute
 import com.qala.data.program.ProgramEngine
 import com.qala.data.repo.AvailabilityRepository
 import com.qala.data.repo.BodyWeightRepository
@@ -70,6 +71,9 @@ class AppContainer(
         env,
         scope,
     )
+
+    /** Lays out any week for the Plan screen from the records behind the engine snapshot. */
+    val planCompute = PlanCompute(programEngine)
 
     /** Whether each skip reason pushes the plan out, as the core's `shifts_plan` answers (vacation and sick do). Five tiny calls, made once. */
     val shiftRules: Map<SkipReason, Boolean> by lazy { SkipReason.entries.associateWith { QalaCore.shiftsPlan(it) } }
