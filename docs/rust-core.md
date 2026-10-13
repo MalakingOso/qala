@@ -57,7 +57,7 @@ crates/
   qala-lspp/  from R5, section 8
 ```
 
-`docs/spike/qcore/` is a throwaway. The real crates are written fresh against the golden vectors.
+`docs/archive/spike-qcore/` is a throwaway. The real crates are written fresh against the golden vectors.
 
 **Boundary.** Each exported function takes and returns a JSON string with a top-level `"v": 1`. Columnar fix data (the hot path) uses one `ByteArray` or `Float64Array` of little-endian f64 columns, matching the existing delta-encoded track layout. The spike showed UniFFI boxes `Vec<f64>` per element, so large arrays never cross as lists.
 
@@ -233,7 +233,7 @@ Files under `testdata/golden/<package>/<function>.json`:
 
 ## Appendix A. Rust core spike report
 
-2026-09-30. Folded in from `docs/rust-core-spike.md` (deleted 2026-10-02). The spike crate is `docs/spike/qcore/` (throwaway; the real crates are specified in the plan). Nothing in `packages/` was touched.
+2026-09-30. Folded in from `docs/rust-core-spike.md` (deleted 2026-10-02). The spike crate is `docs/archive/spike-qcore/` (throwaway; the real crates are specified in the plan). Nothing in `packages/` was touched.
 
 The spike was a few hours of work by a research agent plus my own re-run of the cheap parts, not the full day the task allowed. It answers question 2c and part of 2b. It does not answer 2a at all, and 2b stops short of an arm64 build. The "Not done" section is as important as the results.
 
@@ -241,7 +241,7 @@ The spike was a few hours of work by a research agent plus my own re-run of the 
 
 - Machine: Ubuntu, x86_64. System toolchain `cargo 1.94.1` (rustup, `~/.cargo`). The spike used `rustc 1.98.1` from a scratch rustup. The plan pins 1.98.1 in a `rust-toolchain.toml`, so run `rustup toolchain install 1.98.1` first.
 - Deno 2.9.6. Node present. No JDK, Android SDK, NDK, Gradle or adb.
-- Locked versions (`docs/spike/qcore/Cargo.lock`): wasm-bindgen 0.2.129, uniffi 0.32.2, automerge 0.12.0. The wasm-bindgen CLI must match the crate version exactly.
+- Locked versions (`docs/archive/spike-qcore/Cargo.lock`): wasm-bindgen 0.2.129, uniffi 0.32.2, automerge 0.12.0. The wasm-bindgen CLI must match the crate version exactly.
 
 ### What the spike crate does
 
