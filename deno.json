@@ -36,6 +36,7 @@
     "vendor": "deno run --allow-all scripts/vendor_liftosaur.ts",
     "build:android": "bash -c 'source scripts/android-env.sh && apps/android/gradlew -p apps/android assembleDebug'",
     "gen:android": "deno run --allow-all scripts/tokens_to_kotlin.ts && deno run --allow-all scripts/lucide_to_kotlin.ts && deno run --allow-all scripts/plates_to_android.ts",
+    "gen:android-gear": "deno run --allow-all scripts/gear_to_kotlin.ts",
     "tiles:extract": "deno run --allow-all scripts/tiles_extract.ts",
     "dem:fetch": "deno run --allow-all scripts/dem_fetch.ts",
     "golden:liftoscript": "deno run -A scripts/golden_liftoscript.ts",

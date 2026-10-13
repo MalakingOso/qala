@@ -113,14 +113,18 @@ fun QalaApp() {
                             onBack = { nav.back()?.let { nav = it } },
                             onPlates = { nav = nav.push(Route.Plates) },
                             onEditPlates = { nav = nav.push(Route.Settings) },
+                            onPush = { nav = nav.push(it) },
                         )
                     }
                 }
-                TabBar(
-                    items = Route.tabs.map { TabItems.getValue(it) },
-                    selectedIndex = Route.tabs.indexOf(nav.route.tab),
-                    onSelect = { nav = nav.selectTab(Route.tabs[it]) },
-                )
+                // The lifting flow has no tab bar: a thumb mid-set should not land on Plan, and the screens want the height.
+                if (!nav.route.isFocus) {
+                    TabBar(
+                        items = Route.tabs.map { TabItems.getValue(it) },
+                        selectedIndex = Route.tabs.indexOf(nav.route.tab),
+                        onSelect = { nav = nav.selectTab(Route.tabs[it]) },
+                    )
+                }
             }
             if (nav.route == Route.Today) {
                 TodayMenu(today, ui, Modifier.zIndex(2f))

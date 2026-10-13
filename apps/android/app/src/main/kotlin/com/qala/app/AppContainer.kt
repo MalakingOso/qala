@@ -11,6 +11,7 @@ import com.qala.data.model.SkipReason
 import com.qala.data.db.QalaDatabase
 import com.qala.data.engine.EngineCompute
 import com.qala.data.engine.EngineRepository
+import com.qala.data.program.LiftService
 import com.qala.data.program.ProgramEngine
 import com.qala.data.repo.AvailabilityRepository
 import com.qala.data.repo.BodyWeightRepository
@@ -20,6 +21,8 @@ import com.qala.data.repo.RepoEnv
 import com.qala.data.repo.RunRepository
 import com.qala.data.repo.SessionRepository
 import com.qala.data.repo.SettingsRepository
+import com.qala.data.repo.WorkoutDraftStore
+import com.qala.app.workout.WorkoutStore
 import com.qala.data.seed.DebugSeeder
 import com.qala.data.sync.RecordWriter
 import com.qala.data.sync.RoomTransactor
@@ -55,6 +58,18 @@ class AppContainer(
     val programs = ProgramRepository(database, writer, env)
 
     val programEngine = ProgramEngine()
+
+    /**
+     * The workout in progress and everything around it: the program's day, the update script, the finish. Process-wide, so
+     * Workout, Rest and Today share one workout, and it is kept in the database so a killed process loses none of it.
+     */
+    val workout = WorkoutStore(
+        LiftService(programs, settings, sessions, programEngine, env),
+        WorkoutDraftStore(database, env),
+        checkIns,
+        env,
+        scope,
+    )
 
     /** Whether each skip reason pushes the plan out, as the core's `shifts_plan` answers (vacation and sick do). Five tiny calls, made once. */
     val shiftRules: Map<SkipReason, Boolean> by lazy { SkipReason.entries.associateWith { QalaCore.shiftsPlan(it) } }

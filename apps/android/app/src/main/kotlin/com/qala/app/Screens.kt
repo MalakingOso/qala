@@ -15,6 +15,9 @@ import androidx.compose.ui.unit.dp
 import com.qala.app.checkin.CheckInScreen
 import com.qala.app.plates.PlatesScreen
 import com.qala.app.settings.SettingsScreen
+import com.qala.app.workout.RestScreen
+import com.qala.app.workout.WarmupScreen
+import com.qala.app.workout.WorkoutScreen
 import com.qala.app.today.Destination
 import com.qala.app.today.TodayLoad
 import com.qala.app.today.TodayScreen
@@ -27,8 +30,9 @@ import com.qala.design.QalaType
 import kotlinx.coroutines.launch
 
 /**
- * The screen for [route], filling the shell's content box. Today brings its own scroll column and fixed layers; every
- * other screen is the same header over a padded column.
+ * The screen for [route], filling the shell's content box. Today brings its own scroll column and fixed layers, and so
+ * do the lifting screens (a pinned bar under their own scroll); every other screen is the same header over a padded
+ * column. [onPush] opens a screen over this one (Workout opens Rest, the warm-up opens Workout).
  */
 @Composable
 fun Screen(
@@ -41,6 +45,7 @@ fun Screen(
     onBack: () -> Unit,
     onPlates: () -> Unit,
     onEditPlates: () -> Unit,
+    onPush: (Route) -> Unit,
 ) {
     when (route) {
         Route.Today -> TodayScreen(today, ui, scroll, topBar, onGo)
@@ -52,12 +57,15 @@ fun Screen(
         Route.Settings -> SettingsScreen(scroll, onBack, onPlates)
         Route.Plates -> PlatesScreen(scroll, onBack, onEditPlates)
         Route.CheckIn -> CheckInRoute(today, scroll, topBar, onBack)
-        Route.WarmUp -> Plain(scroll, topBar) { WarmUpStub(onBack) }
-        Route.Workout -> Plain(scroll, topBar) { WorkoutStub(onBack) }
-        Route.Rest -> Plain(scroll, topBar) { StubScreen("Rest", "The rest screen arrives next.") }
+        Route.WarmUp -> WarmupScreen(programDay(today), onBack, onStart = { onPush(Route.Workout) }, onSkip = { onPush(Route.Workout) })
+        Route.Workout -> WorkoutScreen(programDay(today), onBack, onRest = { onPush(Route.Rest) })
+        Route.Rest -> RestScreen(onBack)
         Route.Run -> Plain(scroll, topBar) { RunStub(onBack) }
     }
 }
+
+/** The program day Today has chosen for today, which the lifting screens open: null while Today is loading or on a day with no lift. */
+private fun programDay(today: TodayLoad): Int? = (today as? TodayLoad.Ready)?.model?.plan?.programDay
 
 /** A scrolling screen under the brand bar, with the 20 dp page gutters. */
 @Composable

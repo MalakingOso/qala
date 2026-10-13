@@ -257,6 +257,34 @@ data class WorkoutState(
         )
     }
 
+    // ---- what the screen says around the logger ----
+
+    /** The set the logger is on, null when the exercise has none. */
+    val selectedSet: SetState? get() = exercise.sets.getOrNull(exercise.selected)
+
+    /**
+     * "Rest about 3:00, then set 4": the rest the selected set will earn at its current numbers (its RPE once picked
+     * moves it) and what follows, for the line under the Log button. Null once the set is done. The last set of the
+     * workout has no rest after it, and says so.
+     */
+    fun restHint(): String? {
+        val set = selectedSet ?: return null
+        if (set.done) return null
+        val ref = SetRef(current, exercise.selected)
+        val next = nextOpen(ref) ?: return "The last set, then you're done"
+        val ex = exercise
+        val plan = restPlan(RestInput(ex.cls, set.targetReps, set.reps, set.rpe, set.targetRpe, ref.set + 1, set.amrap, set.timerSec))
+        val then = if (next.exercise == current) "set ${next.set + 1}" else exercises[next.exercise].name
+        return "Rest about ${formatClock(plan.seconds)}, then $then"
+    }
+
+    /** The log button's words: "Log set 3", "Save set 3" for one already done, "Finish workout" when everything is done. */
+    fun logLabel(): String {
+        if (allDone && selectedSet?.done == true) return "Finish workout"
+        val n = exercise.selected + 1
+        return if (selectedSet?.done == true) "Save set $n" else "Log set $n"
+    }
+
     // ---- the update script ----
 
     /**

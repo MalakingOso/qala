@@ -14,7 +14,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import com.qala.data.repo.StubStage
 import com.qala.design.Card
 import com.qala.design.IconButton
 import com.qala.design.PageHead
@@ -26,14 +25,14 @@ import com.qala.design.QalaType
 import kotlinx.coroutines.launch
 
 /*
- * Stand-ins for the screens that arrive later (the lifting and run screens in A4), so Today's buttons
- * have somewhere real to go and the rail can be seen to move. Each one writes the smallest honest record through the
- * repositories, then goes back to Today; the rail and the hero advance on their own because they observe the engine
- * snapshot. The writes run on the container's scope, not the screen's: going back leaves the screen's scope, and a
- * Room transaction launched there could be cancelled half way.
+ * A stand-in for the run screen, which arrives with the run work (A2), so Today's button has somewhere to go and the
+ * rail can be seen to move. It writes the smallest honest record through the repository, then goes back to Today; the
+ * rail and the hero advance on their own because they observe the engine snapshot. The write runs on the container's
+ * scope, not the screen's: going back leaves the screen's scope, and a Room transaction launched there could be
+ * cancelled half way. The warm-up and the workout are real screens now (the workout package).
  */
 
-/** The back row over a stub's title: the in-app twin of the system Back. */
+/** The back row over the stub's title: the in-app twin of the system Back. */
 @Composable
 private fun StubHead(title: String, onBack: () -> Unit) {
     IconButton(QalaIcons.ChevronLeft, "Back", onBack, Modifier.offset(x = (-12).dp))      // the glyph, not its 44 dp box, sits on the gutter
@@ -48,25 +47,6 @@ private fun StubBody(note: String, label: String, onClick: () -> Unit) {
         QalaText(note, style = QalaType.hint, color = Qala.colors.fgMuted)
         Spacer(Modifier.height(20.dp))
         PrimaryButton(label, onClick = { busy = true; onClick() }, enabled = !busy)
-    }
-}
-
-@Composable
-fun WarmUpStub(onBack: () -> Unit) = StageStub("Warm-up", StubStage.WARM_UP, "The warm-up screen arrives with the lifting screens (A4). Mark done logs the warm-up and moves the day on.", onBack)
-
-@Composable
-fun WorkoutStub(onBack: () -> Unit) = StageStub("Workout", StubStage.LIFT, "The workout screen arrives with the lifting screens (A4). Mark done logs the lift, with no sets, and moves the day on.", onBack)
-
-@Composable
-private fun StageStub(title: String, stage: StubStage, note: String, onBack: () -> Unit) {
-    val container = LocalAppContainer.current
-    Column {
-        StubHead(title, onBack)
-        StubBody(note, "Mark done") {
-            val programDay = container.engine.snapshot.value.today?.programDay
-            container.scope.launch { container.sessions.markStageDone(stage, programDay) }
-            onBack()
-        }
     }
 }
 

@@ -108,6 +108,9 @@ class LiftService(
         return Loaded(program, engine.evaluate(program.text, program.name, s.unit, data), s.unit, s.mainLifts, data)
     }
 
+    /** Whether a session with this id is stored, so a draft whose workout was already saved can be dropped. */
+    suspend fun sessionExists(id: String): Boolean = sessions.exists(id)
+
     /** The active program's id, null with no program. */
     suspend fun activeProgramId(): String? = programs.active.first()?.id
 
