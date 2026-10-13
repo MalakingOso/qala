@@ -9,6 +9,7 @@ import com.qala.data.core.liftoscriptSettings
 import com.qala.data.core.nextEntry
 import com.qala.data.core.programDay
 import com.qala.data.model.WeightUnit
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -45,6 +46,26 @@ data class LiftHero(
     /** Exercises the day uses, and their working sets in all. */
     val exerciseCount: Int,
     val setCount: Int,
+)
+
+/** An exercise of a program day: its name and the sets the program prescribes for it now. */
+data class ExerciseOverview(
+    val exerciseId: String,
+    val name: String,
+    val sets: List<PlannedSet>,
+    val warmups: List<PlannedSet>,
+)
+
+/**
+ * What a program day prescribes, for the Plan screen: the day's heading, which exercise leads it (the Today hero's main
+ * lift) and every exercise with its sets. The weights are the ones the program holds now: LS++ moves them when a
+ * session finishes, so a later day's loads can be higher by the time it comes round.
+ */
+data class DayOverview(
+    val dayName: String,
+    val mainExerciseId: String,
+    val mainExerciseName: String,
+    val exercises: List<ExerciseOverview>,
 )
 
 /** One exercise a program day uses. [index] is its position among the day's used exercises, as `next_history_entry` wants it. */
@@ -114,6 +135,41 @@ class ProgramEngine(private val uidSeed: Long = 0, private val cacheSize: Int = 
         }
 
     /**
+     * The day's heading, main lift and every used exercise with its prescribed working and warm-up sets. Null for a day the
+     * program lacks or one that uses no exercise. [withSets] false leaves the sets empty and skips the per-exercise calls,
+     * for a caller that only wants the names.
+     */
+    fun dayOverview(p: EvaluatedProgram, day: Int, mainLifts: List<String>, unit: WeightUnit, withSets: Boolean = true): DayOverview? {
+        val views = usedViews(p, day)
+        if (views.isEmpty()) return null
+        val used = usedExercises(p, day)
+        val main = mainIndex(used, mainLifts)
+        val exercises = used.mapIndexed { i, ex ->
+            val entry = if (withSets) entryFor(p, day, ex) else JsonObject(emptyMap())
+            ExerciseOverview(
+                exerciseId = ex.exerciseId,
+                name = views[i].getValue("exerciseType").jsonObject.getValue("name").jsonPrimitive.content,
+                sets = plannedSets(entry, unit),
+                warmups = plannedSets(JsonObject(mapOf("sets" to (entry["warmupSets"] ?: JsonArray(emptyList())))), unit),
+            )
+        }
+        return DayOverview(
+            dayName = QalaCore.dayName(p.program, day) ?: "Day $day",
+            mainExerciseId = used[main].exerciseId,
+            mainExerciseName = exercises[main].name,
+            exercises = exercises,
+        )
+    }
+
+    private fun mainIndex(used: List<DayExercise>, mainLifts: List<String>): Int =
+        used.indexOfFirst { it.exerciseId in mainLifts }.takeIf { it >= 0 } ?: 0
+
+    private fun weightOf(set: JsonObject): Double? = (set["weight"] as? JsonObject)?.get("value")?.jsonPrimitive?.doubleOrNull
+
+    private fun unitOf(set: JsonObject): WeightUnit =
+        if ((set["weight"] as? JsonObject)?.get("unit")?.jsonPrimitive?.content == "kg") WeightUnit.Kg else WeightUnit.Lb
+
+    /**
      * The Today hero for a lift day: the day's heading, the day's main lift (the first used exercise that is one of
      * [mainLifts], else the first used exercise) and its top set, the heaviest working set, the last one on a tie so
      * an as-many-as-possible set closing the sets is the one shown. Null when the day has no exercise with sets.
@@ -122,13 +178,12 @@ class ProgramEngine(private val uidSeed: Long = 0, private val cacheSize: Int = 
         val views = usedViews(p, day)
         if (views.isEmpty()) return null
         val used = usedExercises(p, day)
-        val main = used.indexOfFirst { it.exerciseId in mainLifts }.takeIf { it >= 0 } ?: 0
+        val main = mainIndex(used, mainLifts)
         val entries = used.map { ex -> entryFor(p, day, ex).getValue("sets").jsonArray.map { it.jsonObject } }
         val sets = entries[main]
         if (sets.isEmpty()) return null
-        fun weightOf(set: JsonObject): Double? = (set["weight"] as? JsonObject)?.get("value")?.jsonPrimitive?.doubleOrNull
         val top = sets.withIndex().maxWithOrNull(compareBy<IndexedValue<JsonObject>> { weightOf(it.value) ?: Double.NEGATIVE_INFINITY }.thenBy { it.index })!!.value
-        val unit = if ((top["weight"] as? JsonObject)?.get("unit")?.jsonPrimitive?.content == "kg") WeightUnit.Kg else WeightUnit.Lb
+        val unit = unitOf(top)
         return LiftHero(
             programName = programName.removeSuffix(".md"),
             dayName = QalaCore.dayName(p.program, day) ?: "Day $day",

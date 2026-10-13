@@ -128,7 +128,34 @@ class Schedule(
     /** The seven days of the week that contains [today], Monday first. */
     fun week(today: String, runPlan: RunPlan, runs: List<RunSessionEntity>): WeekPlan {
         val weekStart = IsoTime.weekStart(today)
-        var pointer = pointerAt(weekStart)
+        return build(weekStart, today, pointerAt(weekStart), runPlan, runs).week
+    }
+
+    /**
+     * The week that starts on [weekStart] (a Monday), as it stands on [today], for any week: this one is exactly
+     * [week]; an earlier one is what the records say (a logged day is logged, a day with nothing logged was missed and
+     * its lift comes round again); a later one is projected forward from this week, every day carried out as planned,
+     * so its first lift is the program day after the last one this week plans. Skips apply as everywhere else: a
+     * shifting one leaves the pointer where it is, a non-shifting one spends its slot.
+     */
+    fun weekOn(weekStart: String, today: String, runPlan: RunPlan, runs: List<RunSessionEntity>): WeekPlan {
+        val target = IsoTime.weekStart(weekStart)
+        val thisWeek = IsoTime.weekStart(today)
+        if (target <= thisWeek) return build(target, today, pointerAt(target), runPlan, runs).week
+        var built = build(thisWeek, today, pointerAt(thisWeek), runPlan, runs)
+        var start = thisWeek
+        while (start < target) {
+            start = IsoTime.addDays(start, 7)
+            built = build(start, today, built.pointerAfter, runPlan, runs)
+        }
+        return built.week
+    }
+
+    /** A built week and the program day the next training day after it would take. */
+    private class Built(val week: WeekPlan, val pointerAfter: Int)
+
+    private fun build(weekStart: String, today: String, startPointer: Int, runPlan: RunPlan, runs: List<RunSessionEntity>): Built {
+        var pointer = startPointer
         val days = (0..6).map { i ->
             val date = IsoTime.addDays(weekStart, i.toLong())
             val lifted = liftedOn(date)
@@ -156,7 +183,7 @@ class Schedule(
                 else -> DayPlan(date, i, DayKind.REST, null, null, reason, logged = false)
             }
         }
-        return WeekPlan(weekStart, days)
+        return Built(WeekPlan(weekStart, days), pointer)
     }
 
     /**

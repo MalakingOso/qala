@@ -14,6 +14,7 @@ import kotlinx.serialization.json.jsonPrimitive
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /** LS++ evaluation through the host library, against the GZCLP program the seed uses. */
@@ -84,6 +85,45 @@ class ProgramEngineTest {
         assertEquals("benchPress", engine.liftHero(gzclp, 3, emptyList(), "gzclp.md")!!.exerciseId)
         // Day 1 opens with a squat, but if only the bench is a main lift the bench is the day's lift.
         assertEquals("benchPress", engine.liftHero(gzclp, 1, listOf("benchPress"), "gzclp.md")!!.exerciseId)
+    }
+
+    @Test
+    fun aDayOverviewListsEveryExerciseWithItsSets() {
+        val day = engine.dayOverview(gzclp, 1, SettingsRecord.DefaultMainLifts, WeightUnit.Lb)!!
+        assertEquals("Day 1", day.dayName)
+        assertEquals("squat", day.mainExerciseId)
+        assertEquals("Squat", day.mainExerciseName)
+        assertEquals(listOf("Squat", "Bench Press", "Lat Pulldown"), day.exercises.map { it.name })
+        assertEquals(listOf("squat", "benchPress", "latPulldown"), day.exercises.map { it.exerciseId })
+        assertEquals("T1 5 sets, T2 3, T3 3", listOf(5, 3, 3), day.exercises.map { it.sets.size })
+        val t1 = day.exercises.first().sets
+        // Five sets of three at 150 lb, the last as many as possible.
+        assertEquals(List(5) { 150.0 }, t1.map { it.weight })
+        assertEquals(List(5) { 3.0 }, t1.map { it.reps })
+        assertEquals(listOf(false, false, false, false, true), t1.map { it.amrap })
+        assertEquals(WeightUnit.Lb, t1.first().unit)
+        assertTrue("the squat warms up", day.exercises.first().warmups.isNotEmpty())
+        // The hero reads the same entries, so its set count is the overview's.
+        assertEquals(engine.liftHero(gzclp, 1, SettingsRecord.DefaultMainLifts, "gzclp.md")!!.setCount, day.exercises.sumOf { it.sets.size })
+    }
+
+    @Test
+    fun theMainLiftOfAnOverviewIsTheHeros() {
+        assertEquals("benchPress", engine.dayOverview(gzclp, 3, SettingsRecord.DefaultMainLifts, WeightUnit.Lb)!!.mainExerciseId)
+        assertEquals("with no main lifts the first exercise leads", "benchPress", engine.dayOverview(gzclp, 3, emptyList(), WeightUnit.Lb)!!.mainExerciseId)
+        assertEquals("benchPress", engine.dayOverview(gzclp, 1, listOf("benchPress"), WeightUnit.Lb)!!.mainExerciseId)
+    }
+
+    @Test
+    fun anOverviewWithoutSetsIsJustTheNames() {
+        val day = engine.dayOverview(gzclp, 2, SettingsRecord.DefaultMainLifts, WeightUnit.Lb, withSets = false)!!
+        assertEquals(listOf("Overhead Press", "Deadlift", "Bent Over Row"), day.exercises.map { it.name })
+        assertTrue(day.exercises.all { it.sets.isEmpty() && it.warmups.isEmpty() })
+    }
+
+    @Test
+    fun aDayThatDoesNotExistHasNoOverview() {
+        assertNull(engine.dayOverview(gzclp, 99, SettingsRecord.DefaultMainLifts, WeightUnit.Lb))
     }
 
     @Test

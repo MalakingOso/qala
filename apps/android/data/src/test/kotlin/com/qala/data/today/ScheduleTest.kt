@@ -162,6 +162,103 @@ class ScheduleTest {
         assertNull("the planned-week input takes one kind per day", both.days[1].run)
     }
 
+    // ---- any week (the Plan screen) ----
+
+    private val nextMon = "2026-10-12"
+    private val nextWed = "2026-10-14"
+    private val nextFri = "2026-10-16"
+
+    private fun weekOn(
+        weekStart: String,
+        today: String,
+        lifts: List<com.qala.data.db.LiftSessionEntity> = emptyList(),
+        rules: DayRules = FakeRules(),
+        weekdays: Set<Int> = DefaultWeekdays,
+    ) = Schedule(weekdays, 4, lifts, rules).weekOn(weekStart, today, runPlan, emptyList())
+
+    @Test
+    fun thisWeekFromTheProjectionIsTheWeekTodayShows() {
+        // Wednesday, Monday lifted as day 1, Tuesday's run due: the week the strip and rail already read.
+        val lifts = listOf(lift(prevSat, day = 4), lift(mon, day = 1))
+        val rules = FakeRules(mapOf("2026-10-08" to SkipReason.Vacation))
+        assertEquals(week(wed, lifts, rules).days, weekOn(mon, wed, lifts, rules).days)
+        assertEquals("any date of the week names it", week(wed, lifts, rules).days, weekOn(fri, wed, lifts, rules).days)
+    }
+
+    @Test
+    fun aLaterWeekPicksTheRotationUpWhereThisWeekLeavesIt() {
+        // Monday lifted as day 1, so this week plans day 2 Wed, 3 Fri, 4 Sat and next Monday is day 1 again.
+        val lifts = listOf(lift(prevSat, day = 4), lift(mon, day = 1))
+        val next = weekOn(nextMon, wed, lifts)
+        assertEquals(listOf(1, null, 2, null, 3, 4, null), next.days.map { it.programDay })
+        assertEquals(nextMon, next.weekStart)
+        assertTrue("nothing is logged in a week that has not happened", next.days.none { it.logged })
+        val after = weekOn("2026-10-19", wed, lifts)
+        assertEquals("the rotation of four days comes round to the same place", listOf(1, null, 2, null, 3, 4, null), after.days.map { it.programDay })
+    }
+
+    @Test
+    fun aMissedLiftThisWeekIsDoneAgainBeforeTheNextWeekMovesOn() {
+        // Monday was missed: Wednesday repeats day 1, so next Monday is day 4.
+        val lifts = listOf(lift(prevSat, day = 4))
+        assertEquals(listOf(1, null, 1, null, 2, 3, null), week(wed, lifts).days.map { it.programDay })
+        assertEquals(listOf(4, null, 1, null, 2, 3, null), weekOn(nextMon, wed, lifts).days.map { it.programDay })
+    }
+
+    @Test
+    fun anEarlierWeekIsWhatTheRecordsSayAndAMissedDayStaysMissed() {
+        // Last week (Sep 28 to Oct 4): Monday lifted day 1, Wednesday nothing logged, Friday lifted day 2 (the repeat of Wednesday's).
+        val lifts = listOf(lift("2026-09-26", day = 4), lift("2026-09-28", day = 1), lift("2026-10-02", day = 2))
+        val last = weekOn("2026-09-28", wed, lifts)
+        assertEquals(listOf(1, null, 2, null, 2, 3, null), last.days.map { it.programDay })
+        assertEquals(listOf(true, false, false, false, true, false, false), last.days.map { it.logged })
+        assertEquals("a past training day with nothing logged is not planned again", DayKind.LIFT, last.days[2].kind)
+    }
+
+    @Test
+    fun aVacationWednesdayMovesItsLiftToFridayAndNextMondayFollowsOnFromThere() {
+        // Day 1 lifted Monday. Wednesday is on vacation: it shifts, so Friday takes day 2, Saturday 3, next Monday 4.
+        val lifts = listOf(lift(prevSat, day = 4), lift(mon, day = 1))
+        val rules = FakeRules(mapOf(wed to SkipReason.Vacation))
+        val thisWeek = weekOn(mon, wed, lifts, rules)
+        assertEquals(listOf(1, null, null, null, 2, 3, null), thisWeek.days.map { it.programDay })
+        assertEquals(SkipReason.Vacation, thisWeek.days[2].reason)
+        assertEquals(listOf(4, null, 1, null, 2, 3, null), weekOn(nextMon, wed, lifts, rules).days.map { it.programDay })
+    }
+
+    @Test
+    fun aSchedulingWednesdayAdvancesPastItsSlotWhereAVacationOneDoesNot() {
+        val lifts = listOf(lift(prevSat, day = 4), lift(mon, day = 1))
+        val rules = FakeRules(mapOf(wed to SkipReason.Scheduling))
+        val thisWeek = weekOn(mon, wed, lifts, rules)
+        assertEquals("Wednesday's day 2 is spent, so Friday takes 3 and Saturday 4", listOf(1, null, null, null, 3, 4, null), thisWeek.days.map { it.programDay })
+        assertEquals(listOf(1, null, 2, null, 3, 4, null), weekOn(nextMon, wed, lifts, rules).days.map { it.programDay })
+    }
+
+    @Test
+    fun aStatusThatRunsIntoNextWeekShiftsNextWeeksLiftsOutToo() {
+        // Sick from Friday through next Wednesday: both Friday and Saturday this week and Monday and Wednesday next shift out.
+        val rules = FakeRules(
+            mapOf(fri to SkipReason.Sick, "2026-10-10" to SkipReason.Sick, nextMon to SkipReason.Sick, nextWed to SkipReason.Sick),
+        )
+        val lifts = listOf(lift(prevSat, day = 4), lift(mon, day = 1), lift(wed, day = 2))
+        val next = weekOn(nextMon, wed, lifts, rules)
+        assertEquals(listOf(null, null, null, null, 3, 4, null), next.days.map { it.programDay })
+        assertEquals(SkipReason.Sick, next.days[0].reason)
+        assertEquals(SkipReason.Sick, next.days[2].reason)
+        assertEquals("the first lift out of the status takes the day it was waiting on", nextFri, next.days[4].date)
+    }
+
+    @Test
+    fun theTrainingWeekdaysDecideWhichDatesLift() {
+        val monWedFriSat = weekOn(mon, wed)
+        assertEquals(listOf(DayKind.LIFT, DayKind.RUN, DayKind.LIFT, DayKind.RUN, DayKind.LIFT, DayKind.LIFT, DayKind.REST), monWedFriSat.days.map { it.kind })
+        val tueThuSun = weekOn(mon, mon, weekdays = setOf(1, 3, 6))
+        assertEquals(listOf(DayKind.REST, DayKind.LIFT, DayKind.REST, DayKind.LIFT, DayKind.REST, DayKind.REST, DayKind.LIFT), tueThuSun.days.map { it.kind })
+        assertEquals("the rotation still starts at day 1", listOf(null, 1, null, 2, null, null, 3), tueThuSun.days.map { it.programDay })
+        assertEquals("a later week follows the same weekdays", listOf(null, 4, null, 1, null, null, 2), weekOn(nextMon, mon, weekdays = setOf(1, 3, 6)).days.map { it.programDay })
+    }
+
     // ---- next run ----
 
     @Test

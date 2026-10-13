@@ -110,6 +110,8 @@ data class EngineSnapshot(
     val lastTrained: Map<String, String> = emptyMap(),
     /** Whether any run is on the plan, so "no next run" can tell a paused plan from an empty one. */
     val hasRunPlan: Boolean = false,
+    /** The records this snapshot was built from, so the Plan screen can lay out any other week on the same footing as Today's. */
+    val input: EngineInput? = null,
     /** Set when the build failed; the other fields are then empty. */
     val error: String? = null,
 )
@@ -185,6 +187,7 @@ class EngineCompute(private val programs: ProgramEngine = ProgramEngine()) {
             sessionMuscles = sessionMuscles,
             lastTrained = lastTrained(input.liftSessions, today, trained),
             hasRunPlan = input.runPlan.days.isNotEmpty(),
+            input = input,
             liftHero = if (evaluated != null && input.program != null && plan.liftDay && plan.programDay != null) {
                 programs.liftHero(evaluated, plan.programDay, input.settings.mainLifts, input.program.name)
             } else {
