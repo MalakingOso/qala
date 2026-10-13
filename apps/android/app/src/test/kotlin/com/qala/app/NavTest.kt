@@ -7,7 +7,7 @@ import org.junit.Test
 class NavTest {
     @Test
     fun idsRoundTrip() {
-        for (route in Route.tabs + Route.History + Route.Settings + Route.Plates + Route.CheckIn + Route.WarmUp + Route.Workout + Route.Run) {
+        for (route in Route.tabs + Route.History + Route.Settings + Route.Plates + Route.CheckIn + Route.WarmUp + Route.Workout + Route.Rest + Route.Run) {
             assertEquals(route, Route.fromId(route.id))
         }
     }
@@ -40,6 +40,28 @@ class NavTest {
             assertEquals(stub, nav.route)
             assertEquals("Back from a stub is Today, so Mark done lands on the rail", Nav(), nav.back())
         }
+    }
+
+    @Test
+    fun restSitsOverTheWorkoutAndBackReturnsThere() {
+        val workout = Nav().push(Route.Workout)
+        val rest = workout.push(Route.Rest)
+        assertEquals(Route.Rest, rest.route)
+        assertEquals(Route.Today, rest.route.tab)
+        assertEquals("Back from Rest is the workout, not Today", Nav(Route.Workout, Route.Today), rest.back())
+        assertEquals("and from the workout it is Today, where the day is", Nav(), rest.back()!!.back())
+    }
+
+    @Test
+    fun restOverAWorkoutOpenedFromAnotherTabGoesBackThroughItToThatTab() {
+        val nav = Nav().selectTab(Route.Plan).push(Route.Workout).push(Route.Rest)
+        assertEquals(Nav(Route.Workout, Route.Plan), nav.back())
+        assertEquals(Nav(Route.Plan), nav.back()!!.back())
+    }
+
+    @Test
+    fun theLiftingFlowDropsTheTabBarAndNothingElseDoes() {
+        assertEquals(listOf(Route.WarmUp, Route.Workout, Route.Rest), (Route.tabs + Route.History + Route.Settings + Route.CheckIn + Route.WarmUp + Route.Workout + Route.Rest + Route.Run).filter { it.isFocus })
     }
 
     @Test

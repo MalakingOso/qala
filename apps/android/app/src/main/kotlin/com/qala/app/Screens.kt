@@ -54,6 +54,7 @@ fun Screen(
         Route.CheckIn -> CheckInRoute(today, scroll, topBar, onBack)
         Route.WarmUp -> Plain(scroll, topBar) { WarmUpStub(onBack) }
         Route.Workout -> Plain(scroll, topBar) { WorkoutStub(onBack) }
+        Route.Rest -> Plain(scroll, topBar) { StubScreen("Rest", "The rest screen arrives next.") }
         Route.Run -> Plain(scroll, topBar) { RunStub(onBack) }
     }
 }

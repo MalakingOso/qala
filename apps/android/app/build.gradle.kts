@@ -1,6 +1,8 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.plugin.compose")
+    // The workout in progress is kept as JSON (WorkoutState), so a killed process does not lose it.
+    id("org.jetbrains.kotlin.plugin.serialization")
 }
 
 // The Rust tasks (cargo host build, UniFFI bindings, cargo-ndk) live in :data since M2; this module gets the
