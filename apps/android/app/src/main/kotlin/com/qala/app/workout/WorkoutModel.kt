@@ -271,8 +271,9 @@ data class WorkoutState(
         val set = selectedSet ?: return null
         if (set.done) return null
         val ref = SetRef(current, exercise.selected)
-        val next = nextOpen(ref) ?: return "The last set, then you're done"
         val ex = exercise
+        val afterLogging = copy(exercises = exercises.replace(current, ex.copy(sets = ex.sets.replace(ref.set, set.copy(done = true)))))
+        val next = afterLogging.nextOpen(ref) ?: return "The last set, then you're done"
         val plan = restPlan(RestInput(ex.cls, set.targetReps, set.reps, set.rpe, set.targetRpe, ref.set + 1, set.amrap, set.timerSec))
         val then = if (next.exercise == current) "set ${next.set + 1}" else exercises[next.exercise].name
         return "Rest about ${formatClock(plan.seconds)}, then $then"

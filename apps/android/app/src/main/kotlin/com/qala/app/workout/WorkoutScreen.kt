@@ -291,7 +291,8 @@ private fun NeighbourButton(name: String?, description: String, leading: Boolean
     Row(
         modifier
             .heightIn(min = 44.dp)
-            .clickable(role = Role.Button, onClickLabel = "$description, $name", onClick = onClick),
+            .clickable(role = Role.Button, onClickLabel = "$description, $name", onClick = onClick)
+            .semantics { contentDescription = "$description, $name" },
         horizontalArrangement = if (leading) Arrangement.Start else Arrangement.End,
         verticalAlignment = Alignment.CenterVertically,
     ) {

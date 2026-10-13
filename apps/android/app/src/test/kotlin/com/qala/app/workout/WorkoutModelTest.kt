@@ -291,6 +291,39 @@ class WorkoutModelTest {
         assertNull(open.addRest(30).rest)
     }
 
+    // ---- the words around the logger ----
+
+    @Test
+    fun theRestHintNamesWhatTheSelectedSetWillEarnAndWhatFollows() {
+        assertEquals("Rest about 3:00, then set 2", open.restHint())
+        // An RPE well over the target would lengthen it; with none in the program the hint stays at the base.
+        assertEquals("Rest about 3:00, then set 2", open.pickRpe(9.0).restHint())
+        // The last set of an exercise rests for the first of the next one, by name.
+        var four = open
+        repeat(4) { four = four.log(1)!!.state }
+        assertEquals("a late set of a heavy lift rests longer", "Rest about 3:30, then Bench Press", four.restHint())
+        val skipped = open.pickSet(2).log(1)!!.state.log(2)!!.state      // sets 3 and 4 done first; set 5 is selected
+        assertEquals("a skipped set is not forgotten", "Rest about 3:30, then set 1", skipped.restHint())
+        assertEquals("a set already done has no rest to preview", null, open.log(1)!!.state.pickSet(0).restHint())
+    }
+
+    @Test
+    fun theLastSetOfTheWorkoutHasNoRestAndSaysSo() {
+        var s = open
+        repeat(10) { s = s.log(1)!!.state }
+        assertEquals("The last set, then you're done", s.restHint())
+    }
+
+    @Test
+    fun theLogButtonSaysLogSaveOrFinish() {
+        assertEquals("Log set 1", open.logLabel())
+        assertEquals("Log set 3", open.pickSet(2).logLabel())
+        assertEquals("Save set 1", open.log(1)!!.state.pickSet(0).logLabel())
+        var s = open
+        repeat(11) { s = s.log(1)!!.state }
+        assertEquals("Finish workout", s.logLabel())
+    }
+
     // ---- finishing ----
 
     @Test
