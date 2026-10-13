@@ -120,7 +120,10 @@ fun PlatesScreen(scroll: ScrollState, onBack: () -> Unit, onEditPlates: () -> Un
                 }
             }
             Spacer(Modifier.height(8.dp))
-            PlateDrawing(perSide, bar.ez, calcCaption(bar, perSide, load?.perSideTotal ?: 0.0))
+            val caption = calcCaption(bar, perSide, load?.perSideTotal ?: 0.0)
+            PlateDrawing(perSide, bar.ez, caption)
+            QalaText(caption, style = QalaType.body, color = c.fgSecondary)
+            Spacer(Modifier.height(4.dp))
             val summary = calcSummary(bar, load, target)
             Row(verticalAlignment = Alignment.CenterVertically) {
                 QalaText(summary.main, style = QalaType.body)

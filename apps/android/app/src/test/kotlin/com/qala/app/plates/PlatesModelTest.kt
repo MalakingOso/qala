@@ -34,7 +34,8 @@ class PlatesModelTest {
         val nearest = PlateLoad(listOf(45.0, 45.0, 10.0), 100.0, 245.0, 45.0, 0.0)
         assertEquals("nearest you can load to 243", calcSummary(bar, nearest, 243.0).hint)
         assertEquals("45 bar + 2 × 0 = —", calcSummary(bar, null, 245.0).main)
-        assertEquals("25 EZ bar + 2 × 100 = 245", calcSummary(BarOptions[2], exact, 245.0).main)
+        val ezLoad = PlateLoad(listOf(45.0, 45.0, 10.0, 10.0), 110.0, 245.0, 25.0, 0.0)
+        assertEquals("25 EZ bar + 2 × 110 = 245", calcSummary(BarOptions[2], ezLoad, 245.0).main)
     }
 
     @Test
