@@ -7,19 +7,22 @@ recorded in the same app and feed the same fatigue model as lifting.
 
 ## Status
 
-Working v1 build. The plan is in docs/PLAN.md, the design system in docs/DESIGN.md, and
-the decision log in docs/DECISIONS.md. `deno task test` runs 219 tests green;
-`deno task build` typechecks and bundles the PWA; `deno task serve` runs the
-server against the built PWA. Device gates (background GPS recording, APK on
-the Nothing Phone, TTS ducking) still need the real phone (docs/PLAN.md 14).
+Working v1 on the web (the desktop shell and a frozen phone PWA, both on sample
+data), and a native Android app in progress. `docs/ROADMAP.md` says where each
+track stands and what it waits on. The original plan is `docs/PLAN.md`, the
+design system `docs/DESIGN.md`, and the decision log `docs/DECISIONS.md`. The
+Android app has run on the emulator only. The device gates (a 2 h locked-screen
+run, Spotify ducking, a killed service resuming) are in `docs/android-native.md`
+section 5 and haven't been run on the phone.
 
 ## Layout
 
 - `packages/liftoscript/`: liftosaur's grammars and evaluator, vendored with
   the same file names so upstream diffs stay readable. The TS oracle and the
   desktop authoring runtime; the language going forward is LS++.
-- `crates/qala-lspp*`: the Rust LS++ port with wasm (web, server) and UniFFI
-  (Android) shims.
+- `crates/`: `qala-core` (pure logic: engine, availability, HLC, records, plate
+  math), `qala-ffi` (UniFFI for Kotlin, exports `qala-core` and LS++), and the
+  Rust LS++ port in `qala-lspp`, `qala-lspp-json` and `qala-lspp-wasm`.
 - `packages/core/`: data model, document schema, exercise seed and overlay,
   units and rounding.
 - `packages/engine/`: adaptive training engine, pure TypeScript.
@@ -30,16 +33,15 @@ the Nothing Phone, TTS ducking) still need the real phone (docs/PLAN.md 14).
 - `apps/web/`: React PWA with the desktop author shell and the phone logger
   shell sharing one theme.
 - `apps/android/`: native Kotlin and Jetpack Compose phone app (Gradle
-  project, `design` module for the tokens and components). In progress.
-- `server/`: Deno server on 127.0.0.1:8500. Sync, auth, tile and elevation
-  serving, and the LLM proxy.
+  project: `app`, `design` for the tokens and components, `data` for Room and
+  the Rust build). In progress.
+- `server/`: Deno server on 127.0.0.1:8500. Sync (Automerge, to be replaced by
+  record sync), Tailscale-header auth, tile and elevation serving, the LLM
+  proxy and text import.
 - `deploy/`: systemd unit and Tailscale notes.
-- `docs/`: LS++ (`ls-plus-plus.md`), the Rust core plan (`rust-core.md`),
-  the Android plan (`android-native.md`), the accounts plan
-  (`plan-accounts-logins.md`), the pending-decision queue
-  (`decisions-pending.md`), decision records (`adr/`), the research
-  evidence and briefs (`research/`), the owner's blog drafts (`blog/`),
-  and the beginner podcast scripts (`podcast/`).
+- `docs/`: start at `ROADMAP.md`; `README.md` there indexes the rest (plans,
+  the decision log and its pending queue, decision records, research, blog
+  and podcast drafts, and an `archive/` of finished handoffs).
 - `assets/fonts/`: the source font files. The web app serves copies from
   `apps/web/public/fonts/`.
 - `mockups/`: hand-drawn review canvas. Not app code.
@@ -67,6 +69,9 @@ tailscale serve --bg --https=8443 http://127.0.0.1:8500
 ```
 
 See `deploy/tailscale-serve.md` for the full notes.
+
+Rust tests run through `scripts/cargo-test-safe.sh -p <crate>`. A bare
+`cargo test` can exhaust memory and has killed the terminal.
 
 ## License
 
