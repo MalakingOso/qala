@@ -9,9 +9,11 @@ import com.qala.data.model.LiftEntryRecord
 import com.qala.data.sync.LiftSessionBundle
 import com.qala.data.sync.LiftSessionCodec
 import com.qala.data.sync.RecordType
+import com.qala.data.sync.RecordWrite
 import com.qala.data.sync.RecordWriter
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
 /** A session to record. Times are epoch ms; the offset is the device's at that instant. */
@@ -24,6 +26,17 @@ data class NewLiftSession(
     val srpe: Double? = null,
     val notes: String? = null,
     val id: String? = null,
+)
+
+/**
+ * What finishing a lift writes besides the session, so the program moves on in the same transaction: the program's
+ * new text (its progression states live in the text) and, when a script changed them, the 1RMs.
+ */
+data class ProgramAdvance(
+    val programId: String,
+    val text: String,
+    /** The merged LS++ `exerciseData` to store, or null to leave the settings alone. */
+    val exerciseData: JsonObject? = null,
 )
 
 /** Which stage a "Mark done" stub completes (docs/PLAN-m2-room-data.md, Stub-stage records). */
@@ -44,12 +57,27 @@ class SessionRepository(
     /** Session rows alone (dates, flags, program day), for callers that do not need the sets. */
     val liftSessionRows: Flow<List<LiftSessionEntity>> = db.liftSessionDao().observeRows()
 
-    /** Records a real session and returns its id. */
-    suspend fun saveLiftSession(new: NewLiftSession): String = withContext(env.work) {
+    /**
+     * Records a real session and returns its id. With [advance] the program's new text (and 1RMs) are written in the
+     * same transaction, so a session never lands without the progression that goes with it, or the other way round.
+     */
+    suspend fun saveLiftSession(new: NewLiftSession, advance: ProgramAdvance? = null): String = withContext(env.work) {
         val id = new.id ?: env.ids.next()
-        write(id, new.startedAtMs, new.programDayIndex, stub = false, stage = null, new.entries, new.minutes, new.srpe, new.notes)
+        val writes = buildList {
+            add(sessionWrite(id, new.startedAtMs, new.programDayIndex, stub = false, stage = null, new.entries, new.minutes, new.srpe, new.notes))
+            if (advance != null) {
+                add(RecordWrite(RecordType.PROGRAM, advance.programId, mapOf("text" to JsonPrimitive(advance.text))))
+                if (advance.exerciseData != null) {
+                    add(RecordWrite(RecordType.SETTINGS, SettingsGroups.id(SettingsGroups.LSPP), mapOf("exerciseData" to advance.exerciseData)))
+                }
+            }
+        }
+        writer.write(writes)
         id
     }
+
+    /** Whether a live or deleted session with this id is stored: a finish that already landed must not run again. */
+    suspend fun exists(id: String): Boolean = withContext(env.work) { db.liftSessionDao().row(id) != null }
 
     /**
      * Writes the placeholder the Mark done button of a stub screen leaves (M3): `stub = true`, the program
@@ -58,7 +86,7 @@ class SessionRepository(
     suspend fun markStageDone(stage: StubStage, programDayIndex: Int?, atMs: Long = env.clock.nowMs()): String =
         withContext(env.work) {
             val id = env.ids.next()
-            write(id, atMs, programDayIndex, stub = true, stage = stage.column, emptyList(), null, null, null)
+            writer.write(listOf(sessionWrite(id, atMs, programDayIndex, stub = true, stage = stage.column, emptyList(), null, null, null)))
             id
         }
 
@@ -70,7 +98,7 @@ class SessionRepository(
 
     suspend fun restore(id: String) = writer.restore(RecordType.LIFT_SESSION, id)
 
-    private suspend fun write(
+    private fun sessionWrite(
         id: String,
         startedAtMs: Long,
         programDayIndex: Int?,
@@ -80,9 +108,9 @@ class SessionRepository(
         minutes: Double?,
         srpe: Double?,
         notes: String?,
-    ) {
+    ): RecordWrite {
         val offset = IsoTime.offsetMinAt(env.clock.zone, startedAtMs)
         val row = LiftSessionEntity(id, startedAtMs, offset, programDayIndex, stub, stage, minutes, srpe, notes, deleted = false)
-        writer.put(RecordType.LIFT_SESSION, id, LiftSessionCodec.toFields(LiftSessionBundle(row, entries)))
+        return RecordWrite(RecordType.LIFT_SESSION, id, LiftSessionCodec.toFields(LiftSessionBundle(row, entries)))
     }
 }

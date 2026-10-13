@@ -124,6 +124,8 @@ data class FinishDayResult(
     /** 1-based day that follows the one just finished. */
     val nextDay: Int,
     val errors: List<String>,
+    /** 1RMs a finish-day script changed (LS++ `exerciseData` shape, keyed like the settings'), empty when none did. */
+    val exerciseData: JsonObject = JsonObject(emptyMap()),
 )
 
 private fun lspp(build: kotlinx.serialization.json.JsonObjectBuilder.() -> Unit): String =
@@ -211,6 +213,7 @@ fun QalaCore.finishDay(
         plannerText = result.getValue("plannerText").jsonPrimitive.content,
         nextDay = result.getValue("nextDay").jsonPrimitive.int,
         errors = result.getValue("errors").jsonArray.map { it.jsonPrimitive.content },
+        exerciseData = (result["exerciseData"] as? JsonObject) ?: JsonObject(emptyMap()),
     )
 }
 

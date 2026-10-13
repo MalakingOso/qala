@@ -26,6 +26,9 @@ object MetaKeys {
 
     /** Set once the debug seed has run, so a relaunch does not seed twice. */
     const val DEBUG_SEEDED = "debugSeeded"
+
+    /** The workout in progress, as the app's JSON draft: local to this install, never synced, cleared when the lift is saved. */
+    const val WORKOUT_DRAFT = "workoutDraft"
 }
 
 @Dao
@@ -35,4 +38,7 @@ interface MetaDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun put(row: MetaEntity)
+
+    @Query("DELETE FROM meta WHERE `key` = :key")
+    suspend fun remove(key: String)
 }
