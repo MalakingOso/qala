@@ -247,11 +247,15 @@ fun Card(
     )
 }
 
-/** A bordered list: a recessed 48 dp header with a [title], then [GroupRow]s. */
+/**
+ * A bordered list: a recessed 48 dp header with a [title] and, at its end, an optional [action] (a link such as Change),
+ * then [GroupRow]s.
+ */
 @Composable
 fun Group(
     title: String,
     modifier: Modifier = Modifier,
+    action: (@Composable () -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val c = Qala.colors
@@ -274,16 +278,18 @@ fun Group(
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             GroupLabel(title)
+            action?.invoke()
         }
         content()
     }
 }
 
-/** A 56 dp row in a [Group], with a 1 dp divider unless it is the [last] one. */
+/** A 56 dp row in a [Group], with a 1 dp divider unless it is the [last] one. A row of small controls can take a smaller [vertical] padding. */
 @Composable
 fun GroupRow(
     modifier: Modifier = Modifier,
     last: Boolean = false,
+    vertical: Dp = 14.dp,
     content: @Composable RowScope.() -> Unit,
 ) {
     val c = Qala.colors
@@ -294,7 +300,7 @@ fun GroupRow(
             .drawBehind {
                 if (!last) drawRect(c.border, Offset(0f, size.height - 1.dp.toPx()), Size(size.width, 1.dp.toPx()))
             }
-            .padding(horizontal = 16.dp, vertical = 14.dp),
+            .padding(horizontal = 16.dp, vertical = vertical),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.Start),
         content = content,

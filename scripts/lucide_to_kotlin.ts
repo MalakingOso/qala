@@ -86,6 +86,8 @@ export const ICONS = [
   "calendar-off",
   "undo-2",
   "chevron-right",
+  // Settings (A1): the "training as usual" status.
+  "person-standing",
 ];
 
 type Attrs = Record<string, string | number>;

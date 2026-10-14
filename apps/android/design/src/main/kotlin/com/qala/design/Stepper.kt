@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -26,24 +27,25 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-/** A 52 dp square minus or plus: a bordered surface that sinks one step when pressed, like every button here. */
+/** A 52 dp square minus or plus (44 dp in a row of a list): a bordered surface that sinks one step when pressed, like every button here. */
 @Composable
-private fun StepButton(icon: ImageVector, description: String, enabled: Boolean, onClick: () -> Unit) {
+private fun StepButton(icon: ImageVector, description: String, enabled: Boolean, size: Dp = 52.dp, onClick: () -> Unit) {
     val c = Qala.colors
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
     Box(
         Modifier
-            .size(52.dp)
+            .size(size)
             .alpha(if (enabled) 1f else 0.4f)
             .clickable(interaction, indication = null, enabled = enabled, role = Role.Button, onClickLabel = description, onClick = onClick)
             .beamerSurface(if (pressed) c.bgActive else c.bgSurface, if (pressed) c.borderStrong else c.border, QalaTokens.radiusMd),
         contentAlignment = Alignment.Center,
     ) {
-        QalaIcon(icon, description, size = 22.dp, tint = c.fg)
+        QalaIcon(icon, description, size = if (size < 52.dp) 20.dp else 22.dp, tint = c.fg)
     }
 }
 
@@ -86,5 +88,35 @@ fun Stepper(
             )
             StepButton(QalaIcons.Plus, increaseDescription, canIncrease) { onStep(1) }
         }
+    }
+}
+
+/**
+ * A small stepper for a row of a list (a pair count, a bar weight, a number of minutes): minus, the [value] as a word or
+ * a figure at a fixed width so the buttons do not move as it changes, and plus. The buttons are 44 dp, the touch minimum.
+ * [onStep] gets -1 or +1; the caller decides what a step is and when it stops ([canDecrease], [canIncrease]).
+ */
+@Composable
+fun RowStepper(
+    value: String,
+    onStep: (Int) -> Unit,
+    decreaseDescription: String,
+    increaseDescription: String,
+    modifier: Modifier = Modifier,
+    canDecrease: Boolean = true,
+    canIncrease: Boolean = true,
+    valueWidth: Dp = 68.dp,
+) {
+    Row(modifier, verticalAlignment = Alignment.CenterVertically) {
+        StepButton(QalaIcons.Minus, decreaseDescription, canDecrease, size = 44.dp) { onStep(-1) }
+        QalaText(
+            value,
+            Modifier.width(valueWidth),
+            QalaType.log.copy(fontSize = 13.sp, lineHeight = 18.sp),
+            Qala.colors.fg,
+            TextAlign.Center,
+            maxLines = 1,
+        )
+        StepButton(QalaIcons.Plus, increaseDescription, canIncrease, size = 44.dp) { onStep(1) }
     }
 }

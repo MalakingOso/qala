@@ -519,4 +519,15 @@ object QalaIcons {
             "m 9 18 l 6 -6 l -6 -6",
         )
     }
+
+    /** Lucide `person-standing`. */
+    val PersonStanding: ImageVector by lazy {
+        qalaIcon(
+            "person-standing",
+            "M 11 5 A 1 1 0 1 0 13 5 A 1 1 0 1 0 11 5 Z",
+            "m 9 20 l 3 -6 l 3 6",
+            "m 6 8 l 6 2 l 6 -2",
+            "M 12 10 v 4",
+        )
+    }
 }
