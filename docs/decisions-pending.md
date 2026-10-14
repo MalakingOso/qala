@@ -365,9 +365,7 @@ These come from the four new roadmap sections in `docs/PLAN.md` 16c to 16f. None
 
 Code work owed by decided items, built after the session (protocol step 5). An entry leaves when it's built.
 
-- D10: the server Coach route in TS (builds the prompt with `packages/llm`, validates the reply, degrades when the model is down) and the Android Coach screen that calls it (A6).
-
-D02 (DM Sans) was built during the session, before this rule.
+- None open. D10's Coach route and Android screen were built and merged 2026-10-14 (`90db3a6`). D02 (DM Sans) was built during the session, before this rule.
 
 ## Validations (not decisions; real-data gates)
 

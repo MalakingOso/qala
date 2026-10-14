@@ -12,7 +12,7 @@ Everything on Android has run on the emulator only. The server still syncs throu
 
 ## Merge queue
 
-In flight on 2026-10-14, each on its own agent branch: the Coach route and screen (D10) and the `gen:lspp` memory fix. Merged 2026-10-14: FFI exports, the vendored commit and the rename leftovers (`8e48051`); the LS++ wasm in the desktop editor and the server (`f5b88e5`); PDF and voice import (`e54e794`). Merged 2026-10-13, in order: `plates` (`ee49107`), `docs` (`d6837a3`), `workout` (`b5e9ae9`), `plan` (`e0e6a8d`), `history` (`17c4926`), and the deploy unit fix.
+In flight on 2026-10-14, each on its own agent branch: the `gen:lspp` memory fix and the flaky `AppContainerTest`. Merged 2026-10-14: FFI exports, the vendored commit and the rename leftovers (`8e48051`); the LS++ wasm in the desktop editor and the server (`f5b88e5`); PDF and voice import (`e54e794`); the Coach route and Android screen (`90db3a6`). Merged 2026-10-13, in order: `plates` (`ee49107`), `docs` (`d6837a3`), `workout` (`b5e9ae9`), `plan` (`e0e6a8d`), `history` (`17c4926`), and the deploy unit fix.
 
 Beyond the queue, the order of work is the owner's call. The tables below give each item's state and what it waits on.
 
@@ -35,7 +35,8 @@ Plans: `docs/android-native.md` (the app), `docs/PLAN-rail-refresh.md` (the nati
 | Run recording (A2) | not started | recorder service, Room fixes, HR, cues, the four gates in android-native 5; needs R1 in Rust | D11, D14, D15 |
 | Record sync client (A3) | not started | the outbox, clock sidecar and HLC wrapper exist; no HTTP client | D06, D07, D22 |
 | Charts, map, stats screens (A5) | not started | Session complete, Progress, Body; Vico plus Canvas, MapLibre | D12, D13, D16 |
-| Coach screen, release signing (A6) | not started | needs the server Coach route; D10 decided 2026-10-14 (Coach stays TS) | |
+| Coach screen (A6) | done 2026-10-14 | the Coach tab asks `POST /api/coach/ask` over `HttpURLConnection` and shows an unavailable state when the server is unreachable, degraded or answers 401; base URL is a BuildConfig field (`-Pqala.serverUrl=`); the thread is in memory only. Owed: a live run against the real model. Owner questions: should "Use coach" change the workout's numbers; should a bare "hi" on an empty thread still be declined; should the base URL become a setting with S22 | |
+| Release signing (A6) | not started | needs the owner's keystore | |
 | Real-phone verification pass | next, needs the phone | the 2 h locked-screen run, Spotify ducking, a killed service resuming, the L5 check, and the A0 leftovers (Vico run-series spike). USB access is unset: it needs sudo for udev rules, and wireless debugging is untried | the owner's phone |
 
 ## Rust core and LS++
@@ -72,7 +73,7 @@ Plans: `docs/android-native.md` 10, `docs/rust-core.md` 4 and 5, `docs/plan-acco
 | Blob routes for tracks, and the `schemaVersion` migration that moves tracks out of `RunSession` | not started | rust-core 5 | D07 |
 | Accounts: passwords, passkeys, invites, sessions in place of the Tailscale header | planned, not started | plan-accounts-logins; no branch exists | D21 |
 | How the Coach model is reached from the VPS | open | ADR 0002 open question | D23 |
-| Coach route that builds the prompt and validates the reply | not started | android-native 10; D10 decided 2026-10-14 (stays TS) | |
+| Coach route that builds the prompt and validates the reply | done 2026-10-14 | `POST /api/coach/ask` in `server/coach.ts`: `requireUser`, a capped body (`server/body.ts`), the prompt and reply schema from `packages/llm/coach.ts`, a degraded 502 when the model is down, slow or off-schema; contract fixtures in `testdata/golden/coach/`, checked by the Deno and Kotlin tests. Not built: "Remember this?" memory proposals, a rate limit | |
 | Glyph and sprite routes for the map style, or bundle them in the app | not started | android-native 7, 10 | D12 |
 | Serve the region `.pmtiles` for download | route already supports Range | android-native 10 | A5 |
 | Fix `deploy/qala.service` | done 2026-10-13 | `ExecStart` now runs `deno run server/mod.ts`; it named `server/main.ts`, which never existed | |
