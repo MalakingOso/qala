@@ -1184,6 +1184,11 @@
           "npm:valibot@1.4.1"
         ]
       },
+      "packages/lspp": {
+        "dependencies": [
+          "jsr:@std/assert@1.0.19"
+        ]
+      },
       "server": {
         "dependencies": [
           "jsr:@std/assert@1.0.19",
