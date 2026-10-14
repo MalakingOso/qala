@@ -13,10 +13,12 @@ import {
 import { serveCoachAsk } from "./coach.ts";
 import { lookupElevation } from "./elevation.ts";
 import { importDepsOnce, serveImportText } from "./import.ts";
+import { serveImportPdf } from "./importPdf.ts";
 import { LLAMA_DEFAULTS, serveLlmChat } from "./llm.ts";
 import { serveStatic } from "./static.ts";
 import { UserSyncStore } from "./sync.ts";
 import { createTilesHandler } from "./tiles.ts";
+import { serveTranscribe } from "./transcribe.ts";
 import { DenoWebSocketServerAdapter, upgradeSyncSocket } from "./ws.ts";
 
 export const BIND_HOSTNAME = "127.0.0.1";
@@ -132,6 +134,8 @@ export function createHandler(
         const deps = await importDepsOnce(state.options.llmBaseUrl);
         return await serveImportText(req, deps);
       }
+      if (path === "/api/import/pdf") return await serveImportPdf(req, state);
+      if (path === "/api/transcribe") return await serveTranscribe(req);
       if (path === "/api/elevation") {
         return await handleElevation(req, state.options.demDir);
       }

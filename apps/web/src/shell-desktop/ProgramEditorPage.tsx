@@ -30,6 +30,7 @@ import {
 } from "../logic/lsppEditor.ts";
 import { loadLspp } from "../lspp/load.ts";
 import { sampleBlock } from "../store/sample.ts";
+import { DictateButton } from "./DictateButton.tsx";
 import { BlockBar, Bunch, PageHeader, Panel, Pill, TypeTag } from "./parts.tsx";
 
 const SAMPLE = `# Week 1
@@ -131,6 +132,7 @@ export function ProgramEditorPage() {
   const view = useRef<EditorView | null>(null);
   const lspp = useRef<Lspp | null>(null);
   const [text, setText] = useState(SAMPLE);
+  const [transcript, setTranscript] = useState<string | null>(null);
   const [checks, setChecks] = useState<Checks>("loading");
   const [issues, setIssues] = useState<EditorIssue[]>([]);
   const [formatNote, setFormatNote] = useState("");
@@ -375,6 +377,20 @@ export function ProgramEditorPage() {
               </ul>
             )
             : null}
+          <DictateButton onTranscript={setTranscript} />
+          {transcript !== null && (
+            <label className="dictate-transcript">
+              <span className="kbd-hint">
+                Transcript. Check the numbers; importing it comes with the text
+                import screen.
+              </span>
+              <textarea
+                rows={3}
+                value={transcript}
+                onChange={(e) => setTranscript(e.target.value)}
+              />
+            </label>
+          )}
         </Panel>
         <Panel title="Week preview">
           <ul className="preview-days">

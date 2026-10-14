@@ -11,9 +11,15 @@ export const LLAMA_DEFAULTS = {
   timeoutMs: 60_000,
 } as const;
 
+/** One part of a multimodal message (OpenAI chat completions shape). */
+export type ContentPart =
+  | { type: "text"; text: string }
+  | { type: "input_audio"; input_audio: { data: string; format: string } };
+
 export interface ChatMessage {
   role: "system" | "user" | "assistant";
-  content: string;
+  /** A string, or parts when the message carries audio (see transcribe.ts). */
+  content: string | ContentPart[];
 }
 
 export interface ChatOptions {
