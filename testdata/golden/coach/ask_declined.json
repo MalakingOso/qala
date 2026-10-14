@@ -1,0 +1,5 @@
+{
+  "status": "declined",
+  "reply": "I am your training coach, so I stay inside fitness, training, health and recovery. I cannot help with that one, but I can help with your training, running, recovery, or health habits.",
+  "limits": { "weightPctMin": -10, "weightPctMax": 2.5, "setsMin": -2, "setsMax": 1 }
+}

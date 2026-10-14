@@ -1,0 +1,14 @@
+{
+  "status": "ok",
+  "reply": "The engine has 245 because your last top set moved well. Your quads are still sore, so I would pull it back a little and keep the reps.",
+  "limits": { "weightPctMin": -10, "weightPctMax": 2.5, "setsMin": -2, "setsMax": 1 },
+  "suggestion": {
+    "title": "Squat top set",
+    "engine": { "weight": 245, "unit": "lb", "sets": 4, "reps": 4, "rpe": 8 },
+    "coach": { "weight": 240, "unit": "lb", "sets": 4, "reps": 4, "rpe": 8 },
+    "weightPct": -2,
+    "setsDelta": 0,
+    "reason": "Quads still sore (4). Small pullback, same reps.",
+    "status": "accepted"
+  }
+}

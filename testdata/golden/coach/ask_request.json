@@ -1,0 +1,22 @@
+{
+  "message": "Why 245 on squat today?",
+  "thread": [
+    { "who": "you", "text": "How is my recovery looking?" },
+    { "who": "coach", "text": "Readiness is fine, but your quads are still sore from Friday." }
+  ],
+  "context": {
+    "today": "Lower A",
+    "checkIn": "recovery 7, quads 4",
+    "lift": {
+      "title": "Squat top set",
+      "weight": 245,
+      "unit": "lb",
+      "sets": 4,
+      "reps": 4,
+      "rpe": 8
+    },
+    "memory": [
+      { "date": "2026-09-12", "source": "user", "text": "Sleeps 6 h on weeknights." }
+    ]
+  }
+}
