@@ -2,7 +2,7 @@
 # Regenerate every generated liftoscript test file from the TS oracle (packages/liftoscript).
 # These files are gitignored (about 80 MB); the small goldens and builtins/ stay checked in.
 # The output is deterministic, so a clean second run changes nothing.
-# Usage: scripts/gen_liftoscript_testdata.sh        (or: deno task gen:liftoscript)
+# Usage: scripts/gen_liftoscript_testdata.sh        (or: deno task gen:lspp)
 set -euo pipefail
 cd "$(dirname "$0")/.."
 CFG=packages/liftoscript/deno.json

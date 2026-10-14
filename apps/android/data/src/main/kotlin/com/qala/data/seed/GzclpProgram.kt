@@ -2,7 +2,7 @@ package com.qala.data.seed
 
 /**
  * The GZCLP program text the debug seed starts from: `inputs.programText` of
- * testdata/golden/liftoscript/builtins/gzclp.json, copied verbatim. A JVM test compares the two so this
+ * testdata/golden/lspp/builtins/gzclp.json, copied verbatim. A JVM test compares the two so this
  * cannot drift. The progression state of a program lives inside its text; the seed advances it with the
  * finish-day script after each session it logs.
  */

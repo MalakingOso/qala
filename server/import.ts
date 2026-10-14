@@ -23,12 +23,14 @@ import {
   validateEditList,
   type WeightUnit,
 } from "../packages/llm/mod.ts";
+import type { LsppDiagnostic, LsppEvalError } from "../packages/lspp/mod.ts";
 import { readTextCapped } from "./body.ts";
 import {
   jsonSchemaFormat,
   LLAMA_DEFAULTS,
   proxyChatCompletions,
 } from "./llm.ts";
+import { loadLspp } from "./lspp.ts";
 
 /** Request body cap. The text cap is MAX_IMPORT_CHARS; this guards the JSON. */
 export const MAX_IMPORT_BODY_BYTES = 64 * 1024;
@@ -74,7 +76,40 @@ export function llamaTransport(
   };
 }
 
-/** Live deps: the real exercise catalog and the real LS++ evaluator. */
+/** One line per syntax error line (the parser reports several marks on one broken line). */
+export function describeSyntaxErrors(
+  diagnostics: readonly LsppDiagnostic[],
+  max = 5,
+): string[] {
+  const seen = new Set<number>();
+  const out: string[] = [];
+  for (const d of diagnostics) {
+    if (seen.has(d.line)) continue;
+    seen.add(d.line);
+    out.push(
+      `syntax error at line ${d.line}, column ${d.col}: ${d.message}${
+        d.suggestion ? ` (${d.suggestion})` : ""
+      }`,
+    );
+  }
+  return out.length > max
+    ? [...out.slice(0, max), `and ${out.length - max} more lines with errors`]
+    : out;
+}
+
+/** The evaluator reports bad programs in `errors`, it does not throw. */
+export function describeEvalError(e: LsppEvalError): string {
+  const d = e.error.details;
+  return `${d.type ?? "error"} at line ${e.error.line} of day ${e.dayData.day}${
+    d.subject ? ` (${d.subject})` : ""
+  }`;
+}
+
+/**
+ * Live deps: the real exercise catalog and the real LS++ evaluator, which is the
+ * wasm build (server/lspp.ts). Throws if the wasm is not built; the catalog stays
+ * on the TS exercise list because nothing in the wasm exports it.
+ */
 export async function liveImportDeps(
   baseUrl: string,
   fetchFn: typeof fetch = fetch,
@@ -82,10 +117,8 @@ export async function liveImportDeps(
   const { allExercisesList } = await import(
     "../packages/liftoscript/src/models/exercise.ts"
   );
-  const { forceEvaluateText, qalaSettingsToLiftoscript } = await import(
-    "../packages/liftoscript/mod.ts"
-  );
   const { createBaselineDocument } = await import("../packages/core/mod.ts");
+  const lspp = await loadLspp();
   const catalog: CatalogEntry[] = Object.values(allExercisesList).map((e) => ({
     id: e.id,
     name: e.name,
@@ -93,25 +126,52 @@ export async function liveImportDeps(
   return {
     transport: llamaTransport(baseUrl, fetchFn),
     catalog,
-    validatorFor: (units) => (programText) => {
+    validatorFor: (units) => {
       const core = createBaselineDocument().settings;
       core.units = { ...core.units, weight: units };
-      const program = forceEvaluateText(
-        programText,
-        "import",
-        qalaSettingsToLiftoscript(core),
-      );
-      // The evaluator reports bad programs in `errors`, it does not throw.
-      return program.errors.map((e) => {
-        const d = e.error.details as { type?: string; subject?: string };
-        return `${
-          d.type ?? "error"
-        } at line ${e.error.line} of day ${e.dayData.day}${
-          d.subject ? ` (${d.subject})` : ""
-        }`;
-      });
+      const settings = lspp.settingsFromCore(core);
+      // A wasm failure throws, so the pipeline reports "validator failed"
+      // instead of passing the program unchecked.
+      return (programText) => {
+        if (!settings.ok) throw new Error(settings.message);
+        const syntax = lspp.diagnose(programText);
+        if (!syntax.ok) throw new Error(syntax.message);
+        if (syntax.value.length > 0) return describeSyntaxErrors(syntax.value);
+        const program = lspp.evaluateText({
+          programText,
+          name: "import",
+          settings: settings.value,
+        });
+        if (!program.ok) throw new Error(program.message);
+        return program.value.errors.map(describeEvalError);
+      };
     },
   };
+}
+
+const depsByUrl = new Map<string, Promise<ImportRouteDeps>>();
+
+/**
+ * `liveImportDeps`, built on first use and shared after that. A failed build (the
+ * LS++ wasm not built yet) is forgotten, so the next request tries again.
+ */
+export function importDepsOnce(
+  baseUrl: string,
+  build: (baseUrl: string) => Promise<ImportRouteDeps> = liveImportDeps,
+): Promise<ImportRouteDeps> {
+  let deps = depsByUrl.get(baseUrl);
+  if (!deps) {
+    deps = build(baseUrl).catch((err) => {
+      depsByUrl.delete(baseUrl);
+      console.error(
+        "import: could not load the evaluator:",
+        err instanceof Error ? err.message : err,
+      );
+      throw err;
+    });
+    depsByUrl.set(baseUrl, deps);
+  }
+  return deps;
 }
 
 function isRecord(v: unknown): v is Record<string, unknown> {

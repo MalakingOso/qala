@@ -735,7 +735,7 @@ fn quirks_are_preserved() {
 #[test]
 fn evaluate_text_matches_builtin_goldens() {
     let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../../testdata/golden/liftoscript/builtins");
+        .join("../../testdata/golden/lspp/builtins");
     let mut checked = 0;
     let mut order_mismatch = Vec::new();
     for entry in std::fs::read_dir(&dir).expect("builtins dir") {

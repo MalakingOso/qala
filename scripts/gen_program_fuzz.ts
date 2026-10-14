@@ -5,10 +5,10 @@
 //
 // Builds ~600 random valid planner programs (text-level mutations of the 60
 // builtins plus small programs generated from the planner grammar), runs the
-// TS oracle on them and writes testdata/golden/liftoscript/fuzz/programs_fuzz_NN.json.
+// TS oracle on them and writes testdata/golden/lspp/fuzz/programs_fuzz_NN.json.
 // Output is deterministic: a private seeded PRNG drives generation and the
 // golden lib's seeded Math.random / pinned Date.now drive the oracle.
-// File format and canonical JSON rules: testdata/golden/liftoscript/README.md.
+// File format and canonical JSON rules: testdata/golden/lspp/README.md.
 // The replay test is crates/qala-lspp/tests/fuzz_programs.rs.
 
 import {

@@ -100,7 +100,7 @@ export function toJson(value: unknown, indent: number | undefined): string {
 // Output
 // ---------------------------------------------------------------------------
 
-export const ROOT = new URL("../testdata/golden/liftoscript/", import.meta.url)
+export const ROOT = new URL("../testdata/golden/lspp/", import.meta.url)
   .pathname;
 
 export function writeGolden(

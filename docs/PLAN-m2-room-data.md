@@ -55,7 +55,7 @@ Pure Kotlin in `data/` (JVM testable), mirroring `StageState` in `apps/web/src/s
 
 ## Debug seed
 
-`DebugSeeder` (debug builds only, behind a `BuildConfig.DEBUG` check and an explicit call from the app container, never in release) writes: the GZCLP program (`testdata/golden/liftoscript/builtins/gzclp.json` `inputs.text`), a few weeks of sessions, check-ins, body weights, a run plan with a weekday, one skip. **The program's progression state lives inside its text**, so the seed must be generated together: evaluate the program with the LS++ FFI, complete the day's sets, log the session, run the finish-day script to advance the program text, repeat per training day. A hand-checked or generated mismatch between the program text and the sessions is a bug (the hero's top set would disagree with the week card). Release builds start empty and every card shows a plain empty state.
+`DebugSeeder` (debug builds only, behind a `BuildConfig.DEBUG` check and an explicit call from the app container, never in release) writes: the GZCLP program (`testdata/golden/lspp/builtins/gzclp.json` `inputs.text`), a few weeks of sessions, check-ins, body weights, a run plan with a weekday, one skip. **The program's progression state lives inside its text**, so the seed must be generated together: evaluate the program with the LS++ FFI, complete the day's sets, log the session, run the finish-day script to advance the program text, repeat per training day. A hand-checked or generated mismatch between the program text and the sessions is a bug (the hero's top set would disagree with the week card). Release builds start empty and every card shows a plain empty state.
 
 ## DI
 

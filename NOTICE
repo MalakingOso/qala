@@ -11,6 +11,10 @@ seed, built-in programs, and muscle diagrams.
 - Project: https://github.com/astashov/liftosaur
 - License: GNU Affero General Public License v3.0 (AGPL-3.0)
 - Copyright: the liftosaur contributors (see the liftosaur repository)
+- Vendored commit: 5a73c877eabd4670fd21cb60a39df5421568f8c5 (master, 2026-09-13),
+  the newest of 26 master commits whose files match the vendored copy.
+  packages/liftoscript/VENDORED holds the commit of the latest vendoring and how
+  this one was matched.
 
 ## Fonts (all SIL Open Font License 1.1)
 

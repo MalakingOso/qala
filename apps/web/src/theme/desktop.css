@@ -974,6 +974,10 @@
   background: var(--accent-subtle);
   color: var(--accent);
 }
+.pill.bad {
+  background: color-mix(in srgb, var(--danger) 12%, transparent);
+  color: var(--danger);
+}
 .pill.info {
   background: color-mix(in srgb, var(--run) 12%, transparent);
   color: var(--run);
@@ -1246,6 +1250,165 @@
   min-height: 300px;
   border: var(--border-width) solid var(--soft);
   border-radius: var(--radius-md);
+}
+.editor-status .editor-note {
+  margin-left: auto;
+  color: var(--fg-secondary);
+}
+.page-desktop .sec-aside .btn-secondary.small,
+.page-desktop .dry-run .btn-secondary.small {
+  min-height: 32px;
+  padding: 0 14px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.page-desktop .sec-aside .btn-secondary:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* LS++ checks in the editor: wavy marks in the text, the tooltip, and the list
+ * under it. CodeMirror's own marks are fixed red and orange pictures, so these
+ * use tokens and follow the theme. */
+.page-desktop .code-editor .cm-lintRange {
+  background-image: none;
+  padding-bottom: 0;
+  text-decoration-line: underline;
+  text-decoration-style: wavy;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+.page-desktop .code-editor .cm-lintRange-error {
+  text-decoration-color: var(--danger);
+}
+.page-desktop .code-editor .cm-lintRange-warning {
+  text-decoration-color: var(--note-ink);
+}
+.page-desktop .code-editor .cm-tooltip {
+  background: var(--bg-surface);
+  color: var(--fg);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  font-family: var(--font-ui);
+  font-size: 12px;
+}
+.page-desktop .code-editor .cm-diagnostic {
+  border-left: 3px solid var(--note-ink);
+}
+.page-desktop .code-editor .cm-diagnostic-error {
+  border-left-color: var(--danger);
+}
+.page-desktop .code-editor .cm-diagnosticSource {
+  color: var(--fg-muted);
+}
+.page-desktop .code-editor .cm-lint-fix {
+  margin-top: 3px;
+  color: var(--fg-secondary);
+}
+.issue-list {
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--soft);
+}
+.issue-list li {
+  border-bottom: 1px solid var(--soft);
+}
+.issue {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  gap: 10px;
+  width: 100%;
+  padding: 8px 4px;
+  border: 0;
+  background: none;
+  color: var(--fg);
+  font: inherit;
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+.issue:hover {
+  background: var(--wash);
+}
+.issue-pos {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--note-ink);
+}
+.issue.error .issue-pos {
+  color: var(--danger);
+}
+.issue-fix {
+  display: block;
+  margin-top: 2px;
+  color: var(--fg-secondary);
+}
+.issue-more {
+  padding: 8px 4px;
+  font-size: 12px;
+  color: var(--fg-muted);
+}
+
+/* Dry run: the next sessions if every set is hit. */
+.dry-summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 12px 0 8px;
+  font-size: 12px;
+  color: var(--fg-secondary);
+}
+.dry-sessions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 14px 28px;
+  margin: 0 0 12px;
+  padding: 0;
+  list-style: none;
+}
+.dry-sessions > li > b {
+  display: block;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--soft);
+  font-size: 12px;
+}
+.dry-sessions ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.dry-sessions ul li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--soft);
+  font-size: 12px;
+}
+.dry-sessions .num {
+  color: var(--fg-secondary);
+  font-size: 11px;
+}
+.dry-stopped {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: var(--danger);
+}
+.dry-final summary {
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--fg-secondary);
+}
+.dry-final pre {
+  margin: 8px 0 0;
+  padding: 12px;
+  overflow-x: auto;
+  background: var(--bg-recessed);
+  border-radius: var(--radius);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.7;
 }
 .preview-days {
   margin: 0 0 12px;
