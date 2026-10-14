@@ -148,6 +148,31 @@ export async function liveImportDeps(
   };
 }
 
+const depsByUrl = new Map<string, Promise<ImportRouteDeps>>();
+
+/**
+ * `liveImportDeps`, built on first use and shared after that. A failed build (the
+ * LS++ wasm not built yet) is forgotten, so the next request tries again.
+ */
+export function importDepsOnce(
+  baseUrl: string,
+  build: (baseUrl: string) => Promise<ImportRouteDeps> = liveImportDeps,
+): Promise<ImportRouteDeps> {
+  let deps = depsByUrl.get(baseUrl);
+  if (!deps) {
+    deps = build(baseUrl).catch((err) => {
+      depsByUrl.delete(baseUrl);
+      console.error(
+        "import: could not load the evaluator:",
+        err instanceof Error ? err.message : err,
+      );
+      throw err;
+    });
+    depsByUrl.set(baseUrl, deps);
+  }
+  return deps;
+}
+
 function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === "object" && v !== null && !Array.isArray(v);
 }

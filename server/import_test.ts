@@ -1,10 +1,11 @@
 // POST /api/import/text: fake transport (no network, no model) and the real
 // LS++ evaluator as the program check.
 
-import { assert, assertEquals } from "@std/assert";
+import { assert, assertEquals, assertRejects } from "@std/assert";
 import type { ChatMessage, ChatTransport } from "../packages/llm/mod.ts";
 import {
   describeSyntaxErrors,
+  importDepsOnce,
   type ImportRouteDeps,
   liveImportDeps,
   llamaTransport,
@@ -273,4 +274,33 @@ Deno.test("a client-supplied edit list is validated like model output", async ()
   const body = await res.json();
   assertEquals(body.status, "invalid");
   assertEquals(body.rejected.length, 1);
+});
+
+Deno.test("importDepsOnce shares one build and retries after a failed one", async () => {
+  let builds = 0;
+  const url = "http://127.0.0.1:1/importDepsOnce-test";
+  const build = (): Promise<ImportRouteDeps> => {
+    builds++;
+    return builds === 1
+      ? Promise.reject(new Error("wasm not built"))
+      : Promise.resolve(live);
+  };
+  const quiet = console.error;
+  console.error = () => {};
+  try {
+    await assertRejects(
+      () => importDepsOnce(url, build),
+      Error,
+      "wasm not built",
+    );
+  } finally {
+    console.error = quiet;
+  }
+  const [a, b] = await Promise.all([
+    importDepsOnce(url, build),
+    importDepsOnce(url, build),
+  ]);
+  assert(a === live && b === live);
+  await importDepsOnce(url, build);
+  assertEquals(builds, 2);
 });
