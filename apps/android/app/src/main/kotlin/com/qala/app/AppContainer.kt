@@ -23,6 +23,9 @@ import com.qala.data.repo.RunRepository
 import com.qala.data.repo.SessionRepository
 import com.qala.data.repo.SettingsRepository
 import com.qala.data.repo.WorkoutDraftStore
+import com.qala.app.coach.CoachClient
+import com.qala.app.coach.CoachStore
+import com.qala.app.coach.HttpCoachClient
 import com.qala.app.workout.WorkoutStore
 import com.qala.data.seed.DebugSeeder
 import com.qala.data.sync.RecordWriter
@@ -47,6 +50,8 @@ class AppContainer(
     /** Lives as long as the container: the engine collection and the seed run in it. */
     val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
     private val seedInDebug: Boolean = BuildConfig.DEBUG,
+    /** Where the Coach tab asks. The app makes no request until the athlete sends a question, so building the container touches no network. */
+    coachClient: CoachClient = HttpCoachClient(BuildConfig.COACH_BASE_URL),
 ) {
     val writer = RecordWriter(RoomTransactor(database))
 
@@ -72,6 +77,9 @@ class AppContainer(
         env,
         scope,
     )
+
+    /** The conversation with the coach (A6). Process-wide, so the thread survives a visit to another tab. */
+    val coach = CoachStore(coachClient, scope)
 
     /** Lays out any week for the Plan screen from the records behind the engine snapshot. */
     val planCompute = PlanCompute(programEngine)

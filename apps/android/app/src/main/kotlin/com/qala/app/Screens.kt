@@ -10,10 +10,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.qala.app.allex.AllExercisesScreen
 import com.qala.app.checkin.CheckInScreen
+import com.qala.app.coach.CoachScreen
+import com.qala.app.coach.coachDay
 import com.qala.app.history.HistoryScreen
 import com.qala.app.plates.PlatesScreen
 import com.qala.app.plan.PlanScreen
@@ -27,6 +32,7 @@ import com.qala.app.today.TodayLoad
 import com.qala.app.today.TodayScreen
 import com.qala.app.today.TodayUiState
 import com.qala.data.engine.EngineSnapshot
+import com.qala.data.model.GymSettings
 import com.qala.design.Card
 import com.qala.design.PageHead
 import com.qala.design.Qala
@@ -62,7 +68,7 @@ fun Screen(
         Route.Plan -> PlanScreen(snapshot, today, scroll, topBar, onGo)
         Route.Body -> Plain(scroll, topBar) { StubScreen("Body", "Measurements and recovery. Arrives with the stats screens (A5).") }
         Route.Progress -> Plain(scroll, topBar) { StubScreen("Progress", "Charts and records. Arrives with the stats screens (A5).") }
-        Route.Coach -> Plain(scroll, topBar) { StubScreen("Coach", "Chat and suggestions. Arrives with the coach route (A6).") }
+        Route.Coach -> CoachTab(snapshot, scroll, topBar)
         Route.History -> HistoryScreen(scroll, onBack)
         Route.Settings -> SettingsScreen(scroll, today, ui, settingsFocus, onSettingsFocused, onBack, onPlates)
         Route.Plates -> PlatesScreen(scroll, onBack, onEditPlates)
@@ -91,6 +97,15 @@ private fun Plain(scroll: ScrollState, topBar: @Composable (Modifier) -> Unit, c
             content()
         }
     }
+}
+
+/** The Coach tab over the container's coach store, the day the engine snapshot describes, and the plates Settings holds. */
+@Composable
+private fun CoachTab(snapshot: EngineSnapshot, scroll: ScrollState, topBar: @Composable (Modifier) -> Unit) {
+    val container = LocalAppContainer.current
+    val gym by container.settings.gym.collectAsState(initial = GymSettings())
+    val day = remember(snapshot) { coachDay(snapshot) }
+    CoachScreen(container.coach, day, gym, scroll, topBar)
 }
 
 /** The check-in over the day Today is showing; Save writes the record on the container's scope and goes home. */
