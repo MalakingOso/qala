@@ -294,6 +294,40 @@ Deno.test("an oversize upload is refused before ffmpeg or any model runs", async
   assertEquals(seen.e4b.length + seen.whisper.length, 0, "no model call");
 });
 
+Deno.test("a stalled upload times out with 408 and never holds the gate", async () => {
+  const { fetchFn, seen } = fakeBackends({ e4b: "ok", whisper: "ok" });
+  const gate = createGate(1);
+  const { deps } = depsWith(fetchFn, { gate, uploadTimeoutMs: 300 });
+  let sentFirst = false;
+  const stalled = new Request("http://x/api/transcribe", {
+    method: "POST",
+    body: new ReadableStream<Uint8Array>({
+      pull(controller) {
+        if (!sentFirst) {
+          sentFirst = true;
+          controller.enqueue(new TextEncoder().encode("RIFF\0\0\0\0WAVE"));
+          return;
+        }
+        return new Promise<void>(() => {});
+      },
+    }),
+    // @ts-expect-error duplex is required for stream bodies
+    duplex: "half",
+  });
+  const pending = serveTranscribe(stalled, deps);
+  // While the slow client is still sending, the only slot is free: a normal
+  // request runs to completion.
+  const wav = await fixture("tone-8k.wav");
+  const meanwhile = await serveTranscribe(upload(wav), deps);
+  assertEquals(meanwhile.status, 200);
+  const res = await pending;
+  assertEquals(res.status, 408);
+  assertEquals(seen.e4b.length, 1, "only the finished upload reached a model");
+  const slot = gate.tryEnter();
+  assert(slot !== null, "the gate is free after the timeout");
+  slot();
+});
+
 Deno.test("a clip over 30 seconds is refused with a clear message", async () => {
   const dir = await Deno.makeTempDir({ prefix: "qala-test-" });
   try {

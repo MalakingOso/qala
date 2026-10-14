@@ -178,6 +178,42 @@ Deno.test("upload refuses empty, oversize and malformed bodies", async () => {
   assertEquals(await status(readUpload(post(big), 100)), 413);
 });
 
+/** A request whose body sends `first`, then stalls forever. */
+function stalledRequest(first: Uint8Array): Request {
+  let sentFirst = false;
+  const stream = new ReadableStream<Uint8Array>({
+    pull(controller) {
+      if (!sentFirst) {
+        sentFirst = true;
+        controller.enqueue(first);
+        return;
+      }
+      return new Promise<void>(() => {});
+    },
+  });
+  return new Request("http://x/up", {
+    method: "POST",
+    body: stream,
+    // @ts-expect-error duplex is required for stream bodies
+    duplex: "half",
+  });
+}
+
+Deno.test("an upload that stalls mid-body is cut off with 408", async () => {
+  const t0 = performance.now();
+  const err = await readUpload(
+    stalledRequest(new Uint8Array(100)),
+    1000,
+    150,
+  ).catch((e) => e);
+  assert(err instanceof UploadError);
+  assertEquals(err.status, 408);
+  assert(performance.now() - t0 < 2000, "gave up promptly");
+  // A finished upload inside the deadline is unaffected by it.
+  const ok = await readUpload(post(new Uint8Array([1])), 1000, 150);
+  assertEquals([...ok.bytes], [1]);
+});
+
 Deno.test("upload refuses a Content-Length that is not a plain integer", async () => {
   for (const bad of ["abc", "-5", "1e3", "12 34", "0x10"]) {
     const req = new Request("http://x/up", {

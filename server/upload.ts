@@ -31,13 +31,24 @@ export function uploadErrorResponse(err: unknown): Response | null {
 async function readCapped(
   body: ReadableStream<Uint8Array>,
   maxBytes: number,
+  timeoutMs: number,
 ): Promise<Uint8Array<ArrayBuffer>> {
   const reader = body.getReader();
   const parts: Uint8Array[] = [];
   let total = 0;
+  // One deadline for the whole read, so a client trickling bytes cannot hold
+  // a connection (and whatever the caller holds) open indefinitely.
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const expired = new Promise<never>((_, reject) => {
+    timer = setTimeout(
+      () => reject(new UploadError(408, "the upload took too long")),
+      timeoutMs,
+    );
+  });
+  expired.catch(() => {});
   try {
     for (;;) {
-      const { value, done } = await reader.read();
+      const { value, done } = await Promise.race([reader.read(), expired]);
       if (done) break;
       total += value.length;
       if (total > maxBytes) {
@@ -49,9 +60,12 @@ async function readCapped(
       parts.push(value);
     }
   } catch (err) {
-    await reader.cancel().catch(() => {});
+    // Not awaited: a stalled source may never settle its cancel.
+    reader.cancel().catch(() => {});
     if (err instanceof UploadError) throw err;
     throw new UploadError(400, "could not read the upload");
+  } finally {
+    clearTimeout(timer);
   }
   const out = new Uint8Array(total);
   let at = 0;
@@ -68,10 +82,17 @@ function describe(bytes: number): string {
     : `${Math.round(bytes / 1024)} KB`;
 }
 
-/** Read the upload, or throw an UploadError carrying the HTTP status. */
+/** Default total time allowed to receive an upload. */
+export const DEFAULT_UPLOAD_TIMEOUT_MS = 30_000;
+
+/**
+ * Read the upload, or throw an UploadError carrying the HTTP status: 413 over
+ * the cap, 408 when the body does not finish inside `timeoutMs`.
+ */
 export async function readUpload(
   req: Request,
   maxBytes: number,
+  timeoutMs: number = DEFAULT_UPLOAD_TIMEOUT_MS,
 ): Promise<Upload> {
   // Content-Length is only a shortcut for an honest client. The real cap is
   // the bounded read below, which also covers chunked bodies with no header.
@@ -91,7 +112,7 @@ export async function readUpload(
   }
   if (req.body === null) throw new UploadError(400, "the upload is empty");
   const contentType = req.headers.get("content-type") ?? "";
-  const raw = await readCapped(req.body, maxBytes + 1024);
+  const raw = await readCapped(req.body, maxBytes + 1024, timeoutMs);
   if (/^multipart\/form-data/i.test(contentType)) {
     let form: FormData;
     try {

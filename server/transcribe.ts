@@ -61,7 +61,10 @@ export interface TranscribeDeps {
   e4bUrl: string;
   whisperUrl: string;
   ffmpeg: string;
+  /** Covers conversion and the model calls, not the upload read. */
   gate: Gate;
+  /** Total time allowed to receive the upload. Tests pass a short one. */
+  uploadTimeoutMs?: number;
 }
 
 /** Live deps. URLs and the ffmpeg path can be overridden from the environment. */
@@ -380,6 +383,30 @@ export async function serveTranscribe(
   if (req.method !== "POST") {
     return Response.json({ error: "method not allowed" }, { status: 405 });
   }
+  // Receive the whole upload before taking a slot, so a client that stalls
+  // mid-body can only hold its own connection (until the read deadline), not
+  // a transcription slot.
+  let upload;
+  try {
+    upload = await readUpload(
+      req,
+      TRANSCRIBE_LIMITS.maxUploadBytes,
+      deps.uploadTimeoutMs,
+    );
+  } catch (err) {
+    return uploadErrorResponse(err) ??
+      Response.json({ error: "could not read the upload" }, { status: 400 });
+  }
+  const kind = sniffAudio(upload.bytes);
+  if (kind === null) {
+    return Response.json(
+      {
+        error:
+          "unsupported audio format (use wav, webm, ogg, mp4, mp3 or flac)",
+      },
+      { status: 415 },
+    );
+  }
   const release = deps.gate.tryEnter();
   if (release === null) {
     return Response.json(
@@ -388,23 +415,6 @@ export async function serveTranscribe(
     );
   }
   try {
-    let upload;
-    try {
-      upload = await readUpload(req, TRANSCRIBE_LIMITS.maxUploadBytes);
-    } catch (err) {
-      return uploadErrorResponse(err) ??
-        Response.json({ error: "could not read the upload" }, { status: 400 });
-    }
-    const kind = sniffAudio(upload.bytes);
-    if (kind === null) {
-      return Response.json(
-        {
-          error:
-            "unsupported audio format (use wav, webm, ogg, mp4, mp3 or flac)",
-        },
-        { status: 415 },
-      );
-    }
     const converted = await convertToWav(upload.bytes, kind, deps);
     if (!converted.ok) {
       return Response.json(
