@@ -4,6 +4,7 @@
 import { assert, assertEquals } from "@std/assert";
 import type { ChatMessage, ChatTransport } from "../packages/llm/mod.ts";
 import {
+  describeSyntaxErrors,
   type ImportRouteDeps,
   liveImportDeps,
   llamaTransport,
@@ -74,6 +75,39 @@ Deno.test("evaluator really flags a broken program (check is not vacuous)", () =
     live.validatorFor("lb")("# Week 1\n## Day 1\nBench Press / 3x8 ?+\n"),
     [],
   );
+});
+
+Deno.test("a syntax error is reported with its line, column and fix idea", () => {
+  const errors = live.validatorFor("lb")(
+    "# Week 1\n## Day 1\nBench Press / 3x\n",
+  );
+  assertEquals(errors.length, 1);
+  assert(errors[0].startsWith("syntax error at line 3, column "), errors[0]);
+  assert(errors[0].includes("rep count"), errors[0]);
+});
+
+Deno.test("describeSyntaxErrors keeps one error per line and caps the list", () => {
+  const at = (line: number, col: number, suggestion?: string) => ({
+    from: 0,
+    to: 1,
+    message: "Syntax error",
+    line,
+    col,
+    endLine: line,
+    endCol: col + 1,
+    suggestion,
+  });
+  assertEquals(
+    describeSyntaxErrors([at(4, 26, "add the missing }"), at(4, 27), at(5, 1)]),
+    [
+      "syntax error at line 4, column 26: Syntax error (add the missing })",
+      "syntax error at line 5, column 1: Syntax error",
+    ],
+  );
+  const many = Array.from({ length: 8 }, (_, i) => at(i + 1, 1));
+  const out = describeSyntaxErrors(many, 3);
+  assertEquals(out.length, 4);
+  assertEquals(out[3], "and 5 more lines with errors");
 });
 
 Deno.test("split squat comes back as a confirm item, then the owner resolves it", async () => {

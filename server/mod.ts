@@ -131,7 +131,14 @@ export function createHandler(
         return await serveLlmChat(req, state.options.llmBaseUrl);
       }
       if (path === "/api/import/text") {
-        state.importDeps ??= liveImportDeps(state.options.llmBaseUrl);
+        state.importDeps ??= liveImportDeps(state.options.llmBaseUrl).catch(
+          (err) => {
+            // Don't keep a failed load (the LS++ wasm not built yet); the next request retries.
+            state.importDeps = undefined;
+            console.error("import: could not load the evaluator:", err.message);
+            throw err;
+          },
+        );
         return await serveImportText(req, await state.importDeps);
       }
       if (path === "/api/elevation") {
