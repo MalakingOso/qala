@@ -1,6 +1,6 @@
 # Roadmap
 
-Where Qala stands and what comes next, in one place. Verified against main at `ee49107` on 2026-10-13 and updated after the A4 screens merged the same night. Main is ahead of `origin/main` and hasn't been pushed.
+Where Qala stands and what comes next, in one place. Last checked row by row against main at `ee49107` on 2026-10-13; the rows touched by the 2026-10-14 merges are current to `625c99f`. Main is ahead of `origin/main` and hasn't been pushed.
 
 This file lists work that is decided or underway, by track, and links to the plan that holds the detail. It doesn't copy those plans. Choices still to be made are in `docs/decisions-pending.md` (grouped by what they block, below). Choices already made are in `docs/DECISIONS.md`. Every plan doc opens with a status line; if one disagrees with this file, fix both. `docs/README.md` indexes the rest of the docs.
 
@@ -12,7 +12,7 @@ Everything on Android has run on the emulator only. The server still syncs throu
 
 ## Merge queue
 
-Nothing in flight. Merged 2026-10-14: FFI exports, the vendored commit and the rename leftovers (`8e48051`); the LS++ wasm in the desktop editor and the server (`f5b88e5`); PDF and voice import (`e54e794`); the Coach route and Android screen (`90db3a6`); the `gen:lspp` memory fix (`86b6b15`); the flaky connected test fix (`6530def`). Merged 2026-10-13, in order: `plates` (`ee49107`), `docs` (`d6837a3`), `workout` (`b5e9ae9`), `plan` (`e0e6a8d`), `history` (`17c4926`), and the deploy unit fix.
+Nothing in flight. Merged 2026-10-14: FFI exports, the vendored commit and the rename leftovers (`8e48051`); the LS++ wasm in the desktop editor and the server (`f5b88e5`); PDF and voice import (`e54e794`); the Coach route and Android screen (`90db3a6`); the `gen:lspp` memory fix (`86b6b15`); the flaky connected test fix (`6530def`); the `qala-core` differential fuzz (`625c99f`). Merged 2026-10-13, in order: `plates` (`ee49107`), `docs` (`d6837a3`), `workout` (`b5e9ae9`), `plan` (`e0e6a8d`), `history` (`17c4926`), and the deploy unit fix.
 
 Beyond the queue, the order of work is the owner's call. The tables below give each item's state and what it waits on.
 
@@ -50,7 +50,7 @@ Plans: `docs/rust-core.md`, `docs/ls-plus-plus.md`.
 | Plate math with rounding and golden vectors | done 2026-10-13 | `testdata/golden/plates` | |
 | R1 run pipeline and `RunRecorder` | not started | rust-core 7; A2 needs it | |
 | R3 remainder: volume, rest, warm-up, `recommend_next_session` | not in Rust | rust-core 7 still puts them in Rust; rest and warm-up planning shipped in Kotlin (`app/.../workout/RestPlan.kt`, `Warmup.kt`, ports of `rest.ts` and `warmup.ts`); Rust port or keep Kotlin is the owner's call | |
-| Differential fuzz for the R2 and R3 acceptance lines | not done | none in the repo | |
+| Differential fuzz for the R2 and R3 acceptance lines | done 2026-10-14 for the ported code | 1,000,000 plate cases (`deno task fuzz:plates`) and 1,500,000 e1RM, date, decay and readiness cases (`fuzz:engine`), replayed by `crates/qala-core/tests/fuzz_core.rs` with zero mismatches; it fixed three plate bugs at huge and infinite targets and in number formatting. The corpora (about 250 MB) are gitignored, and the test skips when they're absent. `qala-core` tests now build at `opt-level = 2` so the replay fits the safe runner's time cap. Not fuzzed because not ported: volume's `roundWeight`, `doubleProgression`, the rest multiplier | D32 for the rest |
 | FFI exports of `dry_run`, `unresolved_sets`, `lint_planner`, `format_planner` | done 2026-10-14 | Kotlin bindings generate; `LsppToolsFfiTest` covers them; the app doesn't call them yet | |
 | Load the wasm build in the desktop editor and the server | done 2026-10-14 | the editor shows diagnostics and lint inline, Format and a dry run; the server's import check uses it; `packages/lspp` is the typed client. The wasm isn't committed: run `deno task build:wasm` before `deno task test` (server tests load it), and the import route answers 500 until it's built. Open owner questions: should the dry run replace the static Week preview, and should "desktop authoring runtime" for `packages/liftoscript` be reworded now that the editor's checks run on Rust | |
 | PDF import through MinerU | built 2026-10-14, tested with fakes only | `POST /api/import/pdf`: MinerU through Sonoro's `mineru_adapter.py` as a subprocess (the sidecar's only PDF route is the magazine pipeline, which can send text off the machine), `pdftotext -layout` fallback, chunked per week and day, same proposal and confirm step as text import. Owed: a live run with vLLM on :30000. Owner questions: keep the subprocess or add a raw MinerU route to Sonoro; caps of 10 MB and 40 pages | |

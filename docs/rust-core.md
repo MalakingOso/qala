@@ -131,12 +131,12 @@ Also stays TS: `packages/llm` (owner, 2026-10-14). It needs the network (the mod
 
 Each step leaves the TS package in place and passing. A Rust module counts as done only when every acceptance line is met against golden vectors (section 9).
 
-Status by step, 2026-10-13:
+Status by step, 2026-10-14:
 
 - R0 is partly done. `qala-core`, `js.rs` and the `qala-ffi` shim exist and build for Android. There is no wasm shim for `qala-core`, so the Deno and web legs of the round-trip acceptance have not been run.
 - R1 (`run`) is not started. Nothing in `qala-core` touches fixes, splits or the recorder.
-- R2 (`core` math): plates, `round_weight` and `describe_change` are ported with vectors (`testdata/golden/plates`). The 1,000,000-input differential fuzz in the acceptance line is not in the repo.
-- R3 (`engine`): ported are state, decay, e1RM with the RTS table, Kalman, running, readiness, `log_session` and `calibrate`, with vectors in `testdata/golden/engine`. Native readiness decays to an explicit `now` (DECISIONS S26). Not ported: volume, rest, warm-up and `recommend_next_session`. The `workout` branch builds rest and warm-up planning in Kotlin instead (unmerged). The differential fuzz is not in the repo.
+- R2 (`core` math): plates, `round_weight` and `describe_change` are ported with vectors (`testdata/golden/plates`). A 1,000,000-case differential fuzz against the TS (`deno task fuzz:plates`, replayed by `crates/qala-core/tests/fuzz_core.rs`) has zero mismatches (2026-10-14). It found three Rust bugs, now fixed and kept as golden vectors: an integer overflow and a wrong nearest load for targets past 2^53 units or infinite, and non-JS number formatting in `describe_change` and `plates_shorthand` (`inf`, no exponent form from 1e21).
+- R3 (`engine`): ported are state, decay, e1RM with the RTS table, Kalman, running, readiness, `log_session` and `calibrate`, with vectors in `testdata/golden/engine`. Native readiness decays to an explicit `now` (DECISIONS S26). Not ported: volume, rest, warm-up and `recommend_next_session`. Rest and warm-up planning shipped in Kotlin instead (merged 2026-10-13; D32 asks whether they move). A 1,000,000-case e1RM fuzz (`observe_set`, `best_observation`, `rts_lookup`) and a 500,000-case date, decay and readiness fuzz (`days_between`, `add_days_key`, `critical_speed`, `prs_z_score`, readiness with and without decay to `now`, across DST, month, leap and year boundaries) have zero mismatches against the TS (`deno task fuzz:engine`, 2026-10-14); the only differences are one-ulp `exp` noise inside the 1e-9 tolerance. The R3 fuzz line is met for e1RM and decay only: its `roundWeight` (the one in `packages/engine/volume.ts`), `doubleProgression` and the rest multiplier aren't ported, so they aren't fuzzed.
 - R4 (`generator`) is deferred. R5 (LS++) is done. R6 (`llm`) stays TS.
 
 **R0. Foundations.** Workspace, pinned toolchain, `js.rs` helpers, the vector generator and format, `qala-ffi` and `qala-wasm` shims with a `version()` call, `deno task` entries.
@@ -156,7 +156,7 @@ Accept: every `core` test as a vector; `plates_test.ts` cases including "245 lb 
 Accept:
 - Every test in `engine` (62 declarations plus hybrid, crossmodal, validation) as vectors, including the spec's 3-week validation test and the synthetic Kalman recovery within the same tolerance.
 - `EngineState` JSON round-trips byte-identical after canonical key ordering.
-- Differential fuzz of `roundWeight`, `doubleProgression`, `e1rm` and the rest-timer multiplier over 1,000,000 inputs with half-integers, negatives and DST and month-boundary dates: zero mismatches.
+- Differential fuzz of `roundWeight`, `doubleProgression`, `e1rm` and the rest-timer multiplier over 1,000,000 inputs with half-integers, negatives and DST and month-boundary dates: zero mismatches. (The `roundWeight` named here is `packages/engine/volume.ts`'s, which isn't ported; `packages/core/rounding.ts`'s is covered under R2.)
 - After 10 on-target early taps at 90 s with B 120, `m` equals 0.75 + 0.25 x 0.9^10 (0.837) within 0.001 (PLAN 6.6).
 
 **R4. `generator` (deferred, owner 2026-10-14).** No Rust consumer: when the phone gets generated workouts it pulls them from the server, which runs the TS generator. Revisit after R3. If done: vectors compare emitted liftoscript text exactly, and parse-and-evaluate remains a TS check on the output.
