@@ -262,7 +262,7 @@ export function ProgramEditorPage() {
     );
   };
 
-  const { errors: errorCount } = countIssues(issues);
+  const { errors: errorCount, warnings: warningCount } = countIssues(issues);
   const listed = issues.slice(0, MAX_LISTED_ISSUES);
   const lineCount = text.split("\n").length;
 
@@ -329,7 +329,13 @@ export function ProgramEditorPage() {
               : checks === "off"
               ? <Pill tone="mute">LS++ checks unavailable</Pill>
               : (
-                <Pill tone={errorCount > 0 ? "bad" : "ok"}>
+                <Pill
+                  tone={errorCount > 0
+                    ? "bad"
+                    : warningCount > 0
+                    ? "warn"
+                    : "ok"}
+                >
                   {issueSummary(issues)}
                 </Pill>
               )}
@@ -421,19 +427,19 @@ export function ProgramEditorPage() {
                   : null}
               </p>
               <ol className="dry-sessions">
-                {dry.view.sessions.map((s) => (
-                  <li key={s.title}>
+                {dry.view.sessions.map((s, si) => (
+                  <li key={`${si}-${s.title}`}>
                     <b>{s.title}</b>
                     <ul>
-                      {s.lines.map((l) => (
-                        <li key={l.name}>
+                      {s.lines.map((l, li) => (
+                        <li key={`${li}-${l.name}`}>
                           <span>{l.name}</span>
                           <span className="num">{l.sets}</span>
                         </li>
                       ))}
                     </ul>
-                    {s.errors.map((e) => (
-                      <p key={e} className="dry-stopped">{e}</p>
+                    {s.errors.map((e, ei) => (
+                      <p key={`${ei}-${e}`} className="dry-stopped">{e}</p>
                     ))}
                   </li>
                 ))}

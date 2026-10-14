@@ -152,6 +152,24 @@ try {
   check(page.pageErrors.length === 0, "no page errors on the clean path", page.pageErrors.join("; "));
   await page.close();
 
+  // 1b. Text that parses but looks wrong gets a lint warning, not an error.
+  page = await newPage(context);
+  await status(page).filter({ hasText: "No errors" }).waitFor({ timeout: 15000 });
+  await replaceText(page, "# Week 1\n## Day 1\nSquat / 31x5 100lb");
+  await page.locator(".cm-lintRange-warning").first().waitFor({ timeout: 10000 });
+  ok("a lint warning gets an inline mark");
+  check(
+    (await status(page).first().innerText()).includes("1 warning"),
+    "status pill counts the warning",
+    await status(page).first().innerText(),
+  );
+  check(
+    (await page.locator(".cm-lintRange-error").count()) === 0 &&
+      (await page.locator(".issue-list .issue.warning").count()) === 1,
+    "the warning is listed once and nothing is called an error",
+  );
+  await page.close();
+
   // 2. A broken program gets an inline mark, a list entry with position and fix idea.
   page = await newPage(context);
   await status(page).filter({ hasText: "No errors" }).waitFor({ timeout: 15000 });
