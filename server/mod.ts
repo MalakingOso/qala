@@ -16,6 +16,7 @@ import {
   liveImportDeps,
   serveImportText,
 } from "./import.ts";
+import { serveImportPdf } from "./importPdf.ts";
 import { LLAMA_DEFAULTS, serveLlmChat } from "./llm.ts";
 import { serveStatic } from "./static.ts";
 import { UserSyncStore } from "./sync.ts";
@@ -135,6 +136,7 @@ export function createHandler(
         state.importDeps ??= liveImportDeps(state.options.llmBaseUrl);
         return await serveImportText(req, await state.importDeps);
       }
+      if (path === "/api/import/pdf") return await serveImportPdf(req, state);
       if (path === "/api/transcribe") return await serveTranscribe(req);
       if (path === "/api/elevation") {
         return await handleElevation(req, state.options.demDir);
