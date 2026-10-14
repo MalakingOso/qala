@@ -8,7 +8,7 @@ Start at `ROADMAP.md`: where each track stands and what it waits on. Every plan 
 |---|---|---|
 | `ROADMAP.md` | living | Done, in flight, next and blocked, by track. |
 | `DECISIONS.md` | living | The owner's decision log. Rows are added, never renumbered. |
-| `decisions-pending.md` | living | The queue of open choices (D01 to D30) and the protocol for deciding them. |
+| `decisions-pending.md` | living | The queue of open choices (D01 to D35) and the protocol for deciding them. |
 | `adr/` | 0001 accepted, 0002 partly decided and not built, 0003 accepted in part | Decision records. |
 | `CONTEXT.md` | living | The glossary. |
 

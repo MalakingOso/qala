@@ -305,6 +305,51 @@ These come from the four new roadmap sections in `docs/PLAN.md` 16c to 16f. None
 - Blocks: the `bodyMeasures` schema, nothing else.
 - Record in: `docs/DECISIONS.md` P7, `docs/PLAN.md` 16f item 5, `docs/research/RESEARCH-body-composition.md` 5.
 
+### D31 Record the Deno to Bun move (S1)
+
+- Status: [ ] open
+- Question: write the DECISIONS row for replacing Deno with Bun? `docs/PLAN-bun-migration.md` says "Decided 2026-10-13 (owner)", and another session's notes say the owner chose Bun that day (artifact "Qala Deno Exit"), but S1 still says Deno 2 and no row records the change.
+- Options: record it as decided, amending S1 / reopen the choice.
+- Default: record it as decided, with the move still waiting on the LS++ port and the retirement of `packages/liftoscript`, as the plan says.
+- Blocks: nothing now; the move itself waits on LS++.
+- Record in: `docs/DECISIONS.md` S1 (amend) and a new row, `docs/PLAN-bun-migration.md` status line, `docs/ROADMAP.md` tooling track.
+
+### D32 Rest and warm-up planning: Kotlin or Rust (S6, R3)
+
+- Status: [ ] open
+- Question: the Android lifting flow shipped rest and warm-up planning in Kotlin (`app/.../workout/RestPlan.kt` and `Warmup.kt`, ports of `packages/engine/rest.ts` and `warmup.ts`). `docs/rust-core.md` 7 (R3) and `docs/android-native.md` 6 put them in Rust, so there are now two implementations that can drift. Keep Kotlin, or port to `qala-core`?
+- Options: port to Rust oracle-first with golden vectors (as the plates port did) and switch Kotlin to call it / keep Kotlin and amend R3.
+- Default: port to Rust. The Kotlin rest model is also a partial port (no learning multiplier, rep drift or low-readiness adjustment), so a port fixes that too.
+- Blocks: R3's remainder, rest parity with the web.
+- Record in: `docs/DECISIONS.md` S6 note, `docs/rust-core.md` 7, `docs/android-native.md` 6, `docs/ROADMAP.md` Rust track.
+
+### D33 Prescriptions the plates cannot load
+
+- Status: [ ] open
+- Question: the debug seed's GZCLP prescribes 207.5 lb, but the default inventory has 1.25 lb plates at zero pairs, so the flow shows "loads 205". Should program weights round to what the saved inventory can load, or should the default inventory include 1.25s? And is a kg plate inventory wanted (today kg falls back to placeholder rounding)?
+- Options: round prescriptions to the saved inventory / default 1.25s to plenty / leave it, the note is enough. Separately: add a kg inventory / lb only.
+- Default: round prescriptions to the saved inventory, since that's what the lifter can actually put on the bar; lb only for now.
+- Blocks: nothing; it's a correctness polish on the lifting flow.
+- Record in: `docs/DECISIONS.md` (new row), `docs/DESIGN.md` plate sections, `docs/ROADMAP.md` Android track.
+
+### D34 Lifting-flow behaviour that needs a call
+
+- Status: [ ] open
+- Question: four small choices the build left open. (a) When a rest ends with the app in the background: a sound, a notification, or nothing (today a haptic only while Rest shows; the web has a `rest.alert` setting)? (b) Should Today's hero say "Resume workout" when a half-logged draft exists? (c) With Automatic rest off, is a manual rest timer wanted? (d) Should a failed save show the user a message (today the draft stays and the error goes to logcat)?
+- Options: per item, yes or no.
+- Default: (a) a notification, (b) yes, (c) yes, a tap-to-start rest on the set row, (d) yes.
+- Blocks: nothing; polish on A4.
+- Record in: `docs/DECISIONS.md` (new rows), `docs/DESIGN.md` workout and rest sections.
+
+### D35 Settings follow-ons
+
+- Status: [ ] open
+- Question: with Settings built, three follow-ons. (a) When "Build a warm-up" is off, should the Warm-up stage drop off Today's rail (today only the ramp sets remain)? (b) Should collars be editable (fixed at 0 lb now)? (c) Is the Appearance group (theme and title font, which `Theme.kt` says arrives with Settings) next?
+- Options: per item, yes or no.
+- Default: (a) yes, (b) no until someone uses collars, (c) yes.
+- Blocks: nothing.
+- Record in: `docs/DECISIONS.md` (new rows), `docs/DESIGN.md` Settings section, `docs/ROADMAP.md` Android track.
+
 ## Validations (not decisions; real-data gates)
 
 These need the owner's data or device, not an opinion. They stay open until measured.

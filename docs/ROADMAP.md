@@ -110,7 +110,7 @@ Run Rust tests only through `scripts/cargo-test-safe.sh -p <crate>`. A bare `car
 
 ## Owner decisions
 
-All 30 items in `docs/decisions-pending.md` are open as of 2026-10-13. Grouped by what they block:
+All 35 items in `docs/decisions-pending.md` are open as of 2026-10-13 (D31 to D35 were added that night from the A4 build). Grouped by what they block:
 
 | Blocks | Items |
 |---|---|
@@ -126,6 +126,9 @@ All 30 items in `docs/decisions-pending.md` are open as of 2026-10-13. Grouped b
 | Equipment renders | D24 bars |
 | Content | D25 run plans, D26 breathing fallback, D27 beginner exposition, D28 podcast audio, D29 blog home, D30 body photos |
 | Built already, awaiting confirmation | D17 fonts and icons, D18 process leftovers |
+| Tooling | D31 record the Deno to Bun move |
+| Rust core parity | D32 rest and warm-up planning in Kotlin or Rust |
+| Lifting-flow polish (A4 follow-ups) | D33 prescriptions the plates can't load, D34 rest alert, Resume workout, manual rest, save errors, D35 Settings follow-ons |
 
 The queue and the log disagree in places. For example D06 is open while S11 is marked decided and built for the native app. This file follows the queue. Two real-data checks sit beside the queue: V01 (route-matching thresholds) and V02 (voice recheck on the owner's own voice).
 
