@@ -11,11 +11,7 @@ import {
   requireDocOwnership,
 } from "./auth.ts";
 import { lookupElevation } from "./elevation.ts";
-import {
-  type ImportRouteDeps,
-  liveImportDeps,
-  serveImportText,
-} from "./import.ts";
+import { importDepsOnce, serveImportText } from "./import.ts";
 import { LLAMA_DEFAULTS, serveLlmChat } from "./llm.ts";
 import { serveStatic } from "./static.ts";
 import { UserSyncStore } from "./sync.ts";
@@ -48,8 +44,6 @@ export interface ServerState {
   options: ServerOptions;
   store: UserSyncStore;
   syncAdapter: DenoWebSocketServerAdapter;
-  /** Built on first use of /api/import/text (loads the LS++ evaluator). */
-  importDeps?: Promise<ImportRouteDeps>;
 }
 
 export function createState(options: ServerOptions): ServerState {
@@ -131,8 +125,8 @@ export function createHandler(
         return await serveLlmChat(req, state.options.llmBaseUrl);
       }
       if (path === "/api/import/text") {
-        state.importDeps ??= liveImportDeps(state.options.llmBaseUrl);
-        return await serveImportText(req, await state.importDeps);
+        const deps = await importDepsOnce(state.options.llmBaseUrl);
+        return await serveImportText(req, deps);
       }
       if (path === "/api/elevation") {
         return await handleElevation(req, state.options.demDir);

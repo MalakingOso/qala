@@ -1,6 +1,6 @@
 # LS++ (Liftoscript++)
 
-Status 2026-10-13: built and merged, with leftovers. The name is decided (owner, S18). The port and the S21 extensions are in `crates/qala-lspp`; the text import (S19) has its TS half merged (`POST /api/import/text`). Open: MinerU PDF wiring, `POST /api/transcribe` and mic capture, four of the six S21 functions over FFI, and loading the wasm build in the desktop editor and the server (neither `apps/web` nor `server/` does yet). Decision rows are DECISIONS S18 to S21.
+Status 2026-10-14: built and merged, with leftovers. The name is decided (owner, S18). The port and the S21 extensions are in `crates/qala-lspp`; the text import (S19) has its TS half merged (`POST /api/import/text`). The wasm build is loaded by the desktop program editor (checks, Format, dry run; `apps/web/src/lspp/load.ts`) and by the server (`server/lspp.ts`, which the import check uses), from one build in `target/wasm-out/web/`. Open: MinerU PDF wiring, `POST /api/transcribe` and mic capture, and four of the six S21 functions over FFI. Decision rows are DECISIONS S18 to S21.
 
 LS++ is the Rust port in `crates/qala-lspp`: liftosaur's liftoscript plus additive extensions. Programs are still plain text. The vendored TS package stays as the oracle (S17; the upstream commit it was copied from is in `packages/liftoscript/VENDORED`), so every extension has to leave the 60 built-in programs evaluating exactly as before.
 
@@ -23,7 +23,7 @@ All additive, all built and merged (`32cb81c`).
 1. **Error messages with positions.** Every error carries a line, column, span and a one-line fix suggestion. Note the TS evaluator returns `errors[]` (type `parse` or `unknownExercise`) rather than throwing, and its error lines are relative to the day block; pick one convention and document it. The TS evaluator also accepts `99999x8`, only Rust caps sets, so importers bound every number themselves. The import repair loop (section 4) depends on this.
 2. **`fmt`.** One canonical text form. Blank lines are meaningful to the evaluator, so fmt never adds, removes or merges them. `program_to_planner` already exists, so this is mostly a front end plus a round-trip test: `fmt(fmt(x)) == fmt(x)` and `evaluate(fmt(x)) == evaluate(x)` over the 60 built-ins.
 3. **Lint.** Warnings for things that parse but are probably wrong: `too-many-sets` (over `MAX_SETS`), `unused-state` (declared but never mentioned; an assignment counts as use), `empty-program`, `mixed-units`. The built-ins ruled out the first draft: header-only days are rest days, whole empty weeks occur via `Bench[1-3]`, and the kg variants write lb weights.
-4. **Dry run.** "What does week 2 look like if I hit every rep" using the Rust evaluator (compiled to wasm in the desktop shell). Read-only, no history written. Not wired into the desktop shell yet.
+4. **Dry run.** "What does week 2 look like if I hit every rep" using the Rust evaluator (compiled to wasm in the desktop shell). Read-only, no history written. The desktop Programs page has a Dry run card that calls it with the baseline settings (real settings arrive with real data in the web app).
 5. **Partial prescriptions as a first-class idea.** `?+` stays the syntax. The editor and the importers treat "weight unknown" as a state to resolve, not an error, and the dry run shows it as a blank. `unresolved_sets` lists the sets still waiting for a weight.
 
 ## 3. Name and rename scope (S18)
@@ -42,7 +42,7 @@ edit list -> exercise matching (fuzzy, confirm ambiguous) -> emitter (LS++ text)
           -> diff shown to the owner -> confirm -> applied
 ```
 
-Merged (`8f5bd5c`): the edit-list schema, matcher and emitter in `packages/llm`, and `POST /api/import/text` in `server/import.ts` (the confirm step is the same endpoint with `resolutions`). Open: MinerU wiring for PDFs, and `POST /api/transcribe` for voice.
+Merged (`8f5bd5c`): the edit-list schema, matcher and emitter in `packages/llm`, and `POST /api/import/text` in `server/import.ts` (the confirm step is the same endpoint with `resolutions`). The emitted text is checked with the wasm build: syntax errors first (one per broken line, with line, column and the fix idea), then the evaluator's errors. Open: MinerU wiring for PDFs, and `POST /api/transcribe` for voice.
 
 - The edit list is the schema: day or week, exercise name, sets, reps, optional weight, RPE, rest, notes. A missing weight becomes `?+`.
 - The model sees chunks, not the whole PDF. The callisto context is 8192 tokens, so chunk per day or per week and merge the edit lists in code.
@@ -68,7 +68,7 @@ Benchmark (2026-10-01): 10 gym phrases in two Kokoro voices, 20 clips, clean syn
 ## 6. Build order
 
 1. Rename the crates to LS++ and keep every golden suite green. Done, merged (`415fb07`).
-2. Parser error positions, then `fmt`, then lint, then dry run, then `unresolved_sets`. Done in Rust and merged (`32cb81c`). `qala-ffi` exports all six (plus the nine evaluation calls and `qala-core`'s functions): `dry_run`, `unresolved_sets`, `lint_planner` and `format_planner` joined `diagnose_planner` and `diagnose_script` on 2026-10-14, the Gradle build generates their Kotlin bindings, and `LsppToolsFfiTest` calls each one on the JVM (no Kotlin wrapper uses them yet). Open: suggestions for evaluation-time errors and fmt for standalone scripts. The wasm build script already writes `qala_lspp_wasm*` (rebuilt and smoke-tested 2026-10-14); old `qala_liftoscript_wasm*` files in a gitignored `target/wasm-out/` go away on the next `deno task build:wasm`, which empties that directory first.
+2. Parser error positions, then `fmt`, then lint, then dry run, then `unresolved_sets`. Done in Rust and merged (`32cb81c`). `qala-ffi` exports all six (plus the nine evaluation calls and `qala-core`'s functions): `dry_run`, `unresolved_sets`, `lint_planner` and `format_planner` joined `diagnose_planner` and `diagnose_script` on 2026-10-14, the Gradle build generates their Kotlin bindings, and `LsppToolsFfiTest` calls each one on the JVM (no Kotlin wrapper uses them yet). Open: suggestions for evaluation-time errors and fmt for standalone scripts. The wasm build is post-rename (`target/wasm-out/web/qala_lspp_wasm*`, one `--target web` build for Vite and Deno) and the desktop editor and the server load it.
 3. Edit-list schema, emitter and validator in `packages/llm`, tested without any model. Done and merged (`8f5bd5c`).
 4. `POST /api/import/text` against the agent (merged; the confirm step is the same endpoint with `resolutions`), then wire PDF via MinerU (open).
 5. `POST /api/transcribe` against E4B-mm (base64 `input_audio` to `/v1/chat/completions`, wav in, fall back to whisper.cpp when it is down); mic capture on the phone and desktop shells.
