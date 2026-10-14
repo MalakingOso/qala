@@ -72,7 +72,7 @@ qala/
   crates/                   Rust: qala-core (pure logic: engine, availability, HLC, records, plate math), qala-ffi (UniFFI for Kotlin, exports qala-core and LS++), and the LS++ port: qala-lspp, qala-lspp-json (shared JSON boundary), qala-lspp-wasm (web, Deno)
   apps/web/                 React 19 PWA: src/shell-desktop, src/shell-phone, src/shared (charts/ on visx and uPlot), src/theme (tokens.css, fonts.css)
   apps/android/             native Kotlin and Jetpack Compose phone app: app/ (activity, navigation, screens), design/ (generated tokens and icons, fonts, Beamer components), data/ (Room, repositories, the Rust build and UniFFI bindings); run/ follows (docs/android-native.md 3)
-  server/                   Deno: automerge-repo sync (to be replaced by record sync, S11), Tailscale-header auth (to be replaced by accounts, S22), /api/llm proxy, /api/import/text, static files, tiles/ (PMTiles + unpacked z/x/y), elevation.ts (GLO-30)
+  server/                   Deno: automerge-repo sync (to be replaced by record sync, S11), Tailscale-header auth (to be replaced by accounts, S22), /api/llm proxy, /api/import/text, /api/import/pdf, /api/transcribe, static files, tiles/ (PMTiles + unpacked z/x/y), elevation.ts (GLO-30)
   deploy/                   qala.service (systemd --user, runs server/mod.ts), tailscale-serve.md
   docs/                     README.md (index), ROADMAP.md (where we are and what's next), PLAN.md (this plan), DECISIONS.md (the owner's decision log), DESIGN.md (the design system and screens),
                             CONTEXT.md (the glossary), ls-plus-plus.md (the language), rust-core.md (the Rust core plan),
