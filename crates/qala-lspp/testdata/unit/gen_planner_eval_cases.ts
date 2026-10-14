@@ -69,9 +69,19 @@ function errOut(e: any): any {
   };
 }
 
+// A live Lezer node (the `liftoscriptNode` of a progress or update script) has to reach canon()
+// untouched, because canon() collapses it to its name and range. Walking it here instead copies
+// the parent chain and every subtree it points at, and canon() can no longer tell what it was.
+// For the large built-in programs that is millions of objects per case, several GB in all.
+function isLezerNode(v: any): boolean {
+  const ctor = v?.constructor?.name;
+  return ctor === "TreeNode" || ctor === "BufferNode";
+}
+
 function norm(v: any): any {
   if (v instanceof Set) return [...v];
   if (Array.isArray(v)) return v.map(norm);
+  if (isLezerNode(v)) return v;
   if (v && typeof v === "object") {
     const out: any = {};
     for (const [k, x] of Object.entries(v)) out[k] = norm(x);
