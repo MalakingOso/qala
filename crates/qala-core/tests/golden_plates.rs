@@ -24,7 +24,11 @@ fn load() -> Vec<Case> {
     let text = std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("cannot read {path}: {e}"));
     let doc: Value = serde_json::from_str(&text).unwrap_or_else(|e| panic!("{path}: {e}"));
     assert_eq!(doc["version"], json!(1), "{path}: unknown version");
-    assert_eq!(doc["fn"], json!("plates"), "{path}: fn does not match the file name");
+    assert_eq!(
+        doc["fn"],
+        json!("plates"),
+        "{path}: fn does not match the file name"
+    );
     doc["cases"]
         .as_array()
         .unwrap_or_else(|| panic!("{path}: no cases"))
@@ -37,8 +41,14 @@ fn load() -> Vec<Case> {
         .collect()
 }
 
+/// A JSON number, or one of the strings the file uses for inputs JSON cannot hold.
 fn num(v: &Value) -> f64 {
-    v.as_f64().unwrap_or_else(|| panic!("not a number: {v}"))
+    match v.as_str() {
+        Some("NaN") => f64::NAN,
+        Some("Infinity") => f64::INFINITY,
+        Some("-Infinity") => f64::NEG_INFINITY,
+        _ => v.as_f64().unwrap_or_else(|| panic!("not a number: {v}")),
+    }
 }
 
 fn nums(v: &Value) -> Vec<f64> {
@@ -58,15 +68,25 @@ fn assert_value_eq(case: &str, expected: &Value, actual: &Value, path: &str) {
             "{case}: {path}: expected {expected}, got {actual}"
         ),
         (Value::Array(e), Value::Array(a)) => {
-            assert_eq!(e.len(), a.len(), "{case}: {path}: expected {expected}, got {actual}");
+            assert_eq!(
+                e.len(),
+                a.len(),
+                "{case}: {path}: expected {expected}, got {actual}"
+            );
             for (i, (x, y)) in e.iter().zip(a).enumerate() {
                 assert_value_eq(case, x, y, &format!("{path}[{i}]"));
             }
         }
         (Value::Object(e), Value::Object(a)) => {
-            assert_eq!(e.len(), a.len(), "{case}: {path}: expected {expected}, got {actual}");
+            assert_eq!(
+                e.len(),
+                a.len(),
+                "{case}: {path}: expected {expected}, got {actual}"
+            );
             for (k, x) in e {
-                let y = a.get(k).unwrap_or_else(|| panic!("{case}: {path}.{k} missing in {actual}"));
+                let y = a
+                    .get(k)
+                    .unwrap_or_else(|| panic!("{case}: {path}.{k} missing in {actual}"));
                 assert_value_eq(case, x, y, &format!("{path}.{k}"));
             }
         }
@@ -80,15 +100,30 @@ fn run(case: &Case) -> Value {
     let collar = input.get("collarWeight").map(num).unwrap_or(0.0);
     match input["call"].as_str().expect("call") {
         "plan_plates" => {
-            let plan = plan_plates(num(&input["requestedTotal"]), num(&input["barWeight"]), &plates, collar);
+            let plan = plan_plates(
+                num(&input["requestedTotal"]),
+                num(&input["barWeight"]),
+                &plates,
+                collar,
+            );
             serde_json::to_value(plan).expect("plan to json")
         }
         "nearest_loadable" => {
-            let plan = plan_plates(num(&input["requestedTotal"]), num(&input["barWeight"]), &plates, collar);
+            let plan = plan_plates(
+                num(&input["requestedTotal"]),
+                num(&input["barWeight"]),
+                &plates,
+                collar,
+            );
             serde_json::to_value(nearest_loadable(&plan)).expect("load to json")
         }
         "round_weight" => {
-            json!(round_weight(num(&input["targetWeight"]), num(&input["barWeight"]), &plates, collar))
+            json!(round_weight(
+                num(&input["targetWeight"]),
+                num(&input["barWeight"]),
+                &plates,
+                collar
+            ))
         }
         "choose_next" => {
             let choice = choose_next_plates(
@@ -109,7 +144,10 @@ fn run(case: &Case) -> Value {
                 None => Value::Null,
             }
         }
-        "describe_change" => json!(describe_change(&nums(&input["currentPerSide"]), &nums(&input["nextPerSide"]))),
+        "describe_change" => json!(describe_change(
+            &nums(&input["currentPerSide"]),
+            &nums(&input["nextPerSide"])
+        )),
         "shorthand" => json!(plates_shorthand(&nums(&input["perSide"]))),
         "barbell_step" => {
             let fallback = match &input["fallback"] {
@@ -125,7 +163,11 @@ fn run(case: &Case) -> Value {
 #[test]
 fn golden_plates() {
     let cases = load();
-    assert!(cases.len() >= 20, "expected the full oracle set, got {}", cases.len());
+    assert!(
+        cases.len() >= 20,
+        "expected the full oracle set, got {}",
+        cases.len()
+    );
     for case in &cases {
         let actual = run(case);
         assert_value_eq(&case.name, &case.expected, &actual, "$");

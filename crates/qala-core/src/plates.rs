@@ -6,9 +6,10 @@
 //! counts are limited. All rounding goes through `js::js_round`: JS `Math.round`
 //! rounds halves toward +infinity, Rust's `f64::round` away from zero.
 
+use qala_lspp::js::js_number_to_string;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
-use crate::js::js_round;
+use crate::js::{js_max, js_round};
 
 /// Plate-math granularity (`PLATE_MATH_GRANULARITY` in `packages/core/units.ts`).
 pub const GRAN: f64 = 0.25;
@@ -93,22 +94,35 @@ pub struct NextPlateChoice {
     pub plates_moved: usize,
 }
 
+/// `toUnits` as the double TS computes it: `Math.round(w / GRAN)`. It is a whole number for
+/// every finite input, but can be astronomically large or infinite for a huge target.
+fn to_units_f(w: f64) -> f64 {
+    js_round(w / GRAN)
+}
+
+/// [`to_units_f`] as an integer, for plate sizes and sums (saturating; plate weights stay far
+/// below 2^53 units, about 2e15 lb).
 fn to_units(w: f64) -> i64 {
-    js_round(w / GRAN) as i64
+    to_units_f(w) as i64
 }
 
 pub fn from_units(u: i64) -> f64 {
     u as f64 * GRAN
 }
 
-/// `String(Math.round(n * 100) / 100)` for the values plate math produces.
+/// `String(Math.round(n * 100) / 100)`, JS number formatting included (`Infinity`, exponents
+/// from 1e21).
 fn fmt(n: f64) -> String {
-    let v = js_round(n * 100.0) / 100.0;
-    if v == v.trunc() && v.abs() < 1e15 {
-        format!("{}", v as i64)
-    } else {
-        format!("{v}")
-    }
+    js_number_to_string(js_round(n * 100.0) / 100.0)
+}
+
+/// `Math.max(...plates with weight > 0 as units, toUnits(0.25))`, a double like in TS.
+fn max_plate_units(plates: &[PlateEntry]) -> f64 {
+    plates
+        .iter()
+        .filter(|p| p.weight > 0.0)
+        .map(|p| to_units_f(p.weight))
+        .fold(to_units_f(0.25), js_max)
 }
 
 fn desc(xs: &[f64]) -> Vec<f64> {
@@ -136,31 +150,38 @@ struct PlateType {
     limit: i64,
 }
 
-fn plate_types(plates: &[PlateEntry], max_units: i64) -> Vec<PlateType> {
+/// `plateTypes`: the usable plate rows, heaviest first, with their size in units and how many
+/// copies one side may hold. `max_units` is the DP cap, which sets the copy count of an
+/// `"enough"` row (`ceil(cap / units)`).
+fn plate_types(plates: &[PlateEntry], max_units: f64) -> Vec<PlateType> {
     let mut types: Vec<PlateType> = plates
         .iter()
         .filter(|p| p.weight > 0.0)
-        .map(|p| {
-            let units = to_units(p.weight);
-            let limit = match p.pairs {
-                Pairs::Enough => {
-                    if units > 0 {
-                        (max_units + units - 1) / units
-                    } else {
-                        0
-                    }
-                }
-                Pairs::Count(n) => js_round(n.floor()) as i64,
-            };
-            PlateType {
-                weight: p.weight,
-                units,
-                limit: limit.max(0),
+        .filter_map(|p| {
+            let units = to_units_f(p.weight);
+            if !(units > 0.0) {
+                return None;
             }
+            let limit = match p.pairs {
+                Pairs::Enough => js_max(0.0, (max_units / units).ceil()),
+                Pairs::Count(n) => js_max(0.0, n.floor()),
+            };
+            // `NaN > 0` is false, so a NaN count drops the row, as in TS.
+            if !(limit > 0.0) {
+                return None;
+            }
+            Some(PlateType {
+                weight: p.weight,
+                units: units as i64,
+                limit: limit as i64,
+            })
         })
-        .filter(|t| t.units > 0 && t.limit > 0)
         .collect();
-    types.sort_by(|a, b| b.weight.partial_cmp(&a.weight).unwrap_or(std::cmp::Ordering::Equal));
+    types.sort_by(|a, b| {
+        b.weight
+            .partial_cmp(&a.weight)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
     types
 }
 
@@ -178,15 +199,22 @@ fn better_combo(count_a: usize, a: &[f64], count_b: usize, b: &[f64]) -> bool {
 }
 
 /// Best (fewest plates, then heavier) combo for every achievable sum.
-fn build_dp(types: &[PlateType], cap_units: i64) -> std::collections::BTreeMap<i64, DpEntry> {
-    let mut dp: std::collections::BTreeMap<i64, DpEntry> =
-        [(0, DpEntry { count: 0, combo: Vec::new() })].into_iter().collect();
+fn build_dp(types: &[PlateType], cap_units: f64) -> std::collections::BTreeMap<i64, DpEntry> {
+    let mut dp: std::collections::BTreeMap<i64, DpEntry> = [(
+        0,
+        DpEntry {
+            count: 0,
+            combo: Vec::new(),
+        },
+    )]
+    .into_iter()
+    .collect();
     for t in types {
         for _copy in 0..t.limit {
             let snapshot: Vec<(i64, DpEntry)> = dp.iter().map(|(s, e)| (*s, e.clone())).collect();
             for (s, e) in &snapshot {
-                let ns = s + t.units;
-                if ns > cap_units {
+                let ns = s.saturating_add(t.units);
+                if ns as f64 > cap_units {
                     continue;
                 }
                 let nc = e.count + 1;
@@ -221,15 +249,17 @@ fn make_load(per_side: &[f64], bar_weight: f64, collar_weight: f64) -> PlateLoad
 }
 
 /// The achievable sum minimising `key`, then plate count, then heavier plates.
-/// `key` is a distance in units, so smaller is nearer.
+/// `key` is a distance in units, so smaller is nearer. Both are doubles, as in TS: for a
+/// target beyond 2^53 units (or infinite) distinct sums can share a key, and a NaN difference
+/// never replaces the current best.
 fn rank_sums(
     dp: &std::collections::BTreeMap<i64, DpEntry>,
-    keep: impl Fn(i64) -> bool,
-    key: impl Fn(i64) -> i64,
+    keep: impl Fn(f64) -> bool,
+    key: impl Fn(f64) -> f64,
 ) -> Option<i64> {
     let mut best: Option<i64> = None;
     for (s, e) in dp {
-        if !keep(*s) {
+        if !keep(*s as f64) {
             continue;
         }
         let Some(b) = best else {
@@ -237,9 +267,9 @@ fn rank_sums(
             continue;
         };
         let prev = &dp[&b];
-        let dk = key(*s) - key(b);
-        let take = if dk != 0 {
-            dk < 0
+        let dk = key(*s as f64) - key(b as f64);
+        let take = if dk != 0.0 {
+            dk < 0.0
         } else if e.count != prev.count {
             e.count < prev.count
         } else {
@@ -282,22 +312,19 @@ pub fn plan_plates(
         }
         return base;
     }
-    let target_units = to_units(per_side_target);
-    let max_plate_units = plates
-        .iter()
-        .filter(|p| p.weight > 0.0)
-        .map(|p| to_units(p.weight))
-        .max()
-        .unwrap_or_else(|| to_units(0.25))
-        .max(to_units(0.25));
-    let cap_units = target_units + max_plate_units;
+    let target_units = to_units_f(per_side_target);
+    let cap_units = target_units + max_plate_units(plates);
     let types = plate_types(plates, cap_units);
     if types.is_empty() {
         return base;
     }
     let dp = build_dp(&types, cap_units);
-    if let Some(e) = dp.get(&target_units) {
-        base.exact = Some(make_load(&e.combo.clone(), bar_weight, collar_weight));
+    // Every sum is a small whole number, so the target can only be one of them when it is
+    // small enough to be an exact `i64`.
+    if target_units.abs() < 9.0e18 {
+        if let Some(e) = dp.get(&(target_units as i64)) {
+            base.exact = Some(make_load(&e.combo.clone(), bar_weight, collar_weight));
+        }
     }
     // rank over `<` / `>` excludes exact; neighbours surface even when exact exists.
     if let Some(u) = rank_sums(&dp, |s| s < target_units, |s| target_units - s) {
@@ -318,7 +345,11 @@ pub fn nearest_loadable(plan: &PlatePlan) -> Option<PlateLoad> {
         (Some(below), Some(above)) => {
             let d_below = (below.total - plan.requested_total).abs();
             let d_above = (above.total - plan.requested_total).abs();
-            Some(if d_above < d_below { above.clone() } else { below.clone() })
+            Some(if d_above < d_below {
+                above.clone()
+            } else {
+                below.clone()
+            })
         }
         (Some(below), None) => Some(below.clone()),
         (None, Some(above)) => Some(above.clone()),
@@ -386,13 +417,21 @@ pub fn describe_change(current_per_side: &[f64], next_per_side: &[f64]) -> Strin
     if !removed.is_empty() {
         parts.push(format!(
             "take off {}",
-            removed.iter().map(|w| fmt(*w)).collect::<Vec<_>>().join(" + ")
+            removed
+                .iter()
+                .map(|w| fmt(*w))
+                .collect::<Vec<_>>()
+                .join(" + ")
         ));
     }
     if !added.is_empty() {
         parts.push(format!(
             "add {}",
-            added.iter().map(|w| fmt(*w)).collect::<Vec<_>>().join(" + ")
+            added
+                .iter()
+                .map(|w| fmt(*w))
+                .collect::<Vec<_>>()
+                .join(" + ")
         ));
     }
     format!("{} each side", parts.join(", "))
@@ -415,14 +454,7 @@ pub fn choose_next_plates(
     let target = nearest_loadable(&plan)?;
     let side_sum: f64 = target.per_side.iter().sum();
     let target_units = to_units(side_sum);
-    let max_plate_units = plates
-        .iter()
-        .filter(|p| p.weight > 0.0)
-        .map(|p| to_units(p.weight))
-        .max()
-        .unwrap_or_else(|| to_units(0.25))
-        .max(to_units(0.25));
-    let types = plate_types(plates, target_units + max_plate_units);
+    let types = plate_types(plates, target_units as f64 + max_plate_units(plates));
     let combos = enumerate_combos(&types, target_units);
     let cur = desc(current_per_side);
     let mut best: Option<Vec<f64>> = None;
@@ -465,7 +497,10 @@ pub fn plates_shorthand(per_side: &[f64]) -> String {
     } else {
         format!(
             "per side {}",
-            side.iter().map(|w| fmt(*w)).collect::<Vec<_>>().join(" \u{b7} ")
+            side.iter()
+                .map(|w| fmt(*w))
+                .collect::<Vec<_>>()
+                .join(" \u{b7} ")
         )
     }
 }
@@ -493,7 +528,12 @@ pub fn default_barbell_step(plates: &[PlateEntry], fallback: Option<f64>) -> f64
 
 /// Round a bare target total (in the inventory unit) to a loadable total
 /// (`roundWeight` in `packages/core/rounding.ts`).
-pub fn round_weight(target_weight: f64, bar_weight: f64, plates: &[PlateEntry], collar_weight: f64) -> f64 {
+pub fn round_weight(
+    target_weight: f64,
+    bar_weight: f64,
+    plates: &[PlateEntry],
+    collar_weight: f64,
+) -> f64 {
     let plan = plan_plates(target_weight, bar_weight, plates, collar_weight);
     match nearest_loadable(&plan) {
         None => js_round((bar_weight + 2.0 * collar_weight) * 100.0) / 100.0,
@@ -510,5 +550,7 @@ pub fn round_to_step(value: f64, step: f64) -> f64 {
 
 /// True when the total can be loaded exactly with the inventory.
 pub fn is_loadable(total: f64, bar_weight: f64, plates: &[PlateEntry], collar_weight: f64) -> bool {
-    plan_plates(total, bar_weight, plates, collar_weight).exact.is_some()
+    plan_plates(total, bar_weight, plates, collar_weight)
+        .exact
+        .is_some()
 }

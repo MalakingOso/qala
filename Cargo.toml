@@ -20,3 +20,9 @@ opt-level = 1
 lto = false
 codegen-units = 16
 strip = false
+
+# The core fuzz (crates/qala-core/tests/fuzz_core.rs) replays two million cases through the plate
+# DP, which is far too slow unoptimised. Optimise only this crate for tests; overflow checks and
+# debug assertions stay on.
+[profile.test.package.qala-core]
+opt-level = 2
