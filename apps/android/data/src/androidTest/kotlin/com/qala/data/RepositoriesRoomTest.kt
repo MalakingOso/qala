@@ -8,6 +8,15 @@ import com.qala.data.db.QalaDatabase
 import com.qala.data.model.AvailabilityStatus
 import com.qala.data.model.LiftEntryRecord
 import com.qala.data.model.LiftSetRecord
+import com.qala.data.core.DefaultLbPlates
+import com.qala.data.core.PlateEntry
+import com.qala.data.core.PlatePairs
+import com.qala.data.model.EquipmentItem
+import com.qala.data.model.GymSettings
+import com.qala.data.model.OwnedEquipment
+import com.qala.data.model.PlateSettings
+import com.qala.data.model.RestSettings
+import com.qala.data.model.WarmupSettings
 import com.qala.data.model.RunPlan
 import com.qala.data.model.RunPlanDay
 import com.qala.data.model.SkipReason
@@ -129,6 +138,62 @@ class RepositoriesRoomTest {
 
         repo.setExerciseData(JsonObject(mapOf("squat_barbell" to JsonPrimitive(1))))
         assertEquals(setOf("squat_barbell"), repo.exerciseData.first().keys)
+    }
+
+    @Test
+    fun theLiftingSettingsKeepEachLeafAndTheOthersStayAtTheirDefaults() = runBlocking {
+        val repo = SettingsRepository(db, writer, env)
+        assertEquals("nothing written reads as the app's old constants", GymSettings(), repo.gym.first())
+
+        repo.setDefaultBar(35.0)
+        repo.setEzBar(20.0)
+        var g = repo.gym.first()
+        assertEquals(35.0, g.plates.defaultBar, 0.0)
+        assertEquals(20.0, g.plates.ezBar, 0.0)
+        assertEquals("the inventory leaf was never written", DefaultLbPlates, g.plates.plates)
+
+        val inventory = PlateSettings().withPairs(10.0, PlatePairs.Count(0.0)).with55(2.0).plates
+        repo.setPlates(inventory)
+        assertEquals(inventory, repo.gym.first().plates.plates)
+        assertEquals("a bar written earlier is still there", 35.0, repo.gym.first().plates.defaultBar, 0.0)
+
+        repo.setOwned(EquipmentItem.Percussion, false)
+        repo.setOwned(EquipmentItem.Rower, true)
+        repo.setWarmupEnabled(false)
+        repo.setSoftTissue(false)
+        repo.setPreferPercussion(false)
+        repo.setWarmupMinutes(10)
+        repo.setAutoRest(false)
+        repo.setShowPlates(false)
+        g = repo.gym.first()
+        assertEquals(OwnedEquipment(percussion = false, rower = true), g.equipment)
+        assertEquals(WarmupSettings(enabled = false, softTissue = false, preferPercussion = false, minutes = 10), g.warmup)
+        assertEquals(RestSettings(auto = false, showPlates = false), g.rest)
+
+        // They are their own groups: the core's settings and the training days are untouched.
+        assertEquals(listOf(0, 2, 4, 5), repo.settings.first().trainingWeekdays)
+        // Each leaf is a clocked field with an outbox row, like every other settings write.
+        assertTrue(db.outboxDao().pending(10_000).any { it.recordId == "settings-plates" && it.field == "defaultBar" })
+        assertTrue(db.outboxDao().pending(10_000).any { it.recordId == "settings-rest" && it.field == "auto" })
+    }
+
+    @Test
+    fun theLiftingSettingSettersRefuseWhatCannotBeRight() = runBlocking {
+        val repo = SettingsRepository(db, writer, env)
+        for (bad in listOf<suspend () -> Unit>(
+            { repo.setDefaultBar(0.0) },
+            { repo.setEzBar(500.0) },
+            { repo.setWarmupMinutes(1) },
+            { repo.setPlates(listOf(PlateEntry(45.0, PlatePairs.Enough), PlateEntry(45.0, PlatePairs.Count(1.0)))) },
+            { repo.setPlates(listOf(PlateEntry(0.0, PlatePairs.Enough))) },
+        )) {
+            try {
+                bad()
+                org.junit.Assert.fail("should have been refused")
+            } catch (expected: IllegalArgumentException) {
+            }
+        }
+        assertEquals(GymSettings(), repo.gym.first())
     }
 
     @Test
