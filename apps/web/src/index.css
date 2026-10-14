@@ -4031,3 +4031,40 @@ select.field {
 .ring-tip span {
   opacity: 0.75;
 }
+
+/* Dictation control on the program editor (docs/ls-plus-plus.md 4). */
+.dictate {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+}
+.dictate-status {
+  min-height: 1.4em;
+}
+.dictate-dot {
+  width: 10px;
+  height: 10px;
+  background: var(--danger);
+  animation: dictate-pulse 1s ease-in-out infinite;
+}
+@keyframes dictate-pulse {
+  50% {
+    opacity: 0.25;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dictate-dot {
+    animation: none;
+  }
+}
+.dictate-transcript {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 12px;
+}
+.dictate-transcript textarea {
+  width: 100%;
+  resize: vertical;
+}

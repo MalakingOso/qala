@@ -69,6 +69,13 @@ export {
 } from "./importEmit.ts";
 export type { DiffLine, ResolvedItem } from "./importEmit.ts";
 export { importText, resolveEditList } from "./importPipeline.ts";
+export {
+  CHUNK_CHARS,
+  chunkProgramText,
+  importChunks,
+  MAX_CHUNKS,
+} from "./importChunk.ts";
+export type { ChunkedImport, ChunkedText, ImportChunk } from "./importChunk.ts";
 export type {
   ConfirmItem,
   ImportDeps,
