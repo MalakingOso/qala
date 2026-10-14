@@ -1,23 +1,18 @@
 # Roadmap
 
-Where Qala stands and what comes next, in one place. Verified against main at `ee49107` on 2026-10-13. Main is 50 commits ahead of `origin/main` and hasn't been pushed.
+Where Qala stands and what comes next, in one place. Verified against main at `ee49107` on 2026-10-13 and updated after the A4 screens merged the same night. Main is ahead of `origin/main` and hasn't been pushed.
 
 This file lists work that is decided or underway, by track, and links to the plan that holds the detail. It doesn't copy those plans. Choices still to be made are in `docs/decisions-pending.md` (grouped by what they block, below). Choices already made are in `docs/DECISIONS.md`. Every plan doc opens with a status line; if one disagrees with this file, fix both. `docs/README.md` indexes the rest of the docs.
 
 ## Where we are
 
-The web build (desktop and the frozen phone PWA) is v1 and runs entirely on sample data: `apps/web/src` has no `fetch`, `WebSocket` or IndexedDB call. The native Android app is the active work. On main it has the Rust core and FFI, the Room data layer, Today with the day rail, check-in, the skip sheet and status, the weekday picker, and the plate calculator. History and All exercises, Warm-up, Workout and Rest, and Plan are being built on three branches. Run recording, sync, charts and the Coach screen haven't started.
+The web build (desktop and the frozen phone PWA) is v1 and runs entirely on sample data: `apps/web/src` has no `fetch`, `WebSocket` or IndexedDB call. The native Android app is the active work. On main it has the Rust core and FFI, the Room data layer, Today with the day rail, check-in, the skip sheet and status, the weekday picker, the plate calculator, and the lifting loop: Warm-up, Workout and Rest (a finished workout saves real sets and advances the program), Plan, History and All exercises. Run recording, sync, charts and the Coach screen haven't started.
 
 Everything on Android has run on the emulator only. The server still syncs through Automerge and trusts the Tailscale header. Accounts, record sync and blob upload are planned and unbuilt.
 
 ## Merge queue
 
-Order as of 2026-10-13:
-
-1. `plates`: merged (`ee49107`).
-2. `history` (Muse): History and All exercises, plus the plates follow-ups in `058a2bd`.
-3. `workout`: Warm-up, Workout and Rest. It wires Muse's plate API into Rest after rebasing.
-4. `plan`: the Plan screen.
+Empty as of 2026-10-13. Merged that day, in order: `plates` (`ee49107`), `docs` (`d6837a3`), `workout` (`b5e9ae9`), `plan` (`e0e6a8d`), `history` (`17c4926`), and the deploy unit fix.
 
 Beyond the queue, the order of work is the owner's call. The tables below give each item's state and what it waits on.
 
@@ -31,9 +26,9 @@ Plans: `docs/android-native.md` (the app), `docs/PLAN-rail-refresh.md` (the nati
 | Capacitor removed (A7) | done 2026-10-01 | android-native 9 | |
 | Rust core and FFI, Room data layer, Today with day rail, check-in, skip sheet and status, weekday picker (M1 to M4) | done, merged by 2026-10-03 | PLAN-rail-refresh | |
 | Plate calculator | done 2026-10-13 | android-native 8 | |
-| History and All exercises | in flight (`history`) | | merge queue |
-| Warm-up, Workout, Rest | in flight (`workout`) | rest and warm-up planning is Kotlin there; see the Rust track | merge queue |
-| Plan screen | in flight (`plan`) | | merge queue |
+| History and All exercises | done 2026-10-13 | one All exercises grid, opened from the Warm-up, Workout and Rest headers, live during a workout | |
+| Warm-up, Workout, Rest | done 2026-10-13 | a finished workout saves real sets and advances the program through the finish-day scripts; per-side plates on the set rows and Rest; rest and warm-up planning is Kotlin, see the Rust track | |
+| Plan screen | done 2026-10-13 | Start follows Today's stage order; "See what you did" opens History | |
 | Rest of Settings | next | Training status group, editable plate inventory with the 55 lb row, bar defaults; the plates work deferred these | |
 | Navigation library choice | at the first real back stacks | android-native 3 | D20 |
 | Run recording (A2) | not started | recorder service, Room fixes, HR, cues, the four gates in android-native 5; needs R1 in Rust | D11, D14, D15 |
@@ -52,7 +47,7 @@ Plans: `docs/rust-core.md`, `docs/ls-plus-plus.md`.
 | `qala-core`: engine, availability, HLC, records, adapter, Today numbers | done | rust-core 7 (R3 part) | |
 | Plate math with rounding and golden vectors | done 2026-10-13 | `testdata/golden/plates` | |
 | R1 run pipeline and `RunRecorder` | not started | rust-core 7; A2 needs it | |
-| R3 remainder: volume, rest, warm-up, `recommend_next_session` | not in Rust | rust-core 7 still puts them in Rust; the `workout` branch writes rest and warm-up planning in Kotlin (unmerged) | |
+| R3 remainder: volume, rest, warm-up, `recommend_next_session` | not in Rust | rust-core 7 still puts them in Rust; rest and warm-up planning shipped in Kotlin (`app/.../workout/RestPlan.kt`, `Warmup.kt`, ports of `rest.ts` and `warmup.ts`); Rust port or keep Kotlin is the owner's call | |
 | Differential fuzz for the R2 and R3 acceptance lines | not done | none in the repo | |
 | FFI exports of `dry_run`, `unresolved_sets`, `lint_planner`, `format_planner` | next | wasm has them; `qala-ffi` has `diagnose_*` only | |
 | Load the wasm build in the desktop editor and the server | next | diagnostics, dry run, fmt; neither `apps/web` nor `server/` loads it | |

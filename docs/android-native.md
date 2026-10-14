@@ -146,7 +146,7 @@ Status by phase, 2026-10-13:
 | A2 | Not started. Waits on D11. |
 | A3 | Not started. The outbox, clock sidecar and HLC wrapper exist; there is no sync endpoint or client. Waits on D06, D07 and D22. |
 | R5 | Done 2026-10-01. |
-| A4 | Rust side done for what Today needs (engine, availability, readiness, plates). Screens: Today, Check-in and Plate calc built; Warm-up, Workout and Rest in flight on `workout`; Plan in flight on `plan`. The `workout` branch writes rest and warm-up planning in Kotlin, where section 6 and `docs/rust-core.md` 7 (R3) put them in Rust. |
+| A4 | Screens built and merged 2026-10-13: Today, Check-in, Warm-up, Workout, Rest, Plate calc, Plan, plus History and All exercises. Check-in to workout end to end with no network is covered by `WorkoutFlowTest` on the emulator; nothing has run on a real phone. Rest and warm-up planning shipped in Kotlin (ports of `rest.ts` and `warmup.ts`), where section 6 and `docs/rust-core.md` 7 (R3) put them in Rust. |
 | A5, A6 | Not started. |
 | A7 | Done 2026-10-01. |
 
