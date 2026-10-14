@@ -2,7 +2,7 @@
 
 Status 2026-10-13: built and merged, with leftovers. The name is decided (owner, S18). The port and the S21 extensions are in `crates/qala-lspp`; the text import (S19) has its TS half merged (`POST /api/import/text`). Open: MinerU PDF wiring, `POST /api/transcribe` and mic capture, four of the six S21 functions over FFI, and loading the wasm build in the desktop editor and the server (neither `apps/web` nor `server/` does yet). Decision rows are DECISIONS S18 to S21.
 
-LS++ is the Rust port in `crates/qala-lspp`: liftosaur's liftoscript plus additive extensions. Programs are still plain text. The vendored TS package stays as the oracle (S17), so every extension has to leave the 60 built-in programs evaluating exactly as before.
+LS++ is the Rust port in `crates/qala-lspp`: liftosaur's liftoscript plus additive extensions. Programs are still plain text. The vendored TS package stays as the oracle (S17; the upstream commit it was copied from is in `packages/liftoscript/VENDORED`), so every extension has to leave the 60 built-in programs evaluating exactly as before.
 
 ## 1. What already works
 
@@ -28,7 +28,7 @@ All additive, all built and merged (`32cb81c`).
 
 ## 3. Name and rename scope (S18)
 
-Display name: Liftoscript++, short form LS++. File extension `.lspp`. Rust crates and the wasm and Kotlin namespaces use `ls_pp` or `lspp`, since `+` is not allowed in identifiers. Done: the four crates are renamed (`415fb07`), and READMEs and docs call the language LS++. Still open: `deno task gen:liftoscript` and the `testdata/golden/liftoscript/` directory keep their old names. Never touched: `packages/liftoscript` (the oracle keeps liftosaur's names), NOTICE, and the liftosaur credit in the footer. Liftosaur programs stay importable. Programs that use LS++ extensions will not export back to liftosaur.
+Display name: Liftoscript++, short form LS++. File extension `.lspp`. Rust crates and the wasm and Kotlin namespaces use `ls_pp` or `lspp`, since `+` is not allowed in identifiers. Done: the four crates are renamed (`415fb07`), READMEs and docs call the language LS++, the golden vectors live in `testdata/golden/lspp/` and `deno task gen:lspp` regenerates all test data (2026-10-14). Never touched: `packages/liftoscript` (the oracle keeps liftosaur's names), NOTICE, and the liftosaur credit in the footer. Named for the TS oracle on purpose and so kept: `deno task golden:liftoscript` and `fuzz:liftoscript`, `scripts/golden_liftoscript*.ts`, `scripts/gen_liftoscript_testdata.sh`, and the Rust and Kotlin names `qala_settings_to_liftoscript` and `liftoscriptSettings`, which build the oracle's `ISettings`. Liftosaur programs stay importable. Programs that use LS++ extensions will not export back to liftosaur.
 
 ## 4. Import: PDF and voice (S19)
 
@@ -68,7 +68,7 @@ Benchmark (2026-10-01): 10 gym phrases in two Kokoro voices, 20 clips, clean syn
 ## 6. Build order
 
 1. Rename the crates to LS++ and keep every golden suite green. Done, merged (`415fb07`).
-2. Parser error positions, then `fmt`, then lint, then dry run, then `unresolved_sets`. Done in Rust and merged (`32cb81c`). Open: FFI exports of `dry_run`, `unresolved_sets`, `lint_planner` and `format_planner` plus Kotlin regen (wasm exports all six; `qala-ffi`, which also exports `qala-core`, has the nine evaluation calls plus `diagnose_planner` and `diagnose_script`), suggestions for evaluation-time errors, fmt for standalone scripts, and a post-rename wasm build (`target/wasm-out/` still has the pre-rename filenames).
+2. Parser error positions, then `fmt`, then lint, then dry run, then `unresolved_sets`. Done in Rust and merged (`32cb81c`). `qala-ffi` exports all six (plus the nine evaluation calls and `qala-core`'s functions): `dry_run`, `unresolved_sets`, `lint_planner` and `format_planner` joined `diagnose_planner` and `diagnose_script` on 2026-10-14, the Gradle build generates their Kotlin bindings, and `LsppToolsFfiTest` calls each one on the JVM (no Kotlin wrapper uses them yet). Open: suggestions for evaluation-time errors and fmt for standalone scripts. The wasm build script already writes `qala_lspp_wasm*` (rebuilt and smoke-tested 2026-10-14); old `qala_liftoscript_wasm*` files in a gitignored `target/wasm-out/` go away on the next `deno task build:wasm`, which empties that directory first.
 3. Edit-list schema, emitter and validator in `packages/llm`, tested without any model. Done and merged (`8f5bd5c`).
 4. `POST /api/import/text` against the agent (merged; the confirm step is the same endpoint with `resolutions`), then wire PDF via MinerU (open).
 5. `POST /api/transcribe` against E4B-mm (base64 `input_audio` to `/v1/chat/completions`, wav in, fall back to whisper.cpp when it is down); mic capture on the phone and desktop shells.

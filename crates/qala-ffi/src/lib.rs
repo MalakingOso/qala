@@ -220,3 +220,25 @@ pub fn diagnose_script(request: String) -> Result<String, QalaError> {
     Ok(api::diagnose_script(&request)?)
 }
 
+// Dry run and editor tools. `dry_run` and `unresolved_sets` take a request object; `lint_planner`
+// and `format_planner` take the raw program text, like `diagnose_planner`.
+#[uniffi::export]
+pub fn dry_run(request: String) -> Result<String, QalaError> {
+    Ok(api::dry_run(&request)?)
+}
+
+#[uniffi::export]
+pub fn unresolved_sets(request: String) -> Result<String, QalaError> {
+    Ok(api::unresolved_sets(&request)?)
+}
+
+#[uniffi::export]
+pub fn lint_planner(request: String) -> Result<String, QalaError> {
+    Ok(api::lint_planner(&request)?)
+}
+
+#[uniffi::export]
+pub fn format_planner(request: String) -> Result<String, QalaError> {
+    Ok(api::format_planner(&request)?)
+}
+

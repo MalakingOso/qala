@@ -10,7 +10,7 @@ use std::path::{Path, PathBuf};
 use serde_json::{Map, Value};
 
 pub fn golden_dir() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../testdata/golden/liftoscript")
+    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../testdata/golden/lspp")
 }
 
 pub fn load(rel: &str) -> Value {

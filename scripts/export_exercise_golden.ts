@@ -1,5 +1,5 @@
 // Golden vectors for crates/qala-lspp/src/exercise.rs and muscle.rs, computed by the TS
-// oracle. Writes testdata/golden/liftoscript/exercise_lookup.json and exercise_functions.json.
+// oracle. Writes testdata/golden/lspp/exercise_lookup.json and exercise_functions.json.
 //
 //   deno run --allow-all --config packages/liftoscript/deno.json scripts/export_exercise_golden.ts
 
@@ -63,7 +63,7 @@ import { availableMuscles, equipments, type IExercise, type ISettings } from "..
 // deno-lint-ignore no-explicit-any
 type Any = any;
 
-const outDir = new URL("../testdata/golden/liftoscript/", import.meta.url);
+const outDir = new URL("../testdata/golden/lspp/", import.meta.url);
 const builtinDir = new URL("../packages/liftoscript/programs/builtin/", import.meta.url);
 
 // ---- shared custom exercises and settings ----------------------------------------------------

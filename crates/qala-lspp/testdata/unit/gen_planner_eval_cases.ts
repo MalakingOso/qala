@@ -6,7 +6,7 @@
 // Writes cases_planner_eval.json next to this file.
 //
 // The built-in programs' PlannerEvaluator_forceEvaluate output is already in
-// testdata/golden/liftoscript/builtins*/ (the `evaluated` case), so the Rust tests replay those
+// testdata/golden/lspp/builtins*/ (the `evaluated` case), so the Rust tests replay those
 // directly. This file records what the goldens do not cover: hand-written programs that hit the
 // reuse / conflict / repeat error paths, evaluateFull, topLineItems / groupedTopLines, compact and
 // generateFullText.

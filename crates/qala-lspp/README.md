@@ -14,7 +14,7 @@ scripts/cargo-test-safe.sh -p qala-lspp --lib planner_parse -- --test-threads=1
 About 80 MB of the test data is generated and gitignored. On a fresh clone, regenerate it first, or the tests will not compile (they `include_str!` the unit cases) or will skip:
 
 ```sh
-deno task gen:liftoscript      # runs every generator against the TS oracle, deterministic
+deno task gen:lspp      # runs every generator against the TS oracle, deterministic
 ```
 
-Checked in: `testdata/golden/liftoscript/{builtins,builtins_kg}/`, the finish-day, next-history-entry, bindings and exercise goldens, and `data/`.
+Checked in: `testdata/golden/lspp/{builtins,builtins_kg}/`, the finish-day, next-history-entry, bindings and exercise goldens, and `data/`.

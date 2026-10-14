@@ -1065,7 +1065,7 @@ mod tests {
 
     fn golden_dir() -> PathBuf {
         PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../testdata/golden/liftoscript/lezer_trees")
+            .join("../../testdata/golden/lspp/lezer_trees")
     }
 
     fn dump(n: &Node) -> String {

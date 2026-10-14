@@ -1350,7 +1350,7 @@ mod tests {
         let root = std::env::var("QALA_GOLDEN_ROOT")
             .map(PathBuf::from)
             .unwrap_or_else(|_| PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../.."));
-        root.join("testdata/golden/liftoscript/lezer_trees")
+        root.join("testdata/golden/lspp/lezer_trees")
     }
 
     fn read_json(path: &std::path::Path) -> serde_json::Value {
