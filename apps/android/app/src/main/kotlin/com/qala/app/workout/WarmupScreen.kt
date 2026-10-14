@@ -95,7 +95,7 @@ fun WarmupScreen(day: Int?, onBack: () -> Unit, onStart: () -> Unit, onSkip: () 
         ) {
             val ready = (load as? WarmupLoad.Ready)?.view
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.Top) {
-                FlowIconButton(QalaIcons.ChevronLeft, "Back to Today", onBack)
+                FlowIconButton(QalaIcons.ChevronLeft, "Back", onBack)
                 Column(Modifier.weight(1f).padding(top = 2.dp)) {
                     GroupLabel(if (ready != null) "Before ${ready.dayName} · ${ready.plan.minutes} min" else "Before the lift", Modifier.padding(bottom = 2.dp))
                     QalaText("Warm-up", Modifier.semantics { heading() }, QalaType.stageTitle, c.fg)

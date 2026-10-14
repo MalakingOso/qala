@@ -226,8 +226,8 @@ class WorkoutFlowTest {
         logSet()
         logSet()
         waitForText("Log set 3")
-        // Back to Today (the in-app button), then the same Start workout comes back on set 3 with two sets logged.
-        rule.onNodeWithContentDescription("Back to Today").performClick()
+        // Back (the in-app button), then the same Start workout comes back on set 3 with two sets logged.
+        rule.onNodeWithContentDescription("Back").performClick()
         railSays("Day stages: lift now, 2 of 6 done")
         assertEquals(2, container.workout.state.value!!.loggedSets)
         rule.onNodeWithText("Start workout").performClick()

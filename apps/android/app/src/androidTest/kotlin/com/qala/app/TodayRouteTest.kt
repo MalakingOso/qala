@@ -146,7 +146,7 @@ class TodayRouteTest {
         rule.onNodeWithText("Start warm-up").assertExists()
         rule.onNodeWithText("Start warm-up").performClick()
         waitForText("Easy cardio")
-        rule.onNodeWithContentDescription("Back to Today").performClick()
+        rule.onNodeWithContentDescription("Back").performClick()
         rule.onNodeWithText("Start warm-up").assertExists()
         railSays("Day stages: warm-up now, 1 of 6 done")             // leaving the warm-up records nothing
     }

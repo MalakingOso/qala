@@ -211,7 +211,7 @@ private fun Header(
     onFinish: () -> Unit,
 ) {
     Row(Modifier.fillMaxWidth().padding(bottom = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Top) {
-        FlowIconButton(QalaIcons.ChevronLeft, "Back to Today", onBack)
+        FlowIconButton(QalaIcons.ChevronLeft, "Back", onBack)
         Column(Modifier.weight(1f).padding(start = 2.dp, top = 2.dp)) {
             GroupLabel("${state.programName} · ${state.dayName} · ${formatClock(elapsedSec)} in")
             QalaText("Workout", Modifier.semantics { heading() }, QalaType.stageTitle, Qala.colors.fg, maxLines = 1)
