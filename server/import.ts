@@ -13,6 +13,7 @@ import {
   type CatalogEntry,
   type ChatMessage,
   type ChatTransport,
+  IMPORT_LIMITS,
   type ImportDeps,
   type ImportProposal,
   importText,
@@ -29,8 +30,12 @@ import {
   proxyChatCompletions,
 } from "./llm.ts";
 
-/** Request body cap. The text cap is MAX_IMPORT_CHARS; this guards the JSON. */
-export const MAX_IMPORT_BODY_BYTES = 64 * 1024;
+/**
+ * Request body cap. The text cap is MAX_IMPORT_CHARS; this guards the JSON,
+ * which for the confirm step carries a whole edit list (up to
+ * IMPORT_LIMITS.maxEditListItems items from a PDF import).
+ */
+export const MAX_IMPORT_BODY_BYTES = 256 * 1024;
 
 /** Everything the route needs from outside, so tests can inject fakes. */
 export interface ImportRouteDeps {
@@ -195,7 +200,11 @@ export async function serveImportText(
       currentProgram,
     );
   } else if (body["editList"] !== undefined) {
-    const { items, rejected } = validateEditList(body["editList"], units);
+    const { items, rejected } = validateEditList(
+      body["editList"],
+      units,
+      IMPORT_LIMITS.maxEditListItems,
+    );
     proposal = items.length === 0
       ? {
         status: "invalid",

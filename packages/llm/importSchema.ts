@@ -58,7 +58,13 @@ export const IMPORT_LIMITS = {
   maxWeightKg: 1000,
   maxWeeks: 52,
   maxDays: 14,
+  /** Items accepted from one model reply. */
   maxItems: 200,
+  /**
+   * Items in a merged edit list (a PDF import joins one reply per chunk) and
+   * in a list the client sends back for the confirm step.
+   */
+  maxEditListItems: 600,
   minRestSec: 5,
   maxRestSec: 1800,
   maxNameChars: 80,
@@ -222,6 +228,7 @@ function validateItem(raw: unknown, defaultUnit: WeightUnit): ItemOutcome {
 export function validateEditList(
   raw: unknown,
   defaultUnit: WeightUnit = "lb",
+  maxItems: number = IMPORT_LIMITS.maxItems,
 ): EditListResult {
   if (!isRecord(raw) || !Array.isArray(raw["items"])) {
     return {
@@ -233,7 +240,7 @@ export function validateEditList(
   const rejected: RejectedItem[] = [];
   const list = raw["items"] as unknown[];
   for (let i = 0; i < list.length; i++) {
-    if (i >= IMPORT_LIMITS.maxItems) {
+    if (i >= maxItems) {
       rejected.push({ index: i, reason: "too many items, rest dropped" });
       break;
     }

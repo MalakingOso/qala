@@ -240,3 +240,28 @@ Deno.test("a client-supplied edit list is validated like model output", async ()
   assertEquals(body.status, "invalid");
   assertEquals(body.rejected.length, 1);
 });
+
+Deno.test("the confirm step takes a whole PDF edit list, past one reply's 200 items", async () => {
+  const { deps, calls } = depsWith(PROGRAM);
+  const names = [
+    "Squat",
+    "Bench Press",
+    "Incline Bench Press",
+    "Pull Up",
+    "Overhead Press",
+  ];
+  const items = Array.from({ length: 250 }, (_, i) => ({
+    week: Math.floor(i / 20) + 1,
+    day: Math.floor((i % 20) / 5) + 1,
+    exercise: names[i % 5],
+    sets: 3,
+    reps: 5,
+  }));
+  const res = await serveImportText(post({ editList: { items } }), deps);
+  assertEquals(res.status, 200);
+  const body = await res.json();
+  assertEquals(body.status, "ready");
+  assertEquals(body.items.length, 250);
+  assertEquals(body.rejected.length, 0);
+  assertEquals(calls.length, 0, "the confirm step never calls the model");
+});
