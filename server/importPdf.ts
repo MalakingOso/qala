@@ -64,6 +64,8 @@ export interface PdfImportDeps {
   pdfinfo: string;
   pdftotext: string;
   mineruTimeoutMs?: number;
+  /** Server-side log for raw helper output; defaults to console.error. */
+  log?: (message: string) => void;
   /** Total time allowed to receive the upload. Tests pass a short one. */
   uploadTimeoutMs?: number;
   /** Time allowed with no chunk arriving. Tests pass a short one. */
@@ -258,6 +260,7 @@ export async function handlePdfImport(
         deps.mineru,
         deps.run,
         deps.mineruTimeoutMs ?? MINERU_DEFAULTS.timeoutMs,
+        deps.log,
       );
       if (m.ok) {
         text = contentListToMarkdown(m.blocks);

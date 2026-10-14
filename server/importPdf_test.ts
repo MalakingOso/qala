@@ -21,7 +21,7 @@ import {
   type PdfImportDeps,
   SCAN_MESSAGE,
 } from "./importPdf.ts";
-import type { MineruConfig } from "./mineru.ts";
+import { type MineruConfig, redactLogLine } from "./mineru.ts";
 
 const fixture = (name: string) =>
   Deno.readFile(new URL(`../testdata/import/${name}`, import.meta.url));
@@ -75,7 +75,14 @@ const CONTENT_LIST = [
   },
 ];
 
-type MineruMode = "ok" | "exit2" | "missing" | "timeout" | "empty" | "junk";
+type MineruMode =
+  | "ok"
+  | "exit2"
+  | "leaky"
+  | "missing"
+  | "timeout"
+  | "empty"
+  | "junk";
 
 const RESULT: CommandResult = {
   code: 0,
@@ -85,6 +92,10 @@ const RESULT: CommandResult = {
   truncated: false,
   spawnFailed: false,
 };
+
+/** What an adapter crash could print: a URL, a bearer token, keys, a long token. */
+const LEAKY_STDERR =
+  "Traceback ...\n[adapter] error: auth failed for Bearer sk-live1234567890abcdef at http://127.0.0.1:30000/v1/models?api_key=hunter2 token=AbCdEf0123456789AbCdEf0123456789";
 
 /** Real pdfinfo and pdftotext; the MinerU adapter is answered by `mode`. */
 function runnerFor(
@@ -106,6 +117,8 @@ function runnerFor(
           };
         case "timeout":
           return { ...RESULT, code: null, timedOut: true };
+        case "leaky":
+          return { ...RESULT, code: 1, stderr: LEAKY_STDERR };
         case "exit2":
           return {
             ...RESULT,
@@ -179,6 +192,7 @@ function depsFor(
     pdfinfo: "/usr/bin/pdfinfo",
     pdftotext: "/usr/bin/pdftotext",
     readGate: createGate(4),
+    log: () => {},
     ...over,
   };
 }
@@ -278,8 +292,9 @@ Deno.test("MinerU down (adapter exit 2): pdftotext reads the PDF and the respons
     body.source.notice,
   );
   assert(
-    body.source.notice.includes("did not answer /v1/models"),
-    body.source.notice,
+    !body.source.notice.includes("/v1/models") &&
+      !body.source.notice.includes("127.0.0.1"),
+    "the adapter's own message stays off the wire",
   );
   assertEquals(body.notes[0], body.source.notice);
   assertEquals(body.source.chunks, 4, "pdftotext text splits the same way");
@@ -287,12 +302,68 @@ Deno.test("MinerU down (adapter exit 2): pdftotext reads the PDF and the respons
   assertEquals(body.items[4].week, 2);
 });
 
+Deno.test("the client gets fixed MinerU reasons; the raw stderr is logged redacted", async () => {
+  const logged: string[] = [];
+  for (const mode of ["exit2", "leaky"] as const) {
+    const res = await handlePdfImport(
+      upload(await workoutPdf()),
+      depsFor(mode, { log: (m) => logged.push(m) }),
+    );
+    const raw = JSON.stringify(await res.json());
+    for (
+      const secret of [
+        "hunter2",
+        "sk-live",
+        "127.0.0.1",
+        "AbCdEf",
+        "http://",
+        "v1/models",
+      ]
+    ) {
+      assert(!raw.includes(secret), `${mode}: response leaks ${secret}`);
+    }
+    assert(
+      raw.includes(mode === "exit2" ? "MinerU is not ready" : "MinerU failed"),
+      raw,
+    );
+  }
+  assertEquals(logged.length, 2);
+  assert(logged[0].startsWith("[mineru] adapter exit 2: "), logged[0]);
+  assert(logged[0].includes("<url>"), "the URL is redacted in the log too");
+  assert(logged[1].startsWith("[mineru] adapter exit 1: "), logged[1]);
+  for (const secret of ["hunter2", "sk-live", "127.0.0.1", "AbCdEf"]) {
+    assert(!logged.join("\n").includes(secret), `log leaks ${secret}`);
+  }
+});
+
+Deno.test("log redaction takes out URLs, bearer tokens, key=value secrets and long tokens", () => {
+  assertEquals(
+    redactLogLine("see https://user:pw@host.example:8443/path?x=1 now"),
+    "see <url> now",
+  );
+  assertEquals(
+    redactLogLine("Authorization: Bearer abc.def"),
+    "Authorization=<redacted> <redacted>",
+  );
+  assertEquals(redactLogLine("Bearer abc.def"), "Bearer <redacted>");
+  assertEquals(redactLogLine("api-key = hunter2 ok"), "api-key=<redacted> ok");
+  assertEquals(redactLogLine("sk-abcdefgh12345678"), "<redacted>");
+  assertEquals(
+    redactLogLine("id 0123456789abcdef01234567 end"),
+    "id <redacted> end",
+  );
+  assertEquals(
+    redactLogLine("plain words and 42 stay"),
+    "plain words and 42 stay",
+  );
+});
+
 Deno.test("every MinerU failure falls back: missing, timeout, no text, bad output, switched off", async () => {
   const reasons: [MineruMode | "off", string][] = [
     ["missing", "not installed"],
-    ["timeout", "did not finish"],
+    ["timeout", "timed out"],
     ["empty", "found no text"],
-    ["junk", "could not be read"],
+    ["junk", "MinerU failed"],
     ["off", "switched off"],
   ];
   for (const [mode, reason] of reasons) {

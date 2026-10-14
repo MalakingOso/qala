@@ -48,6 +48,17 @@ export function liveMineruConfig(): MineruConfig | null {
   };
 }
 
+/**
+ * The only reasons the client ever sees. What the adapter actually printed
+ * stays in the server log, because its stderr can carry URLs, paths and keys.
+ */
+export const MINERU_REASONS = {
+  notInstalled: "MinerU is not installed on this server",
+  notReady: "MinerU is not ready",
+  timedOut: "MinerU timed out",
+  failed: "MinerU failed",
+} as const;
+
 export type MineruResult =
   | { ok: true; blocks: unknown }
   | { ok: false; reason: string };
@@ -66,6 +77,26 @@ function lastLine(stderr: string): string {
 }
 
 /**
+ * Take URLs, bearer tokens, `key=value` secrets and long key-like tokens out
+ * of a line before it is logged. Best effort: the line is the adapter's own
+ * message, not user text, but it can echo a configured URL or API key.
+ */
+export function redactLogLine(line: string): string {
+  return line
+    .replace(/\b[a-z][a-z0-9+.-]*:\/\/\S+/gi, "<url>")
+    .replace(/\bBearer\s+\S+/gi, "Bearer <redacted>")
+    .replace(
+      /\b(api[_-]?key|token|secret|password|authorization)\s*[=:]\s*\S+/gi,
+      "$1=<redacted>",
+    )
+    .replace(/\bsk-[A-Za-z0-9_-]{8,}/g, "<redacted>")
+    .replace(
+      /\b(?=[A-Za-z0-9_\-+/=]*\d)[A-Za-z0-9_\-+/=]{24,}\b/g,
+      "<redacted>",
+    );
+}
+
+/**
  * Parse `pdfPath` with MinerU. `workDir` is a directory the caller owns and
  * removes; the adapter creates `workDir/mineru` inside it. Never throws: any
  * failure comes back as `{ ok: false, reason }` so the caller can fall back.
@@ -76,6 +107,7 @@ export async function runMineru(
   cfg: MineruConfig,
   run: CommandRunner,
   timeoutMs: number = MINERU_DEFAULTS.timeoutMs,
+  log: (message: string) => void = console.error,
 ): Promise<MineruResult> {
   const outDir = `${workDir}/mineru`;
   const env = scrubbedEnv();
@@ -106,21 +138,24 @@ export async function runMineru(
     ownSession: true,
   });
   if (r.spawnFailed) {
-    return { ok: false, reason: "MinerU is not installed on this server" };
+    log(
+      `[mineru] cannot start the adapter: ${redactLogLine(lastLine(r.stderr))}`,
+    );
+    return { ok: false, reason: MINERU_REASONS.notInstalled };
   }
   if (r.timedOut) {
-    return {
-      ok: false,
-      reason: `MinerU did not finish within ${Math.round(timeoutMs / 1000)} s`,
-    };
+    log(`[mineru] timed out after ${Math.round(timeoutMs / 1000)} s`);
+    return { ok: false, reason: MINERU_REASONS.timedOut };
   }
   if (r.code !== 0) {
-    const why = lastLine(r.stderr);
+    log(
+      `[mineru] adapter exit ${r.code}: ${redactLogLine(lastLine(r.stderr))}`,
+    );
+    // Exit 2 is the adapter's own "a precondition failed" (vLLM down, models
+    // missing); anything else is a crash.
     return {
       ok: false,
-      reason: r.code === 2 && why !== ""
-        ? `MinerU is not ready: ${why}`
-        : `MinerU failed (exit ${r.code})${why === "" ? "" : `: ${why}`}`,
+      reason: r.code === 2 ? MINERU_REASONS.notReady : MINERU_REASONS.failed,
     };
   }
   try {
@@ -135,14 +170,21 @@ export async function runMineru(
       }
     }
     if (file === undefined) {
-      return { ok: false, reason: "MinerU wrote no content list" };
+      log("[mineru] the adapter wrote no content list");
+      return { ok: false, reason: MINERU_REASONS.failed };
     }
     const size = (await Deno.stat(file)).size;
     if (size > MINERU_DEFAULTS.maxContentListBytes) {
-      return { ok: false, reason: "MinerU output was too large to read" };
+      log(`[mineru] content list is ${size} bytes, over the limit`);
+      return { ok: false, reason: MINERU_REASONS.failed };
     }
     return { ok: true, blocks: JSON.parse(await Deno.readTextFile(file)) };
-  } catch {
-    return { ok: false, reason: "MinerU output could not be read" };
+  } catch (err) {
+    log(
+      `[mineru] could not read the content list: ${
+        err instanceof Error ? err.name : "error"
+      }`,
+    );
+    return { ok: false, reason: MINERU_REASONS.failed };
   }
 }
