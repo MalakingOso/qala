@@ -12,7 +12,7 @@ Everything on Android has run on the emulator only. The server still syncs throu
 
 ## Merge queue
 
-Empty as of 2026-10-13. Merged that day, in order: `plates` (`ee49107`), `docs` (`d6837a3`), `workout` (`b5e9ae9`), `plan` (`e0e6a8d`), `history` (`17c4926`), and the deploy unit fix.
+In flight on 2026-10-14, each on its own agent branch: the Coach route and screen (D10), the LS++ wasm in the desktop editor and the server, PDF and voice import. Merged 2026-10-14: FFI exports, the vendored commit and the rename leftovers (`8e48051`). Merged 2026-10-13, in order: `plates` (`ee49107`), `docs` (`d6837a3`), `workout` (`b5e9ae9`), `plan` (`e0e6a8d`), `history` (`17c4926`), and the deploy unit fix.
 
 Beyond the queue, the order of work is the owner's call. The tables below give each item's state and what it waits on.
 
@@ -50,12 +50,13 @@ Plans: `docs/rust-core.md`, `docs/ls-plus-plus.md`.
 | R1 run pipeline and `RunRecorder` | not started | rust-core 7; A2 needs it | |
 | R3 remainder: volume, rest, warm-up, `recommend_next_session` | not in Rust | rust-core 7 still puts them in Rust; rest and warm-up planning shipped in Kotlin (`app/.../workout/RestPlan.kt`, `Warmup.kt`, ports of `rest.ts` and `warmup.ts`); Rust port or keep Kotlin is the owner's call | |
 | Differential fuzz for the R2 and R3 acceptance lines | not done | none in the repo | |
-| FFI exports of `dry_run`, `unresolved_sets`, `lint_planner`, `format_planner` | next | wasm has them; `qala-ffi` has `diagnose_*` only | |
+| FFI exports of `dry_run`, `unresolved_sets`, `lint_planner`, `format_planner` | done 2026-10-14 | Kotlin bindings generate; `LsppToolsFfiTest` covers them; the app doesn't call them yet | |
 | Load the wasm build in the desktop editor and the server | next | diagnostics, dry run, fmt; neither `apps/web` nor `server/` loads it | |
 | PDF import through MinerU | next | ls-plus-plus 4 | |
 | Speech import: `POST /api/transcribe`, mic capture | next | ls-plus-plus 4, 5 | V02 |
-| Record the vendored liftosaur commit (S17) | open chore | no hash on record | |
-| Rename leftovers | open | `gen:liftoscript`, `testdata/golden/liftoscript/`, pre-rename names in `target/wasm-out/` | |
+| Record the vendored liftosaur commit (S17) | done 2026-10-14 | `5a73c87`, the newest of 26 master commits whose files match; `packages/liftoscript/VENDORED` has the method and the 14 locally changed files, and the vendor script records the hash from now on | |
+| Rename leftovers | done 2026-10-14 | `testdata/golden/lspp/`, `gen:lspp`; names that run the TS oracle (`golden:liftoscript`, `fuzz:liftoscript`) keep them, per S18 | |
+| `gen:lspp` runs out of memory | open | `crates/qala-lspp/testdata/unit/gen_planner_eval_cases.ts` hits the 7 GB V8 cap on Deno 2.9.7, from a clean main too, so a fresh clone can't generate `cases_planner_eval.json`; existing checkouts have it | |
 | Generator port (R4) | deferred 2026-10-14 (owner) | rust-core 7; later the phone pulls generated workouts from the server instead | |
 | Retire `packages/liftoscript` as the oracle | not started | gate for the Bun move | |
 
