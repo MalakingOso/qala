@@ -1,11 +1,11 @@
 // Smoke test for the wasm build of qala-lspp-wasm. Run `deno task build:wasm` first.
-// Checks the exported JSON entry points against testdata/golden/liftoscript, with the same
+// Checks the exported JSON entry points against testdata/golden/lspp, with the same
 // normalizations as crates/qala-lspp/tests/golden.rs.
 import * as q from "../target/wasm-out/deno/qala_lspp_wasm.js";
 
 type J = unknown;
 const golden = (f: string) =>
-  JSON.parse(Deno.readTextFileSync(new URL(`../testdata/golden/liftoscript/${f}`, import.meta.url)));
+  JSON.parse(Deno.readTextFileSync(new URL(`../testdata/golden/lspp/${f}`, import.meta.url)));
 
 const isObj = (v: J): v is Record<string, J> => typeof v === "object" && v !== null && !Array.isArray(v);
 

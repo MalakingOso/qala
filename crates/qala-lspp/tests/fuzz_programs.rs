@@ -1,5 +1,5 @@
 //! Program-level differential fuzz: replays every case in
-//! `testdata/golden/liftoscript/fuzz/programs_fuzz_*.json` (written by
+//! `testdata/golden/lspp/fuzz/programs_fuzz_*.json` (written by
 //! `deno task fuzz:liftoscript`) through the Rust port and compares against the
 //! TS oracle. The comparison helpers below are copied from `golden.rs` and
 //! follow the same normalisation rules (see the golden README and the header
@@ -28,7 +28,7 @@ use qala_lspp::planner_program;
 use qala_lspp::util::generator::SequentialUid;
 
 fn golden_dir() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../testdata/golden/liftoscript")
+    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../testdata/golden/lspp")
 }
 
 fn load(path: &Path) -> Value {

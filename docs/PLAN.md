@@ -58,7 +58,7 @@ Name: **Qala**. Location: `/home/berkley/Programming/qala`. Systemd unit `qala.s
 
 ```
 qala/
-  deno.json                 workspace; tasks: dev, build, test, serve, vendor, build:android (Gradle `assembleDebug` of `apps/android`), gen:android (Kotlin tokens and icons from the web sources), tiles:extract (pmtiles extract + unpack to z/x/y), dem:fetch (GLO-30 tiles for the region), golden:liftoscript, golden:engine, golden:plates and gen:liftoscript (oracle goldens), build:wasm and smoke:wasm (the LS++ wasm build)
+  deno.json                 workspace; tasks: dev, build, test, serve, vendor, build:android (Gradle `assembleDebug` of `apps/android`), gen:android (Kotlin tokens and icons from the web sources), tiles:extract (pmtiles extract + unpack to z/x/y), dem:fetch (GLO-30 tiles for the region), golden:liftoscript, golden:engine, golden:plates and gen:lspp (oracle goldens), build:wasm and smoke:wasm (the LS++ wasm build)
   LICENSE (AGPL-3.0), NOTICE (liftosaur, fonts, Lucide, visx, uPlot attributions), README.md
   assets/fonts/             QalaTest-*, DMMono-*, Faustina-* faces; qala-test/work/ (font build scripts)
   mockups/                  build.mjs and the generated review canvas; not app code

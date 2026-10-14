@@ -1002,8 +1002,8 @@ mod tests {
         }
     }
 
-    const LOOKUP: &str = include_str!("../../../testdata/golden/liftoscript/exercise_lookup.json");
-    const FUNCTIONS: &str = include_str!("../../../testdata/golden/liftoscript/exercise_functions.json");
+    const LOOKUP: &str = include_str!("../../../testdata/golden/lspp/exercise_lookup.json");
+    const FUNCTIONS: &str = include_str!("../../../testdata/golden/lspp/exercise_functions.json");
 
     fn parse(s: &str) -> Value {
         serde_json::from_str(s).expect("golden parses")

@@ -24,7 +24,7 @@ class ProgramEngineTest {
 
     @Test
     fun theEmbeddedTextIsTheGoldenText() {
-        val doc = TestRepo.json("testdata/golden/liftoscript/builtins/gzclp.json").jsonObject
+        val doc = TestRepo.json("testdata/golden/lspp/builtins/gzclp.json").jsonObject
         val case = doc.getValue("cases").jsonArray.map { it.jsonObject }.first { it.getValue("fn").jsonPrimitive.content == "forceEvaluateText" }
         assertEquals(case.getValue("inputs").jsonObject.getValue("programText").jsonPrimitive.content, GzclpProgram.TEXT)
         assertEquals("gzclp.md", case.getValue("inputs").jsonObject.getValue("name").jsonPrimitive.content)

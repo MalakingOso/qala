@@ -8,7 +8,7 @@
 // Every built-in program is evaluated with forceEvaluateText (lb settings, and kg for ten of
 // them) and then printed back with convertToPlanner() and PlannerProgram_generateFullText.
 // The evaluated programs of the 60 lb cases already live in
-// testdata/golden/liftoscript/builtins/<name>.json (scrubbed ids), so those cases only name that
+// testdata/golden/lspp/builtins/<name>.json (scrubbed ids), so those cases only name that
 // file. The kg cases and the hand-written edge cases embed their evaluated program.
 import {
   forceEvaluateText,

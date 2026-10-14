@@ -145,7 +145,7 @@ berkley picks; nothing is built from these until picked.
 - Engine state is a derived cache (S8): recompute by replaying history on launch
   through qala-core and keep it in memory; a local non-synced Room cache table
   only if replay time shows up as a problem.
-- Debug seed: GZCLP program (`testdata/golden/liftoscript/builtins/gzclp.json`
+- Debug seed: GZCLP program (`testdata/golden/lspp/builtins/gzclp.json`
   `inputs.text`), a few weeks of sessions, check-ins, weights, a run plan with
   `dayOfWeek`, one skip. Empty states per card for release. **The program's
   progression state lives inside its text**, so the seed text and the seeded

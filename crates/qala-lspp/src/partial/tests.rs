@@ -5,7 +5,7 @@ use crate::util::generator::SequentialUid;
 
 fn settings() -> ISettings {
     let p = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../../testdata/golden/liftoscript/finish_day_rotation_gzclp.json");
+        .join("../../testdata/golden/lspp/finish_day_rotation_gzclp.json");
     let doc: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(p).unwrap()).unwrap();
     serde_json::from_value(doc["fixtures"]["settings"]["gzclp_settings"].clone()).unwrap()
 }

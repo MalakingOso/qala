@@ -3,7 +3,7 @@
 //
 //   deno run -A scripts/gen_script_parse_cases.ts
 //
-// Writes testdata/golden/liftoscript/lezer_trees/scripts_fuzz.json as
+// Writes testdata/golden/lspp/lezer_trees/scripts_fuzz.json as
 // [{ input, tree: {name, from, to, children} }]. The PRNG is seeded, so output is
 // deterministic.
 
@@ -221,7 +221,7 @@ while (out.length < N) {
   out.push({ input, tree: dumpTree(liftoscriptParser.parse(input)) });
 }
 
-const path = new URL("../testdata/golden/liftoscript/lezer_trees/scripts_fuzz.json", import.meta.url);
+const path = new URL("../testdata/golden/lspp/lezer_trees/scripts_fuzz.json", import.meta.url);
 // One case per line keeps the file small and diffs readable.
 Deno.writeTextFileSync(path, "[\n" + out.map((e) => JSON.stringify(e)).join(",\n") + "\n]\n");
 const errCount = out.filter((e) => JSON.stringify(e.tree).includes('"⚠"')).length;

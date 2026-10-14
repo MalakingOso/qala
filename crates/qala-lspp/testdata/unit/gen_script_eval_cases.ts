@@ -3,7 +3,7 @@
 //   deno run -A --config packages/liftoscript/deno.json crates/qala-lspp/testdata/unit/gen_script_eval_cases.ts
 // Writes cases_script_eval.json next to this file. The Rust tests replay every case.
 //
-// Corpus: every script in testdata/golden/liftoscript/lezer_trees/scripts*.json plus
+// Corpus: every script in testdata/golden/lspp/lezer_trees/scripts*.json plus
 // the hand-written list below, each run in planner and update mode against a few
 // binding and state fixtures. Recorded per run: the result (or error), updates,
 // state and other states after, the bindings keys that changed, and prints.
@@ -108,7 +108,7 @@ function add(s: string) {
 }
 const fuzzScripts = new Set<string>();
 for (const f of ["scripts", "scripts_extra", "scripts_fuzz"]) {
-  const list = JSON.parse(Deno.readTextFileSync(root + `testdata/golden/liftoscript/lezer_trees/${f}.json`));
+  const list = JSON.parse(Deno.readTextFileSync(root + `testdata/golden/lspp/lezer_trees/${f}.json`));
   for (const x of list) {
     if (f === "scripts_fuzz" && !seen.has(x.input)) fuzzScripts.add(x.input);
     add(x.input);

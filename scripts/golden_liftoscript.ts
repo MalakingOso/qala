@@ -3,7 +3,7 @@
 //
 //   deno run -A scripts/golden_liftoscript.ts
 //
-// Writes testdata/golden/liftoscript/**. See testdata/golden/liftoscript/README.md
+// Writes testdata/golden/lspp/**. See testdata/golden/lspp/README.md
 // for the file formats and the canonical JSON rules. Output is deterministic:
 // Math.random is replaced by a seeded PRNG and Date.now is pinned.
 

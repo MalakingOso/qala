@@ -3,7 +3,7 @@
 //
 //   deno run -A scripts/gen_planner_parse_cases.ts
 //
-// Writes testdata/golden/liftoscript/lezer_trees/planner_fuzz.json as
+// Writes testdata/golden/lspp/lezer_trees/planner_fuzz.json as
 // [{ input, tree: {name, from, to, children} }]. The PRNG is seeded, so output is
 // deterministic. Generated inputs whose Lezer tree contains an error node are dropped.
 
@@ -263,6 +263,6 @@ function add(input: string) {
 for (let i = 0; i < 350; i++) add(exerciseLine() + (chance(0.5) ? "\n" : ""));
 for (let i = 0; i < 150; i++) add(program());
 
-const path = new URL("../testdata/golden/liftoscript/lezer_trees/planner_fuzz.json", import.meta.url);
+const path = new URL("../testdata/golden/lspp/lezer_trees/planner_fuzz.json", import.meta.url);
 Deno.writeTextFileSync(path, JSON.stringify(out));
 console.log(`wrote ${out.length} cases (${dropped} dropped for Lezer errors) to ${path.pathname}`);

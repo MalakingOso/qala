@@ -1,5 +1,5 @@
 //! Type tests: shape checks on hand-written JSON, and round trips of the
-//! TS-produced golden files in `testdata/golden/liftoscript/` (skipped when
+//! TS-produced golden files in `testdata/golden/lspp/` (skipped when
 //! the directory is missing).
 
 use std::path::PathBuf;
@@ -11,7 +11,7 @@ use serde_json::{json, Value};
 use super::*;
 
 fn golden_dir() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../testdata/golden/liftoscript")
+    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../testdata/golden/lspp")
 }
 
 /// First differing path between two JSON values, if any.
