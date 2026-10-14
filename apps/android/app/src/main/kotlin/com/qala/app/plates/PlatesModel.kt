@@ -4,6 +4,7 @@ import com.qala.data.core.DefaultLbPlates
 import com.qala.data.core.PlateEntry
 import com.qala.data.core.PlateLoad
 import com.qala.data.core.PlatePairs
+import com.qala.data.model.PlateSettings
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
@@ -17,8 +18,8 @@ import kotlin.math.round
  * same Blender renders by the same inches-along-the-bar geometry.
  */
 
-/** The EZ bar weighs 25 lb (the web default, `settings.ezBar`). */
-const val EzBarWeight = 25.0
+/** The EZ bar's weight until Settings says otherwise (the web default, `settings.ezBar`). */
+const val EzBarWeight = PlateSettings.DefaultEzBar
 
 /** The target the calculator opens on, as the web's does. */
 const val DefaultTarget = 245.0
@@ -27,11 +28,19 @@ const val TargetStep = 5.0
 /** A bar the screen can plan on. [ez] draws the curl bar behind the collar. */
 data class BarOption(val label: String, val weight: Double, val ez: Boolean)
 
-val BarOptions: List<BarOption> = listOf(
-    BarOption("45", 45.0, ez = false),
-    BarOption("35", 35.0, ez = false),
-    BarOption("EZ 25", EzBarWeight, ez = true),
-)
+/**
+ * The cells of the bar picker: the two full-size bars, then the curl bar at the weight Settings has for it ("EZ 25"). A
+ * default bar the picker does not offer (one this app never writes) gets a cell of its own, so the picker never lies
+ * about the bar a lift is planned with.
+ */
+fun barOptions(plates: PlateSettings): List<BarOption> {
+    val straight = (PlateSettings.DefaultBarChoices + plates.defaultBar).distinct().map { BarOption(fmtWeight(it), it, ez = false) }
+    return straight + BarOption("EZ ${fmtWeight(plates.ezBar)}", plates.ezBar, ez = true)
+}
+
+/** The cell the calculator shows: the curl bar when the screen has switched to it, else the default bar from Settings. */
+fun selectedBarIndex(options: List<BarOption>, plates: PlateSettings, ez: Boolean): Int =
+    if (ez) options.lastIndex else options.indexOfFirst { !it.ez && it.weight == plates.defaultBar }.coerceAtLeast(0)
 
 /** Stepping never goes under the bar, as on the web. */
 fun stepTarget(current: Double, steps: Int, barWeight: Double): Double =

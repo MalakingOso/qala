@@ -30,6 +30,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.hideFromAccessibility
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.zIndex
+import com.qala.app.settings.SettingsFocus
 import com.qala.app.skip.SkipSheet
 import com.qala.app.today.Destination
 import com.qala.app.today.TodayLoad
@@ -66,6 +67,8 @@ fun QalaApp() {
     QalaTheme {
         val container = LocalAppContainer.current
         var nav by rememberSaveable(stateSaver = Nav.Saver) { mutableStateOf(Nav()) }
+        // The plate calculator's Edit plates lands on Settings scrolled to the inventory.
+        var settingsFocus by remember { mutableStateOf<SettingsFocus?>(null) }
         val back = nav.back()
         BackHandler(enabled = back != null) { back?.let { nav = it } }
 
@@ -113,8 +116,10 @@ fun QalaApp() {
                             },
                             onBack = { nav.back()?.let { nav = it } },
                             onPlates = { nav = nav.push(Route.Plates) },
-                            onEditPlates = { nav = nav.push(Route.Settings) },
+                            onEditPlates = { settingsFocus = SettingsFocus.Plates; nav = nav.push(Route.Settings) },
                             onPush = { nav = nav.push(it) },
+                            settingsFocus = settingsFocus,
+                            onSettingsFocused = { settingsFocus = null },
                         )
                     }
                 }
@@ -127,10 +132,9 @@ fun QalaApp() {
                     )
                 }
             }
-            if (nav.route == Route.Today) {
-                TodayMenu(today, ui, Modifier.zIndex(2f))
-                SkipSheet(ui.skip, Modifier.zIndex(3f))
-            }
+            if (nav.route == Route.Today) TodayMenu(today, ui, Modifier.zIndex(2f))
+            // Change on Settings' Training status opens the same sheet over Settings.
+            if (nav.route == Route.Today || nav.route == Route.Settings) SkipSheet(ui.skip, Modifier.zIndex(3f))
         }
     }
 }

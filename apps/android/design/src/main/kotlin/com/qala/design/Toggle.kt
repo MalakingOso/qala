@@ -18,6 +18,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -83,6 +85,31 @@ fun ToggleRow(
                 if (hint != null) QalaText(hint, style = QalaType.hint.copy(fontSize = 12.sp, lineHeight = 17.sp), color = c.fgMuted)
             }
         }
+        QalaToggle(on)
+    }
+}
+
+/**
+ * A switch that stands alone in a row of other controls (a stepper beside it): the same look as [QalaToggle], with a 52 by
+ * 48 dp target and the switch role, spoken as [label]. Where the whole row is the switch, use [ToggleRow] instead.
+ */
+@Composable
+fun QalaSwitch(on: Boolean, onToggle: (Boolean) -> Unit, label: String, modifier: Modifier = Modifier, enabled: Boolean = true) {
+    Box(
+        modifier
+            .size(52.dp, 48.dp)
+            .alpha(if (enabled) 1f else 0.45f)
+            .toggleable(
+                value = on,
+                enabled = enabled,
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                role = Role.Switch,
+                onValueChange = onToggle,
+            )
+            .semantics { contentDescription = label },
+        contentAlignment = Alignment.Center,
+    ) {
         QalaToggle(on)
     }
 }

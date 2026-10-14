@@ -17,6 +17,7 @@ import com.qala.app.checkin.CheckInScreen
 import com.qala.app.history.HistoryScreen
 import com.qala.app.plates.PlatesScreen
 import com.qala.app.plan.PlanScreen
+import com.qala.app.settings.SettingsFocus
 import com.qala.app.settings.SettingsScreen
 import com.qala.app.workout.RestScreen
 import com.qala.app.workout.WarmupScreen
@@ -37,7 +38,8 @@ import kotlinx.coroutines.launch
  * The screen for [route], filling the shell's content box. Today brings its own scroll column and fixed layers, and so
  * do the lifting screens (a pinned bar under their own scroll); every other screen is the same header over a padded
  * column. [onPush] opens a screen over this one (Workout opens Rest, the warm-up opens Workout, and each of the three
- * opens All exercises, whose Back returns to it).
+ * opens All exercises, whose Back returns to it). [settingsFocus] is the group Settings opens scrolled to, if one sent the
+ * lifter there; Settings calls [onSettingsFocused] once it has scrolled.
  */
 @Composable
 fun Screen(
@@ -52,6 +54,8 @@ fun Screen(
     onPlates: () -> Unit,
     onEditPlates: () -> Unit,
     onPush: (Route) -> Unit,
+    settingsFocus: SettingsFocus? = null,
+    onSettingsFocused: () -> Unit = {},
 ) {
     when (route) {
         Route.Today -> TodayScreen(today, ui, scroll, topBar, onGo)
@@ -60,7 +64,7 @@ fun Screen(
         Route.Progress -> Plain(scroll, topBar) { StubScreen("Progress", "Charts and records. Arrives with the stats screens (A5).") }
         Route.Coach -> Plain(scroll, topBar) { StubScreen("Coach", "Chat and suggestions. Arrives with the coach route (A6).") }
         Route.History -> HistoryScreen(scroll, onBack)
-        Route.Settings -> SettingsScreen(scroll, onBack, onPlates)
+        Route.Settings -> SettingsScreen(scroll, today, ui, settingsFocus, onSettingsFocused, onBack, onPlates)
         Route.Plates -> PlatesScreen(scroll, onBack, onEditPlates)
         Route.CheckIn -> CheckInRoute(today, scroll, topBar, onBack)
         Route.WarmUp -> WarmupScreen(
