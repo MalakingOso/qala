@@ -6,12 +6,17 @@
 // sends and `curl --data-binary` does), or a multipart form with a `file` part
 // (`curl -F file=@clip.wav`).
 
+import { createGate, type Gate } from "./exec.ts";
+
 export class UploadError extends Error {
   status: number;
-  constructor(status: number, message: string) {
+  /** True when the server is saturated, not the request at fault. */
+  degraded: boolean;
+  constructor(status: number, message: string, degraded = false) {
     super(message);
     this.name = "UploadError";
     this.status = status;
+    this.degraded = degraded;
   }
 }
 
@@ -23,7 +28,12 @@ export interface Upload {
 
 export function uploadErrorResponse(err: unknown): Response | null {
   if (err instanceof UploadError) {
-    return Response.json({ error: err.message }, { status: err.status });
+    return Response.json(
+      err.degraded
+        ? { degraded: true, error: err.message }
+        : { error: err.message },
+      { status: err.status },
+    );
   }
   return null;
 }
@@ -149,4 +159,37 @@ export async function readUpload(
   }
   if (raw.length === 0) throw new UploadError(400, "the upload is empty");
   return { bytes: raw, contentType };
+}
+
+/**
+ * Uploads being received at once, across every upload route. Each holds up to
+ * its route's cap in memory, so the total buffered is slots times the larger
+ * cap (4 x 10 MB for PDFs). A slot is held only while bytes are arriving.
+ */
+export const UPLOAD_READ_SLOTS = 4;
+export const uploadReadGate: Gate = createGate(UPLOAD_READ_SLOTS);
+
+/**
+ * readUpload inside a read slot. Answers 503 with the degraded shape when
+ * every slot is taken, and frees the slot as soon as the bytes are in (or the
+ * read fails or times out), before the caller takes any processing slot.
+ */
+export async function readUploadGated(
+  req: Request,
+  maxBytes: number,
+  options: { timeoutMs?: number; gate?: Gate } = {},
+): Promise<Upload> {
+  const release = (options.gate ?? uploadReadGate).tryEnter();
+  if (release === null) {
+    throw new UploadError(
+      503,
+      "too many uploads are in progress, try again shortly",
+      true,
+    );
+  }
+  try {
+    return await readUpload(req, maxBytes, options.timeoutMs);
+  } finally {
+    release();
+  }
 }

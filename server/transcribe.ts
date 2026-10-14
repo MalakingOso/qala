@@ -21,7 +21,7 @@ import {
   runCommand,
 } from "./exec.ts";
 import { type ContentPart, proxyChatCompletions } from "./llm.ts";
-import { readUpload, uploadErrorResponse } from "./upload.ts";
+import { readUploadGated, uploadErrorResponse } from "./upload.ts";
 
 export const TRANSCRIBE_LIMITS = {
   /** Upload size. 30 s of opus or webm is under 200 KB; this leaves room for a WAV. */
@@ -65,6 +65,8 @@ export interface TranscribeDeps {
   gate: Gate;
   /** Total time allowed to receive the upload. Tests pass a short one. */
   uploadTimeoutMs?: number;
+  /** Slots for uploads being received; defaults to the shared read gate. */
+  readGate?: Gate;
 }
 
 /** Live deps. URLs and the ffmpeg path can be overridden from the environment. */
@@ -388,11 +390,10 @@ export async function serveTranscribe(
   // a transcription slot.
   let upload;
   try {
-    upload = await readUpload(
-      req,
-      TRANSCRIBE_LIMITS.maxUploadBytes,
-      deps.uploadTimeoutMs,
-    );
+    upload = await readUploadGated(req, TRANSCRIBE_LIMITS.maxUploadBytes, {
+      timeoutMs: deps.uploadTimeoutMs,
+      gate: deps.readGate,
+    });
   } catch (err) {
     return uploadErrorResponse(err) ??
       Response.json({ error: "could not read the upload" }, { status: 400 });

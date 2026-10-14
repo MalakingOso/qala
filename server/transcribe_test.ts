@@ -328,6 +328,38 @@ Deno.test("a stalled upload times out with 408 and never holds the gate", async 
   slot();
 });
 
+Deno.test("a full read gate answers 503 degraded, and slots free after the deadline", async () => {
+  const { fetchFn } = fakeBackends({ e4b: "ok", whisper: "ok" });
+  const readGate = createGate(2);
+  const { deps } = depsWith(fetchFn, { readGate, uploadTimeoutMs: 300 });
+  const stall = () =>
+    new Request("http://x/api/transcribe", {
+      method: "POST",
+      body: new ReadableStream<Uint8Array>({
+        pull() {
+          return new Promise<void>(() => {});
+        },
+      }),
+      // @ts-expect-error duplex is required for stream bodies
+      duplex: "half",
+    });
+  const first = serveTranscribe(stall(), deps);
+  const second = serveTranscribe(stall(), deps);
+  const wav = await fixture("tone-8k.wav");
+  const refused = await serveTranscribe(upload(wav), deps);
+  assertEquals(refused.status, 503);
+  assertEquals((await refused.json()).degraded, true);
+
+  assertEquals((await first).status, 408);
+  assertEquals((await second).status, 408);
+  const after = await serveTranscribe(upload(wav), deps);
+  assertEquals(
+    after.status,
+    200,
+    "slots are free once the deadline has passed",
+  );
+});
+
 Deno.test("a clip over 30 seconds is refused with a clear message", async () => {
   const dir = await Deno.makeTempDir({ prefix: "qala-test-" });
   try {
