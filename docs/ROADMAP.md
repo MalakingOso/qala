@@ -6,13 +6,13 @@ This file lists work that is decided or underway, by track, and links to the pla
 
 ## Where we are
 
-The web build (desktop and the frozen phone PWA) is v1 and runs entirely on sample data: `apps/web/src` has no `fetch`, `WebSocket` or IndexedDB call. The native Android app is the active work. On main it has the Rust core and FFI, the Room data layer, Today with the day rail, check-in, the skip sheet and status, the weekday picker, the plate calculator, and the lifting loop: Warm-up, Workout and Rest (a finished workout saves real sets and advances the program), Plan, History and All exercises. Run recording, sync, charts and the Coach screen haven't started.
+The web build (desktop and the frozen phone PWA) is v1 and runs entirely on sample data: `apps/web/src` has no `fetch`, `WebSocket` or IndexedDB call. The native Android app is the active work. On main it has the Rust core and FFI, the Room data layer, Today with the day rail, check-in, the skip sheet and status, the weekday picker, the plate calculator, and the lifting loop: Warm-up, Workout and Rest (a finished workout saves real sets and advances the program), Plan, History and All exercises, and the Coach screen. Run recording, sync and charts haven't started.
 
 Everything on Android has run on the emulator only. The server still syncs through Automerge and trusts the Tailscale header. Accounts, record sync and blob upload are planned and unbuilt.
 
 ## Merge queue
 
-In flight on 2026-10-14: the flaky `AppContainerTest`, on its own agent branch. Merged 2026-10-14: FFI exports, the vendored commit and the rename leftovers (`8e48051`); the LS++ wasm in the desktop editor and the server (`f5b88e5`); PDF and voice import (`e54e794`); the Coach route and Android screen (`90db3a6`); the `gen:lspp` memory fix (`86b6b15`). Merged 2026-10-13, in order: `plates` (`ee49107`), `docs` (`d6837a3`), `workout` (`b5e9ae9`), `plan` (`e0e6a8d`), `history` (`17c4926`), and the deploy unit fix.
+Nothing in flight. Merged 2026-10-14: FFI exports, the vendored commit and the rename leftovers (`8e48051`); the LS++ wasm in the desktop editor and the server (`f5b88e5`); PDF and voice import (`e54e794`); the Coach route and Android screen (`90db3a6`); the `gen:lspp` memory fix (`86b6b15`); the flaky connected test fix (`6530def`). Merged 2026-10-13, in order: `plates` (`ee49107`), `docs` (`d6837a3`), `workout` (`b5e9ae9`), `plan` (`e0e6a8d`), `history` (`17c4926`), and the deploy unit fix.
 
 Beyond the queue, the order of work is the owner's call. The tables below give each item's state and what it waits on.
 
@@ -29,7 +29,7 @@ Plans: `docs/android-native.md` (the app), `docs/PLAN-rail-refresh.md` (the nati
 | History and All exercises | done 2026-10-13 | one All exercises grid, opened from the Warm-up, Workout and Rest headers, live during a workout | |
 | Warm-up, Workout, Rest | done 2026-10-13 | a finished workout saves real sets and advances the program through the finish-day scripts; per-side plates on the set rows and Rest; rest and warm-up planning is Kotlin, see the Rust track | |
 | Plan screen | done 2026-10-13 | Start follows Today's stage order; "See what you did" opens History | |
-| Flaky connected test | open | `AppContainerTest.aStartWithoutTheSeedLeavesEveryTableEmpty` crashed once in 4 runs on merged main (2026-10-13) with a Compose `SlotTable` `ArrayIndexOutOfBoundsException` while the activity's composition was disposed. The crash ends the instrumentation run, so later suites (`WorkoutFlowTest`) don't run and the gate shows 24 tests instead of 36 | |
+| Flaky connected test | done 2026-10-14 | the `SlotTable` crash blamed on `AppContainerTest` came from the legacy `createAndroidComposeRule`, which recomposes on whatever thread sets a `StateFlow`, so the engine snapshot set on a worker thread raced the main thread. The eight UI tests now use the `v2` rule, which queues recomposition on the UI thread. Before: 3 of 9 full runs failed. After: 10 clean runs on the branch and 1 on main, each app 52 and data 23 with no race signatures in logcat. App code is unchanged | |
 | Rest of Settings | done 2026-10-13 | Training status (Change opens the skip sheet, Set active), Units, bars, the editable plate inventory with the 55 lb row, equipment, warm-up and rest timer, all stored as settings groups and read by the plate calculator, set rows, Rest and the warm-up. Not built, with nothing behind them: Learn from taps, Alert, Check-ins, Running, Coach, Appearance (title font and theme) | |
 | Navigation library choice | at the first real back stacks | android-native 3 | D20 |
 | Run recording (A2) | not started | recorder service, Room fixes, HR, cues, the four gates in android-native 5; needs R1 in Rust | D11, D14, D15 |
