@@ -30,7 +30,7 @@ Plans: `docs/android-native.md` (the app), `docs/PLAN-rail-refresh.md` (the nati
 | Warm-up, Workout, Rest | done 2026-10-13 | a finished workout saves real sets and advances the program through the finish-day scripts; per-side plates on the set rows and Rest; rest and warm-up planning is Kotlin, see the Rust track | |
 | Plan screen | done 2026-10-13 | Start follows Today's stage order; "See what you did" opens History | |
 | Flaky connected test | open | `AppContainerTest.aStartWithoutTheSeedLeavesEveryTableEmpty` crashed once in 4 runs on merged main (2026-10-13) with a Compose `SlotTable` `ArrayIndexOutOfBoundsException` while the activity's composition was disposed. The crash ends the instrumentation run, so later suites (`WorkoutFlowTest`) don't run and the gate shows 24 tests instead of 36 | |
-| Rest of Settings | next | Training status group, editable plate inventory with the 55 lb row, bar defaults; the plates work deferred these | |
+| Rest of Settings | done 2026-10-13 | Training status (Change opens the skip sheet, Set active), Units, bars, the editable plate inventory with the 55 lb row, equipment, warm-up and rest timer, all stored as settings groups and read by the plate calculator, set rows, Rest and the warm-up. Not built, with nothing behind them: Learn from taps, Alert, Check-ins, Running, Coach, Appearance (title font and theme) | |
 | Navigation library choice | at the first real back stacks | android-native 3 | D20 |
 | Run recording (A2) | not started | recorder service, Room fixes, HR, cues, the four gates in android-native 5; needs R1 in Rust | D11, D14, D15 |
 | Record sync client (A3) | not started | the outbox, clock sidecar and HLC wrapper exist; no HTTP client | D06, D07, D22 |

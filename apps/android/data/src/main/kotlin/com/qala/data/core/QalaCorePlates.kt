@@ -169,8 +169,9 @@ fun QalaCore.platesShorthand(perSide: List<Double>): String = call(
 /**
  * The default lb inventory from `packages/core/plates.ts` (`defaultLbInventory`):
  * a 45 lb bar gym with 1.25 lb plates listed at zero pairs until the owner
- * enters a real inventory. Android has no editable plate inventory yet, so the
- * calculator plans against this set (see the plates report).
+ * enters a real inventory. It is what Settings holds until the inventory is
+ * edited there (`PlateSettings`), so the calculator, the plate hints and the
+ * warm-up plan on it by default.
  */
 val DefaultLbPlates: List<PlateEntry> = listOf(
     PlateEntry(45.0, PlatePairs.Enough, "blue"),

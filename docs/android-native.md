@@ -119,7 +119,7 @@ Sequence by dependency, not by line count. Line counts are the existing React pa
 | A6 coach | Coach (119) | Needs the server route. |
 | skip | Landing (150) | Marketing page, not part of the phone logger. |
 
-Status 2026-10-13. Built and merged: Today, Check-in and Plate calc (M3, M4 and the plates work), and Settings with the weekday picker only (the Training status group, the editable plate inventory with the 55 lb row, and bar defaults are open). In flight: History and All exercises on `history`, Warm-up, Workout and Rest on `workout`, Plan on `plan`. Not started: the run screens, Session complete, Progress, Body, Coach.
+Status 2026-10-13. Built and merged: Today, Check-in and Plate calc (M3, M4 and the plates work), and Settings (Training status, weekdays, Units, bars and the editable plate inventory with the 55 lb row, equipment, warm-up and rest timer; Appearance, Coach, Check-ins and Running are not built). In flight: History and All exercises on `history`, Warm-up, Workout and Rest on `workout`, Plan on `plan`. Not started: the run screens, Session complete, Progress, Body, Coach.
 
 ## 9. Phases and gates
 
@@ -142,7 +142,7 @@ Status by phase, 2026-10-13:
 | Phase | State |
 |---|---|
 | A0 | Toolchain installed (section 11). Spike check 1 (arm64 `.so`, size and alignment) and check 5 (LS++ against the oracle) pass. Checks 2 to 4, the Vico and Canvas run-series spike and the L5 check have not been run; nothing in the repo does them. |
-| A1 | Built: tokens generator, fonts, icons, design components, navigation shell. The stub Today was compared against the web at 390 dp on an x86_64 emulator and matches in fonts, spacing, shadows and colors (2026-10-01). Settings has the weekday picker only; History and All exercises are in flight on `history`. |
+| A1 | Built: tokens generator, fonts, icons, design components, navigation shell. The stub Today was compared against the web at 390 dp on an x86_64 emulator and matches in fonts, spacing, shadows and colors (2026-10-01). Settings has every group a native screen can honour (2026-10-13); the Appearance and Coach groups wait for their screens. |
 | A2 | Not started. Waits on D11. |
 | A3 | Not started. The outbox, clock sidecar and HLC wrapper exist; there is no sync endpoint or client. Waits on D06, D07 and D22. |
 | R5 | Done 2026-10-01. |
