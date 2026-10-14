@@ -85,6 +85,26 @@ Deno.test("elevation endpoint validates and answers null without tiles", async (
   }
 });
 
+Deno.test("transcribe is routed and refuses what is not an audio POST", async () => {
+  const { state, cleanup } = await testState();
+  try {
+    const handle = createHandler(state);
+    const get = await handle(
+      new Request("http://127.0.0.1:8500/api/transcribe"),
+    );
+    assertEquals(get.status, 405);
+    const text = await handle(
+      new Request("http://127.0.0.1:8500/api/transcribe", {
+        method: "POST",
+        body: "not audio",
+      }),
+    );
+    assertEquals(text.status, 415);
+  } finally {
+    await cleanup();
+  }
+});
+
 Deno.test("unknown paths fall through to static", async () => {
   const { state, cleanup } = await testState();
   try {

@@ -20,6 +20,7 @@ import { LLAMA_DEFAULTS, serveLlmChat } from "./llm.ts";
 import { serveStatic } from "./static.ts";
 import { UserSyncStore } from "./sync.ts";
 import { createTilesHandler } from "./tiles.ts";
+import { serveTranscribe } from "./transcribe.ts";
 import { DenoWebSocketServerAdapter, upgradeSyncSocket } from "./ws.ts";
 
 export const BIND_HOSTNAME = "127.0.0.1";
@@ -134,6 +135,7 @@ export function createHandler(
         state.importDeps ??= liveImportDeps(state.options.llmBaseUrl);
         return await serveImportText(req, await state.importDeps);
       }
+      if (path === "/api/transcribe") return await serveTranscribe(req);
       if (path === "/api/elevation") {
         return await handleElevation(req, state.options.demDir);
       }
