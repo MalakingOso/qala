@@ -21,6 +21,8 @@ seed, built-in programs, and muscle diagrams.
   300-800, Latin subset): apps/web/public/fonts/Faustina-OFL.txt
 - DM Mono (body text, copied from the owner's Beamer app, google/fonts):
   apps/web/public/fonts/DMMono-OFL.txt
+- DM Sans (desktop UI text, google/fonts via @fontsource-variable/dm-sans
+  5.2.8, variable wght, Latin subset): apps/web/public/fonts/DMSans-OFL.txt
 
 The Android app bundles TTF copies of Qala Test (Bold V2, Medium) and DM Mono
 (Regular, Medium); DM Mono was converted from the woff2 files with

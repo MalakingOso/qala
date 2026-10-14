@@ -20,7 +20,7 @@ below; the decisions are L9 to L11 and U14 to U19.
 
 ## 1. Principles
 
-1. **Beamer first.** Qala should look like a sibling of the owner's Beamer app: off-white ground, white surfaces, 2px borders, hard offset shadows with zero blur, 4/6/8px radii, no pills, no logo tile (the Qala Test wordmark is the brand). Cards are flat at rest and lift on hover or press. Each screen still gets one clear reading order (L1, L8).
+1. **Serious and minimal, Beamer first.** The register is serious and minimal; the playful, cartoon-like direction was weighed and dropped (L18). Qala should look like a sibling of the owner's Beamer app: off-white ground, white surfaces, 2px borders, hard offset shadows with zero blur, 4/6/8px radii, no pills, no logo tile (the Qala Test wordmark is the brand). Cards are flat at rest and lift on hover or press. Each screen still gets one clear reading order (L1, L8).
 2. **Light and breezy.** Generous space, one strong element per card, nothing dense or dark by default.
 3. **One action color.** Ember marks the one thing to do on a screen: the primary button, the current stage, today's column. Everything else is ink and gray. (L3)
 4. **Numbers are the hero.** Big figures in the owner's Qala Test face; everything readable at a glance mid-set with sweaty hands.
@@ -89,7 +89,7 @@ Mirror the dark block under `@media (prefers-color-scheme: dark)` for `theme: 's
 | Big static number: weight x reps, stat tiles, readiness, session figures | Qala Test | 700 | 24-64 | default (proportional lining) |
 | Ticking number: rest countdown, "of 3:45", workout clock, live run numbers, warm-up timers | Qala Test | 700, 500 for "of 3:45" | 22-150 | `font-variant-numeric: lining-nums tabular-nums` |
 | Body, buttons, controls, set rows, table cells | DM Mono | 400, 500 for labels and emphasis | 13-15 / 13-14 | DM Mono's own |
-| Desktop shell UI text: nav, labels, table cells, body copy, buttons (L16) | a proportional sans (`--font-ui` in `theme/desktop.css`, a system stack until the owner picks a face) | 400, 500, 600 for emphasis | 12-13 | tabular for numerals |
+| Desktop shell UI text: nav, labels, table cells, body copy, buttons (L16) | DM Sans (`--font-ui` in `theme/desktop.css`, variable, Latin subset; the system stack behind it covers missing glyphs) | 400, 500, 600 for emphasis | 12-13 | tabular for numerals |
 | Desktop numerals, chart ticks, code: load and distance columns, axis ticks, times, LS++ | DM Mono | 400, 500 | 10-13 | DM Mono's own, tabular |
 | Group labels (uppercase band) | DM Mono | 500, letter-spacing .09em | 11 | |
 | Chart text: axis ticks, direct labels, legends | DM Mono | 400, 500 for the labeled value | 10-12 | tabular in axis ticks |

@@ -35,7 +35,7 @@ Plans: `docs/android-native.md` (the app), `docs/PLAN-rail-refresh.md` (the nati
 | Run recording (A2) | not started | recorder service, Room fixes, HR, cues, the four gates in android-native 5; needs R1 in Rust | D11, D14, D15 |
 | Record sync client (A3) | not started | the outbox, clock sidecar and HLC wrapper exist; no HTTP client | D06, D07, D22 |
 | Charts, map, stats screens (A5) | not started | Session complete, Progress, Body; Vico plus Canvas, MapLibre | D12, D13, D16 |
-| Coach screen, release signing (A6) | not started | needs the server Coach route | D10 |
+| Coach screen, release signing (A6) | not started | needs the server Coach route; D10 decided 2026-10-14 (Coach stays TS) | |
 | Real-phone verification pass | next, needs the phone | the 2 h locked-screen run, Spotify ducking, a killed service resuming, the L5 check, and the A0 leftovers (Vico run-series spike). USB access is unset: it needs sudo for udev rules, and wireless debugging is untried | the owner's phone |
 
 ## Rust core and LS++
@@ -56,7 +56,7 @@ Plans: `docs/rust-core.md`, `docs/ls-plus-plus.md`.
 | Speech import: `POST /api/transcribe`, mic capture | next | ls-plus-plus 4, 5 | V02 |
 | Record the vendored liftosaur commit (S17) | open chore | no hash on record | |
 | Rename leftovers | open | `gen:liftoscript`, `testdata/golden/liftoscript/`, pre-rename names in `target/wasm-out/` | |
-| Generator port (R4) | deferred | rust-core 7 | D03 |
+| Generator port (R4) | deferred 2026-10-14 (owner) | rust-core 7; later the phone pulls generated workouts from the server instead | |
 | Retire `packages/liftoscript` as the oracle | not started | gate for the Bun move | |
 
 ## Server and sync
@@ -70,7 +70,7 @@ Plans: `docs/android-native.md` 10, `docs/rust-core.md` 4 and 5, `docs/plan-acco
 | Blob routes for tracks, and the `schemaVersion` migration that moves tracks out of `RunSession` | not started | rust-core 5 | D07 |
 | Accounts: passwords, passkeys, invites, sessions in place of the Tailscale header | planned, not started | plan-accounts-logins; no branch exists | D21 |
 | How the Coach model is reached from the VPS | open | ADR 0002 open question | D23 |
-| Coach route that builds the prompt and validates the reply | not started | android-native 10 | D10 |
+| Coach route that builds the prompt and validates the reply | not started | android-native 10; D10 decided 2026-10-14 (stays TS) | |
 | Glyph and sprite routes for the map style, or bundle them in the app | not started | android-native 7, 10 | D12 |
 | Serve the region `.pmtiles` for download | route already supports Range | android-native 10 | A5 |
 | Fix `deploy/qala.service` | done 2026-10-13 | `ExecStart` now runs `deno run server/mod.ts`; it named `server/main.ts`, which never existed | |
@@ -83,7 +83,7 @@ Plans: `docs/android-native.md` 10, `docs/rust-core.md` 4 and 5, `docs/plan-acco
 | Phone PWA frozen | done | DECISIONS S13 | |
 | Real data in the web app | not started | `apps/web` runs on `store/sample.ts`; the desktop load zoom reads `sampleBlockWeeks` | a sync client (D06) |
 | Desktop leftovers | open | "Generate next block" isn't wired, "Add exercise" doesn't exist, the phone's Today stages and the desktop sample disagree, Calibration shows a prior next to lifts with observations | |
-| Overall register and desktop sans | open | D01, D02 | owner |
+| Overall register and desktop sans | done | serious and minimal (DECISIONS L18, 2026-10-13); desktop UI text in DM Sans (L16, 2026-10-14) | |
 
 ## Content
 
@@ -110,27 +110,26 @@ Run Rust tests only through `scripts/cargo-test-safe.sh -p <crate>`. A bare `car
 
 ## Owner decisions
 
-All 35 items in `docs/decisions-pending.md` are open as of 2026-10-13 (D31 to D35 were added that night from the A4 build). Grouped by what they block:
+30 of the 36 items in `docs/decisions-pending.md` are open as of 2026-10-14; D01 was decided 2026-10-13, D02 to D05 and D10 on 2026-10-14, and D36 was added from D03's answer. D03 to D06, D08, D14, D15 and D20 were rewritten 2026-10-14 to ask only what the build left open. Grouped by what they block:
 
 | Blocks | Items |
 |---|---|
-| Run recording (A2) | D11 run stack, D14 devices and SDKs, D15 test process |
-| Record sync and the server rewrite (A3) | D06 record sync, D07 tracks as blobs, D08 engine state as a cache, D22 sync DDL and transport |
+| Run recording (A2) | D11 run stack, D14 targetSdk 37, D15 L5 check, gates and HR strap |
+| Record sync and the server rewrite (A3) | D06 record sync, server side, D07 tracks as blobs, D22 sync DDL and transport |
 | Accounts | D21 public domain and DNS date, D23 hosted LLM fallback |
 | Charts, map, stats (A5) | D12 maps, D13 charts, D16 chart accessibility |
-| Coach (A6) | D10 Coach stays TypeScript |
-| Android navigation | D20 navigation library and screenshot tool |
-| Rust core scope and rules | D03 approve the plan, D04 TS and Rust coexistence, D05 platform direction, D09 review of the LS++ port |
+| Android navigation | D20 keep the hand-written `Nav` or adopt a library, and the screenshot tool |
+| Rust core scope and rules | D09 review of the LS++ port |
+| Phone authoring (later) | D36 workouts from the phone |
 | Run extras (PLAN 16a) | D19 HR-zone timing |
-| Look and feel | D01 overall register, D02 desktop sans |
 | Equipment renders | D24 bars |
 | Content | D25 run plans, D26 breathing fallback, D27 beginner exposition, D28 podcast audio, D29 blog home, D30 body photos |
-| Built already, awaiting confirmation | D17 fonts and icons, D18 process leftovers |
+| Built already, awaiting confirmation | D08 engine state as a cache, D17 fonts and icons, D18 process leftovers |
 | Tooling | D31 record the Deno to Bun move |
-| Rust core parity | D32 rest and warm-up planning in Kotlin or Rust |
+| Rust core parity | D32 rest and warm-up planning in Kotlin or Rust, with appendix B question 36 |
 | Lifting-flow polish (A4 follow-ups) | D33 prescriptions the plates can't load, D34 rest alert, Resume workout, manual rest, save errors, D35 Settings follow-ons |
 
-The queue and the log disagree in places. For example D06 is open while S11 is marked decided and built for the native app. This file follows the queue. Two real-data checks sit beside the queue: V01 (route-matching thresholds) and V02 (voice recheck on the owner's own voice).
+The queue and the log disagree in places (S6 is marked decided while its leftovers sit in D03 and D04). This file follows the queue. Two real-data checks sit beside the queue: V01 (route-matching thresholds) and V02 (voice recheck on the owner's own voice).
 
 One decision is made and not in the log: Deno is replaced by Bun (2026-10-13, `docs/PLAN-bun-migration.md`). S1 still says Deno 2.
 
@@ -138,7 +137,7 @@ One decision is made and not in the log: Deno is replaced by Bun (2026-10-13, `d
 
 | Question | Overlap |
 |---|---|
-| 1 Which sans for desktop UI text | D02 |
+| 1 Which sans for desktop UI text | D02, decided: DM Sans |
 | 2 Chip shape, 4px rounded or pills | none |
 | 3 No avatar; the toolbar search and week switcher are new behavior | none |
 | 4 Past versus future look in the week chart | U27 rebuilt the chart |

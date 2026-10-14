@@ -23,7 +23,7 @@ Since that writeup the port, the rename and the S21 extensions were merged (`2b9
 2. Drop Automerge. Sync becomes immutable records with UUIDs, last-write-wins per field with a hybrid logical clock, and plain HTTP with the server as authority (section 4). The Rust core never holds a synced store; it takes state in and returns state out as JSON.
 3. Raw GPS fixes never go through sync as records. They live in Room on the phone and upload as immutable content-addressed blobs (section 5). This amends the constraint "run recording writes to the local document continuously".
 4. LS++ is the Rust port of liftosaur's liftoscript, evaluation path only (about 9 to 11k lines of logic, reorganized into small modules, not a mirror of the TS layout). There is no quickjs interim: the phase order puts the port ahead of the phone's lifting screens (section 6). Built and merged; `docs/ls-plus-plus.md` is the language reference now.
-5. Defer the generator port. The phone doesn't author programs, so the generator has no phone consumer.
+5. Defer the generator port (owner, 2026-10-14). The phone will later pull generated workouts from the server, which runs the TS generator, so the generator still has no consumer that needs it in Rust.
 6. Rust is the reason the foreground service can run guided cues with the screen locked: there is no WebView and no JS there. That is why the run pipeline goes first.
 
 ## 2. Inventory
@@ -125,7 +125,7 @@ PLAN 10: check-in, then `predict_readiness`, then bindings, then program evaluat
 
 Because the phone's lifting screens (phase A4) need it, the LS++ port starts as soon as R1 and R2 have set up the workspace, in parallel with the phone's run and sync phases, which don't depend on it. Landed 2026-10-01, ahead of A4; the quickjs-kt stopgap below was never needed. It was: embed quickjs-kt with a bundle of the TS package (0.9 MB, measured by research; one maintainer; unverified on our bundle). Don't build it unless the schedule forces it.
 
-Also stays TS: `packages/llm`. It needs the network (the model runs on callisto), so offline use is moot. A server route builds the prompt and validates the response; the phone's Coach tab calls it (S14).
+Also stays TS: `packages/llm` (owner, 2026-10-14). It needs the network (the model runs on callisto), so offline use is moot. A server route builds the prompt and validates the response; the phone's Coach tab calls it (S14).
 
 ## 7. Porting order and acceptance
 
@@ -159,7 +159,7 @@ Accept:
 - Differential fuzz of `roundWeight`, `doubleProgression`, `e1rm` and the rest-timer multiplier over 1,000,000 inputs with half-integers, negatives and DST and month-boundary dates: zero mismatches.
 - After 10 on-target early taps at 90 s with B 120, `m` equals 0.75 + 0.25 x 0.9^10 (0.837) within 0.001 (PLAN 6.6).
 
-**R4. `generator` (deferred).** No phone consumer. Revisit after R3. If done: vectors compare emitted liftoscript text exactly, and parse-and-evaluate remains a TS check on the output.
+**R4. `generator` (deferred, owner 2026-10-14).** No Rust consumer: when the phone gets generated workouts it pulls them from the server, which runs the TS generator. Revisit after R3. If done: vectors compare emitted liftoscript text exactly, and parse-and-evaluate remains a TS check on the output.
 
 **R5. LS++.** Section 8. Starts after R0 and runs in parallel with R1 to R3; the phone's lifting screens depend on it. Done and merged.
 
@@ -183,7 +183,7 @@ This is a real project. Scope it to the evaluation path, because the phone doesn
 - Authoring stays TS on the desktop: the 17 `PlannerStructure_*` mutators (1,919), `programToPlanner.ts` (1,163), `plannerExerciseEvaluatorText.ts`, `plannerExerciseStyles.ts`, `exerciseImage.ts`, `dialog.ts`, `storage.ts`.
 - Confirm this split with a grep of what `apps/web/src/shell-desktop/ProgramEditorPage.tsx` imports against what `runtime.ts` uses before starting.
 
-**Structure.** The vendored-upstream rule (same file names as liftosaur so diffs stay readable) ends for the new Rust code. The Rust crate is organized by responsibility in small modules (`lexer`, `parse_script`, `parse_planner`, `eval_script`, `eval_planner`, `weight`, `progress`, `runtime`, ...), not mirrored from the TS layout. The TS copy stays vendored and untouched as the oracle and the desktop's authoring runtime. Record the vendored upstream commit in `NOTICE` or a `VENDORED` file if it isn't already recorded; upstream fixes after that are tracked in a list and ported by hand when you ask.
+**Structure.** The vendored-upstream rule (same file names as liftosaur so diffs stay readable) ends for the new Rust code. The Rust crate is organized by responsibility in small modules (`lexer`, `parse_script`, `parse_planner`, `eval_script`, `eval_planner`, `weight`, `progress`, `runtime`, ...), not mirrored from the TS layout. The TS copy stays vendored and untouched as the oracle and the desktop's authoring runtime. Record the vendored upstream commit in `NOTICE` or a `VENDORED` file if it isn't already recorded. Upstream isn't followed after that: LS++ is Qala's own language, and upstream fixes are neither tracked nor ported (owner, 2026-10-14).
 
 **Parser.** Hand-written lexer plus recursive descent per grammar, producing a typed AST whose node kinds mirror the grammar rule names. Not an emulation of Lezer's generic tree. Error-recovery fidelity is low priority: programs reach the phone already validated by the desktop editor, which keeps Lezer. Two quirks to handle on purpose:
 - The planner lexer is context-sensitive. `ExerciseName` is `NonSeparator+`, and the `@precedence` blocks decide `Weight` over `Keyword` and `SetTimer` over `Int`.
@@ -219,7 +219,7 @@ Files under `testdata/golden/<package>/<function>.json`:
 - Compared at 1e-9 for floats, exactly for integers and strings, with a per-function override documented in the file.
 - Consumers: Deno tests (wasm), `cargo test` (reads the files directly), Kotlin instrumented tests (Gradle copies them into assets).
 - Must include: half-integers, negatives, zero and negative zero, the DST and month boundaries, the 10-tap rest timer sequence, a 2 h track.
-- When TS and Rust disagree, TS is the oracle until someone reviews the case and edits the vector.
+- Rust is the main implementation (owner, 2026-10-14). TS is the reference only while a port is checked: when the two disagree, someone reviews the case and edits the vector. Once a package passes on every target its TS is deleted, and the checked-in vectors stay as Rust's regression suite.
 
 ## 10. Risks
 
@@ -313,16 +313,16 @@ Folded in from `docs/rust-core-open-questions.md` (deleted 2026-10-02). Collecte
 ### Scope and direction
 
 1. Does the React phone shell survive? PLAN 3 says it stays as a PWA for iOS friends who only lift. If it goes, the web only needs the desktop shell and the Rust wasm build gets simpler. Default: keep it, frozen, no new features. **Settled 2026-10-01** (S13): frozen as a PWA; the Capacitor wrapper is deleted.
-2. Is native Kotlin the only Android app, or do you want Compose Multiplatform kept open for iOS later? Blocks module layout. Default: Android only, but keep the native layer isolated from the Rust core so iOS stays possible.
-3. Do you accept two UI codebases (React for desktop, Compose for phone) drifting on design? Default: share one token JSON and the chart validation script, and nothing else.
-4. Is Rust acceptable as a language you will maintain, or should it be hidden behind a stable API you rarely touch? Affects how much logic I put in Rust versus Kotlin. Default: Rust only for logic that must match across platforms.
+2. Is native Kotlin the only Android app, or do you want Compose Multiplatform kept open for iOS later? Blocks module layout. Default: Android only, but keep the native layer isolated from the Rust core so iOS stays possible. **Settled 2026-10-14**: as the default; no Compose Multiplatform.
+3. Do you accept two UI codebases (React for desktop, Compose for phone) drifting on design? Default: share one token JSON and the chart validation script, and nothing else. **Settled 2026-10-14**: as built, `tokens.css` generates Android's `Tokens.kt` and both sides test contrast on it; nothing else is shared.
+4. Is Rust acceptable as a language you will maintain, or should it be hidden behind a stable API you rarely touch? Affects how much logic I put in Rust versus Kotlin. Default: Rust only for logic that must match across platforms. **Settled 2026-10-14**: as the default; Kotlin keeps the UI and platform glue, and rest and warm-up planning is D32.
 
 ### Rust core
 
 5. ~~Is the liftoscript port worth it?~~ Answered 2026-09-30: yes, to Rust, evaluation path only (S12). **Landed 2026-10-01 as LS++** (`docs/ls-plus-plus.md`); the quickjs-kt stopgap question is moot.
-6. How long will you tolerate the existing TS packages and the Rust crates both existing? The plan keeps TS until each Rust replacement passes conformance. Default: no deadline, delete TS per package only after golden vectors pass on all targets.
-7. Rust and TS will disagree on edge cases (rounding of .5, float formatting, Date handling). When they differ, which one is right? Default: TS is the oracle until a case is reviewed and the vector is edited by hand.
-8. Who owns upstream liftosaur fixes once the vendored copy stops being the runtime? Default: tracked in an issue list, ported by hand when you ask.
+6. How long will you tolerate the existing TS packages and the Rust crates both existing? The plan keeps TS until each Rust replacement passes conformance. Default: no deadline, delete TS per package only after golden vectors pass on all targets. **Settled 2026-10-14**: as the default; Rust is the main implementation and each TS package goes once its port checks out.
+7. Rust and TS will disagree on edge cases (rounding of .5, float formatting, Date handling). When they differ, which one is right? Default: TS is the oracle until a case is reviewed and the vector is edited by hand. **Settled 2026-10-14**: Rust is the main implementation; TS is only the reference for the check, a disagreement is reviewed by hand, and after the TS is deleted the vectors are Rust's regression suite.
+8. Who owns upstream liftosaur fixes once the vendored copy stops being the runtime? Default: tracked in an issue list, ported by hand when you ask. **Settled 2026-10-14**: nobody; upstream isn't followed, Qala is its own thing now.
 
 ### Document and sync
 
@@ -363,9 +363,9 @@ Folded in from `docs/rust-core-open-questions.md` (deleted 2026-10-02). Collecte
 ### Added after the plan was written
 
 30. Check in the Gradle wrapper jar (about 60 KB)? The deleted Capacitor wrapper's `package.json` (`apps/phone`, in git history) said "no Gradle binaries in the repo". Default: check it in for the native project. **Settled 2026-10-01**: the wrapper jar is checked in (`docs/android-native.md` 11).
-31. The generator port is deferred because the phone doesn't author programs. Do you want it ported anyway for one-implementation purity? Default: defer.
+31. The generator port is deferred because the phone doesn't author programs. Do you want it ported anyway for one-implementation purity? Default: defer. **Settled 2026-10-14**: defer. Later the phone adds workouts and pulls generated ones from the server (`docs/decisions-pending.md` D36).
 32. ~~Liftoscript to Rust go/no-go~~ Answered: go (S12).
-33. The Coach on the phone calls a new server route that builds the prompt and validates the response, so `packages/llm` stays TypeScript. OK? Default: yes.
+33. The Coach on the phone calls a new server route that builds the prompt and validates the response, so `packages/llm` stays TypeScript. OK? Default: yes. **Settled 2026-10-14**: yes, the Coach stays TypeScript behind a server route.
 34. HR-zone coaching (R6) isn't built. Build it in TS now or wait for the Rust `guided` port? Default: wait, build once.
 35. ~~Automerge hydration~~ Moot.
 36. With liftoscript going to Rust, would you rather the run, math and engine also stay out of Rust and live in Kotlin on the phone (one phone language, accept the fork with the web)? Default: no, keep the Rust core so the three targets share one implementation.

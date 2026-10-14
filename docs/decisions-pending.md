@@ -17,6 +17,7 @@ The owner goes through this file with an agent, one item at a time. The agent ru
    - In `docs/rust-core.md` appendix B, mark the named question settled or answered, same as the existing settled entries.
    - Here, tick the item's box, add the date and a one-line answer.
 5. Read back the changed lines so the owner can check them, then ask for the next item.
+   - Decide now, build later (owner, 2026-10-14): the session changes docs only. When a Record in names code, or the answer needs code work, add a line to "To implement" at the end of this file instead, and build the list after the session.
 6. If an answer contradicts an earlier decided row, stop and say so before writing anything. The owner resolves the conflict first.
 7. If a session turns up a new pending choice that has no item here, append it with the next free D number and the same fields, then carry on.
 8. If the owner ends the session with items still open, say how many remain and which one is next.
@@ -25,7 +26,7 @@ The owner goes through this file with an agent, one item at a time. The agent ru
 
 ### D01 Overall register (L18)
 
-- Status: [ ] open
+- Status: [x] decided 2026-10-13: serious minimal, the current Beamer direction; the cartoon-like direction drops.
 - Question: keep the serious, minimal Beamer direction, or lean playful, almost cartoon-like?
 - Options: serious minimal (current) / playful cartoon-like. One wins and the other drops.
 - Default: none. This is the only open row in the decision log.
@@ -34,7 +35,7 @@ The owner goes through this file with an agent, one item at a time. The agent ru
 
 ### D02 Desktop sans face (L16)
 
-- Status: [ ] open
+- Status: [x] decided 2026-10-14: DM Sans, as one variable Latin woff2 in `apps/web/public/fonts`, with the system stack behind it.
 - Question: which proportional sans for desktop UI text? `--font-ui` is a system stack stand-in.
 - Options: name a face (then a one-line change plus a font file) / keep the stack.
 - Default: keep the stack until the owner picks.
@@ -43,40 +44,40 @@ The owner goes through this file with an agent, one item at a time. The agent ru
 
 ## Rust core and shared logic
 
-### D03 Approve the Rust core plan (S6)
+### D03 Generator port (S6, B31)
 
-- Status: [ ] open
-- Question: approve the workspace scope (run, math, engine, LS++), the R0 to R5 order, and deferring the generator port? Includes B31 (port the generator anyway for purity?) and B36 (keep run, math and engine in Rust rather than writing them in Kotlin and accepting the fork with the web?).
-- Options: approve as written / approve with changes / reject.
-- Default: approve as written (order and deferral are the recommendation).
-- Blocks: R0 and everything after it.
-- Record in: `docs/DECISIONS.md` S6, `docs/rust-core.md` status and 7, appendix B questions 31 and 36.
+- Status: [x] decided 2026-10-14: defer. Later the phone should add workouts and pull generated workouts from the server (D36).
+- Question: the Rust core plan is built past the point of approval: `qala-core` (engine, HLC, records, plates), LS++ and the Kotlin FFI are merged and in use. What's left is B31: port the generator to Rust anyway, for one implementation, when no phone screen authors programs? (B36, Kotlin instead of Rust for shared logic, moved to D32.)
+- Options: defer / port it.
+- Default: defer, revisit after R3.
+- Blocks: R4 only.
+- Record in: `docs/DECISIONS.md` S6 note, `docs/rust-core.md` 7 (R4), appendix B question 31.
 
 ### D04 TS and Rust coexistence rules (B6, B7, B8)
 
-- Status: [ ] open
-- Question: three rules for living with two implementations. How long do both exist (B6)? When Rust and TS disagree on an edge case, which is right (B7)? Who owns upstream liftosaur fixes once the vendored copy stops being the runtime (B8)?
-- Options: accept the defaults / set different ones.
-- Default: no deadline, TS deleted per package after golden vectors pass on all targets; TS is the oracle until a case is reviewed by hand; upstream fixes tracked in a list and ported by hand on request.
-- Blocks: R1 onward (the rules bite with the first ported module).
+- Status: [x] decided 2026-10-14: Rust is the main implementation; each TS package is deleted once its Rust port checks out on every target, and TS is only the reference for that check (B6, B7). Upstream liftosaur is not followed (B8).
+- Question: confirm two rules the build already follows, and answer one it hasn't hit yet. B6: both implementations live with no deadline, and TS goes per package only after golden vectors pass on all targets (every TS package is still in `packages/`). B7: TS is the oracle until a case is reviewed by hand (the vectors come from the `golden:engine`, `golden:plates` and `golden:liftoscript` Deno tasks and Rust is tested against them). B8: who owns upstream liftosaur fixes now that Rust is the phone's runtime?
+- Options: confirm B6 and B7 / reopen either; for B8, accept the default or set another.
+- Default: confirm; B8 tracked in a list and ported by hand on request.
+- Blocks: nothing new; B8 bites the first time upstream ships a fix worth taking.
 - Record in: `docs/DECISIONS.md` S6 and S17 notes, `docs/rust-core.md` 9, appendix B questions 6, 7, 8.
 
 ### D05 Platform direction (B2, B3, B4)
 
-- Status: [ ] open
-- Question: is native Kotlin the only Android app or is Compose Multiplatform kept open for iOS (B2)? Is two UI codebases drifting acceptable (B3)? Is Rust a language the owner will maintain, or must it hide behind a stable API (B4)?
-- Options: accept the defaults / change them.
-- Default: Android only with the native layer isolated from the core; one shared token file and nothing else shared; Rust only for logic that must match across platforms.
-- Blocks: module layout (B2), design drift policy (B3), how much logic goes into Rust vs Kotlin (B4).
+- Status: [x] decided 2026-10-14: confirmed all three. Android only, one generated token source, Rust for logic that must match across platforms and Kotlin for UI and platform glue.
+- Question: B2 is settled in practice: the app is native Kotlin on Jetpack Compose (not Compose Multiplatform), Android only, with the shared logic in Rust behind UniFFI, which Swift can also call. Confirm it. B3 is built as the plan's default: `scripts/tokens_to_kotlin.ts` generates Android's `design/.../Tokens.kt` from the web's `theme/tokens.css` (`deno task gen:android`), both sides test contrast on those tokens, and nothing else is shared. Confirm it. B4: is Rust a language you'll maintain, or should it sit behind a stable API you rarely touch? D32 is the live case.
+- Options: confirm B2 and B3 / reopen either. B4: accept the default / change it.
+- Default: confirm B2 and B3; B4 Rust only for logic that must match across platforms.
+- Blocks: design drift policy (B3), how much logic goes into Rust vs Kotlin (B4).
 - Record in: `docs/DECISIONS.md` S7 note, `docs/android-native.md` 3 and 4, appendix B questions 2, 3, 4.
 
-### D06 Record sync (S11, B11, B13)
+### D06 Record sync, server side (S11, B11, B13)
 
 - Status: [ ] open
-- Question: approve record sync replacing Automerge? Includes B11 (per-user SQLite on the server, and losing one write silently on a same-field conflict?) and B13 (sync in the background or only with the app open?).
-- Options: approve as written / approve with changes / keep Automerge after all.
-- Default: approve; yes to SQLite and silent loser; sync on app open, run end and workout end.
-- Blocks: A3, the server sync rewrite, both clients.
+- Question: the phone side of record sync is built in S11's shape: typed Room tables, the `field_clock` sidecar, the outbox, and the HLC in Rust with golden vectors. The server and the phone's HTTP client aren't built. Two questions are left. B11: per-user SQLite on the server, and accept losing one write silently on a same-field conflict? B13: sync in the background (WorkManager) or only with the app open?
+- Options: per question.
+- Default: yes to SQLite and the silent loser; sync on app open, run end and workout end.
+- Blocks: A3, the server sync rewrite, real data in the web app.
 - Record in: `docs/DECISIONS.md` S11, `docs/rust-core.md` 4, `docs/android-native.md` 6 and 9, appendix B questions 11 and 13.
 
 ### D07 Tracks as blobs (S9, B10)
@@ -91,10 +92,10 @@ The owner goes through this file with an agent, one item at a time. The agent ru
 ### D08 Engine state as derived cache (S8)
 
 - Status: [ ] open
-- Question: approve engine state rebuilt on each device from history, never synced, with the Rust core never owning a store?
-- Options: approve / reject.
-- Default: approve.
-- Blocks: engine port (R3) and sync design.
+- Question: confirm what the build already does. The engine state is rebuilt on the device from history (`data/.../engine/EngineCompute.kt` calls `buildEngineState` over the records), it has no Room table and is never synced, and `qala-core` owns no store.
+- Options: confirm / reopen.
+- Default: confirm.
+- Blocks: nothing now; the sync design assumes it.
 - Record in: `docs/DECISIONS.md` S8, `docs/rust-core.md` 4.
 
 ### D09 Review the landed LS++ port (S12, S17)
@@ -108,7 +109,7 @@ The owner goes through this file with an agent, one item at a time. The agent ru
 
 ### D10 Coach stays TypeScript (S14, B33)
 
-- Status: [ ] open
+- Status: [x] decided 2026-10-14: approve. The Coach stays TypeScript behind a new server route that the Android Coach tab calls.
 - Question: approve the Coach staying TS behind a new server route the Android tab calls, instead of porting `packages/llm` to Rust?
 - Options: approve / port it to Rust instead.
 - Default: approve (it needs the network regardless).
@@ -144,22 +145,22 @@ The owner goes through this file with an agent, one item at a time. The agent ru
 - Blocks: A5. The spike is future work; its result gets recorded here as a follow-up.
 - Record in: `docs/DECISIONS.md` S10, `docs/android-native.md` 7, appendix B question 24.
 
-### D14 Devices and SDKs (B14, B15)
+### D14 targetSdk 37 (B14, B15)
 
 - Status: [ ] open
-- Question: does any device besides the Nothing Phone need to run this (B14)? Move targetSdk to 37 once Nothing OS 5.0 is stable, after retesting the service and ducking (B15)?
-- Options: one phone only / name other devices; move to 37 after the retest / stay on 36.
-- Default: only the owner's phone; target 36 now, move to 37 after the October retest.
-- Blocks: minSdk choice (B14 only matters if another device appears); the October retest.
+- Question: the build answered B14: minSdk 34, targetSdk 36, compileSdk 37, one phone. Left is B15: move targetSdk to 37 once Nothing OS 5.0 is stable, after retesting the foreground service and audio ducking on the real phone? A second device would reopen minSdk; name one only if it turns up.
+- Options: move to 37 after the retest / stay on 36.
+- Default: stay on 36 until the real-phone retest, then move.
+- Blocks: nothing until the real-phone pass (USB access to the phone isn't set up yet).
 - Record in: `docs/DECISIONS.md` S7 note, `docs/android-native.md` 2, appendix B questions 14 and 15.
 
-### D15 Test process (B17, B18, B19)
+### D15 L5 check, gates and HR strap (B17, B18, B19)
 
 - Status: [ ] open
-- Question: write the L5 check as a first test app, or keep it inside milestone A0 (B17)? Owner tests at gates only, with the toolchain already provisioned (B18)? Which HR strap, or buy one (B19)?
+- Question: A0 provisioned the toolchain and closed without the L5 check, and everything so far has run on the emulator only. Where does the L5 check go now (B17)? Does "owner tests at gates only" still stand (B18)? Which HR strap, or buy one (B19)?
 - Options: per question.
-- Default: L5 check inside A0; owner at gates only; standard 0x180D strap when one exists.
-- Blocks: BLE testing (B19); A0 planning.
+- Default: the L5 check goes in the real-phone verification pass; owner at gates only; a standard 0x180D strap when one exists.
+- Blocks: the real-phone pass (B17), BLE testing (B19).
 - Record in: `docs/android-native.md` 5 and 9, appendix B questions 17, 18, 19.
 
 ### D16 Chart accessibility on Android (B22)
@@ -201,10 +202,10 @@ The owner goes through this file with an agent, one item at a time. The agent ru
 ### D20 Navigation library and screenshot tool
 
 - Status: [ ] open
-- Question: Navigation Compose vs Navigation 3 at A4 (the A1 shell uses a sealed `Route`, no library)? And which screenshot tool for Compose UI tests (Roborazzi vs Paparazzi vs one-off emulator screenshots)?
-- Options: pick at A4 / pick now.
-- Default: pick at A4 for nav; one-off emulator screenshots until a tool proves itself on compileSdk 37.
-- Blocks: A4 back stacks (nav); A1+ UI test automation (screenshots).
+- Question: the default was to pick the nav library at A4. A4 shipped without one: Today, Plan, History, Settings and the lifting flow (Warm-up, Workout, Rest, All exercises) run on a hand-written `Nav` holding a route, an origin tab and one parent (`app/.../Navigation.kt`), whose comment says the choice stays open. Keep the hand-written model, and until when, or move to Navigation Compose or Navigation 3? Separately, which screenshot tool for Compose UI tests (Roborazzi, Paparazzi, or one-off emulator screenshots)? None is in the build.
+- Options: keep `Nav` until a named trigger / adopt a library now. Screenshots: pick a tool / stay with one-off screenshots.
+- Default: keep `Nav` until a screen needs a third level or deep links; one-off emulator screenshots until a tool proves itself on compileSdk 37.
+- Blocks: deeper back stacks (the A5 stats screens may be the first); UI test automation.
 - Record in: `docs/android-native.md` 3 and 12.
 
 ## Accounts (S22 track)
@@ -320,8 +321,9 @@ These come from the four new roadmap sections in `docs/PLAN.md` 16c to 16f. None
 - Question: the Android lifting flow shipped rest and warm-up planning in Kotlin (`app/.../workout/RestPlan.kt` and `Warmup.kt`, ports of `packages/engine/rest.ts` and `warmup.ts`). `docs/rust-core.md` 7 (R3) and `docs/android-native.md` 6 put them in Rust, so there are now two implementations that can drift. Keep Kotlin, or port to `qala-core`?
 - Options: port to Rust oracle-first with golden vectors (as the plates port did) and switch Kotlin to call it / keep Kotlin and amend R3.
 - Default: port to Rust. The Kotlin rest model is also a partial port (no learning multiplier, rep drift or low-readiness adjustment), so a port fixes that too.
+- Also answers appendix B question 36 (moved here from D03): keep run, math and engine logic in Rust, or let it live in Kotlin on the phone and accept the fork with the web? Default: keep the Rust core.
 - Blocks: R3's remainder, rest parity with the web.
-- Record in: `docs/DECISIONS.md` S6 note, `docs/rust-core.md` 7, `docs/android-native.md` 6, `docs/ROADMAP.md` Rust track.
+- Record in: `docs/DECISIONS.md` S6 note, `docs/rust-core.md` 7, `docs/android-native.md` 6, `docs/ROADMAP.md` Rust track, appendix B question 36.
 
 ### D33 Prescriptions the plates cannot load
 
@@ -349,6 +351,23 @@ These come from the four new roadmap sections in `docs/PLAN.md` 16c to 16f. None
 - Default: (a) yes, (b) no until someone uses collars, (c) yes.
 - Blocks: nothing.
 - Record in: `docs/DECISIONS.md` (new rows), `docs/DESIGN.md` Settings section, `docs/ROADMAP.md` Android track.
+
+### D36 Workouts from the phone
+
+- Status: [ ] open
+- Question: the owner wants the phone, later, to add workouts and to pull generated workouts from the server (D03). Three things are open. What does "add a workout" cover: a one-off session logged outside the program, or a day or exercise written into the program text? Where does that authoring run, given S12 keeps authoring in TS on the desktop: a server route, or an LS++ authoring port in Rust? And how do generated workouts reach the phone: a route the phone calls, or records the server writes and sync delivers?
+- Options: per question.
+- Default: one-off workouts first; program edits through a server route that runs the TS authoring code, the same pattern as the Coach (S14); generated workouts arrive as records through sync, so they work offline once pulled.
+- Blocks: nothing now; any phone authoring work.
+- Record in: `docs/DECISIONS.md` (new row), `docs/rust-core.md` 7 (R4) and 8, `docs/android-native.md` (screens), `docs/ROADMAP.md` Android track.
+
+## To implement
+
+Code work owed by decided items, built after the session (protocol step 5). An entry leaves when it's built.
+
+- D10: the server Coach route in TS (builds the prompt with `packages/llm`, validates the reply, degrades when the model is down) and the Android Coach screen that calls it (A6).
+
+D02 (DM Sans) was built during the session, before this rule.
 
 ## Validations (not decisions; real-data gates)
 
