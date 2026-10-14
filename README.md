@@ -18,9 +18,10 @@ section 5 and haven't been run on the phone.
 ## Layout
 
 - `packages/liftoscript/`: liftosaur's grammars and evaluator, vendored with
-  the same file names so upstream diffs stay readable. The TS oracle; the
-  language going forward is LS++, which the desktop editor and the server run
-  through wasm.
+  the same file names so upstream diffs stay readable. The TS oracle and the
+  desktop authoring runtime; the language going forward is LS++ (the editor's
+  checks, Format and dry run, and the server's import check, run it through
+  wasm).
 - `crates/`: `qala-core` (pure logic: engine, availability, HLC, records, plate
   math), `qala-ffi` (UniFFI for Kotlin, exports `qala-core` and LS++), and the
   Rust LS++ port in `qala-lspp`, `qala-lspp-json` and `qala-lspp-wasm`.
