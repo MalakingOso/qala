@@ -559,6 +559,26 @@ Deno.test("page cap, password, corrupt and non-PDF files", async () => {
   assertEquals(seen.length, 0, "the model was never called for these");
 });
 
+Deno.test("a missing program checker is a 503 degraded response, found before MinerU runs", async () => {
+  const specs: CommandSpec[] = [];
+  const res = await handlePdfImport(
+    upload(await workoutPdf()),
+    depsFor("ok", {
+      specs,
+      imports: () => Promise.reject(new Error("wasm not built")),
+    }),
+  );
+  assertEquals(res.status, 503);
+  const body = await res.json();
+  assertEquals(body.degraded, true);
+  assertEquals(body.error, "the program checker is not available");
+  assertEquals(
+    specs.some((s) => s.cmd === MINERU.python),
+    false,
+    "no time spent in MinerU",
+  );
+});
+
 Deno.test("the model down is a 502 degraded response that still names the source", async () => {
   const down: ChatTransport = () =>
     Promise.reject(new Error("connection refused"));

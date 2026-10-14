@@ -57,7 +57,7 @@ fn empty_and_whitespace_only() {
 
 #[test]
 fn idempotent_on_fuzz_programs_that_parse() {
-    let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../testdata/golden/liftoscript/lezer_trees");
+    let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../testdata/golden/lspp/lezer_trees");
     let v: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(dir.join("planner_fuzz.json")).unwrap()).unwrap();
     let (mut ok, mut refused) = (0, 0);
     for c in v.as_array().unwrap() {

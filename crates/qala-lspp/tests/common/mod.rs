@@ -8,7 +8,7 @@ use qala_lspp::types::ISettings;
 use serde_json::Value;
 
 pub fn golden_dir() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../testdata/golden/liftoscript")
+    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../testdata/golden/lspp")
 }
 
 pub struct Program {

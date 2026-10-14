@@ -84,6 +84,26 @@ Deno.test("video files get video MIME types and advertise ranges", async () => {
   }
 });
 
+Deno.test("wasm files get the wasm MIME type, so browsers can stream-compile them", async () => {
+  const dir = await fixtureDist();
+  try {
+    await Deno.mkdir(`${dir}/wasm/abc123`, { recursive: true });
+    await Deno.writeFile(
+      `${dir}/wasm/abc123/qala_lspp_wasm_bg.wasm`,
+      new Uint8Array([0, 0x61, 0x73, 0x6d]),
+    );
+    const res = await serveStatic(
+      new Request("http://127.0.0.1:8500/wasm/abc123/qala_lspp_wasm_bg.wasm"),
+      dir,
+    );
+    assertEquals(res.status, 200);
+    assertEquals(res.headers.get("content-type"), "application/wasm");
+    await res.body?.cancel();
+  } finally {
+    await Deno.remove(dir, { recursive: true });
+  }
+});
+
 Deno.test("Range requests answer 206 with the right bytes", async () => {
   const { dir, bytes } = await videoDist();
   const get = (range: string, method = "GET") =>

@@ -195,7 +195,7 @@ recording = false;
 
 // ---- 2. planner_calls inputs, per-day and full
 
-const callsDir = repo + "testdata/golden/liftoscript/lezer_trees/planner_calls/";
+const callsDir = repo + "testdata/golden/lspp/lezer_trees/planner_calls/";
 const callInputs = new Set<string>();
 for (const e of Deno.readDirSync(callsDir)) {
   for (const c of JSON.parse(Deno.readTextFileSync(callsDir + e.name))) callInputs.add(c.input);

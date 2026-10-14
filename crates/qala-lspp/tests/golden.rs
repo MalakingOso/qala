@@ -1,4 +1,4 @@
-//! End-to-end golden tests: replay every case in `testdata/golden/liftoscript/`
+//! End-to-end golden tests: replay every case in `testdata/golden/lspp/`
 //! through the Rust port and compare against the TS oracle's recorded output.
 //!
 //! Comparison rules (see the golden README):
@@ -38,7 +38,7 @@ use qala_lspp::util::generator::SequentialUid;
 use qala_lspp::{planner_program, progress};
 
 fn golden_dir() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../testdata/golden/liftoscript")
+    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../testdata/golden/lspp")
 }
 
 fn load(path: &Path) -> Value {

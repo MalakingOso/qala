@@ -29,7 +29,7 @@ import {
   type KeyedGate,
   runCommand,
 } from "./exec.ts";
-import { type ImportRouteDeps, liveImportDeps } from "./import.ts";
+import { importDepsOnce, type ImportRouteDeps } from "./import.ts";
 import {
   liveMineruConfig,
   MINERU_DEFAULTS,
@@ -247,6 +247,18 @@ export async function handlePdfImport(
     if (!counted.ok) return fail(counted.status, counted.error);
     const pages = counted.pages;
 
+    // The evaluator can be missing (the LS++ wasm not built). Find out before
+    // spending minutes in MinerU.
+    let imports: ImportRouteDeps;
+    try {
+      imports = await deps.imports();
+    } catch {
+      return Response.json(
+        { degraded: true, error: "the program checker is not available" },
+        { status: 503 },
+      );
+    }
+
     // Text: MinerU first, pdftotext when MinerU cannot do it.
     let engine: PdfSource["engine"] = "mineru";
     let text = "";
@@ -286,7 +298,6 @@ export async function handlePdfImport(
     }
 
     const chunked = chunkProgramText(text);
-    const imports = await deps.imports();
     // A closed browser tab stops the remaining model calls.
     const transport: ChatTransport = (messages, schema) => {
       if (req.signal.aborted) {
@@ -338,7 +349,6 @@ export async function handlePdfImport(
 /** What the route needs from the server state, so this file does not import mod.ts. */
 export interface PdfRouteState {
   options: { llmBaseUrl: string };
-  importDeps?: Promise<ImportRouteDeps>;
 }
 
 /** The dispatch entry used by server/mod.ts. */
@@ -348,7 +358,6 @@ export function serveImportPdf(
 ): Promise<Response> {
   return handlePdfImport(req, {
     ...LIVE,
-    imports:
-      () => (state.importDeps ??= liveImportDeps(state.options.llmBaseUrl)),
+    imports: () => importDepsOnce(state.options.llmBaseUrl),
   });
 }

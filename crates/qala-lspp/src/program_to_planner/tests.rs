@@ -11,7 +11,7 @@ use crate::planner_program::generate_full_text;
 use crate::util::generator::SequentialUid;
 
 fn golden_dir() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../testdata/golden/liftoscript")
+    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../testdata/golden/lspp")
 }
 
 fn read_json(path: &std::path::Path) -> Value {

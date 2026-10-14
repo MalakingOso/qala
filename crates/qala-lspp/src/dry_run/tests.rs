@@ -4,7 +4,7 @@ use crate::util::generator::SequentialUid;
 use serde_json::Value;
 
 fn golden(name: &str) -> Value {
-    let p = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../testdata/golden/liftoscript").join(name);
+    let p = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../testdata/golden/lspp").join(name);
     serde_json::from_str(&std::fs::read_to_string(p).unwrap()).unwrap()
 }
 

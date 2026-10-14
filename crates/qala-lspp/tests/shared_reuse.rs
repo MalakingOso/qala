@@ -11,7 +11,7 @@ use qala_lspp::util::generator::SequentialUid;
 
 fn lb_settings() -> ISettings {
     let path = Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../../testdata/golden/liftoscript/fuzz/programs_fuzz_01.json");
+        .join("../../testdata/golden/lspp/fuzz/programs_fuzz_01.json");
     let doc: serde_json::Value = serde_json::from_str(&fs::read_to_string(path).unwrap()).unwrap();
     serde_json::from_value(doc["fixtures"]["settings"]["lb"].clone()).unwrap()
 }

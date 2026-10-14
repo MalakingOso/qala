@@ -19,7 +19,9 @@ section 5 and haven't been run on the phone.
 
 - `packages/liftoscript/`: liftosaur's grammars and evaluator, vendored with
   the same file names so upstream diffs stay readable. The TS oracle and the
-  desktop authoring runtime; the language going forward is LS++.
+  desktop authoring runtime; the language going forward is LS++ (the editor's
+  checks, Format and dry run, and the server's import check, run it through
+  wasm).
 - `crates/`: `qala-core` (pure logic: engine, availability, HLC, records, plate
   math), `qala-ffi` (UniFFI for Kotlin, exports `qala-core` and LS++), and the
   Rust LS++ port in `qala-lspp`, `qala-lspp-json` and `qala-lspp-wasm`.
@@ -28,6 +30,8 @@ section 5 and haven't been run on the phone.
 - `packages/engine/`: adaptive training engine, pure TypeScript.
 - `packages/generator/`: rules engine that emits LS++ programs.
 - `packages/llm/`: prompt builders and response validation for the coach.
+- `packages/lspp/`: typed client over the LS++ wasm build (`deno task
+  build:wasm` makes it); the web app and the server both load it.
 - `packages/run/`: GPS pipeline and guided workout step machine, pure
   TypeScript.
 - `apps/web/`: React PWA with the desktop author shell and the phone logger
@@ -55,8 +59,9 @@ npm --prefix apps/web install
 ```
 
 ```sh
+deno task build:wasm   # LS++ wasm into target/wasm-out/web; docs/rust-core.md has the one-time installs
 deno task build    # typecheck + bundle the PWA into apps/web/dist
-deno task test     # every package's tests
+deno task test     # every package's tests; server/ needs the wasm built first
 deno task dev      # server with watch on 127.0.0.1:8500, serves dist/
 deno task serve    # server without watch
 deno task build:android   # debug APK of apps/android; see docs/android-native.md 11

@@ -485,7 +485,7 @@ fn next_entry_matches_oracle() {
 fn golden_bindings() -> Value {
     let path = concat!(
         env!("CARGO_MANIFEST_DIR"),
-        "/../../testdata/golden/liftoscript/bindings.json"
+        "/../../testdata/golden/lspp/bindings.json"
     );
     match std::fs::read_to_string(path) {
         Ok(s) => serde_json::from_str(&s).expect("bindings.json"),
@@ -654,7 +654,7 @@ fn current_index(list: &Value) -> usize {
 fn run_update_script_matches_golden() {
     let path = concat!(
         env!("CARGO_MANIFEST_DIR"),
-        "/../../testdata/golden/liftoscript/finish_day_4.json"
+        "/../../testdata/golden/lspp/finish_day_4.json"
     );
     let Ok(text) = std::fs::read_to_string(path) else {
         return;

@@ -67,7 +67,7 @@ fn line_and_col_are_one_based_utf16_on_later_lines() {
 
 #[test]
 fn fuzz_inputs_never_panic_and_stay_in_range() {
-    let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../testdata/golden/liftoscript/lezer_trees");
+    let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../testdata/golden/lspp/lezer_trees");
     for (file, planner) in [("planner_fuzz.json", true), ("scripts_fuzz.json", false)] {
         let v: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(dir.join(file)).unwrap()).unwrap();
         let cases = v.as_array().unwrap();
