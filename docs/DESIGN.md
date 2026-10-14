@@ -347,6 +347,8 @@ Open-ended conversation within fitness/training/health/recovery topics (declines
 
 Build, 2026-09-30: the thread is coach and you turns (you filled with ink, right aligned). The suggestion card shows engine and coach side by side, the coach's plates as discs (the sample said 45 · 25 · 5 for 240, which loads 195; it is now 45 · 45 · 5 · 2.5), the limits, and Keep engine / Use coach.
 
+Build, 2026-10-14 (native phone, `apps/android/.../coach/`): the title with "Runs on callisto" ("Offline" once a question could not be answered), chips for the day and today's check-in, the thread, the suggestion card with the limits the server enforced, and the composer over the tab bar. An empty thread offers two starter questions that fit the day. The plates under each number are the text lines the set rows use ("per side 45 · 35 · loads 205"), for a barbell lift in pounds and when Settings shows plates. A question that cannot be answered leaves the "Coach is offline" or "Coach is unavailable" card under the thread, with the reason (no connection, the model down, or a 401 because the server did not recognise the phone) and Try again; the thread keeps the question and every other screen keeps working. Not built: "Remember this?" (the phone has no memory record), and Use coach does not change the workout, so after it the card says to change the numbers there.
+
 ### 7.12 Plate calculator (T10)
 
 Target weight as a big figure with -/+, the bar choice, the plate drawing for one side, a summary (bar plus plates with counts and the arithmetic), and the owner's plate inventory with counts and an Edit action. Opened from the logging card, the rest screen, or Settings.
