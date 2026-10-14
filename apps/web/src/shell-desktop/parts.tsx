@@ -78,7 +78,7 @@ export function TypeTag({ kind }: { kind: "lift" | "run" }) {
   return <span className={`type-tag ${kind}`}>{kind}</span>;
 }
 
-export type PillTone = "ok" | "warn" | "info" | "note" | "mute";
+export type PillTone = "ok" | "warn" | "bad" | "info" | "note" | "mute";
 
 export function Pill(
   { tone = "mute", children }: { tone?: PillTone; children: ReactNode },
