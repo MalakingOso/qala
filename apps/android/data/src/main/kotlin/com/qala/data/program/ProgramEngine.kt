@@ -14,6 +14,7 @@ import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.doubleOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
@@ -46,6 +47,8 @@ data class LiftHero(
     /** Exercises the day uses, and their working sets in all. */
     val exerciseCount: Int,
     val setCount: Int,
+    /** `barbell`, `dumbbell`, `cable`... as the LS++ entry names the main lift; null when it does not say. */
+    val equipment: String? = null,
 )
 
 /** An exercise of a program day: its name and the sets the program prescribes for it now. */
@@ -198,6 +201,7 @@ class ProgramEngine(private val uidSeed: Long = 0, private val cacheSize: Int = 
             ),
             exerciseCount = used.size,
             setCount = entries.sumOf { it.size },
+            equipment = views[main].getValue("exerciseType").jsonObject["equipment"]?.jsonPrimitive?.contentOrNull,
         )
     }
 }
