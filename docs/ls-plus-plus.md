@@ -2,7 +2,7 @@
 
 Status 2026-10-13: built and merged, with leftovers. The name is decided (owner, S18). The port and the S21 extensions are in `crates/qala-lspp`; the text import (S19) has its TS half merged (`POST /api/import/text`). Open: MinerU PDF wiring, `POST /api/transcribe` and mic capture, four of the six S21 functions over FFI, and loading the wasm build in the desktop editor and the server (neither `apps/web` nor `server/` does yet). Decision rows are DECISIONS S18 to S21.
 
-LS++ is the Rust port in `crates/qala-lspp`: liftosaur's liftoscript plus additive extensions. Programs are still plain text. The vendored TS package stays as the oracle (S17), so every extension has to leave the 60 built-in programs evaluating exactly as before.
+LS++ is the Rust port in `crates/qala-lspp`: liftosaur's liftoscript plus additive extensions. Programs are still plain text. The vendored TS package stays as the oracle (S17; the upstream commit it was copied from is in `packages/liftoscript/VENDORED`), so every extension has to leave the 60 built-in programs evaluating exactly as before.
 
 ## 1. What already works
 
