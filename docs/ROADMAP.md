@@ -12,7 +12,7 @@ Everything on Android has run on the emulator only. The server still syncs throu
 
 ## Merge queue
 
-In flight on 2026-10-14, each on its own agent branch: the Coach route and screen (D10), the LS++ wasm in the desktop editor and the server, PDF and voice import. Merged 2026-10-14: FFI exports, the vendored commit and the rename leftovers (`8e48051`). Merged 2026-10-13, in order: `plates` (`ee49107`), `docs` (`d6837a3`), `workout` (`b5e9ae9`), `plan` (`e0e6a8d`), `history` (`17c4926`), and the deploy unit fix.
+In flight on 2026-10-14, each on its own agent branch: the Coach route and screen (D10), PDF and voice import, and the `gen:lspp` memory fix. Merged 2026-10-14: FFI exports, the vendored commit and the rename leftovers (`8e48051`); the LS++ wasm in the desktop editor and the server (`f5b88e5`). Merged 2026-10-13, in order: `plates` (`ee49107`), `docs` (`d6837a3`), `workout` (`b5e9ae9`), `plan` (`e0e6a8d`), `history` (`17c4926`), and the deploy unit fix.
 
 Beyond the queue, the order of work is the owner's call. The tables below give each item's state and what it waits on.
 
@@ -51,7 +51,7 @@ Plans: `docs/rust-core.md`, `docs/ls-plus-plus.md`.
 | R3 remainder: volume, rest, warm-up, `recommend_next_session` | not in Rust | rust-core 7 still puts them in Rust; rest and warm-up planning shipped in Kotlin (`app/.../workout/RestPlan.kt`, `Warmup.kt`, ports of `rest.ts` and `warmup.ts`); Rust port or keep Kotlin is the owner's call | |
 | Differential fuzz for the R2 and R3 acceptance lines | not done | none in the repo | |
 | FFI exports of `dry_run`, `unresolved_sets`, `lint_planner`, `format_planner` | done 2026-10-14 | Kotlin bindings generate; `LsppToolsFfiTest` covers them; the app doesn't call them yet | |
-| Load the wasm build in the desktop editor and the server | next | diagnostics, dry run, fmt; neither `apps/web` nor `server/` loads it | |
+| Load the wasm build in the desktop editor and the server | done 2026-10-14 | the editor shows diagnostics and lint inline, Format and a dry run; the server's import check uses it; `packages/lspp` is the typed client. The wasm isn't committed: run `deno task build:wasm` before `deno task test` (server tests load it), and the import route answers 500 until it's built. Open owner questions: should the dry run replace the static Week preview, and should "desktop authoring runtime" for `packages/liftoscript` be reworded now that the editor's checks run on Rust | |
 | PDF import through MinerU | next | ls-plus-plus 4 | |
 | Speech import: `POST /api/transcribe`, mic capture | next | ls-plus-plus 4, 5 | V02 |
 | Record the vendored liftosaur commit (S17) | done 2026-10-14 | `5a73c87`, the newest of 26 master commits whose files match; `packages/liftoscript/VENDORED` has the method and the 14 locally changed files, and the vendor script records the hash from now on | |
