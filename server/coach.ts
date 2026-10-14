@@ -51,9 +51,10 @@ import {
   validateCoachReply,
 } from "../packages/llm/mod.ts";
 import type { AdjustmentResult } from "../packages/llm/mod.ts";
+import { readTextCapped } from "./body.ts";
 import { jsonSchemaFormat, proxyChatCompletions } from "./llm.ts";
 
-/** Request body cap. The text caps are in COACH_LIMITS; this guards the JSON. */
+/** Request body cap in bytes. The text caps are in COACH_LIMITS; this guards the JSON. */
 export const MAX_COACH_BODY_BYTES = 32 * 1024;
 
 /** The model call gets less than llm.ts's 60 s so the phone's own timeout comes second. */
@@ -283,22 +284,13 @@ export async function serveCoachAsk(
   if (req.method !== "POST") {
     return Response.json({ error: "method not allowed" }, { status: 405 });
   }
-  const declared = Number(req.headers.get("content-length") ?? "0");
-  if (declared > MAX_COACH_BODY_BYTES) {
-    return Response.json({ error: "request body too large" }, { status: 413 });
-  }
-  let raw: string;
-  try {
-    raw = await req.text();
-  } catch {
-    return Response.json({ error: "could not read body" }, { status: 400 });
-  }
-  if (raw.length > MAX_COACH_BODY_BYTES) {
-    return Response.json({ error: "request body too large" }, { status: 413 });
+  const read = await readTextCapped(req, MAX_COACH_BODY_BYTES);
+  if (!read.ok) {
+    return Response.json({ error: read.error }, { status: read.status });
   }
   let body: unknown;
   try {
-    body = JSON.parse(raw);
+    body = JSON.parse(read.text);
   } catch {
     return Response.json({ error: "invalid JSON body" }, { status: 400 });
   }

@@ -225,6 +225,29 @@ Deno.test("request validation: method, size, shape", async () => {
   assertEquals(calls.length, 0, "model never called for rejected requests");
 });
 
+Deno.test("a chunked body with no Content-Length is capped while it is read", async () => {
+  const { deps, calls } = depsWith(PROGRAM);
+  let sent = 0;
+  const stream = new ReadableStream<Uint8Array>({
+    pull(controller) {
+      sent += 1024;
+      controller.enqueue(new Uint8Array(1024).fill(0x61));
+    },
+  });
+  const res = await serveImportText(
+    new Request("http://localhost/api/import/text", {
+      method: "POST",
+      body: stream,
+      // @ts-ignore Deno needs `duplex` for a stream body; the DOM types lack it.
+      duplex: "half",
+    }),
+    deps,
+  );
+  assertEquals(res.status, 413);
+  assert(sent < MAX_IMPORT_BODY_BYTES + 16 * 1024, `read ${sent} bytes`);
+  assertEquals(calls.length, 0);
+});
+
 Deno.test("a client-supplied edit list is validated like model output", async () => {
   const { deps } = depsWith(PROGRAM);
   const res = await serveImportText(

@@ -23,6 +23,7 @@ import {
   validateEditList,
   type WeightUnit,
 } from "../packages/llm/mod.ts";
+import { readTextCapped } from "./body.ts";
 import {
   jsonSchemaFormat,
   LLAMA_DEFAULTS,
@@ -145,22 +146,13 @@ export async function serveImportText(
   if (req.method !== "POST") {
     return Response.json({ error: "method not allowed" }, { status: 405 });
   }
-  const declared = Number(req.headers.get("content-length") ?? "0");
-  if (declared > MAX_IMPORT_BODY_BYTES) {
-    return Response.json({ error: "request body too large" }, { status: 413 });
-  }
-  let raw: string;
-  try {
-    raw = await req.text();
-  } catch {
-    return Response.json({ error: "could not read body" }, { status: 400 });
-  }
-  if (raw.length > MAX_IMPORT_BODY_BYTES) {
-    return Response.json({ error: "request body too large" }, { status: 413 });
+  const read = await readTextCapped(req, MAX_IMPORT_BODY_BYTES);
+  if (!read.ok) {
+    return Response.json({ error: read.error }, { status: read.status });
   }
   let body: unknown;
   try {
-    body = JSON.parse(raw);
+    body = JSON.parse(read.text);
   } catch {
     return Response.json({ error: "invalid JSON body" }, { status: 400 });
   }

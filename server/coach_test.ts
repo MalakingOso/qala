@@ -387,6 +387,40 @@ Deno.test("a request that is wrong is a 4xx with a reason", async () => {
   assertEquals(model.calls.length, 0);
 });
 
+Deno.test("a chunked body with no Content-Length is capped while it is read", async () => {
+  const model = fakeModel({ message: "never sent" });
+  let sent = 0;
+  const stream = new ReadableStream<Uint8Array>({
+    pull(controller) {
+      sent += 1024;
+      controller.enqueue(new Uint8Array(1024).fill(0x61));
+    },
+  });
+  const res = await serveCoachAsk(
+    new Request("http://qala.test/api/coach/ask", {
+      method: "POST",
+      headers: IDENTITY,
+      body: stream,
+      // @ts-ignore Deno needs `duplex` for a stream body; the DOM types lack it.
+      duplex: "half",
+    }),
+    { baseUrl: BASE, fetchFn: model.fetchFn },
+  );
+  assertEquals(res.status, 413);
+  assert(sent < MAX_COACH_BODY_BYTES + 16 * 1024, `read ${sent} bytes`);
+  assertEquals(model.calls.length, 0);
+});
+
+Deno.test("a garbage Content-Length is a 400", async () => {
+  const model = fakeModel({ message: "never sent" });
+  const res = await serveCoachAsk(
+    post({ message: "squat" }, { ...IDENTITY, "content-length": "lots" }),
+    { baseUrl: BASE, fetchFn: model.fetchFn },
+  );
+  assertEquals(res.status, 400);
+  assertEquals((await res.json()).error, "invalid Content-Length");
+});
+
 Deno.test("context that does not parse is dropped, not rejected", async () => {
   const model = fakeModel({ message: "Keep it light." });
   const res = await serveCoachAsk(
