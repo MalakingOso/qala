@@ -1,11 +1,12 @@
 package com.qala.app.coach
 
+import com.qala.app.today.trimNumber
 import kotlin.math.roundToInt
 import kotlinx.coroutines.delay
 
 /**
  * A stand-in for the server, for debug builds only: MainActivity swaps it in when the launch intent carries
- * `--es qala.coach <mode>` (see [demoCoachClient]) and the build is a debug one. It answers like the real route does for
+ * `--es qala.coach <mode>` (see [demoCoachClient]) and the build is a debug one. It answers in the shape of
  * the fixtures in testdata/golden/coach, so the Coach screen can be looked at, and screenshotted, without a server or
  * a model. A release build never reads the extra.
  */
@@ -32,7 +33,7 @@ class DemoCoachClient(private val mode: String, private val delayMs: Long = 600)
         val engine = CoachNumbers(lift.weight, lift.unit, lift.sets, lift.reps, lift.rpe)
         return CoachResponse(
             ReplyStatus.Ok,
-            "The engine has ${lift.weight.toInt()} because your last top set moved well. Your quads are still sore, so I would pull it back a little and keep the reps.",
+            "The engine has ${trimNumber(lift.weight)} because your last top set moved well. Today's check-in shows some soreness, so I would pull it back a little and keep the reps.",
             limits,
             CoachSuggestion(
                 title = lift.title,
@@ -40,7 +41,7 @@ class DemoCoachClient(private val mode: String, private val delayMs: Long = 600)
                 coach = engine.copy(weight = coachWeight),
                 weightPct = Math.round((coachWeight / lift.weight - 1) * 1000) / 10.0,
                 setsDelta = 0,
-                reason = "Quads still sore (4). Small pullback, same reps.",
+                reason = "Soreness in today's check-in. Small pullback, same reps.",
                 status = SuggestionStatus.Accepted,
             ),
         )
