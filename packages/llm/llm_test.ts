@@ -262,6 +262,29 @@ Deno.test("coach: declines outside topics, keeps inside ones", () => {
   }
 });
 
+Deno.test("classifier: out-of-scope phrases match whole words, not parts of words", () => {
+  for (
+    const text of [
+      "Give me an example of a deload week",
+      "I'm frustrated with my squat",
+      "Should I trust the engine on bench?",
+      "My syntax for the bar path is off, any tips on my squat?",
+    ]
+  ) {
+    assertEquals(classifyCoachTopic(text).inScope, true, text);
+  }
+  for (
+    const text of [
+      "Which stocks should I buy for my training budget?",
+      "Help me debugging my Python script after my workout",
+      "Can you do my taxes before my run?",
+    ]
+  ) {
+    assertEquals(classifyCoachTopic(text).inScope, false, text);
+  }
+  assertEquals(classifyCoachTopic("deload exams").inScope, false, "exams");
+});
+
 // Memory round-trip.
 
 Deno.test("memory: propose, accept/reject, serialize round-trip", () => {

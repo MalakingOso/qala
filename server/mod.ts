@@ -10,6 +10,7 @@ import {
   checkWsUpgrade,
   requireDocOwnership,
 } from "./auth.ts";
+import { serveCoachAsk } from "./coach.ts";
 import { lookupElevation } from "./elevation.ts";
 import { importDepsOnce, serveImportText } from "./import.ts";
 import { serveImportPdf } from "./importPdf.ts";
@@ -125,6 +126,9 @@ export function createHandler(
       }
       if (path === "/api/llm/chat") {
         return await serveLlmChat(req, state.options.llmBaseUrl);
+      }
+      if (path === "/api/coach/ask") {
+        return await serveCoachAsk(req, { baseUrl: state.options.llmBaseUrl });
       }
       if (path === "/api/import/text") {
         const deps = await importDepsOnce(state.options.llmBaseUrl);

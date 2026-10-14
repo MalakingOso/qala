@@ -1,6 +1,6 @@
 # Native Android app: plan
 
-Status 2026-10-13: in progress. The Kotlin direction (DECISIONS S7) was decided 2026-10-01 and `apps/android` builds. Merged to main: the toolchain (A0, section 11), the design system and shell (A1), the Capacitor removal (A7), the Rust core and FFI, the Room data layer, Today with the day rail, check-in, the skip sheet and status, the weekday picker (the native refresh M1 to M4, `docs/PLAN-rail-refresh.md`), and the plate calculator. In flight and unmerged: History and All exercises (branch `history`), Warm-up, Workout and Rest (`workout`), Plan (`plan`). Not started: run recording (A2), record sync (A3), charts and map (A5), Coach (A6). Everything has run on the emulator only; none of the section 5 gates has run on the phone. `docs/ROADMAP.md` has the order and what each item waits on.
+Status 2026-10-13: in progress. The Kotlin direction (DECISIONS S7) was decided 2026-10-01 and `apps/android` builds. Merged to main: the toolchain (A0, section 11), the design system and shell (A1), the Capacitor removal (A7), the Rust core and FFI, the Room data layer, Today with the day rail, check-in, the skip sheet and status, the weekday picker (the native refresh M1 to M4, `docs/PLAN-rail-refresh.md`), and the plate calculator. In flight and unmerged: History and All exercises (branch `history`), Warm-up, Workout and Rest (`workout`), Plan (`plan`). Built 2026-10-14: the Coach route and screen (A6, release signing not started). Not started: run recording (A2), record sync (A3), charts and map (A5). Everything has run on the emulator only; none of the section 5 gates has run on the phone. `docs/ROADMAP.md` has the order and what each item waits on.
 
 Sections 5 to 7 (run recorder, sync, charts and map) are still proposals: DECISIONS S9, S10 and S14 to S16, and queue items D07 and D11 to D13. This replaced the Capacitor wrapper (`apps/phone`, DECISIONS S2), which has been deleted. The shared logic comes from the Rust core in `docs/rust-core.md`; what was and wasn't verified is in its appendix A, and the open questions are in appendix B. Decision rows are DECISIONS S6 to S17, plus S18 to S21 for LS++ and S22 for accounts. Revised 2026-09-30: sync is records over HTTP (no Automerge), and LS++ is the Rust port (no quickjs).
 
@@ -87,7 +87,7 @@ Don't put recording in WorkManager or JobScheduler; Android 16 tightened their r
 - **Sync.** `POST /api/sync` over HTTPS to the Qala server on the owner's VPS (DECISIONS S22, no Tailscale; the base URL is a setting, not hard-coded), one round trip sending local changes and receiving everything past the cursor. Runs on app open, run end and workout end. No background sync in v1. The web's `offlineQueue.ts` shape (enqueue, acknowledge, backoff 1 s doubling to 60 s) becomes a Room outbox table plus a WorkManager job for blob uploads. Built so far (M2): the outbox, the clock sidecar and the HLC wrapper. There is no HTTP client, and the server has no `/api/sync` yet.
 - **Workout flow owner.** A `WorkoutPlanner` in `data/` runs PLAN 10 on the phone: read the check-in, call Rust `predict_readiness`, build the engine bindings, call the Rust LS++ evaluator for today's program, then map the result to screen state and call Rust `recommend_next_session` for the numbers. Phase A4 builds it; nothing else owns the sequence.
 - **Hot path.** Rust calls are synchronous and cheap per call. Engine and LS++ calls happen at workout start, set logged, session end and check-in, not per frame, so a JSON boundary is fine. Plates and clock formatting are the only per-render calls and are pure Rust or plain Kotlin.
-- **Coach.** A server route builds the prompt and validates the response (S14); the phone sends context and gets a validated, enveloped suggestion. Needs the network, so offline behavior is "coach offline", as PLAN 14 already says.
+- **Coach.** A server route builds the prompt and validates the response (S14); the phone sends context and gets a validated, enveloped suggestion. Needs the network, so offline behavior is "coach offline", as PLAN 14 already says. Built 2026-10-14: `POST /api/coach/ask` (`server/coach.ts`, which holds the wire contract) and `app/.../coach/` on the phone (`CoachClient`, an `HttpURLConnection` implementation, the in-memory `CoachStore` and the screen). The base URL is the `COACH_BASE_URL` BuildConfig field (default `http://10.0.2.2:8500`, `-Pqala.serverUrl=` to change it), not yet a setting. The app asks only when the athlete sends a question. The thread lives in memory for the session. "Use coach" records the choice on the card and the workout does not read it yet. "Remember this?" is not built (no memory record on the phone).
 
 ## 7. Charts and map
 
@@ -116,10 +116,10 @@ Sequence by dependency, not by line count. Line counts are the existing React pa
 | A2 run | Start, Live, Guided, Summary (the 358-line `RunPages.tsx`, all stubs) | Real recorder, no sample data. |
 | A4 lifting | Today (280, timeline rail, ring, week strip, 10 s snap-back from U9), Check-in (171), Warm-up (103), Workout (311, swipe between exercises with `HorizontalPager`, U5), Rest (88, 1 s timer), Plate calc (103, `PlateDrawing` on Canvas), Plan (185) | The web has no swipe code, so U5's swipe is new. |
 | A5 stats | Session complete (145, four charts), Progress (71), Body (66) | Needs charts. |
-| A6 coach | Coach (119) | Needs the server route. |
+| A6 coach | Coach (119) | Built 2026-10-14 on the server route. |
 | skip | Landing (150) | Marketing page, not part of the phone logger. |
 
-Status 2026-10-13. Built and merged: Today, Check-in and Plate calc (M3, M4 and the plates work), and Settings (Training status, weekdays, Units, bars and the editable plate inventory with the 55 lb row, equipment, warm-up and rest timer; Appearance, Coach, Check-ins and Running are not built). In flight: History and All exercises on `history`, Warm-up, Workout and Rest on `workout`, Plan on `plan`. Not started: the run screens, Session complete, Progress, Body, Coach.
+Status 2026-10-13. Built and merged: Today, Check-in and Plate calc (M3, M4 and the plates work), and Settings (Training status, weekdays, Units, bars and the editable plate inventory with the 55 lb row, equipment, warm-up and rest timer; Appearance, Coach, Check-ins and Running are not built). In flight: History and All exercises on `history`, Warm-up, Workout and Rest on `workout`, Plan on `plan`. Not started: the run screens, Session complete, Progress, Body. The Coach screen was built on 2026-10-14.
 
 ## 9. Phases and gates
 
@@ -142,12 +142,13 @@ Status by phase, 2026-10-13:
 | Phase | State |
 |---|---|
 | A0 | Toolchain installed (section 11). Spike check 1 (arm64 `.so`, size and alignment) and check 5 (LS++ against the oracle) pass. Checks 2 to 4, the Vico and Canvas run-series spike and the L5 check have not been run; nothing in the repo does them. |
-| A1 | Built: tokens generator, fonts, icons, design components, navigation shell. The stub Today was compared against the web at 390 dp on an x86_64 emulator and matches in fonts, spacing, shadows and colors (2026-10-01). Settings has every group a native screen can honour (2026-10-13); the Appearance and Coach groups wait for their screens. |
+| A1 | Built: tokens generator, fonts, icons, design components, navigation shell. The stub Today was compared against the web at 390 dp on an x86_64 emulator and matches in fonts, spacing, shadows and colors (2026-10-01). Settings has every group a native screen can honour (2026-10-13); the Appearance group waits for its screen. The Coach group (status and limits, both read-only) is left out: the Coach screen shows the status, and the limits come from the server's answer. |
 | A2 | Not started. Waits on D11. |
 | A3 | Not started. The outbox, clock sidecar and HLC wrapper exist; there is no sync endpoint or client. Waits on D06, D07 and D22. |
 | R5 | Done 2026-10-01. |
 | A4 | Screens built and merged 2026-10-13: Today, Check-in, Warm-up, Workout, Rest, Plate calc, Plan, plus History and All exercises. Check-in to workout end to end with no network is covered by `WorkoutFlowTest` on the emulator; nothing has run on a real phone. Rest and warm-up planning shipped in Kotlin (ports of `rest.ts` and `warmup.ts`), where section 6 and `docs/rust-core.md` 7 (R3) put them in Rust. |
-| A5, A6 | Not started. |
+| A5 | Not started. |
+| A6 | The Coach screen and the server route are built (2026-10-14). The offline gate is tested on the emulator: a connection refused, a 401, the degraded body and Try again, with Today, Plan and the check-in still opening. The wire contract is checked on both sides against `testdata/golden/coach`. Not run against the real model on callisto. Release signing, and the signed APK, are not started. |
 | A7 | Done 2026-10-01. |
 
 Nothing has run on the owner's phone. Every check so far used the `qala-test` emulator.
@@ -159,7 +160,7 @@ The existing server needs additions, not rewrites. Auth is the Tailscale identit
 - `POST /api/sync` (records, cursor, idempotent on record, field and HLC) with per-user SQLite storage, replacing `server/sync.ts` and `server/ws.ts`. The server rejects writes more than a day ahead of its own clock.
 - Content-addressed blob upload and download for tracks: resumable, immutable, keyed by hash under the user. Both new routes must call `requireUser`; today only the old `/sync` socket does, and `/api/llm/chat`, `/api/elevation` and `/tiles` rely on the tailnet.
 - Glyph and sprite routes for the map style (or bundle them in the app).
-- A Coach route that builds the prompt and validates the response.
+- A Coach route that builds the prompt and validates the response. Built 2026-10-14 as `POST /api/coach/ask` (`server/coach.ts`), which calls `requireUser`; the JSON bodies of it and of `/api/import/text` are read with a byte cap (`server/body.ts`).
 - Serving the region `.pmtiles` file for download (the route already supports Range requests).
 
 ## 11. Toolchain (milestone A0)

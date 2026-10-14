@@ -146,7 +146,7 @@ function renderEngine(e: EngineOutput): string {
   return lines.join("\n");
 }
 
-function renderEnvelope(env: Envelope): string {
+export function renderEnvelope(env: Envelope): string {
   return `Envelope: weight ${env.weightPctMin}% to +${env.weightPctMax}%, ` +
     `sets ${env.setsMin} to +${env.setsMax}. ` +
     `Stay inside it; out-of-envelope numbers are clamped or discarded.`;
@@ -163,7 +163,7 @@ export function renderContextBlock(ctx: PromptContext): string {
   ].join("\n\n");
 }
 
-const COACH_SYSTEM =
+export const COACH_SYSTEM =
   "You are Qala's training coach. You speak plainly about fitness, " +
   "training, health and recovery, and you decline anything outside those " +
   "topics. You never diagnose injuries. Numbers you suggest must stay " +

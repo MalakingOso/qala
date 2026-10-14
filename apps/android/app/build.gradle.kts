@@ -12,6 +12,8 @@ val targetAbi: String = providers.gradleProperty("qala.abi").getOrElse("arm64-v8
 // JVM unit tests load the host build of libqala_ffi through JNA, as :data's do: the warm-up's rounding is Rust now.
 tasks.withType<Test>().configureEach {
     dependsOn(":data:cargoHostBuild")
+    // CoachWireTest reads the Coach wire fixtures, which server/coach_test.ts checks too; a change to them must rerun it.
+    inputs.dir(File(rootProject.projectDir.parentFile.parentFile, "testdata/golden/coach")).withPathSensitivity(PathSensitivity.RELATIVE)
     systemProperty("jna.library.path", File(rootProject.projectDir.parentFile.parentFile, "target/debug").absolutePath)
 }
 
@@ -30,6 +32,12 @@ android {
         versionCode = 1
         versionName = "0.1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // Where the Coach tab reaches the server (docs/android-native.md section 10). 10.0.2.2 is the emulator's name for the
+        // host's loopback, where the server listens (127.0.0.1:8500). A build for the phone passes -Pqala.serverUrl=https://...;
+        // S22 makes this a setting.
+        val serverUrl = providers.gradleProperty("qala.serverUrl").getOrElse("http://10.0.2.2:8500")
+        buildConfigField("String", "COACH_BASE_URL", "\"$serverUrl\"")
 
         ndk {
             // One phone, arm64 only. Compose ships a small native library, so an x86_64 emulator needs

@@ -294,6 +294,7 @@ const OUT_OF_SCOPE_PHRASES = [
   "lawsuit",
   "lawyer",
   "debug",
+  "debugging",
   "borrow checker",
   "compiler",
   "javascript",
@@ -305,6 +306,16 @@ const OUT_OF_SCOPE_PHRASES = [
   "car repair",
   "plumbing",
 ];
+
+/**
+ * The out-of-scope phrases get the same word-boundary treatment as the short
+ * keywords above, with an optional plural. A plain substring check declined
+ * "an example of a deload" ("exam") and "I'm frustrated with my squat"
+ * ("rust"), which is the wrong side to fail on in an open conversation.
+ */
+const OUT_OF_SCOPE_PATTERNS = OUT_OF_SCOPE_PHRASES.map(
+  (p) => new RegExp(`\\b${p}(?:s|es)?\\b`, "i"),
+);
 
 export interface TopicVerdict {
   inScope: boolean;
@@ -345,7 +356,7 @@ function inScopeHit(lower: string): boolean {
 export function classifyCoachTopic(text: string): TopicVerdict {
   const lower = text.toLowerCase();
   const inHit = inScopeHit(lower);
-  const outHit = OUT_OF_SCOPE_PHRASES.some((p) => lower.includes(p));
+  const outHit = OUT_OF_SCOPE_PATTERNS.some((re) => re.test(lower));
   if (!inHit || outHit) return { inScope: false, topics: [] };
   const topics = COACH_TOPICS.filter((t) => lower.includes(t));
   return { inScope: true, topics: topics.length > 0 ? topics : ["training"] };

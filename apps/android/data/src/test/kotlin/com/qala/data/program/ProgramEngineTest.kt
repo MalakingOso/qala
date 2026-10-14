@@ -78,6 +78,13 @@ class ProgramEngineTest {
     }
 
     @Test
+    fun theHeroSaysWhatEquipmentTheMainLiftTakes() {
+        // The Coach card shows plates only for a barbell lift.
+        assertEquals("barbell", engine.liftHero(gzclp, 1, SettingsRecord.DefaultMainLifts, "gzclp.md")!!.equipment)
+        assertEquals("barbell", engine.liftHero(gzclp, 3, SettingsRecord.DefaultMainLifts, "gzclp.md")!!.equipment)
+    }
+
+    @Test
     fun theMainLiftIsTheFirstUsedExerciseThatIsOne() {
         assertEquals("benchPress", engine.liftHero(gzclp, 3, SettingsRecord.DefaultMainLifts, "gzclp.md")!!.exerciseId)
         assertEquals("Day 3", engine.liftHero(gzclp, 3, SettingsRecord.DefaultMainLifts, "gzclp.md")!!.dayName)
