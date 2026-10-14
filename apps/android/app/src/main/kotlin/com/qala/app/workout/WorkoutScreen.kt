@@ -134,6 +134,7 @@ private fun WorkoutBody(state: WorkoutState, store: WorkoutStore, onBack: () -> 
 
     val now by rememberNow(container.env.clock, state.startedAtMs)
     val plates by store.plateHints.collectAsState()
+    val gym by store.gym.collectAsState()
 
     Box(Modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize().semantics { if (finishOpen) hideFromAccessibility() }) {
@@ -153,14 +154,15 @@ private fun WorkoutBody(state: WorkoutState, store: WorkoutStore, onBack: () -> 
                 modifier = Modifier.weight(1f).fillMaxWidth(),
                 key = { it },
             ) { page ->
-                ExercisePage(state, page, store, plates)
+                ExercisePage(state, page, store, plates, gym.rest.showPlates)
             }
             FlowBottomBar {
-                val hint = state.restHint()
+                val hint = state.restHint(gym.rest.auto)
                 if (hint != null) {
                     Row(Modifier.padding(bottom = 8.dp).fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
-                        QalaIcon(QalaIcons.Hourglass, null, size = 14.dp, tint = c.fgMuted)
-                        QalaText(hint, Modifier.padding(start = 6.dp), QalaType.hint, c.fgMuted, maxLines = 1)
+                        // The hourglass is the rest: with automatic rest off there is none to show.
+                        if (gym.rest.auto) QalaIcon(QalaIcons.Hourglass, null, size = 14.dp, tint = c.fgMuted)
+                        QalaText(hint, Modifier.padding(start = if (gym.rest.auto) 6.dp else 0.dp), QalaType.hint, c.fgMuted, maxLines = 1)
                     }
                 }
                 PrimaryButton(
@@ -172,7 +174,7 @@ private fun WorkoutBody(state: WorkoutState, store: WorkoutStore, onBack: () -> 
                             when (store.log()) {
                                 AfterLog.Rest -> onRest()
                                 AfterLog.Finish -> finishOpen = true
-                                AfterLog.Stay -> {}
+                                AfterLog.Stay, AfterLog.Next -> {}
                             }
                         }
                     },
@@ -296,7 +298,7 @@ private fun NeighbourButton(name: String?, description: String, leading: Boolean
 // ---- one exercise ----
 
 @Composable
-private fun ExercisePage(state: WorkoutState, page: Int, store: WorkoutStore, plates: Map<Double, PlateHint>) {
+private fun ExercisePage(state: WorkoutState, page: Int, store: WorkoutStore, plates: Map<Double, PlateHint>, showPlates: Boolean) {
     val ex = state.exercises[page]
     val unit = ex.unit
     val scroll = rememberScrollState()
@@ -319,7 +321,7 @@ private fun ExercisePage(state: WorkoutState, page: Int, store: WorkoutStore, pl
                     unit = unit,
                     selected = selected,
                     last = i == ex.sets.lastIndex,
-                    plateShorthand = if (ex.barbell && set.weight != null) plates[set.weight]?.let { plateLine(set.weight, it) } else null,
+                    plateShorthand = setPlateLine(showPlates, ex.barbell, set.weight, plates),
                     onClick = { store.pickSet(i) },
                 ) {
                     Logger(set, unit, store)

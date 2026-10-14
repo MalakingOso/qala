@@ -3,18 +3,26 @@ package com.qala.app.workout
 import android.util.Log
 import com.qala.data.IsoTime
 import com.qala.data.QalaJson
+import com.qala.data.model.GymSettings
+import com.qala.data.model.PlateSettings
 import com.qala.data.model.WeightUnit
 import com.qala.data.program.FinishOutcome
 import com.qala.data.program.LiftService
 import com.qala.data.program.oneRepMax
 import com.qala.data.repo.CheckInRepository
 import com.qala.data.repo.RepoEnv
+import com.qala.data.repo.SettingsRepository
 import com.qala.data.repo.WorkoutDraftStore
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -26,14 +34,15 @@ import kotlinx.serialization.builtins.serializer
 /** How a day opened. [NoDay] is a program that has no exercise on the day, or no program at all. */
 enum class Opened { Ready, NoDay }
 
-/** What a logged set asks of the screen: open Rest, offer to finish (it was the last set), or stay (a set edited after the fact). */
-enum class AfterLog { Rest, Finish, Stay }
-
 /**
  * The workout in progress, held for the life of the process (like the container's other long-lived state), so it
  * survives the screens: Workout to Rest and back, Back to Today and returning, a rotation. Each change is also written
  * to the draft store, so a killed process picks the workout up where it was. Nothing here touches Compose: the model is
  * [WorkoutState], this class is the I/O around it (the program, the update script, the finish).
+ *
+ * What Settings holds for the lifting flow ([GymSettings]: the bar and plates, the equipment, the warm-up, automatic rest
+ * and showing plates) is followed here as it changes, so a set logged, a plate hint or a warm-up built a moment after a
+ * change already uses it.
  *
  * All of it is meant to be called from the main thread; the Rust and database work runs off it, on [env]'s dispatcher
  * or the container's scope, which outlives any screen: a finish started from a screen that is then left is not cancelled.
@@ -42,6 +51,7 @@ class WorkoutStore(
     private val service: LiftService,
     private val drafts: WorkoutDraftStore,
     private val checkIns: CheckInRepository,
+    settings: SettingsRepository,
     private val env: RepoEnv,
     private val scope: CoroutineScope,
 ) {
@@ -59,6 +69,15 @@ class WorkoutStore(
     val plateHints: StateFlow<Map<Double, PlateHint>> = _plateHints
 
     private val plateTried = HashSet<Double>()
+    private var hintsFor: PlateSettings? = null
+
+    private val _gym = MutableStateFlow(GymSettings())
+
+    /** The lifting settings as the store last saw them; the screens read what to show and hide from it. */
+    val gym: StateFlow<GymSettings> = _gym
+
+    /** Completes when the first read of the settings has landed, so a workout or a warm-up never starts from the defaults by mistake. */
+    private val gymLoaded = CompletableDeferred<Unit>()
 
     private val openLock = Mutex()
     private val scriptLock = Mutex()
@@ -66,7 +85,15 @@ class WorkoutStore(
 
     init {
         scope.launch {
-            _state.collect { s -> if (s != null) fillPlateHints(s) }
+            settings.gym.collect {
+                _gym.value = it
+                gymLoaded.complete(Unit)
+            }
+        }
+        // The hints are for one bar and one inventory: when either changes they are asked for again.
+        scope.launch {
+            combine(_state.filterNotNull(), _gym.map { it.plates }.distinctUntilChanged()) { s, plates -> s to plates }
+                .collect { (s, plates) -> fillPlateHints(s, plates) }
         }
         // One writer for the draft. A write that is no longer the current state is skipped, so a late write never
         // brings back a draft that a finish has just cleared.
@@ -77,11 +104,16 @@ class WorkoutStore(
         }
     }
 
-    /** Asks the plate math (Rust, so off the main thread) for each barbell weight in [s] it has not answered yet. */
-    private suspend fun fillPlateHints(s: WorkoutState) {
+    /** Asks the plate math (Rust, so off the main thread) on [plates] for each barbell weight in [s] it has not answered yet. */
+    private suspend fun fillPlateHints(s: WorkoutState, plates: PlateSettings) {
+        if (plates != hintsFor) {
+            hintsFor = plates
+            plateTried.clear()
+            _plateHints.value = emptyMap()
+        }
         val missing = s.plateWeights().filter { it !in _plateHints.value && plateTried.add(it) }
         if (missing.isEmpty()) return
-        val answers = withContext(env.work) { missing.mapNotNull { w -> PlateMath.hint(w)?.let { w to it } }.toMap() }
+        val answers = withContext(env.work) { missing.mapNotNull { w -> PlateMath.hint(w, plates)?.let { w to it } }.toMap() }
         if (answers.isNotEmpty()) _plateHints.update { it + answers }
     }
 
@@ -95,6 +127,7 @@ class WorkoutStore(
      * saved is dropped.
      */
     suspend fun open(day: Int): Opened = openLock.withLock {
+        gymLoaded.await()
         val now = env.clock.nowMs()
         val programId = service.activeProgramId()
         _state.value?.let { if (it.isFor(programId, day, now)) return Opened.Ready }
@@ -132,10 +165,12 @@ class WorkoutStore(
 
     /**
      * Logs the selected set. The first logging of a set starts the rest after it (unless it was the last set of the
-     * workout) and runs the program's update script, which may rewrite the sets still to come.
+     * workout, or automatic rest is off in Settings: then the logger only moves to the next set) and runs the program's
+     * update script, which may rewrite the sets still to come.
      */
     fun log(): AfterLog {
         val now = env.clock.nowMs()
+        val autoRest = _gym.value.rest.auto
         var result = AfterLog.Stay
         var logged: SetRef? = null
         _state.update { s ->
@@ -144,11 +179,9 @@ class WorkoutStore(
             if (s == null) return@update s
             val l = s.log(now) ?: return@update s
             logged = l.ref
-            when {
-                !l.first -> l.state
-                l.next == null -> l.state.also { result = AfterLog.Finish }
-                else -> l.state.startRest(l.ref, l.next, now).also { result = AfterLog.Rest }
-            }
+            val settled = l.settle(now, autoRest)
+            result = settled.after
+            settled.state
         }
         logged?.let { runUpdateScript(it) }
         if (result == AfterLog.Rest) _state.value?.rest?.let { restPlates(it.logged, it.next) }
@@ -179,12 +212,13 @@ class WorkoutStore(
             val nextEx = s.exercises.getOrNull(next.exercise) ?: return@launch
             val nextWeight = nextEx.sets.getOrNull(next.set)?.weight
             if (!nextEx.barbell || nextWeight == null) return@launch
+            val setup = _gym.value.plates
             val answer = withContext(env.work) {
-                val hint = PlateMath.hint(nextWeight) ?: return@withContext null
+                val hint = PlateMath.hint(nextWeight, setup) ?: return@withContext null
                 val doneEx = s.exercises[logged.exercise]
                 val doneWeight = doneEx.sets.getOrNull(logged.set)?.weight
                 val change = if (doneEx.barbell && doneWeight != null) {
-                    PlateMath.hint(doneWeight)?.let { PlateMath.change(it.perSide, nextWeight)?.instruction }
+                    PlateMath.hint(doneWeight, setup)?.let { PlateMath.change(it.perSide, nextWeight, setup)?.instruction }
                 } else {
                     null
                 }
@@ -235,7 +269,9 @@ class WorkoutStore(
      * The warm-up for program [day]: the day's exercises, their working weights against the 1RMs, and today's
      * check-in (soreness and recovery). Null when the day has nothing to lift.
      */
-    suspend fun warmup(day: Int, equipment: Equipment = Equipment.Owner): WarmupView? = withContext(env.work) {
+    suspend fun warmup(day: Int): WarmupView? = withContext(env.work) {
+        gymLoaded.await()
+        val gym = _gym.value
         val planned = service.plan(day) ?: return@withContext null
         val nowMs = env.clock.nowMs()
         val today = IsoTime.localDateKey(nowMs, IsoTime.offsetMinAt(env.clock.zone, nowMs))
@@ -255,15 +291,19 @@ class WorkoutStore(
                 barbell = ex.equipment == "barbell",
             )
         }
-        val plan = planWarmup(WarmupInput(exercises, planned.unit, soreness, checkIn?.recovery, equipment))
-        val hints = plan.ramps.filter { it.barbell }.flatMap { r -> r.steps.filter { !it.bar }.map { it.load } }.distinct()
-            .mapNotNull { w -> PlateMath.hint(w)?.let { w to it } }.toMap()
+        val plan = planWarmup(warmupInput(exercises, planned.unit, soreness, checkIn?.recovery, gym))
+        // The plates under each ramp step, unless Settings hides them.
+        val hints = if (!gym.rest.showPlates) emptyMap() else {
+            plan.ramps.filter { it.barbell }.flatMap { r -> r.steps.filter { !it.bar }.map { it.load } }.distinct()
+                .mapNotNull { w -> PlateMath.hint(w, gym.plates)?.let { w to it } }.toMap()
+        }
         WarmupView(
             dayName = planned.plan.dayName,
             programName = planned.plan.programName,
             unit = planned.unit,
             plan = plan,
             plateHints = hints,
+            blocksOff = !gym.warmup.enabled,
         )
     }
 
@@ -279,6 +319,8 @@ class WarmupView(
     val programName: String,
     val unit: WeightUnit,
     val plan: WarmupPlan,
-    /** The plates for each ramp step of a barbell lift, by load. */
+    /** The plates for each ramp step of a barbell lift, by load; empty when Settings hides plates. */
     val plateHints: Map<Double, PlateHint> = emptyMap(),
+    /** "Build a warm-up" is off in Settings, so only the ramp sets are here. */
+    val blocksOff: Boolean = false,
 )

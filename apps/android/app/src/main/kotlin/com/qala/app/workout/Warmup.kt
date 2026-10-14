@@ -1,23 +1,44 @@
 package com.qala.app.workout
 
 import com.qala.app.today.muscleName
+import com.qala.data.core.DefaultLbPlates
+import com.qala.data.core.PlateEntry
+import com.qala.data.model.GymSettings
+import com.qala.data.model.OwnedEquipment
+import com.qala.data.model.PlateSettings
 import com.qala.data.model.WeightUnit
 import com.qala.data.program.ExerciseClass
 
 /*
  * The warm-up (DESIGN 7.4, PLAN 6.7, DECISIONS T6), ported from packages/engine/warmup.ts: easy cardio, soft tissue
- * with the owner's tools, dynamic mobility, then ramp sets worked out from each exercise's working weight. Pure: no
- * Compose, no Rust, no clock. Every weight it computes goes through [roundLoadable], so the plates work changes the
- * rounding in one place. Not ported yet: the recent-run rule (an easy run just before lifting covers the cardio), which
- * needs the run pipeline's effort rating (a run is rated steady until critical speed exists).
+ * with the owner's tools, dynamic mobility, then ramp sets worked out from each exercise's working weight. What it is
+ * built from (the tools owned, soft tissue, the Theragun preference, the time, the bar and the plates) is Settings,
+ * passed in as [WarmupInput]. Pure: no Compose, no clock. Every weight it computes goes through [roundLoadable], so the
+ * plates change the rounding in one place. Not ported yet: the recent-run rule (an easy run just before lifting covers
+ * the cardio), which needs the run pipeline's effort rating (a run is rated steady until critical speed exists).
  */
 
-/** What the owner has. Settings has no equipment yet on Android, so [Owner] stands in: the web's sample settings (a foam roller, a Theragun, a bike). */
+/**
+ * What the warm-up is built around: the tools for soft tissue and the one machine for the cardio (null for none, which
+ * is a brisk walk). [Owner] is what Settings holds until it is changed: a foam roller, a Theragun and a bike.
+ */
 data class Equipment(val foamRoller: Boolean, val percussion: Boolean, val cardio: String?) {
     companion object {
         val Owner = Equipment(foamRoller = true, percussion = true, cardio = "bike")
     }
 }
+
+/** The equipment Settings says is owned. The cardio is the first machine owned, in the order the page lists them: bike, rower, treadmill. */
+fun OwnedEquipment.toEquipment(): Equipment = Equipment(
+    foamRoller = foamRoller,
+    percussion = percussion,
+    cardio = when {
+        bike -> "bike"
+        rower -> "rower"
+        treadmill -> "treadmill"
+        else -> null
+    },
+)
 
 /** The tools a soft-tissue row can name, which is also which Blender render it shows. */
 enum class SoftTissueTool(val label: String) { FoamRoller("Foam roller"), Percussion("Theragun") }
@@ -64,10 +85,34 @@ class WarmupInput(
     val equipment: Equipment = Equipment.Owner,
     /** "Prefer Theragun where allowed" (PLAN 6.7); the owner likes it. */
     val preferPercussion: Boolean = true,
-    /** The time for the first three blocks, in minutes: the owner's sample setting (`warmup.minutes`), since settings has no warm-up group on Android yet. */
+    /** The time for the first three blocks, in minutes (`warmup.minutes` in Settings). */
     val budgetMin: Int = 15,
-    val barWeight: Double = defaultBarWeight(unit),
+    /** The bar and the inventory the ramp weights are rounded on. */
+    val plates: PlateSettings = PlateSettings(),
+    val barWeight: Double = defaultBarWeight(unit, plates),
+    /** "Soft tissue" in Settings: off, the soft-tissue block is not built, whatever tools are owned. */
+    val softTissue: Boolean = true,
+    /** "Build a warm-up" in Settings: off, the cardio, soft tissue and mobility blocks are not built and only the ramp sets stay. */
+    val enabled: Boolean = true,
 )
+
+/**
+ * The warm-up's input with everything Settings holds applied: the tools and machine owned, the soft tissue and Theragun
+ * choices, the time, and the bar and plates the ramp weights round on.
+ */
+fun warmupInput(exercises: List<WarmupExercise>, unit: WeightUnit, soreness: Map<String, Int>, recovery: Double?, gym: GymSettings): WarmupInput =
+    WarmupInput(
+        exercises = exercises,
+        unit = unit,
+        soreness = soreness,
+        recovery = recovery,
+        equipment = gym.equipment.toEquipment(),
+        preferPercussion = gym.warmup.preferPercussion,
+        budgetMin = gym.warmup.minutes,
+        plates = gym.plates,
+        softTissue = gym.warmup.softTissue,
+        enabled = gym.warmup.enabled,
+    )
 
 enum class BlockKind { General, SoftTissue, Mobility }
 
@@ -133,11 +178,11 @@ class RampInput(
  * weight rounded to a loadable weight. A step under the empty bar becomes one "bar x 8", a step equal to the one before
  * it or to the working weight is dropped.
  */
-fun rampSets(input: RampInput, unit: WeightUnit, bar: Double = defaultBarWeight(unit)): List<RampStep> {
-    val work = roundLoadable(input.weight, unit, bar)
+fun rampSets(input: RampInput, unit: WeightUnit, bar: Double = defaultBarWeight(unit), plates: List<PlateEntry> = DefaultLbPlates): List<RampStep> {
+    val work = roundLoadable(input.weight, unit, bar, plates)
     fun single(pct: Double, reps: Int, rest: Int): RampStep {
         val raw = input.weight * pct
-        return if (raw < bar) RampStep(bar, reps, rest, bar = true) else RampStep(roundLoadable(raw, unit, bar), reps, rest)
+        return if (raw < bar) RampStep(bar, reps, rest, bar = true) else RampStep(roundLoadable(raw, unit, bar, plates), reps, rest)
     }
     if (input.alreadyTrainedSecondary) return listOf(single(0.8, 4, 90))
     val tier = tierFor(input.intensity, input.isolation)
@@ -149,13 +194,13 @@ fun rampSets(input: RampInput, unit: WeightUnit, bar: Double = defaultBarWeight(
             if (steps.none { it.bar }) steps += RampStep(bar, 8, 45, bar = true)
             continue
         }
-        val load = roundLoadable(raw, unit, bar)
+        val load = roundLoadable(raw, unit, bar, plates)
         if (steps.lastOrNull()?.load == load) continue
         if (load >= work) continue
         steps += RampStep(load, reps, rest)
     }
     if (input.extraStep && steps.size >= 2) {
-        val mid = roundLoadable((steps[0].load + steps[1].load) / 2, unit, bar)
+        val mid = roundLoadable((steps[0].load + steps[1].load) / 2, unit, bar, plates)
         if (mid != steps[0].load && mid != steps[1].load && mid < work) steps.add(1, RampStep(mid, 5, 60, extra = true))
     }
     return steps
@@ -195,10 +240,15 @@ private fun cardioTitle(mode: String?): Pair<String, String> = when (mode) {
     else -> "Brisk walk" to "then bodyweight squats"
 }
 
+/** Why the blocks are missing when "Build a warm-up" is off. */
+const val OffInSettings = "off in Settings"
+
 /**
- * The whole warm-up for a day. The cardio is 5 minutes, or 10 when the first main lift's top set is heavy (at or over 85%
- * of the 1RM). Over the time budget ([WarmupInput.budgetMin]) the soft tissue goes first, then the mobility drops to
- * one drill, then the cardio to 3 minutes. The ramp sets are never cut.
+ * The whole warm-up for a day, built from [WarmupInput]. The cardio is 5 minutes, or 10 when the first main lift's top
+ * set is heavy (at or over 85% of the 1RM). Soft tissue needs [WarmupInput.softTissue] on, a tool owned and time to
+ * spare. Over the time budget ([WarmupInput.budgetMin]) the soft tissue goes first, then the mobility drops to one
+ * drill, then the cardio to 3 minutes. The ramp sets are never cut, and are all there is when the warm-up is off in
+ * Settings ([WarmupInput.enabled]).
  */
 fun planWarmup(input: WarmupInput): WarmupPlan {
     val unit = input.unit
@@ -210,78 +260,85 @@ fun planWarmup(input: WarmupInput): WarmupPlan {
     val budget = input.budgetMin
     val blocks = ArrayList<WarmupBlock>()
 
-    // 1. General.
-    val minutes = if (heavy) 10 else 5
-    val (machine, pace) = cardioTitle(input.equipment.cardio)
-    blocks += WarmupBlock(
-        BlockKind.General,
-        listOf(
-            WarmupItem(
-                "cardio",
-                "$machine, $pace",
-                if (heavy) "$minutes min today because the top set is ${(topPct * 100).toInt()}% of your max." else "$minutes min to raise your heart rate and warm the joints.",
+    if (input.enabled) {
+        // 1. General.
+        val minutes = if (heavy) 10 else 5
+        val (machine, pace) = cardioTitle(input.equipment.cardio)
+        blocks += WarmupBlock(
+            BlockKind.General,
+            listOf(
+                WarmupItem(
+                    "cardio",
+                    "$machine, $pace",
+                    if (heavy) "$minutes min today because the top set is ${(topPct * 100).toInt()}% of your max." else "$minutes min to raise your heart rate and warm the joints.",
+                ),
             ),
-        ),
-        minutes,
-    )
+            minutes,
+        )
 
-    // 2. Soft tissue, when a tool is owned and there is time.
-    val haveTool = input.equipment.foamRoller || input.equipment.percussion
-    val trainedToday = exercises.flatMap { it.muscles }.distinct()
-    val firstTwo = exercises.take(2).flatMap { it.muscles }.distinct()
-    val sore = trainedToday.filter { (input.soreness[it] ?: 0) >= 3 }
-    val targets = (firstTwo + sore).distinct().take(4)
-    if (haveTool && budget >= 8 && targets.isNotEmpty()) {
-        val rows = targets.map { m ->
-            val soreness = input.soreness[m] ?: 0
-            val isSore = soreness >= 3
-            val primeHeavy = heavy && m in firstTwo
-            val rollerBad = m in RollerBad
-            val tool = when {
-                isSore -> SoftTissueTool.FoamRoller                                   // never percussion on a sore muscle
-                primeHeavy && !rollerBad -> SoftTissueTool.FoamRoller
-                rollerBad && input.equipment.percussion -> SoftTissueTool.Percussion
-                input.preferPercussion && input.equipment.percussion && !primeHeavy -> SoftTissueTool.Percussion
-                input.equipment.foamRoller -> SoftTissueTool.FoamRoller
-                else -> SoftTissueTool.Percussion
+        // 2. Soft tissue, when a tool is owned and there is time.
+        val haveTool = input.equipment.foamRoller || input.equipment.percussion
+        val trainedToday = exercises.flatMap { it.muscles }.distinct()
+        val firstTwo = exercises.take(2).flatMap { it.muscles }.distinct()
+        val sore = trainedToday.filter { (input.soreness[it] ?: 0) >= 3 }
+        val targets = (firstTwo + sore).distinct().take(4)
+        if (input.softTissue && haveTool && budget >= 8 && targets.isNotEmpty()) {
+            val rows = targets.map { m ->
+                val soreness = input.soreness[m] ?: 0
+                val isSore = soreness >= 3
+                val primeHeavy = heavy && m in firstTwo
+                val rollerBad = m in RollerBad
+                val tool = when {
+                    isSore -> SoftTissueTool.FoamRoller                                   // never percussion on a sore muscle
+                    primeHeavy && !rollerBad -> SoftTissueTool.FoamRoller
+                    rollerBad && input.equipment.percussion -> SoftTissueTool.Percussion
+                    input.preferPercussion && input.equipment.percussion && !primeHeavy -> SoftTissueTool.Percussion
+                    input.equipment.foamRoller -> SoftTissueTool.FoamRoller
+                    else -> SoftTissueTool.Percussion
+                }
+                val seconds = if (tool == SoftTissueTool.Percussion) 60 else if (isSore) 120 else 90
+                val why = when {
+                    isSore -> "sore ($soreness)*"
+                    tool == SoftTissueTool.Percussion && input.preferPercussion -> "your preference*"
+                    m in firstTwo -> "today's first lifts*"
+                    else -> "warms the muscle*"
+                }
+                val time = formatClock(seconds) + if (tool == SoftTissueTool.FoamRoller) " a side" else ""
+                WarmupItem("tissue-$m", muscleName(m).replaceFirstChar { it.uppercase() }, "${tool.label} \u00B7 $time \u00B7 $why", tool) to seconds
             }
-            val seconds = if (tool == SoftTissueTool.Percussion) 60 else if (isSore) 120 else 90
-            val why = when {
-                isSore -> "sore ($soreness)*"
-                tool == SoftTissueTool.Percussion && input.preferPercussion -> "your preference*"
-                m in firstTwo -> "today's first lifts*"
-                else -> "warms the muscle*"
+            blocks += WarmupBlock(BlockKind.SoftTissue, rows.map { it.first }, kotlin.math.ceil(rows.sumOf { it.second } / 60.0).toInt())
+        }
+
+        // 3. Dynamic mobility: two drills of ten for up to three muscle groups.
+        val drills = mobilityRows(trainedToday)
+        blocks += WarmupBlock(
+            BlockKind.Mobility,
+            drills.flatMapIndexed { r, row -> row.mapIndexed { d, name -> WarmupItem("mobility-$r-$d", name, "10 reps") } },
+            drills.size,
+        )
+
+        // Over budget: soft tissue first, then mobility to one drill, then the cardio to three minutes.
+        var used = blocks.sumOf { it.minutes }
+        if (used > budget) {
+            blocks.indexOfFirst { it.kind == BlockKind.SoftTissue }.takeIf { it >= 0 }?.let { i ->
+                used -= blocks[i].minutes
+                blocks[i] = WarmupBlock(BlockKind.SoftTissue, emptyList(), 0, "cut for time")
             }
-            val time = formatClock(seconds) + if (tool == SoftTissueTool.FoamRoller) " a side" else ""
-            WarmupItem("tissue-$m", muscleName(m).replaceFirstChar { it.uppercase() }, "${tool.label} \u00B7 $time \u00B7 $why", tool) to seconds
         }
-        blocks += WarmupBlock(BlockKind.SoftTissue, rows.map { it.first }, kotlin.math.ceil(rows.sumOf { it.second } / 60.0).toInt())
-    }
-
-    // 3. Dynamic mobility: two drills of ten for up to three muscle groups.
-    val drills = mobilityRows(trainedToday)
-    blocks += WarmupBlock(
-        BlockKind.Mobility,
-        drills.flatMapIndexed { r, row -> row.mapIndexed { d, name -> WarmupItem("mobility-$r-$d", name, "10 reps") } },
-        drills.size,
-    )
-
-    // Over budget: soft tissue first, then mobility to one drill, then the cardio to three minutes.
-    var used = blocks.sumOf { it.minutes }
-    if (used > budget) {
-        blocks.indexOfFirst { it.kind == BlockKind.SoftTissue }.takeIf { it >= 0 }?.let { i ->
-            used -= blocks[i].minutes
-            blocks[i] = WarmupBlock(BlockKind.SoftTissue, emptyList(), 0, "cut for time")
+        if (used > budget) {
+            val i = blocks.indexOfFirst { it.kind == BlockKind.Mobility }
+            blocks[i] = blocks[i].copy(items = blocks[i].items.take(1), minutes = 1)
+            used = blocks.sumOf { it.minutes }
         }
-    }
-    if (used > budget) {
-        val i = blocks.indexOfFirst { it.kind == BlockKind.Mobility }
-        blocks[i] = blocks[i].copy(items = blocks[i].items.take(1), minutes = 1)
-        used = blocks.sumOf { it.minutes }
-    }
-    if (used > budget) {
-        val i = blocks.indexOfFirst { it.kind == BlockKind.General }
-        blocks[i] = WarmupBlock(BlockKind.General, listOf(WarmupItem("cardio", "$machine, $pace", "3 min, short on time.")), 3)
+        if (used > budget) {
+            val i = blocks.indexOfFirst { it.kind == BlockKind.General }
+            blocks[i] = WarmupBlock(BlockKind.General, listOf(WarmupItem("cardio", "$machine, $pace", "3 min, short on time.")), 3)
+        }
+    } else {
+        // Off in Settings: no cardio, soft tissue or mobility. The ramp sets below are lifting time and stay.
+        blocks += WarmupBlock(BlockKind.General, emptyList(), 0, OffInSettings)
+        blocks += WarmupBlock(BlockKind.SoftTissue, emptyList(), 0, OffInSettings)
+        blocks += WarmupBlock(BlockKind.Mobility, emptyList(), 0, OffInSettings)
     }
 
     // 4. Ramp sets, per exercise.
@@ -294,7 +351,7 @@ fun planWarmup(input: WarmupInput): WarmupPlan {
             val alreadyTrained = idx > 0 && e.cls == ExerciseClass.Secondary && e.muscles.isNotEmpty() && e.muscles.all { it in trained }
             val extra = e.muscles.any { input.soreness[it] == 4 } || (input.recovery != null && input.recovery <= 4)
             val first = e.muscles.any { it !in trained }
-            rampSets(RampInput(e.weight, intensity, e.cls == ExerciseClass.Isolation, first, alreadyTrained, extra), unit, if (e.barbell) bar else 0.0)
+            rampSets(RampInput(e.weight, intensity, e.cls == ExerciseClass.Isolation, first, alreadyTrained, extra), unit, if (e.barbell) bar else 0.0, input.plates.plates)
         }
         trained += e.muscles
         Ramp(e.exerciseId, e.name, e.weight, e.repsLabel, ramp, barbell = PlateMath.applies(unit, e.barbell))

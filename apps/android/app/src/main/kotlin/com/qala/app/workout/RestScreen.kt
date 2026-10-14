@@ -53,9 +53,10 @@ import com.qala.design.SecondaryButton
  * starting the set, returns to the workout, which is already on the next set.
  *
  * The next set's plates come from the running rest ([RestState.perSide] and [RestState.plateInstruction], computed by the
- * store off the main thread from the Rust plate math): what goes on each side, heaviest first, and the change from
- * what is on the bar ("take off 5, add 25 each side"). They are absent for a lift with no plates, and until the plate
- * math has answered. A plate shows as its weight; the sprites are not drawn here.
+ * store off the main thread from the Rust plate math on the bar and plates in Settings): what goes on each side, heaviest
+ * first, and the change from what is on the bar ("take off 5, add 25 each side"). They are absent for a lift with no
+ * plates, until the plate math has answered, and when Settings hides plates. A plate shows as its weight; the sprites are
+ * not drawn here.
  */
 @Composable
 fun RestScreen(onBack: () -> Unit, onAllExercises: () -> Unit) {
@@ -78,10 +79,10 @@ fun RestScreen(onBack: () -> Unit, onAllExercises: () -> Unit) {
     val buzz = rememberUpdatedState { haptic.performHapticFeedback(HapticFeedbackType.LongPress) }
     LaunchedEffect(up, rest.startedAtMs) { if (up && timer.budgetSec > 0 && now - rest.startedAtMs < (timer.budgetSec + 5) * 1000L) buzz.value() }
 
+    val gym by store.gym.collectAsState()
     val from = state.restLogged()
     val next = state.restNext()
-    val perSide = rest.perSide
-    val plateInstruction = rest.plateInstruction
+    val plates = next?.let { restPlatesView(gym.rest.showPlates, rest, it) }
     val ready = onBack            // the workout is already on the next set; a rest left behind is replaced by the next one
 
     Column(Modifier.fillMaxSize()) {
@@ -142,13 +143,12 @@ fun RestScreen(onBack: () -> Unit, onAllExercises: () -> Unit) {
                         )
                     }
                     if (next.newExercise) QalaText("Set ${next.setNumber} of ${next.setCount}", Modifier.padding(top = 2.dp), QalaType.hint, c.fgMuted)
-                    if (perSide != null) PlateWeights(perSide)
+                    if (plates?.perSide != null) PlateWeights(plates.perSide)
                     // A weight the plates cannot make says what they do make, as the set rows do ("loads 205").
-                    plateLoadsNote(next.weight, rest.plateTotal)?.let {
+                    plates?.loadsNote?.let {
                         QalaText(it, Modifier.fillMaxWidth().padding(top = 6.dp), QalaType.hint, c.fgMuted, TextAlign.Center)
                     }
-                    if (plateInstruction != null) QalaText(plateChangeLine(plateInstruction), Modifier.padding(top = 8.dp), QalaType.hint, c.fgMuted)
-                    else if (next.sameWeight && perSide != null) QalaText(plateChangeLine("no change"), Modifier.padding(top = 8.dp), QalaType.hint, c.fgMuted)
+                    plates?.changeLine?.let { QalaText(it, Modifier.padding(top = 8.dp), QalaType.hint, c.fgMuted) }
                 }
             } else {
                 QalaText("That was the last set.", Modifier.padding(top = 16.dp), QalaType.hint, c.fgMuted)

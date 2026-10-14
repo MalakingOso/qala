@@ -68,6 +68,7 @@ class AppContainer(
         LiftService(programs, settings, sessions, programEngine, env),
         WorkoutDraftStore(database, env),
         checkIns,
+        settings,
         env,
         scope,
     )

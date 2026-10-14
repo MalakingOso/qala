@@ -341,6 +341,62 @@ class WorkoutModelTest {
         assertNull(open.addRest(30).rest)
     }
 
+    // ---- automatic rest ----
+
+    @Test
+    fun withAutomaticRestOnTheFirstLoggingOpensRestForTheNextSet() {
+        val settled = open.log(10_000)!!.settle(10_000, autoRest = true)
+        assertEquals(AfterLog.Rest, settled.after)
+        val rest = settled.state.rest!!
+        assertEquals(SetRef(0, 0), rest.logged)
+        assertEquals(SetRef(0, 1), rest.next)
+        assertEquals(180, rest.seconds)
+    }
+
+    @Test
+    fun withAutomaticRestOffTheSetIsLoggedTheLoggerMovesOnAndNoRestOpens() {
+        val settled = open.log(10_000)!!.settle(10_000, autoRest = false)
+        assertEquals(AfterLog.Next, settled.after)
+        assertNull("no rest was started", settled.state.rest)
+        assertTrue("the set is logged", settled.state.exercises[0].sets[0].done)
+        assertEquals("and the logger is on the next set", 1, settled.state.exercise.selected)
+        assertEquals("with the same state automatic rest would have started from", open.log(10_000)!!.state.exercises, settled.state.exercises)
+    }
+
+    @Test
+    fun theLastSetOffersToFinishWhetherOrNotRestIsAutomatic() {
+        var s = open
+        repeat(10) { s = s.log(1)!!.state }
+        for (auto in listOf(true, false)) {
+            val settled = s.log(1)!!.settle(1, autoRest = auto)
+            assertEquals(AfterLog.Finish, settled.after)
+            assertNull(settled.state.rest)
+        }
+    }
+
+    @Test
+    fun editingASetAlreadyLoggedStaysPutWhetherOrNotRestIsAutomatic() {
+        val done = open.log(1)!!.state.pickSet(0)
+        for (auto in listOf(true, false)) {
+            val settled = done.log(2)!!.settle(2, autoRest = auto)
+            assertEquals(AfterLog.Stay, settled.after)
+            assertNull(settled.state.rest)
+        }
+    }
+
+    @Test
+    fun withAutomaticRestOffTheHintSaysWhatComesNextAndPromisesNoRest() {
+        assertEquals("Then set 2", open.restHint(autoRest = false))
+        var four = open
+        repeat(4) { four = four.log(1)!!.state }
+        assertEquals("Then Bench Press", four.restHint(autoRest = false))
+        var last = open
+        repeat(10) { last = last.log(1)!!.state }
+        assertEquals("The last set, then you're done", last.restHint(autoRest = false))
+        assertEquals("a set already done has nothing to preview", null, open.log(1)!!.state.pickSet(0).restHint(autoRest = false))
+        assertEquals("on is still the default", "Rest about 3:00, then set 2", open.restHint())
+    }
+
     // ---- the words around the logger ----
 
     @Test

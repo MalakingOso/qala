@@ -124,6 +124,36 @@ data class RestNext(
 /** What logging a set did: the state after, the set that was logged, and whether it was a first logging (which opens Rest). */
 data class Logged(val state: WorkoutState, val ref: SetRef, val first: Boolean, val next: SetRef?)
 
+/** What a logged set asks of the screen. */
+enum class AfterLog {
+    /** Open Rest: the first logging of a set that is not the last, with automatic rest on. */
+    Rest,
+
+    /** Offer to finish: it was the last set. */
+    Finish,
+
+    /** Stay where the logger is: a set edited after the fact. */
+    Stay,
+
+    /** The logger has moved on to the next set and no Rest opens, because automatic rest is off in Settings. */
+    Next,
+}
+
+/** The workout after a logging, and what the screen does about it. */
+data class Settled(val state: WorkoutState, val after: AfterLog)
+
+/**
+ * Decides what a logging opens. A first logging of a set that is not the last starts the rest after it (the length and
+ * the ledger from [restPlan], counted from [nowMs]) when [autoRest] is on, and leaves Rest unopened when it is off; the
+ * last set offers to finish either way, and a set edited after the fact stays where it is.
+ */
+fun Logged.settle(nowMs: Long, autoRest: Boolean): Settled = when {
+    !first -> Settled(state, AfterLog.Stay)
+    next == null -> Settled(state, AfterLog.Finish)
+    autoRest -> Settled(state.startRest(ref, next, nowMs), AfterLog.Rest)
+    else -> Settled(state, AfterLog.Next)
+}
+
 @Serializable
 data class WorkoutState(
     /** Minted when the workout opens, so saving it twice writes one session. */
@@ -287,17 +317,19 @@ data class WorkoutState(
     /**
      * "Rest about 3:00, then set 4": the rest the selected set will earn at its current numbers (its RPE once picked
      * moves it) and what follows, for the line under the Log button. Null once the set is done. The last set of the
-     * workout has no rest after it, and says so.
+     * workout has no rest after it, and says so. With automatic rest off ([autoRest] false) no rest follows any set, so
+     * the line only says what comes next.
      */
-    fun restHint(): String? {
+    fun restHint(autoRest: Boolean = true): String? {
         val set = selectedSet ?: return null
         if (set.done) return null
         val ref = SetRef(current, exercise.selected)
         val ex = exercise
         val afterLogging = copy(exercises = exercises.replace(current, ex.copy(sets = ex.sets.replace(ref.set, set.copy(done = true)))))
         val next = afterLogging.nextOpen(ref) ?: return "The last set, then you're done"
-        val plan = restPlan(RestInput(ex.cls, set.targetReps, set.reps, set.rpe, set.targetRpe, ref.set + 1, set.amrap, set.timerSec))
         val then = if (next.exercise == current) "set ${next.set + 1}" else exercises[next.exercise].name
+        if (!autoRest) return "Then $then"
+        val plan = restPlan(RestInput(ex.cls, set.targetReps, set.reps, set.rpe, set.targetRpe, ref.set + 1, set.amrap, set.timerSec))
         return "Rest about ${formatClock(plan.seconds)}, then $then"
     }
 

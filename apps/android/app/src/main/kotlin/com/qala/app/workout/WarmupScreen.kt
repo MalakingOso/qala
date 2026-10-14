@@ -97,7 +97,10 @@ fun WarmupScreen(day: Int?, onBack: () -> Unit, onStart: () -> Unit, onSkip: () 
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.Top) {
                 FlowIconButton(QalaIcons.ChevronLeft, "Back", onBack)
                 Column(Modifier.weight(1f).padding(top = 2.dp)) {
-                    GroupLabel(if (ready != null) "Before ${ready.dayName} · ${ready.plan.minutes} min" else "Before the lift", Modifier.padding(bottom = 2.dp))
+                    GroupLabel(
+                        if (ready != null) "Before ${ready.dayName} · ${if (ready.blocksOff) "ramp sets only" else "${ready.plan.minutes} min"}" else "Before the lift",
+                        Modifier.padding(bottom = 2.dp),
+                    )
                     QalaText("Warm-up", Modifier.semantics { heading() }, QalaType.stageTitle, c.fg)
                 }
                 if (ready != null) {
@@ -133,6 +136,10 @@ private fun WarmupSteps(view: WarmupView, ticked: Set<String>, flip: (String) ->
     val plan = view.plan
     val c = Qala.colors
     var n = 0
+
+    if (view.blocksOff) {
+        QalaText("Your warm-up is off in Settings, so there is no cardio, soft tissue or mobility. The ramp sets stay.", Modifier.padding(horizontal = 4.dp), QalaType.hint, c.fgMuted)
+    }
 
     plan.block(BlockKind.General)?.let { general ->
         Step(++n, "Easy cardio", "${general.minutes} min") {

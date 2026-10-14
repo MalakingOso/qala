@@ -1,19 +1,19 @@
 package com.qala.app.workout
 
-import com.qala.data.core.DefaultLbPlates
 import com.qala.data.core.NextPlateChoice
 import com.qala.data.core.QalaCore
 import com.qala.data.core.chooseNextPlates
 import com.qala.data.core.nearestLoadable
 import com.qala.data.core.planPlates
 import com.qala.data.core.platesShorthand
+import com.qala.data.model.PlateSettings
 import com.qala.data.model.WeightUnit
 
 /*
- * What goes on the bar, from the Rust plate math (qala-core plates.rs through QalaCorePlates.kt). The inventory is the
- * default pounds set (`DefaultLbPlates`) and the bar is 45 lb, because Android has no editable plate inventory yet, so
- * hints exist for pounds on a barbell only: a dumbbell, a cable and a machine have no plates, and kilograms have no
- * inventory. Every call is synchronous Rust: the store computes them off the main thread and the screens only read.
+ * What goes on the bar, from the Rust plate math (qala-core plates.rs through QalaCorePlates.kt), on the bar and the
+ * inventory Settings holds ([PlateSettings]; its defaults are the 45 lb bar and the default pounds set). Hints exist for
+ * pounds on a barbell only: a dumbbell, a cable and a machine have no plates, and kilograms have no inventory. Every call
+ * is synchronous Rust: the store computes them off the main thread and the screens only read.
  */
 
 /** The plates for one total. [perSide] is the nearest loadable load (heaviest first), [total] what it adds up to. */
@@ -23,15 +23,15 @@ object PlateMath {
     /** Whether a lift gets plate hints: pounds on a barbell. */
     fun applies(unit: WeightUnit, barbell: Boolean): Boolean = unit == WeightUnit.Lb && barbell
 
-    /** The plates for [weight] on the bar, null when nothing is loadable. */
-    fun hint(weight: Double, barWeight: Double = defaultBarWeight(WeightUnit.Lb)): PlateHint? {
-        val load = QalaCore.planPlates(weight, barWeight, DefaultLbPlates).nearestLoadable() ?: return null
+    /** The plates for [weight] on the default bar from [setup], null when nothing is loadable. */
+    fun hint(weight: Double, setup: PlateSettings = PlateSettings()): PlateHint? {
+        val load = QalaCore.planPlates(weight, setup.defaultBar, setup.plates).nearestLoadable() ?: return null
         return PlateHint(load.perSide, QalaCore.platesShorthand(load.perSide), load.total)
     }
 
     /** How to get from [currentPerSide] to [nextWeight] with the fewest plates moved; null when nothing is loadable. */
-    fun change(currentPerSide: List<Double>, nextWeight: Double, barWeight: Double = defaultBarWeight(WeightUnit.Lb)): NextPlateChoice? =
-        QalaCore.chooseNextPlates(currentPerSide, nextWeight, barWeight, DefaultLbPlates, 0.0)
+    fun change(currentPerSide: List<Double>, nextWeight: Double, setup: PlateSettings = PlateSettings()): NextPlateChoice? =
+        QalaCore.chooseNextPlates(currentPerSide, nextWeight, setup.defaultBar, setup.plates, 0.0)
 }
 
 /**
@@ -48,3 +48,24 @@ fun plateLoadsNote(weight: Double?, total: Double?): String? =
 /** The change between two sets as a sentence: "Take off 5, add 25 each side." and, for the same plates, the usual line. */
 fun plateChangeLine(instruction: String): String =
     if (instruction == "no change") "Same as last set, leave the plates on." else instruction.replaceFirstChar { it.uppercase() } + "."
+
+/**
+ * The line under a set row, or null: when plates are hidden in Settings ([show] false), when the lift has no plates
+ * ([barbell] false) or no weight, or before the plate math has answered for this weight.
+ */
+fun setPlateLine(show: Boolean, barbell: Boolean, weight: Double?, hints: Map<Double, PlateHint>): String? =
+    if (!show || !barbell || weight == null) null else hints[weight]?.let { plateLine(weight, it) }
+
+/** What Rest says about the plates of the next set: what goes on each side, a note when the weight cannot be made, and the change from the set before. */
+data class RestPlatesView(val perSide: List<Double>?, val loadsNote: String?, val changeLine: String?)
+
+/** The Rest screen's plate lines for [next], or null when plates are hidden in Settings ([show] false). */
+fun restPlatesView(show: Boolean, rest: RestState, next: RestNext): RestPlatesView? {
+    if (!show) return null
+    val change = when {
+        rest.plateInstruction != null -> plateChangeLine(rest.plateInstruction)
+        next.sameWeight && rest.perSide != null -> plateChangeLine("no change")
+        else -> null
+    }
+    return RestPlatesView(rest.perSide, plateLoadsNote(next.weight, rest.plateTotal), change)
+}
