@@ -77,6 +77,24 @@ export type {
   Resolutions,
 } from "./importPipeline.ts";
 export {
+  buildCoachChatPrompt,
+  COACH_LIMITS,
+  coachReplySchema,
+  coachScopeText,
+  isCoachInScope,
+  recentTurns,
+  sanitizeCoachText,
+  validateCoachReply,
+} from "./coach.ts";
+export type {
+  CoachChatInput,
+  CoachLift,
+  CoachReplyResult,
+  CoachTurn,
+  CoachUnit,
+  CoachWho,
+} from "./coach.ts";
+export {
   acceptedMemories,
   acceptProposal,
   deserializeProposals,
