@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from "react";
 import { basicSetup, EditorView } from "codemirror";
 import { EditorState } from "@codemirror/state";
 import { sampleBlock } from "../store/sample.ts";
+import { DictateButton } from "./DictateButton.tsx";
 import { BlockBar, Bunch, PageHeader, Panel, Pill, TypeTag } from "./parts.tsx";
 
 const SAMPLE = `// Lower A · Strength B2 W3
@@ -79,6 +80,7 @@ export function ProgramEditorPage() {
   const host = useRef<HTMLDivElement>(null);
   const [errors] = useState<string[]>([]);
   const [text, setText] = useState(SAMPLE);
+  const [transcript, setTranscript] = useState<string | null>(null);
 
   useEffect(() => {
     const el = host.current;
@@ -153,6 +155,20 @@ export function ProgramEditorPage() {
               : <Pill tone="ok">No errors</Pill>}
             <span>{text.split("\n").length} lines</span>
           </div>
+          <DictateButton onTranscript={setTranscript} />
+          {transcript !== null && (
+            <label className="dictate-transcript">
+              <span className="kbd-hint">
+                Transcript. Check the numbers; importing it comes with the text
+                import screen.
+              </span>
+              <textarea
+                rows={3}
+                value={transcript}
+                onChange={(e) => setTranscript(e.target.value)}
+              />
+            </label>
+          )}
         </Panel>
         <Panel title="Week preview">
           <ul className="preview-days">
