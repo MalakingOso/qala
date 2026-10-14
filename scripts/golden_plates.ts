@@ -15,8 +15,8 @@ import {
   defaultLbInventory,
   describeChange,
   planPlates,
-  platesShorthand,
   type PlateEntry,
+  platesShorthand,
 } from "../packages/core/plates.ts";
 import { nearestLoadable } from "../packages/core/plates.ts";
 import { barbellStepDefault, roundWeight } from "../packages/core/rounding.ts";
@@ -34,6 +34,9 @@ interface Case {
 
 const cases: Case[] = [];
 
+/** JSON has no NaN or Infinity: such inputs travel as "NaN", "Infinity" and "-Infinity". */
+const nf = (x: number): number | string => Number.isFinite(x) ? x : String(x);
+
 function planCase(
   name: string,
   requestedTotal: number,
@@ -46,9 +49,9 @@ function planCase(
     name: `plan_plates: ${name}`,
     input: {
       call: "plan_plates",
-      requestedTotal,
-      barWeight,
-      collarWeight,
+      requestedTotal: nf(requestedTotal),
+      barWeight: nf(barWeight),
+      collarWeight: nf(collarWeight),
       plates,
     },
     expected: plan,
@@ -57,9 +60,9 @@ function planCase(
     name: `nearest_loadable: ${name}`,
     input: {
       call: "nearest_loadable",
-      requestedTotal,
-      barWeight,
-      collarWeight,
+      requestedTotal: nf(requestedTotal),
+      barWeight: nf(barWeight),
+      collarWeight: nf(collarWeight),
       plates,
     },
     expected: nearestLoadable(plan),
@@ -68,9 +71,9 @@ function planCase(
     name: `round_weight: ${name}`,
     input: {
       call: "round_weight",
-      targetWeight: requestedTotal,
-      barWeight,
-      collarWeight,
+      targetWeight: nf(requestedTotal),
+      barWeight: nf(barWeight),
+      collarWeight: nf(collarWeight),
       plates,
     },
     expected: roundWeight(requestedTotal, barWeight, plates, collarWeight),
@@ -120,6 +123,97 @@ planCase("242 lb snaps down", 242, BAR, full);
 // Collars move every total; no TS test covers them, so pin one case here.
 planCase("245 lb with 2.5 lb collars", 245, BAR, full, 2.5);
 
+// Found by the differential fuzz (scripts/gen_plates_fuzz.ts): a target past 2^53 units. The
+// TS keeps the units as doubles, so distinct sums can share a distance (the nearest load
+// then falls to the fewest plates), and Infinity makes the distances NaN (the first sum
+// stays). An integer port overflowed, and ranked by exact distance. Finite pair counts
+// only: "enough" rows would loop on a target that size.
+{
+  const limitedPairs: PlateEntry[] = [
+    { weight: 25, pairs: 2, color: "green" },
+    { weight: 20, pairs: 2, color: "red" },
+  ];
+  planCase("1e15 lb target, finite pairs", 1e15, BAR, limitedPairs);
+  planCase("1e16 lb target, finite pairs", 1e16, BAR, limitedPairs);
+  planCase("1e18 lb target, finite pairs", 1e18, BAR, limitedPairs, 0.5);
+  planCase("1e30 lb target, finite pairs", 1e30, BAR, limitedPairs, 1);
+  planCase("1e300 lb target, finite pairs", 1e300, BAR, limitedPairs);
+  planCase(
+    "Number.MAX_VALUE lb target, finite pairs",
+    Number.MAX_VALUE,
+    BAR,
+    limitedPairs,
+  );
+  planCase("Infinity target, finite pairs", Infinity, BAR, limitedPairs);
+  planCase("-Infinity target", -Infinity, BAR, full);
+  planCase("NaN target", NaN, BAR, full);
+  planCase("NaN bar weight", 245, NaN, full);
+  planCase(
+    "-Infinity collar makes the per-side target Infinity",
+    245,
+    BAR,
+    limitedPairs,
+    -Infinity,
+  );
+  planCase("negative target", -50, BAR, full);
+  const huge = chooseNextPlates([], 1e18, 20, limitedPairs, 0.5);
+  if (!huge) throw new Error("oracle gave no choice for 1e18");
+  cases.push({
+    name: "choose_next: 1e18 lb target, finite pairs",
+    input: {
+      call: "choose_next",
+      currentPerSide: [],
+      nextTotal: 1e18,
+      barWeight: 20,
+      collarWeight: 0.5,
+      plates: limitedPairs,
+    },
+    expected: {
+      perSide: huge.load.perSide,
+      total: huge.load.total,
+      instruction: huge.instruction,
+      keptInner: huge.keptInner,
+      platesMoved: huge.platesMoved,
+    },
+  });
+}
+
+// Found by the differential fuzz: plate weights print the way JS prints numbers, so an
+// infinite or huge weight reads "Infinity" or "1e+21", not Rust's "inf" or a 22 digit run.
+for (
+  const side of [
+    [Infinity, 20, 1.25],
+    [-Infinity, 0.004],
+    [1e21, 5],
+    [1e15, 2.675],
+    [123456.789, 1e-7],
+  ]
+) {
+  cases.push({
+    name: `shorthand: ${side.join(", ")}`,
+    input: { call: "shorthand", perSide: side.map(nf) },
+    expected: platesShorthand(side),
+  });
+}
+for (
+  const [cur, next] of [
+    [[55, 10, Infinity], [2.5]],
+    [[1e21], []],
+    [[], [-Infinity]],
+    [[1e21, 5], [1e21, 2.5]],
+  ] as number[][][]
+) {
+  cases.push({
+    name: `describe_change: ${cur.join(", ")} to ${next.join(", ")}`,
+    input: {
+      call: "describe_change",
+      currentPerSide: cur.map(nf),
+      nextPerSide: next.map(nf),
+    },
+    expected: describeChange(cur, next),
+  });
+}
+
 // plates_test.ts: "warm-up ramp keep-inner sequence from PLAN 6.8".
 {
   let current: number[] = [];
@@ -149,12 +243,14 @@ planCase("245 lb with 2.5 lb collars", 245, BAR, full, 2.5);
 }
 
 // plates_test.ts: "between-set instructions read like PLAN 6.8 examples".
-for (const [cur, next] of [
-  [[45, 5], [45, 25]],
-  [[25, 2.5], [35, 5]],
-  [[45], [45, 25]],
-  [[45, 45, 10], [45, 45, 10]],
-] as const) {
+for (
+  const [cur, next] of [
+    [[45, 5], [45, 25]],
+    [[25, 2.5], [35, 5]],
+    [[45], [45, 25]],
+    [[45, 45, 10], [45, 45, 10]],
+  ] as const
+) {
   cases.push({
     name: `describe_change: ${cur} to ${next}`,
     input: {
@@ -191,14 +287,16 @@ for (const [cur, next] of [
 }
 
 // rounding_test.ts: "barbellStep defaults to twice the smallest pair".
-for (const [name, plates, fallback] of [
-  ["default inventory", full, undefined],
-  ["25s and 1s", [
-    { weight: 25, pairs: 1, color: "red" },
-    { weight: 1, pairs: 2, color: "green" },
-  ], undefined],
-  ["empty inventory", [], undefined],
-] as const) {
+for (
+  const [name, plates, fallback] of [
+    ["default inventory", full, undefined],
+    ["25s and 1s", [
+      { weight: 25, pairs: 1, color: "red" },
+      { weight: 1, pairs: 2, color: "green" },
+    ], undefined],
+    ["empty inventory", [], undefined],
+  ] as const
+) {
   cases.push({
     name: `barbell_step: ${name}`,
     input: { call: "barbell_step", plates, fallback: fallback ?? null },

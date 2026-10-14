@@ -1208,6 +1208,1504 @@
    "expected": 245
   },
   {
+   "name": "plan_plates: 1e15 lb target, finite pairs",
+   "input": {
+    "call": "plan_plates",
+    "requestedTotal": 1000000000000000,
+    "barWeight": 45,
+    "collarWeight": 0,
+    "plates": [
+     {
+      "weight": 25,
+      "pairs": 2,
+      "color": "green"
+     },
+     {
+      "weight": 20,
+      "pairs": 2,
+      "color": "red"
+     }
+    ]
+   },
+   "expected": {
+    "requestedTotal": 1000000000000000,
+    "barWeight": 45,
+    "collarWeight": 0,
+    "perSideTarget": 499999999999977.5,
+    "exact": null,
+    "below": {
+     "perSide": [
+      25,
+      25,
+      20,
+      20
+     ],
+     "perSideTotal": 90,
+     "total": 225,
+     "barWeight": 45,
+     "collarWeight": 0
+    },
+    "above": null
+   }
+  },
+  {
+   "name": "nearest_loadable: 1e15 lb target, finite pairs",
+   "input": {
+    "call": "nearest_loadable",
+    "requestedTotal": 1000000000000000,
+    "barWeight": 45,
+    "collarWeight": 0,
+    "plates": [
+     {
+      "weight": 25,
+      "pairs": 2,
+      "color": "green"
+     },
+     {
+      "weight": 20,
+      "pairs": 2,
+      "color": "red"
+     }
+    ]
+   },
+   "expected": {
+    "perSide": [
+     25,
+     25,
+     20,
+     20
+    ],
+    "perSideTotal": 90,
+    "total": 225,
+    "barWeight": 45,
+    "collarWeight": 0
+   }
+  },
+  {
+   "name": "round_weight: 1e15 lb target, finite pairs",
+   "input": {
+    "call": "round_weight",
+    "targetWeight": 1000000000000000,
+    "barWeight": 45,
+    "collarWeight": 0,
+    "plates": [
+     {
+      "weight": 25,
+      "pairs": 2,
+      "color": "green"
+     },
+     {
+      "weight": 20,
+      "pairs": 2,
+      "color": "red"
+     }
+    ]
+   },
+   "expected": 225
+  },
+  {
+   "name": "plan_plates: 1e16 lb target, finite pairs",
+   "input": {
+    "call": "plan_plates",
+    "requestedTotal": 10000000000000000,
+    "barWeight": 45,
+    "collarWeight": 0,
+    "plates": [
+     {
+      "weight": 25,
+      "pairs": 2,
+      "color": "green"
+     },
+     {
+      "weight": 20,
+      "pairs": 2,
+      "color": "red"
+     }
+    ]
+   },
+   "expected": {
+    "requestedTotal": 10000000000000000,
+    "barWeight": 45,
+    "collarWeight": 0,
+    "perSideTarget": 4999999999999978,
+    "exact": null,
+    "below": {
+     "perSide": [
+      25,
+      25,
+      20,
+      20
+     ],
+     "perSideTotal": 90,
+     "total": 225,
+     "barWeight": 45,
+     "collarWeight": 0
+    },
+    "above": null
+   }
+  },
+  {
+   "name": "nearest_loadable: 1e16 lb target, finite pairs",
+   "input": {
+    "call": "nearest_loadable",
+    "requestedTotal": 10000000000000000,
+    "barWeight": 45,
+    "collarWeight": 0,
+    "plates": [
+     {
+      "weight": 25,
+      "pairs": 2,
+      "color": "green"
+     },
+     {
+      "weight": 20,
+      "pairs": 2,
+      "color": "red"
+     }
+    ]
+   },
+   "expected": {
+    "perSide": [
+     25,
+     25,
+     20,
+     20
+    ],
+    "perSideTotal": 90,
+    "total": 225,
+    "barWeight": 45,
+    "collarWeight": 0
+   }
+  },
+  {
+   "name": "round_weight: 1e16 lb target, finite pairs",
+   "input": {
+    "call": "round_weight",
+    "targetWeight": 10000000000000000,
+    "barWeight": 45,
+    "collarWeight": 0,
+    "plates": [
+     {
+      "weight": 25,
+      "pairs": 2,
+      "color": "green"
+     },
+     {
+      "weight": 20,
+      "pairs": 2,
+      "color": "red"
+     }
+    ]
+   },
+   "expected": 225
+  },
+  {
+   "name": "plan_plates: 1e18 lb target, finite pairs",
+   "input": {
+    "call": "plan_plates",
+    "requestedTotal": 1000000000000000000,
+    "barWeight": 45,
+    "collarWeight": 0.5,
+    "plates": [
+     {
+      "weight": 25,
+      "pairs": 2,
+      "color": "green"
+     },
+     {
+      "weight": 20,
+      "pairs": 2,
+      "color": "red"
+     }
+    ]
+   },
+   "expected": {
+    "requestedTotal": 1000000000000000000,
+    "barWeight": 45,
+    "collarWeight": 0.5,
+    "perSideTarget": 500000000000000000,
+    "exact": null,
+    "below": {
+     "perSide": [
+      25,
+      25
+     ],
+     "perSideTotal": 50,
+     "total": 146,
+     "barWeight": 45,
+     "collarWeight": 0.5
+    },
+    "above": null
+   }
+  },
+  {
+   "name": "nearest_loadable: 1e18 lb target, finite pairs",
+   "input": {
+    "call": "nearest_loadable",
+    "requestedTotal": 1000000000000000000,
+    "barWeight": 45,
+    "collarWeight": 0.5,
+    "plates": [
+     {
+      "weight": 25,
+      "pairs": 2,
+      "color": "green"
+     },
+     {
+      "weight": 20,
+      "pairs": 2,
+      "color": "red"
+     }
+    ]
+   },
+   "expected": {
+    "perSide": [
+     25,
+     25
+    ],
+    "perSideTotal": 50,
+    "total": 146,
+    "barWeight": 45,
+    "collarWeight": 0.5
+   }
+  },
+  {
+   "name": "round_weight: 1e18 lb target, finite pairs",
+   "input": {
+    "call": "round_weight",
+    "targetWeight": 1000000000000000000,
+    "barWeight": 45,
+    "collarWeight": 0.5,
+    "plates": [
+     {
+      "weight": 25,
+      "pairs": 2,
+      "color": "green"
+     },
+     {
+      "weight": 20,
+      "pairs": 2,
+      "color": "red"
+     }
+    ]
+   },
+   "expected": 146
+  },
+  {
+   "name": "plan_plates: 1e30 lb target, finite pairs",
+   "input": {
+    "call": "plan_plates",
+    "requestedTotal": 1e+30,
+    "barWeight": 45,
+    "collarWeight": 1,
+    "plates": [
+     {
+      "weight": 25,
+      "pairs": 2,
+      "color": "green"
+     },
+     {
+      "weight": 20,
+      "pairs": 2,
+      "color": "red"
+     }
+    ]
+   },
+   "expected": {
+    "requestedTotal": 1e+30,
+    "barWeight": 45,
+    "collarWeight": 1,
+    "perSideTarget": 5e+29,
+    "exact": null,
+    "below": {
+     "perSide": [],
+     "perSideTotal": 0,
+     "total": 47,
+     "barWeight": 45,
+     "collarWeight": 1
+    },
+    "above": null
+   }
+  },
+  {
+   "name": "nearest_loadable: 1e30 lb target, finite pairs",
+   "input": {
+    "call": "nearest_loadable",
+    "requestedTotal": 1e+30,
+    "barWeight": 45,
+    "collarWeight": 1,
+    "plates": [
+     {
+      "weight": 25,
+      "pairs": 2,
+      "color": "green"
+     },
+     {
+      "weight": 20,
+      "pairs": 2,
+      "color": "red"
+     }
+    ]
+   },
+   "expected": {
+    "perSide": [],
+    "perSideTotal": 0,
+    "total": 47,
+    "barWeight": 45,
+    "collarWeight": 1
+   }
+  },
+  {
+   "name": "round_weight: 1e30 lb target, finite pairs",
+   "input": {
+    "call": "round_weight",
+    "targetWeight": 1e+30,
+    "barWeight": 45,
+    "collarWeight": 1,
+    "plates": [
+     {
+      "weight": 25,
+      "pairs": 2,
+      "color": "green"
+     },
+     {
+      "weight": 20,
+      "pairs": 2,
+      "color": "red"
+     }
+    ]
+   },
+   "expected": 47
+  },
+  {
+   "name": "plan_plates: 1e300 lb target, finite pairs",
+   "input": {
+    "call": "plan_plates",
+    "requestedTotal": 1e+300,
+    "barWeight": 45,
+    "collarWeight": 0,
+    "plates": [
+     {
+      "weight": 25,
+      "pairs": 2,
+      "color": "green"
+     },
+     {
+      "weight": 20,
+      "pairs": 2,
+      "color": "red"
+     }
+    ]
+   },
+   "expected": {
+    "requestedTotal": 1e+300,
+    "barWeight": 45,
+    "collarWeight": 0,
+    "perSideTarget": 5e+299,
+    "exact": null,
+    "below": {
+     "perSide": [],
+     "perSideTotal": 0,
+     "total": 45,
+     "barWeight": 45,
+     "collarWeight": 0
+    },
+    "above": null
+   }
+  },
+  {
+   "name": "nearest_loadable: 1e300 lb target, finite pairs",
+   "input": {
+    "call": "nearest_loadable",
+    "requestedTotal": 1e+300,
+    "barWeight": 45,
+    "collarWeight": 0,
+    "plates": [
+     {
+      "weight": 25,
+      "pairs": 2,
+      "color": "green"
+     },
+     {
+      "weight": 20,
+      "pairs": 2,
+      "color": "red"
+     }
+    ]
+   },
+   "expected": {
+    "perSide": [],
+    "perSideTotal": 0,
+    "total": 45,
+    "barWeight": 45,
+    "collarWeight": 0
+   }
+  },
+  {
+   "name": "round_weight: 1e300 lb target, finite pairs",
+   "input": {
+    "call": "round_weight",
+    "targetWeight": 1e+300,
+    "barWeight": 45,
+    "collarWeight": 0,
+    "plates": [
+     {
+      "weight": 25,
+      "pairs": 2,
+      "color": "green"
+     },
+     {
+      "weight": 20,
+      "pairs": 2,
+      "color": "red"
+     }
+    ]
+   },
+   "expected": 45
+  },
+  {
+   "name": "plan_plates: Number.MAX_VALUE lb target, finite pairs",
+   "input": {
+    "call": "plan_plates",
+    "requestedTotal": 1.7976931348623157e+308,
+    "barWeight": 45,
+    "collarWeight": 0,
+    "plates": [
+     {
+      "weight": 25,
+      "pairs": 2,
+      "color": "green"
+     },
+     {
+      "weight": 20,
+      "pairs": 2,
+      "color": "red"
+     }
+    ]
+   },
+   "expected": {
+    "requestedTotal": 1.7976931348623157e+308,
+    "barWeight": 45,
+    "collarWeight": 0,
+    "perSideTarget": null,
+    "exact": null,
+    "below": {
+     "perSide": [],
+     "perSideTotal": 0,
+     "total": 45,
+     "barWeight": 45,
+     "collarWeight": 0
+    },
+    "above": null
+   }
+  },
+  {
+   "name": "nearest_loadable: Number.MAX_VALUE lb target, finite pairs",
+   "input": {
+    "call": "nearest_loadable",
+    "requestedTotal": 1.7976931348623157e+308,
+    "barWeight": 45,
+    "collarWeight": 0,
+    "plates": [
+     {
+      "weight": 25,
+      "pairs": 2,
+      "color": "green"
+     },
+     {
+      "weight": 20,
+      "pairs": 2,
+      "color": "red"
+     }
+    ]
+   },
+   "expected": {
+    "perSide": [],
+    "perSideTotal": 0,
+    "total": 45,
+    "barWeight": 45,
+    "collarWeight": 0
+   }
+  },
+  {
+   "name": "round_weight: Number.MAX_VALUE lb target, finite pairs",
+   "input": {
+    "call": "round_weight",
+    "targetWeight": 1.7976931348623157e+308,
+    "barWeight": 45,
+    "collarWeight": 0,
+    "plates": [
+     {
+      "weight": 25,
+      "pairs": 2,
+      "color": "green"
+     },
+     {
+      "weight": 20,
+      "pairs": 2,
+      "color": "red"
+     }
+    ]
+   },
+   "expected": 45
+  },
+  {
+   "name": "plan_plates: Infinity target, finite pairs",
+   "input": {
+    "call": "plan_plates",
+    "requestedTotal": "Infinity",
+    "barWeight": 45,
+    "collarWeight": 0,
+    "plates": [
+     {
+      "weight": 25,
+      "pairs": 2,
+      "color": "green"
+     },
+     {
+      "weight": 20,
+      "pairs": 2,
+      "color": "red"
+     }
+    ]
+   },
+   "expected": {
+    "requestedTotal": null,
+    "barWeight": 45,
+    "collarWeight": 0,
+    "perSideTarget": null,
+    "exact": null,
+    "below": {
+     "perSide": [],
+     "perSideTotal": 0,
+     "total": 45,
+     "barWeight": 45,
+     "collarWeight": 0
+    },
+    "above": null
+   }
+  },
+  {
+   "name": "nearest_loadable: Infinity target, finite pairs",
+   "input": {
+    "call": "nearest_loadable",
+    "requestedTotal": "Infinity",
+    "barWeight": 45,
+    "collarWeight": 0,
+    "plates": [
+     {
+      "weight": 25,
+      "pairs": 2,
+      "color": "green"
+     },
+     {
+      "weight": 20,
+      "pairs": 2,
+      "color": "red"
+     }
+    ]
+   },
+   "expected": {
+    "perSide": [],
+    "perSideTotal": 0,
+    "total": 45,
+    "barWeight": 45,
+    "collarWeight": 0
+   }
+  },
+  {
+   "name": "round_weight: Infinity target, finite pairs",
+   "input": {
+    "call": "round_weight",
+    "targetWeight": "Infinity",
+    "barWeight": 45,
+    "collarWeight": 0,
+    "plates": [
+     {
+      "weight": 25,
+      "pairs": 2,
+      "color": "green"
+     },
+     {
+      "weight": 20,
+      "pairs": 2,
+      "color": "red"
+     }
+    ]
+   },
+   "expected": 45
+  },
+  {
+   "name": "plan_plates: -Infinity target",
+   "input": {
+    "call": "plan_plates",
+    "requestedTotal": "-Infinity",
+    "barWeight": 45,
+    "collarWeight": 0,
+    "plates": [
+     {
+      "weight": 45,
+      "pairs": "enough",
+      "color": "blue"
+     },
+     {
+      "weight": 35,
+      "pairs": "enough",
+      "color": "yellow"
+     },
+     {
+      "weight": 25,
+      "pairs": "enough",
+      "color": "green"
+     },
+     {
+      "weight": 10,
+      "pairs": "enough",
+      "color": "white"
+     },
+     {
+      "weight": 5,
+      "pairs": "enough",
+      "color": "charcoal"
+     },
+     {
+      "weight": 2.5,
+      "pairs": "enough",
+      "color": "silver"
+     },
+     {
+      "weight": 1.25,
+      "pairs": 0,
+      "color": "silver"
+     }
+    ]
+   },
+   "expected": {
+    "requestedTotal": null,
+    "barWeight": 45,
+    "collarWeight": 0,
+    "perSideTarget": null,
+    "exact": null,
+    "below": null,
+    "above": {
+     "perSide": [],
+     "perSideTotal": 0,
+     "total": 45,
+     "barWeight": 45,
+     "collarWeight": 0
+    }
+   }
+  },
+  {
+   "name": "nearest_loadable: -Infinity target",
+   "input": {
+    "call": "nearest_loadable",
+    "requestedTotal": "-Infinity",
+    "barWeight": 45,
+    "collarWeight": 0,
+    "plates": [
+     {
+      "weight": 45,
+      "pairs": "enough",
+      "color": "blue"
+     },
+     {
+      "weight": 35,
+      "pairs": "enough",
+      "color": "yellow"
+     },
+     {
+      "weight": 25,
+      "pairs": "enough",
+      "color": "green"
+     },
+     {
+      "weight": 10,
+      "pairs": "enough",
+      "color": "white"
+     },
+     {
+      "weight": 5,
+      "pairs": "enough",
+      "color": "charcoal"
+     },
+     {
+      "weight": 2.5,
+      "pairs": "enough",
+      "color": "silver"
+     },
+     {
+      "weight": 1.25,
+      "pairs": 0,
+      "color": "silver"
+     }
+    ]
+   },
+   "expected": {
+    "perSide": [],
+    "perSideTotal": 0,
+    "total": 45,
+    "barWeight": 45,
+    "collarWeight": 0
+   }
+  },
+  {
+   "name": "round_weight: -Infinity target",
+   "input": {
+    "call": "round_weight",
+    "targetWeight": "-Infinity",
+    "barWeight": 45,
+    "collarWeight": 0,
+    "plates": [
+     {
+      "weight": 45,
+      "pairs": "enough",
+      "color": "blue"
+     },
+     {
+      "weight": 35,
+      "pairs": "enough",
+      "color": "yellow"
+     },
+     {
+      "weight": 25,
+      "pairs": "enough",
+      "color": "green"
+     },
+     {
+      "weight": 10,
+      "pairs": "enough",
+      "color": "white"
+     },
+     {
+      "weight": 5,
+      "pairs": "enough",
+      "color": "charcoal"
+     },
+     {
+      "weight": 2.5,
+      "pairs": "enough",
+      "color": "silver"
+     },
+     {
+      "weight": 1.25,
+      "pairs": 0,
+      "color": "silver"
+     }
+    ]
+   },
+   "expected": 45
+  },
+  {
+   "name": "plan_plates: NaN target",
+   "input": {
+    "call": "plan_plates",
+    "requestedTotal": "NaN",
+    "barWeight": 45,
+    "collarWeight": 0,
+    "plates": [
+     {
+      "weight": 45,
+      "pairs": "enough",
+      "color": "blue"
+     },
+     {
+      "weight": 35,
+      "pairs": "enough",
+      "color": "yellow"
+     },
+     {
+      "weight": 25,
+      "pairs": "enough",
+      "color": "green"
+     },
+     {
+      "weight": 10,
+      "pairs": "enough",
+      "color": "white"
+     },
+     {
+      "weight": 5,
+      "pairs": "enough",
+      "color": "charcoal"
+     },
+     {
+      "weight": 2.5,
+      "pairs": "enough",
+      "color": "silver"
+     },
+     {
+      "weight": 1.25,
+      "pairs": 0,
+      "color": "silver"
+     }
+    ]
+   },
+   "expected": {
+    "requestedTotal": null,
+    "barWeight": 45,
+    "collarWeight": 0,
+    "perSideTarget": null,
+    "exact": null,
+    "below": {
+     "perSide": [],
+     "perSideTotal": 0,
+     "total": 45,
+     "barWeight": 45,
+     "collarWeight": 0
+    },
+    "above": null
+   }
+  },
+  {
+   "name": "nearest_loadable: NaN target",
+   "input": {
+    "call": "nearest_loadable",
+    "requestedTotal": "NaN",
+    "barWeight": 45,
+    "collarWeight": 0,
+    "plates": [
+     {
+      "weight": 45,
+      "pairs": "enough",
+      "color": "blue"
+     },
+     {
+      "weight": 35,
+      "pairs": "enough",
+      "color": "yellow"
+     },
+     {
+      "weight": 25,
+      "pairs": "enough",
+      "color": "green"
+     },
+     {
+      "weight": 10,
+      "pairs": "enough",
+      "color": "white"
+     },
+     {
+      "weight": 5,
+      "pairs": "enough",
+      "color": "charcoal"
+     },
+     {
+      "weight": 2.5,
+      "pairs": "enough",
+      "color": "silver"
+     },
+     {
+      "weight": 1.25,
+      "pairs": 0,
+      "color": "silver"
+     }
+    ]
+   },
+   "expected": {
+    "perSide": [],
+    "perSideTotal": 0,
+    "total": 45,
+    "barWeight": 45,
+    "collarWeight": 0
+   }
+  },
+  {
+   "name": "round_weight: NaN target",
+   "input": {
+    "call": "round_weight",
+    "targetWeight": "NaN",
+    "barWeight": 45,
+    "collarWeight": 0,
+    "plates": [
+     {
+      "weight": 45,
+      "pairs": "enough",
+      "color": "blue"
+     },
+     {
+      "weight": 35,
+      "pairs": "enough",
+      "color": "yellow"
+     },
+     {
+      "weight": 25,
+      "pairs": "enough",
+      "color": "green"
+     },
+     {
+      "weight": 10,
+      "pairs": "enough",
+      "color": "white"
+     },
+     {
+      "weight": 5,
+      "pairs": "enough",
+      "color": "charcoal"
+     },
+     {
+      "weight": 2.5,
+      "pairs": "enough",
+      "color": "silver"
+     },
+     {
+      "weight": 1.25,
+      "pairs": 0,
+      "color": "silver"
+     }
+    ]
+   },
+   "expected": 45
+  },
+  {
+   "name": "plan_plates: NaN bar weight",
+   "input": {
+    "call": "plan_plates",
+    "requestedTotal": 245,
+    "barWeight": "NaN",
+    "collarWeight": 0,
+    "plates": [
+     {
+      "weight": 45,
+      "pairs": "enough",
+      "color": "blue"
+     },
+     {
+      "weight": 35,
+      "pairs": "enough",
+      "color": "yellow"
+     },
+     {
+      "weight": 25,
+      "pairs": "enough",
+      "color": "green"
+     },
+     {
+      "weight": 10,
+      "pairs": "enough",
+      "color": "white"
+     },
+     {
+      "weight": 5,
+      "pairs": "enough",
+      "color": "charcoal"
+     },
+     {
+      "weight": 2.5,
+      "pairs": "enough",
+      "color": "silver"
+     },
+     {
+      "weight": 1.25,
+      "pairs": 0,
+      "color": "silver"
+     }
+    ]
+   },
+   "expected": {
+    "requestedTotal": 245,
+    "barWeight": null,
+    "collarWeight": 0,
+    "perSideTarget": null,
+    "exact": null,
+    "below": {
+     "perSide": [],
+     "perSideTotal": 0,
+     "total": null,
+     "barWeight": null,
+     "collarWeight": 0
+    },
+    "above": null
+   }
+  },
+  {
+   "name": "nearest_loadable: NaN bar weight",
+   "input": {
+    "call": "nearest_loadable",
+    "requestedTotal": 245,
+    "barWeight": "NaN",
+    "collarWeight": 0,
+    "plates": [
+     {
+      "weight": 45,
+      "pairs": "enough",
+      "color": "blue"
+     },
+     {
+      "weight": 35,
+      "pairs": "enough",
+      "color": "yellow"
+     },
+     {
+      "weight": 25,
+      "pairs": "enough",
+      "color": "green"
+     },
+     {
+      "weight": 10,
+      "pairs": "enough",
+      "color": "white"
+     },
+     {
+      "weight": 5,
+      "pairs": "enough",
+      "color": "charcoal"
+     },
+     {
+      "weight": 2.5,
+      "pairs": "enough",
+      "color": "silver"
+     },
+     {
+      "weight": 1.25,
+      "pairs": 0,
+      "color": "silver"
+     }
+    ]
+   },
+   "expected": {
+    "perSide": [],
+    "perSideTotal": 0,
+    "total": null,
+    "barWeight": null,
+    "collarWeight": 0
+   }
+  },
+  {
+   "name": "round_weight: NaN bar weight",
+   "input": {
+    "call": "round_weight",
+    "targetWeight": 245,
+    "barWeight": "NaN",
+    "collarWeight": 0,
+    "plates": [
+     {
+      "weight": 45,
+      "pairs": "enough",
+      "color": "blue"
+     },
+     {
+      "weight": 35,
+      "pairs": "enough",
+      "color": "yellow"
+     },
+     {
+      "weight": 25,
+      "pairs": "enough",
+      "color": "green"
+     },
+     {
+      "weight": 10,
+      "pairs": "enough",
+      "color": "white"
+     },
+     {
+      "weight": 5,
+      "pairs": "enough",
+      "color": "charcoal"
+     },
+     {
+      "weight": 2.5,
+      "pairs": "enough",
+      "color": "silver"
+     },
+     {
+      "weight": 1.25,
+      "pairs": 0,
+      "color": "silver"
+     }
+    ]
+   },
+   "expected": null
+  },
+  {
+   "name": "plan_plates: -Infinity collar makes the per-side target Infinity",
+   "input": {
+    "call": "plan_plates",
+    "requestedTotal": 245,
+    "barWeight": 45,
+    "collarWeight": "-Infinity",
+    "plates": [
+     {
+      "weight": 25,
+      "pairs": 2,
+      "color": "green"
+     },
+     {
+      "weight": 20,
+      "pairs": 2,
+      "color": "red"
+     }
+    ]
+   },
+   "expected": {
+    "requestedTotal": 245,
+    "barWeight": 45,
+    "collarWeight": null,
+    "perSideTarget": null,
+    "exact": null,
+    "below": {
+     "perSide": [],
+     "perSideTotal": 0,
+     "total": null,
+     "barWeight": 45,
+     "collarWeight": null
+    },
+    "above": null
+   }
+  },
+  {
+   "name": "nearest_loadable: -Infinity collar makes the per-side target Infinity",
+   "input": {
+    "call": "nearest_loadable",
+    "requestedTotal": 245,
+    "barWeight": 45,
+    "collarWeight": "-Infinity",
+    "plates": [
+     {
+      "weight": 25,
+      "pairs": 2,
+      "color": "green"
+     },
+     {
+      "weight": 20,
+      "pairs": 2,
+      "color": "red"
+     }
+    ]
+   },
+   "expected": {
+    "perSide": [],
+    "perSideTotal": 0,
+    "total": null,
+    "barWeight": 45,
+    "collarWeight": null
+   }
+  },
+  {
+   "name": "round_weight: -Infinity collar makes the per-side target Infinity",
+   "input": {
+    "call": "round_weight",
+    "targetWeight": 245,
+    "barWeight": 45,
+    "collarWeight": "-Infinity",
+    "plates": [
+     {
+      "weight": 25,
+      "pairs": 2,
+      "color": "green"
+     },
+     {
+      "weight": 20,
+      "pairs": 2,
+      "color": "red"
+     }
+    ]
+   },
+   "expected": null
+  },
+  {
+   "name": "plan_plates: negative target",
+   "input": {
+    "call": "plan_plates",
+    "requestedTotal": -50,
+    "barWeight": 45,
+    "collarWeight": 0,
+    "plates": [
+     {
+      "weight": 45,
+      "pairs": "enough",
+      "color": "blue"
+     },
+     {
+      "weight": 35,
+      "pairs": "enough",
+      "color": "yellow"
+     },
+     {
+      "weight": 25,
+      "pairs": "enough",
+      "color": "green"
+     },
+     {
+      "weight": 10,
+      "pairs": "enough",
+      "color": "white"
+     },
+     {
+      "weight": 5,
+      "pairs": "enough",
+      "color": "charcoal"
+     },
+     {
+      "weight": 2.5,
+      "pairs": "enough",
+      "color": "silver"
+     },
+     {
+      "weight": 1.25,
+      "pairs": 0,
+      "color": "silver"
+     }
+    ]
+   },
+   "expected": {
+    "requestedTotal": -50,
+    "barWeight": 45,
+    "collarWeight": 0,
+    "perSideTarget": -47.5,
+    "exact": null,
+    "below": null,
+    "above": {
+     "perSide": [],
+     "perSideTotal": 0,
+     "total": 45,
+     "barWeight": 45,
+     "collarWeight": 0
+    }
+   }
+  },
+  {
+   "name": "nearest_loadable: negative target",
+   "input": {
+    "call": "nearest_loadable",
+    "requestedTotal": -50,
+    "barWeight": 45,
+    "collarWeight": 0,
+    "plates": [
+     {
+      "weight": 45,
+      "pairs": "enough",
+      "color": "blue"
+     },
+     {
+      "weight": 35,
+      "pairs": "enough",
+      "color": "yellow"
+     },
+     {
+      "weight": 25,
+      "pairs": "enough",
+      "color": "green"
+     },
+     {
+      "weight": 10,
+      "pairs": "enough",
+      "color": "white"
+     },
+     {
+      "weight": 5,
+      "pairs": "enough",
+      "color": "charcoal"
+     },
+     {
+      "weight": 2.5,
+      "pairs": "enough",
+      "color": "silver"
+     },
+     {
+      "weight": 1.25,
+      "pairs": 0,
+      "color": "silver"
+     }
+    ]
+   },
+   "expected": {
+    "perSide": [],
+    "perSideTotal": 0,
+    "total": 45,
+    "barWeight": 45,
+    "collarWeight": 0
+   }
+  },
+  {
+   "name": "round_weight: negative target",
+   "input": {
+    "call": "round_weight",
+    "targetWeight": -50,
+    "barWeight": 45,
+    "collarWeight": 0,
+    "plates": [
+     {
+      "weight": 45,
+      "pairs": "enough",
+      "color": "blue"
+     },
+     {
+      "weight": 35,
+      "pairs": "enough",
+      "color": "yellow"
+     },
+     {
+      "weight": 25,
+      "pairs": "enough",
+      "color": "green"
+     },
+     {
+      "weight": 10,
+      "pairs": "enough",
+      "color": "white"
+     },
+     {
+      "weight": 5,
+      "pairs": "enough",
+      "color": "charcoal"
+     },
+     {
+      "weight": 2.5,
+      "pairs": "enough",
+      "color": "silver"
+     },
+     {
+      "weight": 1.25,
+      "pairs": 0,
+      "color": "silver"
+     }
+    ]
+   },
+   "expected": 45
+  },
+  {
+   "name": "choose_next: 1e18 lb target, finite pairs",
+   "input": {
+    "call": "choose_next",
+    "currentPerSide": [],
+    "nextTotal": 1000000000000000000,
+    "barWeight": 20,
+    "collarWeight": 0.5,
+    "plates": [
+     {
+      "weight": 25,
+      "pairs": 2,
+      "color": "green"
+     },
+     {
+      "weight": 20,
+      "pairs": 2,
+      "color": "red"
+     }
+    ]
+   },
+   "expected": {
+    "perSide": [
+     25,
+     25
+    ],
+    "total": 121,
+    "instruction": "add 25 + 25 each side",
+    "keptInner": 0,
+    "platesMoved": 2
+   }
+  },
+  {
+   "name": "shorthand: Infinity, 20, 1.25",
+   "input": {
+    "call": "shorthand",
+    "perSide": [
+     "Infinity",
+     20,
+     1.25
+    ]
+   },
+   "expected": "per side Infinity · 20 · 1.25"
+  },
+  {
+   "name": "shorthand: -Infinity, 0.004",
+   "input": {
+    "call": "shorthand",
+    "perSide": [
+     "-Infinity",
+     0.004
+    ]
+   },
+   "expected": "per side 0 · -Infinity"
+  },
+  {
+   "name": "shorthand: 1e+21, 5",
+   "input": {
+    "call": "shorthand",
+    "perSide": [
+     1e+21,
+     5
+    ]
+   },
+   "expected": "per side 999999999999999900000 · 5"
+  },
+  {
+   "name": "shorthand: 1000000000000000, 2.675",
+   "input": {
+    "call": "shorthand",
+    "perSide": [
+     1000000000000000,
+     2.675
+    ]
+   },
+   "expected": "per side 1000000000000000 · 2.68"
+  },
+  {
+   "name": "shorthand: 123456.789, 1e-7",
+   "input": {
+    "call": "shorthand",
+    "perSide": [
+     123456.789,
+     1e-7
+    ]
+   },
+   "expected": "per side 123456.79 · 0"
+  },
+  {
+   "name": "describe_change: 55, 10, Infinity to 2.5",
+   "input": {
+    "call": "describe_change",
+    "currentPerSide": [
+     55,
+     10,
+     "Infinity"
+    ],
+    "nextPerSide": [
+     2.5
+    ]
+   },
+   "expected": "take off Infinity + 55 + 10, add 2.5 each side"
+  },
+  {
+   "name": "describe_change: 1e+21 to ",
+   "input": {
+    "call": "describe_change",
+    "currentPerSide": [
+     1e+21
+    ],
+    "nextPerSide": []
+   },
+   "expected": "take off 999999999999999900000 each side"
+  },
+  {
+   "name": "describe_change:  to -Infinity",
+   "input": {
+    "call": "describe_change",
+    "currentPerSide": [],
+    "nextPerSide": [
+     "-Infinity"
+    ]
+   },
+   "expected": "add -Infinity each side"
+  },
+  {
+   "name": "describe_change: 1e+21, 5 to 1e+21, 2.5",
+   "input": {
+    "call": "describe_change",
+    "currentPerSide": [
+     1e+21,
+     5
+    ],
+    "nextPerSide": [
+     1e+21,
+     2.5
+    ]
+   },
+   "expected": "take off 5, add 2.5 each side"
+  },
+  {
    "name": "choose_next: ramp to 100",
    "input": {
     "call": "choose_next",

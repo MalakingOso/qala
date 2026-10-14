@@ -497,3 +497,15 @@ The TS behaviour is the oracle; none of these was changed.
     flag (`e1rm.json`, two cases).
 13. **`checkRunBeforeLift`'s 8 h rule and `applyLift`'s differ in strictness**:
     exactly 8 h is a miss in both (`< 8`).
+
+## Differential fuzz
+
+`deno task fuzz:engine` writes 1,500,000 random cases with the oracle's answers
+to `testdata/golden/engine/fuzz/` (gitignored, about 175 MB, a few seconds):
+1,000,000 e1RM cases (`observeSet`, `bestObservation`, `rtsLookup`) and 500,000
+date, decay and readiness cases (`daysBetween`, `decayValue`, `applyInput`,
+`decayRecord`, `muscleTau`, `addDaysKey`, `criticalSpeed`, `prsZScore` and the
+readiness core with and without the decay to `now`).
+`crates/qala-core/tests/fuzz_core.rs` replays them with the tolerance rule above
+and skips with a note when the directory is absent. The line formats and the
+date forms are in `scripts/gen_engine_fuzz.ts`.
