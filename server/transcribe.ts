@@ -18,6 +18,7 @@ import {
   type CommandRunner,
   createGate,
   type Gate,
+  type KeyedGate,
   runCommand,
 } from "./exec.ts";
 import { type ContentPart, proxyChatCompletions } from "./llm.ts";
@@ -65,8 +66,12 @@ export interface TranscribeDeps {
   gate: Gate;
   /** Total time allowed to receive the upload. Tests pass a short one. */
   uploadTimeoutMs?: number;
+  /** Time allowed with no chunk arriving. Tests pass a short one. */
+  uploadIdleMs?: number;
   /** Slots for uploads being received; defaults to the shared read gate. */
   readGate?: Gate;
+  /** One read per identity; defaults to the shared per-identity gate. */
+  identityGate?: KeyedGate;
 }
 
 /** Live deps. URLs and the ffmpeg path can be overridden from the environment. */
@@ -392,7 +397,9 @@ export async function serveTranscribe(
   try {
     upload = await readUploadGated(req, TRANSCRIBE_LIMITS.maxUploadBytes, {
       timeoutMs: deps.uploadTimeoutMs,
+      idleTimeoutMs: deps.uploadIdleMs,
       gate: deps.readGate,
+      identityGate: deps.identityGate,
     });
   } catch (err) {
     return uploadErrorResponse(err) ??

@@ -6,7 +6,13 @@
 // sends and `curl --data-binary` does), or a multipart form with a `file` part
 // (`curl -F file=@clip.wav`).
 
-import { createGate, type Gate } from "./exec.ts";
+import {
+  createGate,
+  createKeyedGate,
+  type Gate,
+  type KeyedGate,
+} from "./exec.ts";
+import { userIdFromRequest } from "./auth.ts";
 
 export class UploadError extends Error {
   status: number;
@@ -42,13 +48,16 @@ async function readCapped(
   body: ReadableStream<Uint8Array>,
   maxBytes: number,
   timeoutMs: number,
+  idleMs: number,
 ): Promise<Uint8Array<ArrayBuffer>> {
   const reader = body.getReader();
   const parts: Uint8Array[] = [];
   let total = 0;
-  // One deadline for the whole read, so a client trickling bytes cannot hold
-  // a connection (and whatever the caller holds) open indefinitely.
+  // Two clocks. The total deadline stops a client that trickles bytes from
+  // holding a connection (and whatever the caller holds) open indefinitely.
+  // The idle clock gives the slot back quickly when nothing arrives at all.
   let timer: ReturnType<typeof setTimeout> | undefined;
+  let idleTimer: ReturnType<typeof setTimeout> | undefined;
   const expired = new Promise<never>((_, reject) => {
     timer = setTimeout(
       () => reject(new UploadError(408, "the upload took too long")),
@@ -58,7 +67,19 @@ async function readCapped(
   expired.catch(() => {});
   try {
     for (;;) {
-      const { value, done } = await Promise.race([reader.read(), expired]);
+      const idle = new Promise<never>((_, reject) => {
+        idleTimer = setTimeout(
+          () => reject(new UploadError(408, "the upload stalled")),
+          idleMs,
+        );
+      });
+      idle.catch(() => {});
+      const { value, done } = await Promise.race([
+        reader.read(),
+        expired,
+        idle,
+      ]);
+      clearTimeout(idleTimer);
       if (done) break;
       total += value.length;
       if (total > maxBytes) {
@@ -76,6 +97,7 @@ async function readCapped(
     throw new UploadError(400, "could not read the upload");
   } finally {
     clearTimeout(timer);
+    clearTimeout(idleTimer);
   }
   const out = new Uint8Array(total);
   let at = 0;
@@ -94,16 +116,28 @@ function describe(bytes: number): string {
 
 /** Default total time allowed to receive an upload. */
 export const DEFAULT_UPLOAD_TIMEOUT_MS = 30_000;
+/** Default time allowed between two chunks of an upload. */
+export const DEFAULT_UPLOAD_IDLE_MS = 5_000;
+
+export interface ReadOptions {
+  /** Total time for the whole body. */
+  timeoutMs?: number;
+  /** Time allowed with no chunk arriving. */
+  idleTimeoutMs?: number;
+}
 
 /**
  * Read the upload, or throw an UploadError carrying the HTTP status: 413 over
- * the cap, 408 when the body does not finish inside `timeoutMs`.
+ * the cap, 408 when the body does not finish inside `timeoutMs` or goes quiet
+ * for `idleTimeoutMs`.
  */
 export async function readUpload(
   req: Request,
   maxBytes: number,
-  timeoutMs: number = DEFAULT_UPLOAD_TIMEOUT_MS,
+  options: ReadOptions = {},
 ): Promise<Upload> {
+  const timeoutMs = options.timeoutMs ?? DEFAULT_UPLOAD_TIMEOUT_MS;
+  const idleMs = options.idleTimeoutMs ?? DEFAULT_UPLOAD_IDLE_MS;
   // Content-Length is only a shortcut for an honest client. The real cap is
   // the bounded read below, which also covers chunked bodies with no header.
   // A header that is present but not a plain non-negative integer is refused.
@@ -122,7 +156,7 @@ export async function readUpload(
   }
   if (req.body === null) throw new UploadError(400, "the upload is empty");
   const contentType = req.headers.get("content-type") ?? "";
-  const raw = await readCapped(req.body, maxBytes + 1024, timeoutMs);
+  const raw = await readCapped(req.body, maxBytes + 1024, timeoutMs, idleMs);
   if (/^multipart\/form-data/i.test(contentType)) {
     let form: FormData;
     try {
@@ -168,19 +202,42 @@ export async function readUpload(
  */
 export const UPLOAD_READ_SLOTS = 4;
 export const uploadReadGate: Gate = createGate(UPLOAD_READ_SLOTS);
+/** One upload being received per user identity, across every upload route. */
+export const uploadIdentityGate: KeyedGate = createKeyedGate(1);
+
+export interface GatedReadOptions extends ReadOptions {
+  /** Defaults to the shared read gate. */
+  gate?: Gate;
+  /** Defaults to the shared per-identity gate. */
+  identityGate?: KeyedGate;
+}
 
 /**
- * readUpload inside a read slot. Answers 503 with the degraded shape when
- * every slot is taken, and frees the slot as soon as the bytes are in (or the
- * read fails or times out), before the caller takes any processing slot.
+ * readUpload inside a read slot. A second upload from the same Tailscale
+ * identity while one is still arriving is a 429. Requests with no identity
+ * header (local use, tests) skip that check and only compete for slots. When
+ * every slot is taken the answer is 503 in the degraded shape. Both are freed
+ * as soon as the bytes are in (or the read fails or times out), before the
+ * caller takes any processing slot.
  */
 export async function readUploadGated(
   req: Request,
   maxBytes: number,
-  options: { timeoutMs?: number; gate?: Gate } = {},
+  options: GatedReadOptions = {},
 ): Promise<Upload> {
-  const release = (options.gate ?? uploadReadGate).tryEnter();
-  if (release === null) {
+  const who = userIdFromRequest(req);
+  const releaseIdentity = who === null
+    ? (() => {})
+    : (options.identityGate ?? uploadIdentityGate).tryEnter(who);
+  if (releaseIdentity === null) {
+    throw new UploadError(
+      429,
+      "you already have an upload in progress, wait for it to finish",
+    );
+  }
+  const releaseSlot = (options.gate ?? uploadReadGate).tryEnter();
+  if (releaseSlot === null) {
+    releaseIdentity();
     throw new UploadError(
       503,
       "too many uploads are in progress, try again shortly",
@@ -188,8 +245,9 @@ export async function readUploadGated(
     );
   }
   try {
-    return await readUpload(req, maxBytes, options.timeoutMs);
+    return await readUpload(req, maxBytes, options);
   } finally {
-    release();
+    releaseSlot();
+    releaseIdentity();
   }
 }

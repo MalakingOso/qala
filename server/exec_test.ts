@@ -2,8 +2,8 @@
 // upload reader.
 
 import { assert, assertEquals } from "@std/assert";
-import { createGate, runCommand } from "./exec.ts";
-import { readUpload, UploadError } from "./upload.ts";
+import { createGate, createKeyedGate, runCommand } from "./exec.ts";
+import { readUpload, readUploadGated, UploadError } from "./upload.ts";
 
 const text = (b: Uint8Array) => new TextDecoder().decode(b);
 
@@ -204,14 +204,113 @@ Deno.test("an upload that stalls mid-body is cut off with 408", async () => {
   const err = await readUpload(
     stalledRequest(new Uint8Array(100)),
     1000,
-    150,
+    { timeoutMs: 150, idleTimeoutMs: 60_000 },
   ).catch((e) => e);
   assert(err instanceof UploadError);
   assertEquals(err.status, 408);
   assert(performance.now() - t0 < 2000, "gave up promptly");
   // A finished upload inside the deadline is unaffected by it.
-  const ok = await readUpload(post(new Uint8Array([1])), 1000, 150);
+  const ok = await readUpload(post(new Uint8Array([1])), 1000, {
+    timeoutMs: 150,
+  });
   assertEquals([...ok.bytes], [1]);
+});
+
+Deno.test("a sender that goes quiet is cut off by the idle clock, a steady one is not", async () => {
+  const t0 = performance.now();
+  const err = await readUpload(stalledRequest(new Uint8Array(10)), 1000, {
+    timeoutMs: 60_000,
+    idleTimeoutMs: 100,
+  }).catch((e) => e);
+  assert(err instanceof UploadError);
+  assertEquals(err.status, 408);
+  assertEquals(err.message, "the upload stalled");
+  assert(performance.now() - t0 < 2000, "gave the slot back quickly");
+
+  // Six chunks 40 ms apart take longer than the idle limit in total, but no
+  // single gap does.
+  let n = 0;
+  const steady = new Request("http://x/up", {
+    method: "POST",
+    body: new ReadableStream<Uint8Array>({
+      async pull(controller) {
+        await new Promise((r) => setTimeout(r, 40));
+        if (++n > 6) return controller.close();
+        controller.enqueue(new Uint8Array(10));
+      },
+    }),
+    // @ts-expect-error duplex is required for stream bodies
+    duplex: "half",
+  });
+  const ok = await readUpload(steady, 1000, {
+    timeoutMs: 60_000,
+    idleTimeoutMs: 150,
+  });
+  assertEquals(ok.bytes.length, 60);
+});
+
+function withIdentity(req: Request, login: string): Request {
+  const headers = new Headers(req.headers);
+  headers.set("tailscale-user-login", login);
+  return new Request(req, { headers });
+}
+
+Deno.test("one upload read per identity: the second is 429, others and anonymous are not", async () => {
+  const identityGate = createKeyedGate(1);
+  const gate = createGate(8);
+  const opts = { timeoutMs: 300, idleTimeoutMs: 60_000, gate, identityGate };
+  const mine = () => stalledRequest(new Uint8Array(10));
+
+  const first = readGatedStatus(withIdentity(mine(), "Me@Example.com"), opts);
+  const second = await readGatedStatus(
+    withIdentity(mine(), " me@example.com "),
+    opts,
+  );
+  assertEquals(second, 429, "same identity, normalised, while one is arriving");
+  const other = readGatedStatus(withIdentity(mine(), "you@example.com"), opts);
+  const anon1 = readGatedStatus(mine(), opts);
+  const anon2 = readGatedStatus(mine(), opts);
+  // Everyone else got in (and then hit the 300 ms deadline).
+  assertEquals(await other, 408);
+  assertEquals(await anon1, 408);
+  assertEquals(await anon2, 408);
+  assertEquals(await first, 408);
+
+  // Once the first read has ended, the identity can upload again.
+  const again = await readUploadGated(
+    withIdentity(
+      new Request("http://x/up", { method: "POST", body: new Uint8Array([7]) }),
+      "me@example.com",
+    ),
+    100,
+    opts,
+  );
+  assertEquals([...again.bytes], [7]);
+  assertEquals(gate.tryEnter() !== null, true, "no read slot leaked");
+});
+
+async function readGatedStatus(
+  req: Request,
+  opts: Parameters<typeof readUploadGated>[2],
+): Promise<number> {
+  try {
+    await readUploadGated(req, 1000, opts);
+    return 200;
+  } catch (err) {
+    if (err instanceof UploadError) return err.status;
+    throw err;
+  }
+}
+
+Deno.test("keyed gate limits per key and frees on release", () => {
+  const g = createKeyedGate(1);
+  const a = g.tryEnter("a");
+  assert(a !== null);
+  assertEquals(g.tryEnter("a"), null);
+  assert(g.tryEnter("b") !== null);
+  a();
+  a();
+  assert(g.tryEnter("a") !== null);
 });
 
 Deno.test("upload refuses a Content-Length that is not a plain integer", async () => {

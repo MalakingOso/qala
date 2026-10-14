@@ -2,7 +2,12 @@
 // model servers are fakes behind an injected fetch.
 
 import { assert, assertEquals } from "@std/assert";
-import { type CommandSpec, createGate, runCommand } from "./exec.ts";
+import {
+  type CommandSpec,
+  createGate,
+  createKeyedGate,
+  runCommand,
+} from "./exec.ts";
 import {
   cleanTranscript,
   E4B_DEFAULTS,
@@ -358,6 +363,37 @@ Deno.test("a full read gate answers 503 degraded, and slots free after the deadl
     200,
     "slots are free once the deadline has passed",
   );
+});
+
+Deno.test("a second upload from the same identity while one is arriving is 429", async () => {
+  const { fetchFn } = fakeBackends({ e4b: "ok", whisper: "ok" });
+  const { deps } = depsWith(fetchFn, {
+    readGate: createGate(4),
+    identityGate: createKeyedGate(1),
+    uploadTimeoutMs: 300,
+  });
+  const as = (login: string, body: BodyInit | ReadableStream<Uint8Array>) =>
+    new Request("http://x/api/transcribe", {
+      method: "POST",
+      headers: { "tailscale-user-login": login },
+      body,
+      // @ts-expect-error duplex is required for stream bodies
+      duplex: "half",
+    });
+  const stalled = new ReadableStream<Uint8Array>({
+    pull() {
+      return new Promise<void>(() => {});
+    },
+  });
+  const first = serveTranscribe(as("me@example.com", stalled), deps);
+  const wav = await fixture("tone-8k.wav");
+  const second = await serveTranscribe(as("me@example.com", wav), deps);
+  assertEquals(second.status, 429);
+  const other = await serveTranscribe(as("you@example.com", wav), deps);
+  assertEquals(other.status, 200);
+  assertEquals((await first).status, 408);
+  const again = await serveTranscribe(as("me@example.com", wav), deps);
+  assertEquals(again.status, 200, "free once the first read has ended");
 });
 
 Deno.test("a clip over 30 seconds is refused with a clear message", async () => {

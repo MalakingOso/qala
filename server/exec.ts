@@ -217,3 +217,28 @@ export function createGate(max: number): Gate {
     },
   };
 }
+
+export interface KeyedGate {
+  /** A release function, or null when `key` already has its limit in flight. */
+  tryEnter(key: string): (() => void) | null;
+}
+
+/** Counting gate per key, e.g. one slot per user identity. */
+export function createKeyedGate(maxPerKey = 1): KeyedGate {
+  const active = new Map<string, number>();
+  return {
+    tryEnter(key) {
+      const n = active.get(key) ?? 0;
+      if (n >= maxPerKey) return null;
+      active.set(key, n + 1);
+      let released = false;
+      return () => {
+        if (released) return;
+        released = true;
+        const left = (active.get(key) ?? 1) - 1;
+        if (left <= 0) active.delete(key);
+        else active.set(key, left);
+      };
+    },
+  };
+}
