@@ -12,7 +12,7 @@ Everything on Android has run on the emulator only. The server still syncs throu
 
 ## Merge queue
 
-In flight on 2026-10-14, each on its own agent branch: the `gen:lspp` memory fix and the flaky `AppContainerTest`. Merged 2026-10-14: FFI exports, the vendored commit and the rename leftovers (`8e48051`); the LS++ wasm in the desktop editor and the server (`f5b88e5`); PDF and voice import (`e54e794`); the Coach route and Android screen (`90db3a6`). Merged 2026-10-13, in order: `plates` (`ee49107`), `docs` (`d6837a3`), `workout` (`b5e9ae9`), `plan` (`e0e6a8d`), `history` (`17c4926`), and the deploy unit fix.
+In flight on 2026-10-14: the flaky `AppContainerTest`, on its own agent branch. Merged 2026-10-14: FFI exports, the vendored commit and the rename leftovers (`8e48051`); the LS++ wasm in the desktop editor and the server (`f5b88e5`); PDF and voice import (`e54e794`); the Coach route and Android screen (`90db3a6`); the `gen:lspp` memory fix (`86b6b15`). Merged 2026-10-13, in order: `plates` (`ee49107`), `docs` (`d6837a3`), `workout` (`b5e9ae9`), `plan` (`e0e6a8d`), `history` (`17c4926`), and the deploy unit fix.
 
 Beyond the queue, the order of work is the owner's call. The tables below give each item's state and what it waits on.
 
@@ -58,7 +58,7 @@ Plans: `docs/rust-core.md`, `docs/ls-plus-plus.md`.
 | Upload and import routes skip `requireUser` | open | `/api/import/text`, `/api/import/pdf` and `/api/transcribe` rely on the tailnet, while android-native 10 says new routes call `requireUser`; uploads are capped by size, time, four shared read slots and one per identity. Rate limiting beyond that goes with accounts (S22) | D21 |
 | Record the vendored liftosaur commit (S17) | done 2026-10-14 | `5a73c87`, the newest of 26 master commits whose files match; `packages/liftoscript/VENDORED` has the method and the 14 locally changed files, and the vendor script records the hash from now on | |
 | Rename leftovers | done 2026-10-14 | `testdata/golden/lspp/`, `gen:lspp`; names that run the TS oracle (`golden:liftoscript`, `fuzz:liftoscript`) keep them, per S18 | |
-| `gen:lspp` runs out of memory | open | `crates/qala-lspp/testdata/unit/gen_planner_eval_cases.ts` hits the 7 GB V8 cap on Deno 2.9.7, from a clean main too, so a fresh clone can't generate `cases_planner_eval.json`; existing checkouts have it | |
+| `gen:lspp` runs out of memory | fixed 2026-10-14 | the planner eval generator copied live Lezer nodes through their parent chains before collapsing them (not a Deno regression); now 15 s at about 300 MB. 13 of 555 cases in the gitignored `cases_planner_eval.json` changed, from expanded parse trees and two RangeError records to real data; no test reads that file | |
 | Generator port (R4) | deferred 2026-10-14 (owner) | rust-core 7; later the phone pulls generated workouts from the server instead | |
 | Retire `packages/liftoscript` as the oracle | not started | gate for the Bun move | |
 
