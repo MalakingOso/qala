@@ -1,5 +1,5 @@
 // Deterministic LS++ program text (docs/PLAN.md 12: output is planner text that
-// opens in the editor as a normal program). Deterministic: exercises sorted,
+// opens in the editor as a normal program). Deterministic: exercises in workout order,
 // fixed number formatting, no randomness, no dates except meet-taper sessions.
 //
 // The shape follows the LS++ planner grammar (packages/liftoscript/src/pages/
@@ -116,12 +116,30 @@ function exerciseLines(ex: PlannedExercise): string[] {
   return lines;
 }
 
+const CLASS_ORDER: Record<PlannedExercise["klass"], number> = {
+  main: 0,
+  secondary: 1,
+  isolation: 2,
+};
+
+/**
+ * The order lines appear in is the order the lifter does them, so main lifts
+ * come first, then secondary, then isolation (PLAN 12); name breaks ties so
+ * the output stays deterministic.
+ */
+export function workoutOrder(
+  exercises: readonly PlannedExercise[],
+): PlannedExercise[] {
+  return [...exercises].sort((a, b) =>
+    CLASS_ORDER[a.klass] - CLASS_ORDER[b.klass] || a.name.localeCompare(b.name)
+  );
+}
+
 function dayBlock(day: DayPlan, dayIndex: number): string {
   const lines = [`## Day ${dayIndex}: ${day.label}`];
-  const sorted = [...day.exercises].sort((a, b) =>
-    a.name.localeCompare(b.name)
-  );
-  for (const ex of sorted) lines.push(...exerciseLines(ex));
+  for (const ex of workoutOrder(day.exercises)) {
+    lines.push(...exerciseLines(ex));
+  }
   return lines.join("\n");
 }
 

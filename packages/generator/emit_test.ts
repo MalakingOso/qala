@@ -5,7 +5,7 @@
 import { emitProgram, generateBlock } from "./mod.ts";
 import type { GeneratorInput } from "./mod.ts";
 import { EXERCISE_CATALOG } from "./types.ts";
-import { LSPP_EXERCISES } from "./emit.ts";
+import { LSPP_EXERCISES, workoutOrder } from "./emit.ts";
 import { taperSchedule } from "./templates.ts";
 
 function assert(cond: boolean, msg: string): void {
@@ -92,6 +92,32 @@ Deno.test("every goal and split emits well-shaped program text", () => {
 Deno.test("every generator exercise has an LS++ name", () => {
   for (const ex of EXERCISE_CATALOG) {
     assert(LSPP_EXERCISES[ex.id] !== undefined, `LS++ name for ${ex.id}`);
+  }
+});
+
+Deno.test("each day lists main lifts first, then secondary, then isolation", () => {
+  const rank = { main: 0, secondary: 1, isolation: 2 };
+  for (const daysPerWeek of [3, 4, 5] as const) {
+    const block = generateBlock({ ...BASE, goal: "strength", daysPerWeek });
+    for (const week of block.weeks) {
+      for (const day of week.days) {
+        const ranks = workoutOrder(day.exercises).map((e) => rank[e.klass]);
+        assert(
+          ranks.every((r, i) => i === 0 || ranks[i - 1] <= r),
+          `${day.label}: ${ranks.join(",")}`,
+        );
+      }
+    }
+  }
+  // The text follows the same order: a lower day opens on its main lift, not
+  // on Standing Calf Raise as the alphabetical order used to put it.
+  const text = emitProgram(generateBlock(BASE), BASE);
+  for (const day of text.split("## Day ").slice(1)) {
+    const first = day.split("\n").find((l) => / \/ /.test(l));
+    assert(
+      first !== undefined && !first.startsWith("Standing Calf"),
+      first ?? day,
+    );
   }
 });
 
