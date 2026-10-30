@@ -454,7 +454,7 @@ export const sampleLifts: LiftStat[] = [
     ],
     fullHistory: fullHistory(262),
     nl85: { actual: 27, target: 33 },
-    calibration: { p0: 248.1, k1: 0.62, theta: "4.0 (prior)", obs: 34 },
+    calibration: { p0: 248.1, k1: 0.62, theta: 3.6, obs: 34 },
     residuals: residualCurve(34, 4),
   },
   {
@@ -470,7 +470,7 @@ export const sampleLifts: LiftStat[] = [
     ],
     fullHistory: fullHistory(224),
     nl85: { actual: 18, target: 24 },
-    calibration: { p0: 211.4, k1: 0.55, theta: "4.0 (prior)", obs: 31 },
+    calibration: { p0: 211.4, k1: 0.55, theta: 3.8, obs: 31 },
     residuals: residualCurve(31, 3.2),
   },
   {
@@ -486,7 +486,7 @@ export const sampleLifts: LiftStat[] = [
     ],
     fullHistory: fullHistory(299),
     nl85: { actual: 12, target: 14 },
-    calibration: { p0: 302.7, k1: 0.71, theta: "4.0 (prior)", obs: 22 },
+    calibration: { p0: 302.7, k1: 0.71, theta: 4.2, obs: 22 },
     residuals: residualCurve(22, 4.8),
   },
   {
@@ -502,7 +502,7 @@ export const sampleLifts: LiftStat[] = [
     ],
     fullHistory: fullHistory(134),
     nl85: { actual: 8, target: 10 },
-    calibration: { p0: 141.2, k1: 0.48, theta: "4.0 (prior)", obs: 18 },
+    calibration: { p0: 141.2, k1: 0.48, theta: 4, obs: 18 },
     residuals: residualCurve(18, 2.6),
   },
 ];
