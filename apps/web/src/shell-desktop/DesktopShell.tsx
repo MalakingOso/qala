@@ -25,6 +25,7 @@ import { DesktopSettingsPage } from "./SettingsDesktopPage.tsx";
 import { type NavItem, TRAINING_NAV, WORKSPACE_NAV } from "./nav.ts";
 import { ToolbarSearch } from "./ToolbarSearch.tsx";
 import { useWeekFocus, WeekFocusProvider } from "./weekFocus.tsx";
+import { CustomExercisesProvider } from "./customExercises.tsx";
 
 function NavGroup(
   { label, items, part }: { label: string; items: NavItem[]; part: string },
@@ -192,7 +193,9 @@ function Shell({ route }: { route: string }) {
 export function DesktopShell({ route }: { route: string }) {
   return (
     <WeekFocusProvider>
-      <Shell route={route} />
+      <CustomExercisesProvider>
+        <Shell route={route} />
+      </CustomExercisesProvider>
     </WeekFocusProvider>
   );
 }

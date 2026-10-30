@@ -1623,6 +1623,82 @@ li.today .preview-day {
   max-width: 62ch;
 }
 
+/* Add exercise: name, equipment and rest class in a row, then the target and
+ * synergist rows (filter chips used as toggles). */
+.add-ex {
+  margin: 16px 0 0;
+}
+.add-ex-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.add-ex-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 150px;
+}
+.add-ex-name {
+  flex: 1 1 260px;
+  max-width: 420px;
+}
+.add-ex-field span,
+.add-ex-muscles legend {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+.page-desktop .add-ex-field input,
+.page-desktop .add-ex-field select {
+  min-height: 40px;
+  padding: 6px 12px;
+  font-size: 13px;
+}
+.add-ex-muscles {
+  margin: 14px 0 0;
+  padding: 0;
+  border: 0;
+}
+.add-ex-muscles legend {
+  margin-bottom: 6px;
+  padding: 0;
+}
+.add-ex-problems {
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 12px;
+  color: var(--danger);
+}
+.add-ex-foot {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 0 0;
+}
+.add-ex-list {
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 12px;
+}
+.add-ex-list li {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  padding: 8px 0;
+  border-top: 1px solid var(--soft);
+}
+.add-ex-list span {
+  color: var(--fg-secondary);
+}
+.add-ex-list .quiet-btn {
+  margin-left: auto;
+}
+
 /* ---------- Charts inside the desktop ---------- */
 .page-desktop .chart-head {
   margin-bottom: 10px;

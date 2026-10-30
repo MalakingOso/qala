@@ -29,6 +29,8 @@ import {
   toIssues,
 } from "../logic/lsppEditor.ts";
 import { loadLspp } from "../lspp/load.ts";
+import { withCustomExercises } from "../logic/customExercises.ts";
+import { useCustomExercises } from "./customExercises.tsx";
 import { sampleBlock } from "../store/sample.ts";
 import { DictateButton } from "./DictateButton.tsx";
 import { BlockBar, Bunch, PageHeader, Panel, Pill, TypeTag } from "./parts.tsx";
@@ -137,6 +139,7 @@ export function ProgramEditorPage() {
   const [issues, setIssues] = useState<EditorIssue[]>([]);
   const [formatNote, setFormatNote] = useState("");
   const [dry, setDry] = useState<DryState>({ kind: "idle" });
+  const { custom } = useCustomExercises();
 
   useEffect(() => {
     const el = host.current;
@@ -250,7 +253,7 @@ export function ProgramEditorPage() {
     const result = api.dryRun({
       programText,
       name: sampleBlock.name,
-      settings: settings.value,
+      settings: withCustomExercises(settings.value, custom),
     });
     setDry(
       result.ok

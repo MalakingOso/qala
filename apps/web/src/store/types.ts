@@ -133,7 +133,9 @@ export interface LiftStat {
   recent: { label: string; e1rm: number; tested?: boolean }[];
   fullHistory: { session: number; dailyBest: number; kalman: number }[];
   nl85: { actual: number; target: number };
-  calibration: { p0: number; k1: number; theta: string; obs: number };
+  /** theta is the filter's value: the prior until 20 observations, then its
+   * estimate (logic/calibration.ts picks what to show). */
+  calibration: { p0: number; k1: number; theta: number; obs: number };
   residuals: number[];
 }
 

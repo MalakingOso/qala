@@ -5,10 +5,14 @@
 
 import { DenseSeries } from "../shared/charts/index.ts";
 import { DataTable } from "../shared/ui.tsx";
+import {
+  THETA_FREE_AT as FREE_AT,
+  thetaFree,
+  thetaShown,
+} from "../logic/calibration.ts";
 import { sampleLifts } from "../store/sample.ts";
 import { PageHeader, Panel } from "./parts.tsx";
 
-const FREE_AT = 20;
 const BAR_MAX = 40;
 /** VDOT observations so far (the running side of calibration). */
 const VDOT_OBS = 9;
@@ -48,7 +52,7 @@ export function CalibrationPage() {
                 <b>{r.name}</b>
                 <span className="obs-track">
                   <i
-                    className={r.obs >= FREE_AT ? "free" : undefined}
+                    className={thetaFree(r.obs) ? "free" : undefined}
                     style={{
                       width: `${Math.min(100, (r.obs / BAR_MAX) * 100)}%`,
                     }}
@@ -76,7 +80,7 @@ export function CalibrationPage() {
               l.name,
               String(l.calibration.p0),
               String(l.calibration.k1),
-              l.calibration.theta,
+              thetaShown(l.calibration).text,
               String(l.calibration.obs),
             ])}
             rowHrefs={sampleLifts.map((l) => `#/desktop/lifts/${l.id}`)}

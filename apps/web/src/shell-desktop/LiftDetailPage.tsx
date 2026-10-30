@@ -4,6 +4,7 @@
 
 import { Card, DataTable } from "../shared/ui.tsx";
 import { BulletNl85, DenseSeries } from "../shared/charts/index.ts";
+import { thetaShown } from "../logic/calibration.ts";
 import { sampleLifts } from "../store/sample.ts";
 import { Bunch, PageHeader } from "./parts.tsx";
 
@@ -78,7 +79,7 @@ export function LiftDetailPage({ id }: { id: string }) {
             rows={[[
               String(lift.calibration.p0),
               String(lift.calibration.k1),
-              lift.calibration.theta,
+              thetaShown(lift.calibration).text,
               String(lift.calibration.obs),
             ]]}
           />
