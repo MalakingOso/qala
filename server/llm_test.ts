@@ -5,6 +5,7 @@ import { assert, assertEquals } from "@std/assert";
 import {
   jsonSchemaFormat,
   LLAMA_DEFAULTS,
+  llmBaseUrl,
   proxyChatCompletions,
   serveLlmChat,
 } from "./llm.ts";
@@ -120,4 +121,10 @@ Deno.test("POST /api/llm/chat validates and maps degrade to 502", async () => {
     down as unknown as typeof fetch,
   );
   assertEquals(wrongMethod.status, 405);
+});
+
+Deno.test("LLM_GATEWAY_URL replaces the llama-server base URL when set", () => {
+  assertEquals(llmBaseUrl(""), LLAMA_DEFAULTS.baseUrl);
+  assertEquals(llmBaseUrl("  "), LLAMA_DEFAULTS.baseUrl);
+  assertEquals(llmBaseUrl("http://127.0.0.1:4000/"), "http://127.0.0.1:4000");
 });

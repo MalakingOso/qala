@@ -14,7 +14,7 @@ import { serveCoachAsk } from "./coach.ts";
 import { lookupElevation } from "./elevation.ts";
 import { importDepsOnce, serveImportText } from "./import.ts";
 import { serveImportPdf } from "./importPdf.ts";
-import { LLAMA_DEFAULTS, serveLlmChat } from "./llm.ts";
+import { llmBaseUrl, serveLlmChat } from "./llm.ts";
 import { serveStatic } from "./static.ts";
 import { UserSyncStore } from "./sync.ts";
 import { createTilesHandler } from "./tiles.ts";
@@ -39,7 +39,7 @@ export function defaultOptions(): ServerOptions {
     distDir: `${here}/../apps/web/dist`,
     tilesDir: `${here}/../tiles`,
     demDir: `${here}/data/dem`,
-    llmBaseUrl: LLAMA_DEFAULTS.baseUrl,
+    llmBaseUrl: llmBaseUrl(),
   };
 }
 

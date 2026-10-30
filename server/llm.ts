@@ -11,6 +11,17 @@ export const LLAMA_DEFAULTS = {
   timeoutMs: 60_000,
 } as const;
 
+/**
+ * Where chat completions go: `LLM_GATEWAY_URL` when set (a gateway in front of
+ * the model hosts, docs/PLAN-bun-migration.md "Later"), else the llama-server.
+ */
+export function llmBaseUrl(
+  gateway: string | undefined = Deno.env.get("LLM_GATEWAY_URL"),
+): string {
+  const url = gateway?.trim().replace(/\/+$/, "");
+  return url || LLAMA_DEFAULTS.baseUrl;
+}
+
 /** One part of a multimodal message (OpenAI chat completions shape). */
 export type ContentPart =
   | { type: "text"; text: string }
