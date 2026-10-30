@@ -1248,23 +1248,49 @@
 }
 .page-desktop .code-editor .cm-editor {
   min-height: 300px;
+  /* A generated block runs to hundreds of lines; scroll inside the box
+   * instead of stretching the page. */
+  max-height: 640px;
   border: var(--border-width) solid var(--soft);
   border-radius: var(--radius-md);
+}
+.page-desktop .code-editor .cm-scroller {
+  overflow: auto;
 }
 .editor-status .editor-note {
   margin-left: auto;
   color: var(--fg-secondary);
 }
 .page-desktop .sec-aside .btn-secondary.small,
-.page-desktop .dry-run .btn-secondary.small {
+.page-desktop .dry-run .btn-secondary.small,
+.page-desktop .import-panel .btn-secondary.small,
+.page-desktop .draft-bar .btn-secondary.small {
   min-height: 32px;
   padding: 0 14px;
   font-size: 12px;
   font-weight: 600;
 }
-.page-desktop .sec-aside .btn-secondary:disabled {
+.page-desktop .sec-aside .btn-secondary:disabled,
+.page-desktop .import-panel .btn-secondary:disabled {
   opacity: 0.5;
   cursor: default;
+}
+.aside-buttons {
+  display: inline-flex;
+  gap: 8px;
+}
+
+/* A generated block or an import sits in the buffer as an unsaved draft. */
+.draft-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 10px;
+  font-size: 12px;
+  color: var(--fg-secondary);
+}
+.draft-bar .btn-secondary {
+  margin-left: auto;
 }
 
 /* LS++ checks in the editor: wavy marks in the text, the tooltip, and the list
@@ -1451,6 +1477,155 @@ li.today .preview-day {
 .preview-what em {
   font-style: normal;
   color: var(--fg-muted);
+}
+
+/* Import (docs/ls-plus-plus.md 4): the source, the questions, the diff. */
+.import-input {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 10px;
+}
+.import-input textarea {
+  width: 100%;
+  resize: vertical;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.6;
+}
+.import-file {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  margin-top: 10px;
+  font-size: 12px;
+}
+.import-file .kbd-hint {
+  flex-basis: 100%;
+  margin: 6px 0 0;
+}
+.import-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+}
+.import-actions .kbd-hint,
+.import-actions .dry-stopped {
+  margin: 0;
+}
+.import-result {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--soft);
+}
+.import-summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 6px;
+  font-size: 12px;
+  color: var(--fg-secondary);
+}
+.import-notes,
+.import-errors {
+  margin: 6px 0;
+  padding-left: 18px;
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--fg-secondary);
+}
+.import-errors {
+  color: var(--danger);
+}
+.confirm-list {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--soft);
+}
+.confirm-list > li {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--soft);
+}
+.confirm-list fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.confirm-list legend {
+  padding: 0;
+  font-size: 13px;
+}
+.confirm-list legend span {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--fg-secondary);
+}
+.confirm-lines {
+  margin: 6px 0 8px;
+  padding: 0;
+  list-style: none;
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--fg-muted);
+}
+.confirm-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  font-size: 12px;
+}
+.confirm-choices label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+.import-diff {
+  max-height: 340px;
+  margin: 8px 0 0;
+  padding: 10px 0;
+  overflow: auto;
+  background: var(--bg-recessed);
+  border-radius: var(--radius);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.6;
+}
+.import-diff span {
+  display: block;
+  padding: 0 12px;
+  white-space: pre;
+}
+.import-diff .diff-add {
+  background: color-mix(in srgb, var(--progress-fill) 14%, transparent);
+  color: var(--progress);
+}
+.import-diff .diff-remove {
+  background: color-mix(in srgb, var(--danger) 10%, transparent);
+  color: var(--danger);
+}
+.import-diff .diff-keep {
+  color: var(--fg-muted);
+}
+.import-rejected {
+  margin-top: 12px;
+  font-size: 12px;
+}
+.import-rejected summary {
+  cursor: pointer;
+  color: var(--fg-secondary);
+}
+.import-rejected ul {
+  margin: 6px 0 0;
+  padding-left: 18px;
+  line-height: 1.55;
+  color: var(--fg-secondary);
 }
 
 /* ---------- Coach memory ---------- */

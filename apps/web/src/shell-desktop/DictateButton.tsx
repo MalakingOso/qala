@@ -1,8 +1,8 @@
 /* Dictation control (docs/ls-plus-plus.md 4): record up to 30 s with
  * MediaRecorder, send the clip to POST /api/transcribe, hand the transcript
- * to the page. There is no text import screen yet, so the transcript only
- * lands in a box the owner can read and correct; sending it to
- * /api/import/text comes with that screen. */
+ * to the page. The import screen (ImportPanel.tsx) puts it in its text box,
+ * where the owner reads and corrects it before sending it to
+ * /api/import/text. */
 
 import { useEffect, useRef, useState } from "react";
 import {

@@ -1,9 +1,11 @@
 /* Program editor (DESIGN 7.15, DECISIONS U21): where the block stands, the
  * one ember action (generate the next block), the LS++ source with inline
- * checks, and the week preview. CodeMirror 6 hosts the buffer. The checks,
- * Format and the dry run come from the LS++ wasm build (src/lspp/load.ts),
- * loaded when this page opens; if it can't load the editor still edits and
- * says the checks are off. */
+ * checks, and the week preview, which the import screen takes over while it
+ * is open. CodeMirror 6 hosts the buffer. The checks, Format and the dry run
+ * come from the LS++ wasm build (src/lspp/load.ts), loaded when this page
+ * opens; if it can't load the editor still edits and says the checks are
+ * off. A generated block or an import goes into the buffer as an unsaved
+ * draft that Revert takes back out; the web app saves nothing. */
 
 import { useEffect, useRef, useState } from "react";
 import { basicSetup, EditorView } from "codemirror";
@@ -28,11 +30,13 @@ import {
   MAX_LISTED_ISSUES,
   toIssues,
 } from "../logic/lsppEditor.ts";
+import { generateNextBlock, nextBlockInput } from "../logic/nextBlock.ts";
 import { loadLspp } from "../lspp/load.ts";
 import { withCustomExercises } from "../logic/customExercises.ts";
 import { useCustomExercises } from "./customExercises.tsx";
-import { sampleBlock } from "../store/sample.ts";
-import { DictateButton } from "./DictateButton.tsx";
+import { useQala } from "../store/qalaStore.tsx";
+import { sampleBlock, sampleLifts } from "../store/sample.ts";
+import { ImportPanel } from "./ImportPanel.tsx";
 import { BlockBar, Bunch, PageHeader, Panel, Pill, TypeTag } from "./parts.tsx";
 
 const SAMPLE = `# Week 1
@@ -106,6 +110,12 @@ type DryState =
   | { kind: "ok"; view: DryRunView; finalText: string; forText: string }
   | { kind: "stopped"; message: string };
 
+/** Text the page put in the buffer, and what the buffer held before it. */
+interface Draft {
+  from: string;
+  previous: string;
+}
+
 /** The mark CodeMirror draws for an issue; the fix idea goes under the message. */
 function toMark(i: EditorIssue): Diagnostic {
   return {
@@ -129,12 +139,38 @@ function toMark(i: EditorIssue): Diagnostic {
   };
 }
 
+function WeekPreview() {
+  return (
+    <Panel title="Week preview">
+      <ul className="preview-days">
+        {PREVIEW.map((d) => (
+          <li key={d.day} className={d.today ? "today" : undefined}>
+            <span className="preview-day">{d.day}</span>
+            <TypeTag kind={d.kind} />
+            <span className="preview-what">
+              <b>{d.title}</b>
+              {d.lines ? ` · ${d.lines.join(" · ")}` : null}
+              {d.note ? <em>{`${d.lines ? " " : " · "}${d.note}`}</em> : null}
+            </span>
+          </li>
+        ))}
+      </ul>
+      <p className="kbd-hint">
+        Week totals: 62 sets · NL85 37 · about 5 h with warm-ups.
+      </p>
+    </Panel>
+  );
+}
+
 export function ProgramEditorPage() {
   const host = useRef<HTMLDivElement>(null);
   const view = useRef<EditorView | null>(null);
   const lspp = useRef<Lspp | null>(null);
+  const { settings } = useQala();
   const [text, setText] = useState(SAMPLE);
-  const [transcript, setTranscript] = useState<string | null>(null);
+  const [draft, setDraft] = useState<Draft | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [generateNote, setGenerateNote] = useState("");
   const [checks, setChecks] = useState<Checks>("loading");
   const [issues, setIssues] = useState<EditorIssue[]>([]);
   const [formatNote, setFormatNote] = useState("");
@@ -201,6 +237,41 @@ export function ProgramEditorPage() {
     if (!editor) return;
     editor.dispatch({ selection: { anchor: i.from }, scrollIntoView: true });
     editor.focus();
+  };
+
+  /** Swap the whole buffer in one change, so undo still reaches the old text
+   * and the update listener tracks it like typing. */
+  const replaceText = (next: string) => {
+    const editor = view.current;
+    if (!editor) return false;
+    editor.dispatch({
+      changes: { from: 0, to: editor.state.doc.length, insert: next },
+      selection: { anchor: 0 },
+      scrollIntoView: true,
+    });
+    return true;
+  };
+
+  /** A second draft keeps the text from before the first, so Revert always
+   * goes back to the program the page opened with or the owner wrote. */
+  const loadDraft = (next: string, from: string) => {
+    const before = view.current?.state.doc.toString();
+    if (before === undefined || !replaceText(next)) return;
+    setDraft((d) => ({ from, previous: d ? d.previous : before }));
+  };
+
+  const revertDraft = () => {
+    if (draft && replaceText(draft.previous)) setDraft(null);
+  };
+
+  const generate = () => {
+    const out = generateNextBlock(nextBlockInput(sampleBlock, sampleLifts));
+    if (!out.ok) {
+      setGenerateNote(out.message);
+      return;
+    }
+    setGenerateNote("");
+    loadDraft(out.text, `the generator: ${out.name}`);
   };
 
   const format = () => {
@@ -298,11 +369,13 @@ export function ProgramEditorPage() {
             />
           </div>
           <div className="lede-actions">
-            <button type="button" className="btn-primary">
+            <button type="button" className="btn-primary" onClick={generate}>
               Generate next block
             </button>
-            <p className="kbd-hint">
-              No deload due. Next planned: week {sampleBlock.deloadWeek}.
+            <p className="kbd-hint" role="status">
+              {generateNote !== ""
+                ? generateNote
+                : `No deload due. Next planned: week ${sampleBlock.deloadWeek}.`}
             </p>
           </div>
         </div>
@@ -311,16 +384,41 @@ export function ProgramEditorPage() {
         <Panel
           title="LS++ source"
           aside={
-            <button
-              type="button"
-              className="btn-secondary small"
-              onClick={format}
-              disabled={checks !== "ready"}
-            >
-              Format
-            </button>
+            <span className="aside-buttons">
+              <button
+                type="button"
+                className="btn-secondary small"
+                onClick={() => setImporting(true)}
+                disabled={importing}
+              >
+                Import
+              </button>
+              <button
+                type="button"
+                className="btn-secondary small"
+                onClick={format}
+                disabled={checks !== "ready"}
+              >
+                Format
+              </button>
+            </span>
           }
         >
+          {draft
+            ? (
+              <div className="draft-bar" role="status">
+                <Pill tone="note">Unsaved draft</Pill>
+                <span>From {draft.from}. Review it with the checks below.</span>
+                <button
+                  type="button"
+                  className="btn-secondary small"
+                  onClick={revertDraft}
+                >
+                  Revert
+                </button>
+              </div>
+            )
+            : null}
           <div
             className="code-editor"
             ref={host}
@@ -380,41 +478,20 @@ export function ProgramEditorPage() {
               </ul>
             )
             : null}
-          <DictateButton onTranscript={setTranscript} />
-          {transcript !== null && (
-            <label className="dictate-transcript">
-              <span className="kbd-hint">
-                Transcript. Check the numbers; importing it comes with the text
-                import screen.
-              </span>
-              <textarea
-                rows={3}
-                value={transcript}
-                onChange={(e) => setTranscript(e.target.value)}
-              />
-            </label>
-          )}
         </Panel>
-        <Panel title="Week preview">
-          <ul className="preview-days">
-            {PREVIEW.map((d) => (
-              <li key={d.day} className={d.today ? "today" : undefined}>
-                <span className="preview-day">{d.day}</span>
-                <TypeTag kind={d.kind} />
-                <span className="preview-what">
-                  <b>{d.title}</b>
-                  {d.lines ? ` · ${d.lines.join(" · ")}` : null}
-                  {d.note
-                    ? <em>{`${d.lines ? " " : " · "}${d.note}`}</em>
-                    : null}
-                </span>
-              </li>
-            ))}
-          </ul>
-          <p className="kbd-hint">
-            Week totals: 62 sets · NL85 37 · about 5 h with warm-ups.
-          </p>
-        </Panel>
+        {importing
+          ? (
+            <ImportPanel
+              current={text}
+              units={settings.units.weight}
+              onLoad={(next, from) => {
+                loadDraft(next, from);
+                setImporting(false);
+              }}
+              onClose={() => setImporting(false)}
+            />
+          )
+          : <WeekPreview />}
       </div>
       <Panel
         title="Dry run"
