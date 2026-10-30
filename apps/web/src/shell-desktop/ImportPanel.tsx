@@ -36,7 +36,9 @@ type Phase =
   | { kind: "idle" }
   | { kind: "working"; what: string }
   | { kind: "failed"; message: string }
-  | { kind: "result"; result: ImportResult };
+  /** `from` names what was read, fixed when the request went out, so
+   * switching tabs afterwards can't relabel the draft. */
+  | { kind: "result"; result: ImportResult; from: string };
 
 const SOURCES: { value: Source; label: string }[] = [
   { value: "text", label: "Text" },
@@ -83,6 +85,7 @@ export function ImportPanel({
 
   const run = async (
     what: string,
+    from: string,
     call: (signal: AbortSignal) => Promise<ImportOutcome>,
   ) => {
     inflight.current?.abort();
@@ -94,7 +97,7 @@ export function ImportPanel({
     inflight.current = null;
     setPhase(
       out.ok
-        ? { kind: "result", result: out.result }
+        ? { kind: "result", result: out.result, from }
         : { kind: "failed", message: out.message },
     );
   };
@@ -118,18 +121,20 @@ export function ImportPanel({
     if (source === "text") {
       run(
         "Reading the text",
+        dictated ? "dictation" : "pasted text",
         (signal) => sendImportText(text, { units, signal }),
       );
     } else if (pdf) {
       run(
         "Reading the PDF. A long one can take a few minutes",
+        `the PDF ${pdf.name}`,
         (signal) => sendImportPdf(pdf, { units, signal }),
       );
     }
   };
 
-  const checkAgain = (prev: ImportResult) => {
-    run("Checking your answers", async (signal) => {
+  const checkAgain = (prev: ImportResult, from: string) => {
+    run("Checking your answers", from, async (signal) => {
       const out = await sendImportConfirm(prev.proposal.items, choices, {
         units,
         signal,
@@ -143,12 +148,6 @@ export function ImportPanel({
         : out;
     });
   };
-
-  const from = source === "pdf" && pdf
-    ? `the PDF ${pdf.name}`
-    : dictated
-    ? "dictation"
-    : "pasted text";
 
   const working = phase.kind === "working";
   return (
@@ -187,7 +186,11 @@ export function ImportPanel({
                 rows={7}
                 value={text}
                 placeholder={PLACEHOLDER}
-                onChange={(e) => setText(e.target.value)}
+                onChange={(e) => {
+                  setText(e.target.value);
+                  // Cleared and retyped is pasted text again.
+                  if (e.target.value.trim() === "") setDictated(false);
+                }}
               />
             </label>
             <DictateButton
@@ -272,8 +275,8 @@ export function ImportPanel({
             choices={choices}
             onChoose={(key, value) =>
               setChoices((c) => ({ ...c, [key]: value }))}
-            onCheckAgain={() => checkAgain(phase.result)}
-            onLoad={(programText) => onLoad(programText, from)}
+            onCheckAgain={() => checkAgain(phase.result, phase.from)}
+            onLoad={(programText) => onLoad(programText, phase.from)}
             onDiscard={() => setPhase({ kind: "idle" })}
           />
         )
