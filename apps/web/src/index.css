@@ -4058,13 +4058,3 @@ select.field {
     animation: none;
   }
 }
-.dictate-transcript {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-top: 12px;
-}
-.dictate-transcript textarea {
-  width: 100%;
-  resize: vertical;
-}
