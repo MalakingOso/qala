@@ -148,7 +148,7 @@ Status by phase, 2026-10-13:
 | R5 | Done 2026-10-01. |
 | A4 | Screens built and merged 2026-10-13: Today, Check-in, Warm-up, Workout, Rest, Plate calc, Plan, plus History and All exercises. Check-in to workout end to end with no network is covered by `WorkoutFlowTest` on the emulator; nothing has run on a real phone. Rest and warm-up planning shipped in Kotlin (ports of `rest.ts` and `warmup.ts`), where section 6 and `docs/rust-core.md` 7 (R3) put them in Rust. |
 | A5 | Not started. |
-| A6 | The Coach screen and the server route are built (2026-10-14). The offline gate is tested on the emulator: a connection refused, a 401, the degraded body and Try again, with Today, Plan and the check-in still opening. The wire contract is checked on both sides against `testdata/golden/coach`. Not run against the real model on callisto. Release signing, and the signed APK, are not started. |
+| A6 | The Coach screen and the server route are built (2026-10-14). The offline gate is tested on the emulator: a connection refused, a 401, the degraded body and Try again, with Today, Plan and the check-in still opening. The wire contract is checked on both sides against `testdata/golden/coach`. The server route was run against the real model on 2026-10-30 (`docs/ROADMAP.md` Coach row); the phone was not pointed at it, since nothing in front of the emulator adds the identity header. Release signing, and the signed APK, are not started. |
 | A7 | Done 2026-10-01. |
 
 Nothing has run on the owner's phone. Every check so far used the `qala-test` emulator.

@@ -34,15 +34,15 @@ Written 2026-10-01 night, after implementing the refined desktop look on `main`.
 
 - Upper A was dated Sep 6, a Sunday before the Mon to Sun week, so the sessions list and the week bars disagreed (Monday's bar had no session). I changed its date to Sep 7. The phone's exercise note dated Sep 6 is unchanged.
 - Weeks 2 and 4 are invented sample numbers (`sampleWeeks` in `store/sample.ts`). Week 3 is a copy of the existing sample week with Sunday's lift done (510), because the session list already has Lower A logged. The phone's `sampleWeekLoad` is untouched because a test pins its totals.
-- **Unresolved conflict:** the phone's Today still shows the lift as "now" (`sampleStages`) while the desktop says "Lower A complete". Both come from the sample; I did not touch the phone's stages.
+- **Unresolved conflict:** the phone's Today still shows the lift as "now" (`sampleStages`) while the desktop says "Lower A complete". Both come from the sample; I did not touch the phone's stages. Resolved 2026-10-30: the phone's Today stages have the lift done and Recover now, and the phone's strip reads week 3 of the block, so both shells say Lower A is complete and the run is still to come.
 - Programs' week preview used to be Tue, Thu, Fri, Sun. I moved it to Mon, Wed, Fri, Sun plus the runs, to match the week's sessions.
-- Calibration shows the sample's theta "4.0 (prior)" next to lifts that have 34, 31 and 22 observations, even though theta frees at 20. I kept the app's values, so the page contradicts itself until the sample or the engine changes.
+- Calibration shows the sample's theta "4.0 (prior)" next to lifts that have 34, 31 and 22 observations, even though theta frees at 20. I kept the app's values, so the page contradicts itself until the sample or the engine changes. Resolved 2026-10-30: lifts at 20 or more observations show the filter's theta estimate (sample values); Press, at 18, shows "4.0 (prior until 20)".
 - The recovery map's wording ("Ready Sat") uses the real clock, not the sample's Sunday, as before. It will read differently on different days.
 
 ## What a real build still needs
 
 - The engine has to supply the previous and next week's `WeekLoad` (see `store/types.ts`). Today `shell-desktop/weekFocus.tsx` reads `sampleWeeks`.
-- "Generate next block" is not wired (it was not before). "Add exercise" does not exist, so the Exercises page only says how custom entries work. Hide and the filters keep their state only while the page is open.
+- "Generate next block" is not wired yet. "Add exercise" works on the Exercises page (2026-10-30): custom entries need target and synergist tags, live in memory for the session (a reload clears them), and the Programs dry run resolves them by merging them into liftosaur's `settings.exercises`. Names the evaluator already knows are refused. Hide and the filters still reset when the page closes; customs outlive the page until reload.
 - The coach flag, notes and Accept or Reject still write through the existing store, and I checked that they still work.
 
 ## Housekeeping

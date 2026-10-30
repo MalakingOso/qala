@@ -54,7 +54,7 @@ A small Elixir service between the app server and the model hosts (llama-server 
 
 Why it is later: the proxy is not a bottleneck today (one GPU box, E4B about 0.85 s per clip, a handful of users), so a semaphore in the app server does the same job. Build it when queue waits pass a couple of seconds, a second model host appears, or several people stream coach chat at once.
 
-Seam, any time: in `server/llm.ts`, read `baseUrl` from an env var such as `LLM_GATEWAY_URL` and pass `X-Qala-*` headers through. `ChatOptions` already takes `baseUrl` and an injectable `fetchFn`.
+Seam, any time: in `server/llm.ts`, read `baseUrl` from an env var such as `LLM_GATEWAY_URL` and pass `X-Qala-*` headers through. The env var is done (2026-10-30, `llmBaseUrl()`, used by the coach, import and chat routes); the headers aren't. `ChatOptions` already takes `baseUrl` and an injectable `fetchFn`.
 
 Split of work:
 - App server: session auth and the user id, signs each call to the gateway, keeps prompts, schemas, matching and LS++ emit in `packages/llm`, maps gateway failures to the existing 502 `{ degraded: true }` body.
