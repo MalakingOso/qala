@@ -39,6 +39,8 @@ export const ALIASES: Record<string, string> = {
   "ohp": "Overhead Press",
   "rdl": "Romanian Deadlift",
   "bb row": "Bent Over Row",
+  "barbell row": "Bent Over Row",
+  "back squat": "Squat",
   "dl": "Deadlift",
   "pullup": "Pull Up",
   "pullups": "Pull Up",

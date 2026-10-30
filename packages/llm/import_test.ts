@@ -38,6 +38,7 @@ const CATALOG: CatalogEntry[] = [
   { id: "pullUp", name: "Pull Up" },
   { id: "inclineBenchPress", name: "Incline Bench Press" },
   { id: "chestPress", name: "Chest Press" },
+  { id: "bentOverRow", name: "Bent Over Row" },
 ];
 
 const noErrors = (): string[] => [];
@@ -164,6 +165,21 @@ Deno.test("owner resolutions finish the import, skip drops the line", () => {
     { [key]: "notInCatalog" },
   );
   assertEquals(bogus.status, "needs_confirm", "unknown id is not a resolution");
+});
+
+Deno.test("common names for catalog lifts resolve through aliases", () => {
+  // From a live PDF import: "Barbell Row" scored under the close threshold
+  // against Bent Over Row, so the right lift was not even a candidate.
+  for (
+    const [raw, id] of [
+      ["Barbell Row", "bentOverRow"],
+      ["barbell rows", "bentOverRow"],
+      ["Back Squat", "squat"],
+    ]
+  ) {
+    const m = matchExercise(raw, CATALOG);
+    assert(m.kind === "match" && m.entry.id === id, `${raw} resolves to ${id}`);
+  }
 });
 
 Deno.test("unknown and near-miss names confirm instead of emitting", async () => {
