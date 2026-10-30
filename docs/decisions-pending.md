@@ -361,6 +361,24 @@ These come from the four new roadmap sections in `docs/PLAN.md` 16c to 16f. None
 - Blocks: nothing now; any phone authoring work.
 - Record in: `docs/DECISIONS.md` (new row), `docs/rust-core.md` 7 (R4) and 8, `docs/android-native.md` (screens), `docs/ROADMAP.md` Android track.
 
+### D37 Generator progression in LS++
+
+- Status: [ ] open
+- Question: the generator (`packages/generator`, which stays TypeScript per D03) plans double progression gated on RPE ("8 to 12 reps, add weight once every set is at RPE 8 or below") and Helms percent autoregulation, and used to write them as `progress: double(8, 12, rpe<=8)` and `percent(...)`, which LS++ doesn't have. Since 2026-10-30 "Generate next block" on the desktop is wired and the emitter writes those rules as `// progress:` comments, so a generated block evaluates but doesn't progress. How should they be written in LS++?
+- Options: LS++'s `dp()` without the RPE gate (simple, loses the gate) / a `custom()` progress script per rule that keeps the gate / a new S21-style LS++ builtin for RPE-gated double progression.
+- Default: `custom()` scripts for now, since they need no language change and keep the generator's intent; revisit a builtin if the scripts get repetitive.
+- Blocks: generated blocks that progress on their own.
+- Record in: `docs/DECISIONS.md` (new row, near S21), `docs/ls-plus-plus.md`, `docs/ROADMAP.md` Web and desktop.
+
+### D38 Equipment on imported lifts
+
+- Status: [ ] open
+- Question: the import emitter (`packages/llm/importEmit.ts`) writes bare catalog names, so each lift evaluates with the catalog's default equipment. Romanian Deadlift defaults to dumbbell, so "RDL 3x8 at 185" imports as `Romanian Deadlift / 3x8 185lb` and the dry run prescribes 40 lb, the most liftosaur's default dumbbells can load. Nothing warns. (Squat, Bench Press and Bent Over Row default to barbell, so the common cases are fine.) How should import pick equipment?
+- Options: aliases and words in the source ("barbell", "BB", "DB", "cable", "machine") carry equipment through to a `, Barbell`-style suffix / always ask when the catalog default isn't barbell and the line has a barbell-sized weight / leave it and only warn.
+- Default: carry equipment from aliases and source words to the suffix, and have the import check add a note to the proposal whenever the evaluated weight differs from the stated one, so a silent change can't get through.
+- Blocks: nothing; it's a correctness fix on import (text, PDF and speech).
+- Record in: `docs/DECISIONS.md` S19 note, `docs/ls-plus-plus.md` (import section), `docs/ROADMAP.md` Rust core and LS++.
+
 ## To implement
 
 Code work owed by decided items, built after the session (protocol step 5). An entry leaves when it's built.

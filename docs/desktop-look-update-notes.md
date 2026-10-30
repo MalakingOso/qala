@@ -42,7 +42,7 @@ Written 2026-10-01 night, after implementing the refined desktop look on `main`.
 ## What a real build still needs
 
 - The engine has to supply the previous and next week's `WeekLoad` (see `store/types.ts`). Today `shell-desktop/weekFocus.tsx` reads `sampleWeeks`.
-- "Generate next block" is not wired yet. "Add exercise" works on the Exercises page (2026-10-30): custom entries need target and synergist tags, live in memory for the session (a reload clears them), and the Programs dry run resolves them by merging them into liftosaur's `settings.exercises`. Names the evaluator already knows are refused. Hide and the filters still reset when the page closes; customs outlive the page until reload.
+- "Generate next block" is wired (2026-10-30): the generator's output loads into the editor as an unsaved draft; its progression rules are comments until D37. "Add exercise" works on the Exercises page (2026-10-30): custom entries need target and synergist tags, live in memory for the session (a reload clears them), and the Programs dry run resolves them by merging them into liftosaur's `settings.exercises`. Names the evaluator already knows are refused. Hide and the filters still reset when the page closes; customs outlive the page until reload.
 - The coach flag, notes and Accept or Reject still write through the existing store, and I checked that they still work.
 
 ## Housekeeping
