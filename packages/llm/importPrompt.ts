@@ -23,8 +23,15 @@ export const IMPORT_SYSTEM_PROMPT: string = [
   "week is 1 unless the source has numbered weeks.",
   "Give reps as a number; for a range like 8-10 put 8 in reps and 10 in",
   "repsMax. For '8+' or 'AMRAP' set amrap true.",
-  "Leave weight out when the source gives none. Never guess a weight,",
-  "a rep count or a set count that the text does not state.",
+  // Measured 2026-10-30 against E4B on live PDF chunks: with only "leave
+  // weight out when the source gives none", a table row "Back Squat | 3 x 5 |
+  // 225 lb" lost its weight in 18 of 20 calls, and "140 kg" never kept its
+  // unit, so it imported as pounds. These three lines took both to 20 of 20.
+  "When a line states a weight, such as '225 lb' or 'at 100', always put",
+  "the number in weight. Set unit only when the line writes lb or kg next",
+  "to the weight; otherwise leave unit out. An RPE such as '@ RPE 8' goes",
+  "in rpe. Leave weight out only when the line states none. Never guess a",
+  "weight, a rep count or a set count that the text does not state.",
 ].join("\n");
 
 /** Remove anything in the source that could close the fence early. */
