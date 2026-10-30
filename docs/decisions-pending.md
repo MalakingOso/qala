@@ -379,6 +379,15 @@ These come from the four new roadmap sections in `docs/PLAN.md` 16c to 16f. None
 - Blocks: nothing; it's a correctness fix on import (text, PDF and speech).
 - Record in: `docs/DECISIONS.md` S19 note, `docs/ls-plus-plus.md` (import section), `docs/ROADMAP.md` Rust core and LS++.
 
+### D39 A blank weight with an RPE
+
+- Status: [ ] open
+- Question: LS++ `?+` means "set the weight on the first workout", but when the same set has an RPE (`?+ @8`) the evaluator works out a weight from the exercise's 1RM and the RPE table instead, so the set isn't blank: with default settings it prescribed "Pull Up @ 0 lb" and "Bent Over Row @ 57.5 lb", and `unresolved_sets` skips it. The generator now avoids it by writing `?+` alone; the import emitter (`packages/llm/importEmit.ts`) still writes `?+ / @8` for "Bench 3x8 @ RPE 8". Which should change?
+- Options: change the evaluator so `?+` always stays blank and the RPE is kept as the target (an LS++ semantics change, in Rust with a golden for it) / keep the language as it is and make both emitters drop the RPE from blank sets into a note.
+- Default: change the evaluator, since `?+` is the language's own promise to ask, and a guessed 0 lb or 57.5 lb is worse than a blank.
+- Blocks: nothing; it's correctness on import and on generated blocks.
+- Record in: `docs/DECISIONS.md` S21 note, `docs/ls-plus-plus.md` 1, `docs/ROADMAP.md` Rust core and LS++.
+
 ## To implement
 
 Code work owed by decided items, built after the session (protocol step 5). An entry leaves when it's built.

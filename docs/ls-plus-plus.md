@@ -16,6 +16,8 @@ Split Squat / 3x8             -> no weight, askWeight: false
 
 The built-in `lp` script already treats `weights[i] == 0` with a nonzero completed weight as an initial weight and builds on it. So "I left the weight blank, I'll set it on my first workout" needs no language change. The importers emit `?+`, the workout screen shows an empty required weight field, and the entered value becomes the starting weight.
 
+
+A `?+` set that also carries an RPE is not blank (found 2026-10-30): the evaluator infers a weight from the exercise's 1RM through the RPE table, the dry run shows that number, and `unresolved_sets` does not list it. With default settings that gave "Pull Up @ 0 lb" and "Bent Over Row @ 57.5 lb". The generator now writes `?+` alone and keeps the RPE in its note; the import emitter still writes `?+ / @8`. Whether `?+` should win over the RPE is D39.
 ## 2. Language improvements (S21)
 
 All additive, all built and merged (`32cb81c`).
