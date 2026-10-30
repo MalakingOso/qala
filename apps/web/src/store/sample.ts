@@ -22,11 +22,14 @@ import { bumperColorFor } from "../../../../packages/core/plates.ts";
  * training status resolve against this key until the samples go away. */
 export const SAMPLE_TODAY = "2026-09-13";
 
+/* Today stands just after the lift: Lower A is logged (the Sep 13 session,
+ * 20,400 lb and one PR) and the easy run is still to come, the same moment
+ * the desktop week shows. */
 export const sampleStages: StageState[] = [
   { id: "checkin", label: "Check-in", time: "4:30p", status: "done" },
   { id: "warmup", label: "Warm-up", time: "4:40p", status: "done" },
-  { id: "lift", label: "Lift", time: "5:00p", status: "now" },
-  { id: "recover", label: "Recover", time: "6:00p", status: "later" },
+  { id: "lift", label: "Lift", time: "5:00p", status: "done" },
+  { id: "recover", label: "Recover", time: "6:00p", status: "now" },
   { id: "run", label: "Run", time: "6:00p", status: "later" },
   { id: "winddown", label: "Wind down", time: "9:30p", status: "later" },
 ];
@@ -35,25 +38,6 @@ export const restDayStages: StageState[] = [
   { id: "checkin", label: "Check-in", time: "8:00a", status: "now" },
   { id: "recover", label: "Recover", time: "—", status: "later" },
   { id: "winddown", label: "Wind down", time: "9:30p", status: "later" },
-];
-
-/* The phone's seven-day strip (U13) keeps its own single-week series. */
-export const sampleWeekLoad: WeekLoadDay[] = [
-  { day: "M", liftDone: 420, runDone: 0, liftPlanned: 420, runPlanned: 0 },
-  { day: "T", liftDone: 0, runDone: 310, liftPlanned: 0, runPlanned: 310 },
-  { day: "W", liftDone: 380, runDone: 0, liftPlanned: 380, runPlanned: 0 },
-  { day: "T", liftDone: 0, runDone: 0, liftPlanned: 0, runPlanned: 180 },
-  { day: "F", liftDone: 450, runDone: 0, liftPlanned: 450, runPlanned: 0 },
-  { day: "S", liftDone: 0, runDone: 170, liftPlanned: 0, runPlanned: 290 },
-  {
-    day: "S",
-    liftDone: 0,
-    runDone: 0,
-    liftPlanned: 510,
-    runPlanned: 240,
-    today: true,
-    label: "Lower A",
-  },
 ];
 
 /** A week of the sample block from compact rows: [day, label, lift planned,
@@ -74,13 +58,12 @@ function weekDays(rows: DayRow[]): WeekLoadDay[] {
 }
 
 /* The training block's six weeks, Monday to Sunday (DESIGN 6.3, DECISIONS U24).
- * One series feeds both shells: the phone Today hero opens it at Day, the
- * desktop Overview at three weeks. Week 3 is the sample week with Lower A done
- * (the session list already has it logged, so Overview reads "Lower A
- * complete"); the phone takes today's done state from the timeline rail
- * instead (`withRail` in logic/loadZoom.ts). Weeks 1 to 4 are sample data
- * until the engine supplies them. Week 6 is the deload, half of week 5's
- * planned load. */
+ * One series feeds both shells: the desktop Overview's load zoom reads all
+ * six, the phone's seven-day strip reads week 3 (`sampleWeekLoad`). Week 3 is
+ * the sample week with Lower A done and the easy run still planned, which is
+ * where the session list (Lower A logged on Sep 13) and the phone's Today
+ * stages (`sampleStages`) stand too. Weeks 1 to 4 are sample data until the
+ * engine supplies them. Week 6 is the deload, half of week 5's planned load. */
 const week5Days = weekDays([
   ["M", "Upper A", 440, 0],
   ["T", "Easy run", 0, 330],
@@ -324,6 +307,10 @@ export const sampleBlockWeeks: WeekLoad[] = [
 
 /* The desktop ribbon's three weeks around week 3, the week in focus (U20). */
 export const sampleWeeks: WeekLoad[] = sampleBlockWeeks.slice(1, 4);
+
+/* The phone's seven-day strip (U13): week 3 of the block, so the phone and the
+ * desktop can't drift apart on this week. */
+export const sampleWeekLoad: WeekLoadDay[] = sampleBlockWeeks[2].days;
 
 /** Where the training block stands, for Overview's lede and the program page.
  * The deload is the last week of the block (Body's "Next planned: week 6"). */

@@ -40,6 +40,7 @@ import {
   restDayStages,
   sampleBlockWeeks,
   sampleStages,
+  sampleWeekLoad,
   sampleWeeks,
 } from "../store/sample.ts";
 import type { StageState, WeekLoad } from "../store/types.ts";
@@ -164,14 +165,16 @@ Deno.test("Day level draws a lift piece and a run piece, SESSION_GAP apart", () 
   );
   assertAlmostEquals(bars[0].h, 510 * ppl(model.maxDay), 1e-9);
   assertAlmostEquals(bars[1].h, 240 * ppl(model.maxDay), 1e-9);
-  // Both sit on the baseline with a full cap, and nothing is done yet. A lone
-  // day is wide, so its bars are the thickest a level allows.
+  // Both sit on the baseline with a full cap. The lift is done and the run is
+  // still to come. A lone day is wide, so its bars are the thickest a level
+  // allows.
   for (const b of bars) {
     assertEquals(b.w, LEVEL_BAR_MAX[0]);
     assertAlmostEquals(b.y + b.h, box.height, 1e-9);
     assertEquals(b.cap, 1);
-    assertEquals(b.fillH, 0);
   }
+  assertAlmostEquals(bars[0].fillH, bars[0].h, 1e-9);
+  assertEquals(bars[1].fillH, 0);
   const names = f.labels.filter((l) => l.row === "text" && l.opacity === 1)
     .map((l) => l.text);
   assert(names.includes("Lower A") && names.includes("Easy run"));
@@ -414,8 +417,14 @@ Deno.test("a rest day is one dash labeled Rest, caption Today · rest", () => {
 Deno.test("the rail decides today's done state: lift and run stages", () => {
   const today = (weeks: WeekLoad[]) => weeks[2].days[6];
   const base = today(rail);
-  assertEquals([base.liftDone, base.runDone], [0, 0]);
+  assertEquals([base.liftDone, base.runDone], [510, 0]);
   assertEquals([base.liftPlanned, base.runPlanned], [510, 240]);
+
+  const liftNow = withRail(sampleBlockWeeks, [
+    stage("lift", "now"),
+    stage("run", "later"),
+  ]);
+  assertEquals([today(liftNow).liftDone, today(liftNow).runDone], [0, 0]);
 
   const liftDone = withRail(sampleBlockWeeks, [
     stage("lift", "done"),
@@ -443,22 +452,23 @@ Deno.test("the rail decides today's done state: lift and run stages", () => {
   assertEquals(rest.label, undefined);
 });
 
-Deno.test("week totals of the rail's week 3 match the old phone sample", () => {
+Deno.test("week totals of the rail's week 3 match the phone's strip", () => {
   const t = weekTotals(rail[2].days);
-  assertEquals(t.liftDone, 1250);
+  assertEquals(t, weekTotals(sampleWeekLoad));
+  assertEquals(t.liftDone, 1760);
   assertEquals(t.runDone, 480);
   assertEquals(t.planned, 1760 + 1020);
-  assertEquals(t.done, 1730);
+  assertEquals(t.done, 2240);
 });
 
 Deno.test("captions at each level", () => {
   assertEquals(
     describeInspected(model, 0, TODAY, TODAY).text,
-    "Today · Lower A · 510 planned · Easy run 240 planned",
+    "Today · Lower A · 510 done · Easy run 240 planned",
   );
   assertEquals(
     describeInspected(model, 1, TODAY, TODAY).text,
-    "Today · Lower A · 750 planned",
+    "Today · Lower A · 510 of 750 done",
   );
   assertEquals(
     describeInspected(model, 1, 14, TODAY).text,
@@ -471,7 +481,7 @@ Deno.test("captions at each level", () => {
   );
   assertEquals(
     describeInspected(model, 3, TODAY, TODAY).text,
-    "Week 3 · 1,730 done of 2,780 planned",
+    "Week 3 · 2,240 done of 2,780 planned",
   );
   assertEquals(
     describeInspected(model, 3, 35, TODAY).text,
@@ -479,7 +489,7 @@ Deno.test("captions at each level", () => {
   );
   assertEquals(
     totalLine(model, 1, TODAY),
-    "Week 3: 1,730 done of 2,780 planned",
+    "Week 3: 2,240 done of 2,780 planned",
   );
   assertEquals(totalLine(model, 0, 3), "Week 1: 2,490 of 2,510 done");
   assert(totalLine(model, 3, TODAY).startsWith("Block: "));
@@ -635,7 +645,7 @@ Deno.test("a week belongs to the month holding most of its days", () => {
 Deno.test("tooltips name the session and label the numbers", () => {
   assertEquals(tipFor(model, 1, TODAY, TODAY), {
     title: "Today · Lower A",
-    numbers: "lift + run · 750 planned load",
+    numbers: "lift + run · 510 of 750 load",
   });
   assertEquals(tipFor(model, 1, 14, TODAY), {
     title: "Monday · Upper A",
@@ -648,7 +658,7 @@ Deno.test("tooltips name the session and label the numbers", () => {
   assertEquals(tipFor(model, 1, 19, TODAY).numbers, "run · 170 of 290 load");
   assertEquals(tipFor(model, 3, TODAY, TODAY), {
     title: "Week 3",
-    numbers: "lift + run · 1,730 of 2,780 load",
+    numbers: "lift + run · 2,240 of 2,780 load",
   });
   assertEquals(tipFor(model, 3, 35, TODAY), {
     title: "Week 6 · deload",
