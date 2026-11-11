@@ -45,6 +45,14 @@ export class AutoPause {
     this.highHoldSec = opts.highHoldSec ?? 3;
   }
 
+  /**
+   * Start of the open pause, back-dated to the first sub-threshold sample, or
+   * null while moving. Read-only: the live clock (causalMovingSec) needs it.
+   */
+  get openPauseStart(): number | null {
+    return this.state === "paused" ? this.pauseStart : null;
+  }
+
   update(t: number, speedMps: number): "moving" | "paused" {
     if (t > this.lastT) this.lastT = t;
     if (this.state === "moving") {
@@ -111,6 +119,50 @@ export function movingElapsedAt(
 ): number {
   if (toT <= fromT) return 0;
   return toT - fromT - pausedOverlap(intervals, fromT, toT);
+}
+
+/**
+ * Moving seconds as known at fix time t, with no look-ahead: the first fix's
+ * time t0, the closed pauses so far (closedSec) and the open pause, back-dated
+ * to its start. This is the clock the guided machine runs on, so a live
+ * recorder and the batch pipeline see the same numbers. It steps back by up to
+ * lowHoldSec at the fix that confirms a pause (the still seconds that were
+ * counted as moving are excluded retroactively) and holds while paused.
+ * Association matters: the guided end checks are `>=` differences.
+ */
+export function causalMovingSec(
+  t0: number,
+  t: number,
+  closedSec: number,
+  openPauseStart: number | null,
+): number {
+  return t - t0 - closedSec -
+    (openPauseStart === null ? 0 : t - openPauseStart);
+}
+
+/**
+ * The guided clock at every point: one AutoPause fed in order, no look-ahead.
+ * points[i]'s entry depends only on points[0..=i].
+ */
+export function causalClockTrace(
+  points: SpeedSample[],
+  opts: AutoPauseOptions = {},
+): number[] {
+  const out: number[] = [];
+  if (points.length === 0) return out;
+  const machine = new AutoPause(opts);
+  const t0 = points[0].t;
+  let closedSec = 0;
+  let seen = 0;
+  for (const p of points) {
+    machine.update(p.t, p.speedMps);
+    while (seen < machine.intervals.length) {
+      const iv = machine.intervals[seen++];
+      closedSec += iv.endT - iv.startT;
+    }
+    out.push(causalMovingSec(t0, p.t, closedSec, machine.openPauseStart));
+  }
+  return out;
 }
 
 export interface PauseResult {

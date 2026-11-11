@@ -9,8 +9,8 @@ import { filterFixes, type FilterOptions } from "./filter.ts";
 import { averagePace, cuePace, currentPace } from "./pace.ts";
 import {
   type AutoPauseOptions,
+  causalClockTrace,
   computePauses,
-  movingElapsedAt,
 } from "./autopause.ts";
 import { computeSplits, MILE_M, type SplitOptions } from "./splits.ts";
 import { type GuidedEvent, type GuidedOptions, GuidedRun } from "./guided.ts";
@@ -23,7 +23,6 @@ export * from "./splits.ts";
 export * from "./guided.ts";
 export * from "./gpx.ts";
 export * from "./tcx.ts";
-export * from "./load.ts";
 
 export interface ProcessRunOptions {
   filter?: FilterOptions;
@@ -45,7 +44,9 @@ export interface ProcessedRun extends Run {
  * Run the full pipeline over raw fixes in arrival order. Distance sums
  * Vincenty segments on the filtered track; moving time excludes auto-paused
  * intervals; splits interpolate boundary crossings on the fix clock; guided
- * steps advance on moving time with the 30 s cue pace.
+ * steps advance on the causal moving clock (causalMovingSec: only what a live
+ * recorder knows at that fix) with the 30 s cue pace. So the guided events for
+ * the first k fixes are a prefix of the events for all of them.
  */
 export function processRun(
   fixes: Fix[],
@@ -71,20 +72,19 @@ export function processRun(
   const guidedEvents: GuidedEvent[] = [];
   if (opts.workout && points.length > 0) {
     const guided = new GuidedRun(opts.workout, opts.guided);
-    const t0 = points[0].t;
+    const clock = causalClockTrace(points, opts.autopause);
     // Points arrive in increasing t (dedupe guarantees it), so the window
     // grows by one each step instead of rescanning the whole track.
     const window = points.slice(0, 1);
     for (let i = 0; i < points.length; i++) {
       const p = points[i];
       if (i > 0) window.push(p);
-      const moving = movingElapsedAt(pauses.paused, t0, p.t);
       const cueAt = cuePace(window, p.t);
       guidedEvents.push(
         ...guided.update({
           cueSpeedMps: cueAt?.speedMps ?? null,
           distM: p.distM,
-          timeSec: moving,
+          timeSec: clock[i],
         }),
       );
     }

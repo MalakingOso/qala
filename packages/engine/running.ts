@@ -66,6 +66,82 @@ export function riegel(seconds1: number, d1: number, d2: number): number {
   return seconds1 * Math.pow(d2 / d1, 1.06);
 }
 
+// ---- Run load helpers (merged from packages/run/load.ts) ----
+// Guarded for NaN and zero: they return 0 (or Infinity for a pace) instead of
+// propagating a non-finite number into a run summary. One gapFactor serves
+// both the engine and the run package: the engine's, which gives 1.0 from
+// -18% down.
+
+/** One stretch of a grade profile: its length and mean grade (rise/run). */
+export interface GradeSegment {
+  grade: number;
+  meters: number;
+}
+
+/** Grade-adjusted speed: the flat speed costing the same effort. */
+export function gradeAdjustedSpeed(speedMps: number, grade: number): number {
+  if (!(speedMps > 0)) return 0;
+  return speedMps * gapFactor(grade);
+}
+
+/** Grade-adjusted pace in s/m. */
+export function gradeAdjustedPace(paceSecPerM: number, grade: number): number {
+  if (!(paceSecPerM > 0)) return Infinity;
+  return paceSecPerM / gapFactor(grade);
+}
+
+/** Total grade-adjusted distance: sum of meters x gapFactor(grade). */
+export function gapDistanceM(segments: GradeSegment[]): number {
+  let total = 0;
+  for (const s of segments) {
+    if (s.meters > 0) total += s.meters * gapFactor(s.grade);
+  }
+  return total;
+}
+
+/**
+ * Normalised graded pace as a speed (m/s): grade-adjusted distance over
+ * moving time. This is the distance-weighted mean GAP speed; TrainingPeaks'
+ * exact NGP quartic weighting is proprietary, so this documented mean is
+ * what the engine uses.
+ */
+export function ngpFromGapDistance(
+  gapDistM: number,
+  movingSec: number,
+): number {
+  if (!(movingSec > 0) || !(gapDistM >= 0)) return 0;
+  return gapDistM / movingSec;
+}
+
+/** rTSS straight from a grade-adjusted run. 0 on a non-positive threshold or time. */
+export function rtssFromRun(args: {
+  gapDistM: number;
+  movingSec: number;
+  thresholdMps: number;
+}): number {
+  const ngpValue = ngpFromGapDistance(args.gapDistM, args.movingSec);
+  const IF = args.thresholdMps > 0 && ngpValue >= 0
+    ? intensityFactor(ngpValue, args.thresholdMps)
+    : 0;
+  const hours = args.movingSec / 3600;
+  return hours >= 0 && IF >= 0 ? rtss(hours, IF) : 0;
+}
+
+/**
+ * Threshold speed (m/s) from a recent race: Riegel-project to one hour,
+ * the fastest pace sustainable ~1 h. Assumption until CS has three efforts.
+ * The inverse of riegel(), written out so the bits stay as they were.
+ */
+export function thresholdPaceFromRace(
+  raceDistM: number,
+  raceSec: number,
+): number {
+  if (!(raceDistM > 0) || !(raceSec > 0)) return 0;
+  // Distance coverable in 3600 s at Riegel-equivalent effort, over 3600 s.
+  const d = raceDistM * (3600 / raceSec) ** (1 / 1.06);
+  return d / 3600;
+}
+
 export interface Effort {
   distanceM: number;
   seconds: number;
