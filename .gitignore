@@ -18,6 +18,8 @@ testdata/golden/lspp/fuzz/
 # Generated core fuzz data (regenerate with `deno task fuzz:plates` and `deno task fuzz:engine`); about 260 MB.
 testdata/golden/plates/fuzz/
 testdata/golden/engine/fuzz/
+# Generated run-pipeline fuzz data (regenerate with `deno task fuzz:run`).
+testdata/golden/run/fuzz/
 testdata/golden/lspp/lezer_trees/
 crates/qala-lspp/testdata/unit/cases_*.json
 # Build output from the wasm and FFI crates.

@@ -803,17 +803,20 @@ function genFilter(): void {
       acc: 4,
     }),
   });
-  add("run across the antimeridian", {
-    fixes: track({
-      rng: new Rng(720012),
-      legs: [{ sec: 80, speed: 3.5 }],
-      lat: 10,
-      lon: 179.9995,
-      heading: 90,
-      noiseM: 0.5,
-      acc: 3,
-    }).map((f) => ({ ...f, lon: f.lon > 180 ? f.lon - 360 : f.lon })),
-  });
+  add(
+    "run across the antimeridian: TS does not handle the wrap, the filtered track jumps (ported as is)",
+    {
+      fixes: track({
+        rng: new Rng(720012),
+        legs: [{ sec: 80, speed: 3.5 }],
+        lat: 10,
+        lon: 179.9995,
+        heading: 90,
+        noiseM: 0.5,
+        acc: 3,
+      }).map((f) => ({ ...f, lon: f.lon > 180 ? f.lon - 360 : f.lon })),
+    },
+  );
   add("optional fields are carried through", {
     fixes: track({
       rng: new Rng(720013),

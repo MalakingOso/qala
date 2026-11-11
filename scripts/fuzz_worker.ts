@@ -11,6 +11,8 @@ self.onmessage = async (e: MessageEvent<{ idx: number; job: ChunkJob }>) => {
   try {
     const result = job.area === "plates"
       ? (await import("./gen_plates_fuzz.ts")).generatePlatesChunk(job)
+      : job.area === "run"
+      ? (await import("./gen_run_fuzz.ts")).generateRunChunk(job)
       : (await import("./gen_engine_fuzz.ts")).generateEngineChunk(job);
     self.postMessage({ idx, result });
   } catch (err) {

@@ -49,6 +49,7 @@
     "fuzz:liftoscript": "deno run -A scripts/gen_program_fuzz.ts",
     "fuzz:plates": "deno run -A scripts/gen_plates_fuzz.ts",
     "fuzz:engine": "deno run -A scripts/gen_engine_fuzz.ts",
+    "fuzz:run": "deno run -A scripts/gen_run_fuzz.ts",
     "build:wasm": "scripts/build_wasm.sh",
     "smoke:wasm": "deno run -A scripts/wasm_smoke.ts"
   }

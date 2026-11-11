@@ -1,4 +1,5 @@
-//! Differential fuzz of the Rust plate math and engine against the TS originals (the oracle).
+//! Differential fuzz of the Rust plate math, engine and run pipeline against the TS originals (the
+//! oracle).
 //!
 //! Replays the JSON Lines files `deno task fuzz:plates` writes to `testdata/golden/plates/fuzz/`
 //! and `deno task fuzz:engine` writes to `testdata/golden/engine/fuzz/` (both gitignored). Each
@@ -36,6 +37,12 @@ use qala_core::plates::{
     choose_next_plates, default_barbell_step, describe_change, is_loadable, nearest_loadable,
     plan_plates, plates_shorthand, round_to_step, round_weight, Pairs, PlateEntry, PlateLoad,
 };
+use qala_core::run::autopause::AutoPauseOptions;
+use qala_core::run::filter::{FilterOptions, FixFilter};
+use qala_core::run::geo::{haversine_m, vincenty_m};
+use qala_core::run::guided::GuidedOptions;
+use qala_core::run::splits::SplitOptions;
+use qala_core::run::{process_run, Fix, RecorderConfig, RunWorkout, WorkoutStep, WorkoutStepKind};
 use qala_core::time::{add_days_key, days_between, try_add_days_key};
 use serde_json::Value;
 use std::cell::Cell;
@@ -93,6 +100,8 @@ enum Tol {
     Exact,
     /// The engine README rule: `a == e || |a - e| <= t * max(|a|, |e|) + 1e-12`.
     Rel(f64),
+    /// The run files' rule: the same with an absolute floor of 1e-9 (`testdata/golden/run/README.md`).
+    RunRel(f64),
 }
 
 /// 0 for no match, 1 for an exact match, 2 for a match inside the tolerance only.
@@ -103,6 +112,7 @@ fn match_kind(a: f64, e: f64, tol: Tol) -> u8 {
     match tol {
         Tol::Exact => 0,
         Tol::Rel(t) => u8::from((a - e).abs() <= t * a.abs().max(e.abs()) + 1e-12) * 2,
+        Tol::RunRel(t) => u8::from((a - e).abs() <= t * a.abs().max(e.abs()) + 1e-9) * 2,
     }
 }
 
@@ -1019,4 +1029,291 @@ fn fuzz_engine() {
     let report = Report::default();
     replay(&files, &report, engine_case);
     finish("fuzz_engine", &report, expected);
+}
+
+// ---------------------------------------------------------------------------
+// Run pipeline (`deno task fuzz:run`; the line formats are in scripts/gen_run_fuzz.ts)
+// ---------------------------------------------------------------------------
+
+const RUN_DIR: &str = concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../../testdata/golden/run/fuzz/"
+);
+
+/// A fix field or a null: null is a field the TS fix did not have, which every gate reads as NaN.
+fn num_or_nan(v: &Value) -> f64 {
+    if v.is_null() {
+        f64::NAN
+    } else {
+        num(v)
+    }
+}
+
+fn run_opt(obj: &Value, key: &str) -> Option<f64> {
+    obj.get(key).filter(|v| !v.is_null()).map(num)
+}
+
+fn run_config(opts: &Value) -> RecorderConfig {
+    let section = |key: &str| opts.get(key).cloned().unwrap_or(Value::Null);
+    let (f, a, g) = (section("filter"), section("autopause"), section("guided"));
+    let workout = opts.get("workout").map(|w| RunWorkout {
+        steps: w["steps"]
+            .as_array()
+            .expect("steps")
+            .iter()
+            .map(|s| WorkoutStep {
+                kind: match s["kind"].as_str().expect("kind") {
+                    "warmup" => WorkoutStepKind::Warmup,
+                    "work" => WorkoutStepKind::Work,
+                    "recover" => WorkoutStepKind::Recover,
+                    _ => WorkoutStepKind::Cooldown,
+                },
+                distance_m: run_opt(s, "distanceM"),
+                seconds: run_opt(s, "seconds"),
+                target_mps: run_opt(s, "targetMps"),
+                pace_lo_mps: run_opt(s, "paceLoMps"),
+                pace_hi_mps: run_opt(s, "paceHiMps"),
+                hr_zone: None,
+                repeat: run_opt(s, "repeat"),
+            })
+            .collect(),
+    });
+    RecorderConfig {
+        filter: FilterOptions {
+            accuracy_gate_m: run_opt(&f, "accuracyGateM"),
+            speed_gate_mps: run_opt(&f, "speedGateMps"),
+            reanchor_count: run_opt(&f, "reanchorCount").map(|n| n as u32),
+            accel_noise: run_opt(&f, "accelNoise"),
+        },
+        autopause: AutoPauseOptions {
+            low_mps: run_opt(&a, "lowMps"),
+            low_hold_sec: run_opt(&a, "lowHoldSec"),
+            high_mps: run_opt(&a, "highMps"),
+            high_hold_sec: run_opt(&a, "highHoldSec"),
+        },
+        splits: SplitOptions {
+            split_m: run_opt(opts, "splitM"),
+            min_partial_m: None,
+        },
+        workout,
+        guided: GuidedOptions {
+            tolerance_mps: run_opt(&g, "toleranceMps"),
+            prompt_cooldown_sec: run_opt(&g, "promptCooldownSec"),
+        },
+        cues: Default::default(),
+    }
+}
+
+/// An optional number against `null` or a number.
+fn cmp_run_opt(errs: &mut Vec<String>, path: &str, expected: &Value, actual: Option<f64>) -> u32 {
+    match (expected.is_null(), actual) {
+        (true, None) => 0,
+        (false, Some(a)) => cmp_num(errs, path, expected, a, Tol::RunRel(1e-9)),
+        _ => {
+            errs.push(format!("{path}: Rust {actual:?} but TS {expected}"));
+            0
+        }
+    }
+}
+
+fn geo_case(v: &Value, errs: &mut Vec<String>) -> (&'static str, u32) {
+    let (la1, lo1, la2, lo2) = (num(&v[1]), num(&v[2]), num(&v[3]), num(&v[4]));
+    let d = vincenty_m(la1, lo1, la2, lo2);
+    let e = num(&v[5]);
+    // A segment of `d` metres loses about 1e-16 * 6.4e6 / d to cancellation (see geodesy.json).
+    let mut vt = if e.is_finite() && e > 0.0 {
+        (2e-8 / e.max(1e-3)).max(1e-9)
+    } else {
+        1e-9
+    };
+    // Within about a metre of the antipode Vincenty does not converge and both functions are
+    // haversine, whose `asin(sqrt(s))` has an unbounded condition number as `s` reaches 1: V8's
+    // fdlibm `asin` and the platform's differ in the last bit there, which is 1e-9 relative at
+    // 0.5 m from the antipode. Nobody runs there; the tolerance says so.
+    let antipodal = e > 19_990_000.0;
+    if antipodal {
+        vt = vt.max(1e-7);
+    }
+    let mut inexact = cmp_num(errs, "vincentyM", &v[5], d, Tol::RunRel(vt));
+    inexact += cmp_num(
+        errs,
+        "haversineM",
+        &v[6],
+        haversine_m(la1, lo1, la2, lo2),
+        Tol::RunRel(if antipodal { 1e-7 } else { 1e-9 }),
+    );
+    ("geodesy", inexact)
+}
+
+fn stream_case(v: &Value, errs: &mut Vec<String>) -> (&'static str, u32) {
+    let tol = Tol::RunRel(1e-9);
+    let fixes: Vec<Fix> = v[1]
+        .as_array()
+        .expect("fixes")
+        .iter()
+        .map(|row| Fix {
+            t: num_or_nan(&row[0]),
+            lat: num_or_nan(&row[1]),
+            lon: num_or_nan(&row[2]),
+            acc: num_or_nan(&row[3]),
+            hr: row.get(4).map(num),
+            cad: None,
+            ele: None,
+        })
+        .collect();
+    let cfg = run_config(&v[2]);
+    let exp = &v[3];
+    let mut inexact = 0;
+
+    // The filter, push by push.
+    let mut filter = FixFilter::new(&cfg.filter).expect("filter options");
+    let emitted: Vec<u64> = fixes.iter().map(|f| filter.push(f) as u64).collect();
+    let want: Vec<u64> = exp["e"]
+        .as_array()
+        .expect("e")
+        .iter()
+        .map(|x| x.as_u64().expect("count"))
+        .collect();
+    if emitted != want {
+        let at = emitted
+            .iter()
+            .zip(&want)
+            .position(|(a, b)| a != b)
+            .unwrap_or(0);
+        errs.push(format!(
+            "pushes differ from push {at}: Rust {:?} but TS {:?}",
+            emitted.get(at),
+            want.get(at)
+        ));
+        return ("stream", 0); // everything after would only repeat it
+    }
+
+    // The whole pipeline.
+    let run = process_run(&fixes, &cfg).expect("process_run");
+    let n = exp["n"].as_u64().expect("n") as usize;
+    if run.points.len() != n {
+        errs.push(format!("point count: Rust {} but TS {n}", run.points.len()));
+        return ("stream", 0);
+    }
+    let gaps: Vec<u64> = run
+        .points
+        .iter()
+        .enumerate()
+        .filter(|(_, p)| p.gap)
+        .map(|(i, _)| i as u64)
+        .collect();
+    let want_gaps: Vec<u64> = exp["g"]
+        .as_array()
+        .expect("g")
+        .iter()
+        .map(|x| x.as_u64().expect("index"))
+        .collect();
+    if gaps != want_gaps {
+        errs.push(format!(
+            "re-anchor flags: Rust {gaps:?} but TS {want_gaps:?}"
+        ));
+    }
+    for s in exp["p"].as_array().expect("p") {
+        let i = s[0].as_u64().expect("index") as usize;
+        let p = &run.points[i];
+        for (k, (name, got)) in [
+            ("lat", p.lat),
+            ("lon", p.lon),
+            ("speedMps", p.speed_mps),
+            ("distM", p.dist_m),
+        ]
+        .into_iter()
+        .enumerate()
+        {
+            inexact += cmp_num(errs, &format!("point {i} {name}"), &s[k + 1], got, tol);
+        }
+    }
+    let pz = exp["pz"].as_array().expect("pz");
+    if pz.len() != run.paused.len() {
+        errs.push(format!(
+            "pauses: Rust {} but TS {}",
+            run.paused.len(),
+            pz.len()
+        ));
+    } else {
+        for (i, (g, p)) in pz.iter().zip(&run.paused).enumerate() {
+            // Pause bounds are copies of input timestamps: exact.
+            if match_kind(p.start_t, num(&g[0]), Tol::Exact) == 0
+                || match_kind(p.end_t, num(&g[1]), Tol::Exact) == 0
+            {
+                errs.push(format!(
+                    "pause {i}: Rust [{}, {}] but TS {g}",
+                    p.start_t, p.end_t
+                ));
+            }
+        }
+    }
+    let sp = exp["sp"].as_array().expect("sp");
+    if sp.len() != run.splits.len() {
+        errs.push(format!(
+            "splits: Rust {} but TS {}",
+            run.splits.len(),
+            sp.len()
+        ));
+    } else {
+        for (g, s) in sp.iter().zip(&run.splits) {
+            if g[0].as_u64() != Some(s.index as u64) {
+                errs.push(format!("split index: Rust {} but TS {}", s.index, g[0]));
+            }
+            inexact += cmp_num(errs, "split distM", &g[1], s.dist_m, tol);
+            inexact += cmp_num(errs, "split sec", &g[2], s.sec, tol);
+            inexact += cmp_num(errs, "split cumSec", &g[3], s.cum_sec, tol);
+            inexact += cmp_run_opt(errs, "split hrAvg", &g[4], s.hr_avg);
+        }
+    }
+    let r = &exp["r"];
+    inexact += cmp_num(errs, "distanceM", &r[0], run.distance_m, tol);
+    inexact += cmp_num(errs, "movingSec", &r[1], run.moving_sec, tol);
+    inexact += cmp_num(errs, "elapsedSec", &r[2], run.elapsed_sec, tol);
+    inexact += cmp_num(errs, "avgSpeedMps", &r[3], run.avg_speed_mps, tol);
+    inexact += cmp_run_opt(errs, "currentSpeedMps", &r[4], run.current_speed_mps);
+    inexact += cmp_run_opt(errs, "cueSpeedMps", &r[5], run.cue_speed_mps);
+    let events: Vec<String> = run
+        .guided_events
+        .iter()
+        .map(|e| {
+            let j = serde_json::to_value(e).expect("event");
+            match j.get("stepIndex") {
+                Some(i) => format!("{}:{i}", j["type"].as_str().expect("type")),
+                None => j["type"].as_str().expect("type").to_string(),
+            }
+        })
+        .collect();
+    let want_ev: Vec<String> = exp["ev"]
+        .as_array()
+        .expect("ev")
+        .iter()
+        .map(|x| x.as_str().expect("event").to_string())
+        .collect();
+    if events != want_ev {
+        errs.push(format!("guided events: Rust {events:?} but TS {want_ev:?}"));
+    }
+    ("stream", inexact)
+}
+
+fn run_case(v: &Value, errs: &mut Vec<String>) -> (&'static str, u32) {
+    match v[0].as_str() {
+        Some("g") => geo_case(v, errs),
+        Some("s") => stream_case(v, errs),
+        other => panic!("unknown run fuzz case kind {other:?}"),
+    }
+}
+
+#[test]
+fn fuzz_run() {
+    let Some((manifest, files)) = read_manifest(RUN_DIR, "fuzz:run") else {
+        return;
+    };
+    let expected = manifest["cases"].as_u64().expect("manifest cases") as usize;
+    if expected < 1_020_000 {
+        eprintln!("fuzz_run: partial corpus, {expected} cases (the full run is 1,020,000)");
+    }
+    let report = Report::default();
+    replay(&files, &report, run_case);
+    finish("fuzz_run", &report, expected);
 }

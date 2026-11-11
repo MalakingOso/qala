@@ -124,7 +124,7 @@ export class ChunkWriter {
 }
 
 export interface ChunkJob {
-  area: "plates" | "engine";
+  area: "plates" | "engine" | "run";
   chunk: number;
   /** Absolute output directory with a trailing slash. */
   outDir: string;

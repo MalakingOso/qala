@@ -42,12 +42,20 @@ pub fn compute_splits(points: &[FilteredPoint], opts: &SplitOptions) -> Vec<Spli
     let mut prev_t = t0;
     let mut prev_boundary = 0.0;
     let mut seg: u32 = 1;
+    // `distM` of a filtered track never decreases, so each boundary's search can start at the
+    // previous crossing (nothing before it can matter); any other input scans from the start, as
+    // the TS does.
+    let monotone = points.windows(2).all(|w| w[0].dist_m <= w[1].dist_m);
+    let mut start = 0usize;
     let mut n = 1.0;
     while n <= full && splits.len() < MAX_SPLITS {
         let boundary = n * split_m;
-        let Some(cross) = crossing_at(points, prev_boundary, boundary) else {
+        let Some(cross) = crossing_at(points, prev_boundary, boundary, start) else {
             break;
         };
+        if monotone {
+            start = cross.2;
+        }
         splits.push(Split {
             index: seg,
             dist_m: split_m,
@@ -86,17 +94,19 @@ pub fn compute_splits(points: &[FilteredPoint], opts: &SplitOptions) -> Vec<Spli
     splits
 }
 
-/// First crossing of `boundary` and the mean HR of the points since `from_dist`, as TS scans:
-/// from the first point, remembering the previous one.
+/// First crossing of `boundary` and the mean HR of the points since `from_dist`, as TS scans
+/// (remembering the previous point), from point `start`. Also returns the index of the crossing
+/// point.
 fn crossing_at(
     points: &[FilteredPoint],
     from_dist: f64,
     boundary: f64,
-) -> Option<(f64, Option<f64>)> {
-    let mut prev: Option<&FilteredPoint> = None;
+    start: usize,
+) -> Option<(f64, Option<f64>, usize)> {
+    let mut prev: Option<&FilteredPoint> = start.checked_sub(1).and_then(|i| points.get(i));
     let mut hr_sum = 0.0;
     let mut hr_count = 0usize;
-    for p in points {
+    for (i, p) in points.iter().enumerate().skip(start) {
         if p.dist_m > from_dist && p.dist_m < boundary {
             if let Some(hr) = p.hr {
                 hr_sum += hr;
@@ -115,7 +125,7 @@ fn crossing_at(
                     hr_sum += hr;
                     hr_count += 1;
                 }
-                return Some((t, (hr_count > 0).then(|| hr_sum / hr_count as f64)));
+                return Some((t, (hr_count > 0).then(|| hr_sum / hr_count as f64), i));
             }
         }
         prev = Some(p);
@@ -205,6 +215,26 @@ mod tests {
             min_partial_m: Some(1e9),
         };
         assert_eq!(compute_splits(&pts, &tight).len(), 2);
+    }
+
+    #[test]
+    fn a_huge_track_is_linear_not_quadratic() {
+        // 20,000 points, 999,950 m: 49,997 boundaries and a 10 m tail; the scan restarts at each
+        // crossing instead of from the first point.
+        let pts = line(20_000, 50.0, 1.0);
+        let s = compute_splits(&pts, &SplitOptions { split_m: Some(20.0), min_partial_m: None });
+        assert_eq!(s.len(), 49_998);
+        assert_eq!(s[49_997].index, 49_998);
+        assert_eq!(s[49_997].dist_m, 10.0);
+    }
+
+    #[test]
+    fn a_track_that_goes_backwards_is_scanned_from_the_start() {
+        // Not a filtered track: distance falls back below a boundary already crossed.
+        let mut pts = line(30, 100.0, 1.0);
+        pts[10].dist_m = 50.0;
+        let s = compute_splits(&pts, &SplitOptions { split_m: Some(500.0), min_partial_m: None });
+        assert!(!s.is_empty());
     }
 
     #[test]
