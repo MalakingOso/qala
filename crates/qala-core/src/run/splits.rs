@@ -222,7 +222,13 @@ mod tests {
         // 20,000 points, 999,950 m: 49,997 boundaries and a 10 m tail; the scan restarts at each
         // crossing instead of from the first point.
         let pts = line(20_000, 50.0, 1.0);
-        let s = compute_splits(&pts, &SplitOptions { split_m: Some(20.0), min_partial_m: None });
+        let s = compute_splits(
+            &pts,
+            &SplitOptions {
+                split_m: Some(20.0),
+                min_partial_m: None,
+            },
+        );
         assert_eq!(s.len(), 49_998);
         assert_eq!(s[49_997].index, 49_998);
         assert_eq!(s[49_997].dist_m, 10.0);
@@ -233,7 +239,13 @@ mod tests {
         // Not a filtered track: distance falls back below a boundary already crossed.
         let mut pts = line(30, 100.0, 1.0);
         pts[10].dist_m = 50.0;
-        let s = compute_splits(&pts, &SplitOptions { split_m: Some(500.0), min_partial_m: None });
+        let s = compute_splits(
+            &pts,
+            &SplitOptions {
+                split_m: Some(500.0),
+                min_partial_m: None,
+            },
+        );
         assert!(!s.is_empty());
     }
 

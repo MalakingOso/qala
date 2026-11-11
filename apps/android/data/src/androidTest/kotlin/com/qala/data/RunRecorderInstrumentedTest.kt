@@ -75,6 +75,23 @@ class RunRecorderInstrumentedTest {
             assertEquals(expected["splits"]!!.jsonArray.size, run.splits.size)
             assertEquals(expected["guidedEvents"]!!.jsonArray.size, run.guidedEvents.size)
             assertEquals(guidedPushed, run.guidedEvents)
+            // How far bionic's libm is from V8's: the worst relative difference over every point.
+            var worstDist = 0.0
+            var worstPos = 0.0
+            var worstSpeed = 0.0
+            val want = expected["points"]!!.jsonArray
+            run.points.forEachIndexed { i, p ->
+                val w = want[i].jsonObject
+                fun rel(a: Double, key: String): Double {
+                    val e = w[key]!!.jsonPrimitive.content.toDouble()
+                    return kotlin.math.abs(a - e) / maxOf(kotlin.math.abs(e), 1.0)
+                }
+                worstDist = maxOf(worstDist, rel(p.distM, "distM"))
+                worstPos = maxOf(worstPos, rel(p.lat, "lat"), rel(p.lon, "lon"))
+                worstSpeed = maxOf(worstSpeed, rel(p.speedMps, "speedMps"))
+            }
+            Log.i("RunRecorderDrift", "vs the TS vector over ${run.points.size} points: worst relative difference " +
+                "distM $worstDist, lat/lon $worstPos, speedMps $worstSpeed")
             assertClose(run.distanceM, expected["distanceM"]!!.jsonPrimitive.content.toDouble(), "distance")
             assertClose(run.movingSec, expected["movingSec"]!!.jsonPrimitive.content.toDouble(), "moving time")
             // Every mile and every five minutes was read out once, in order: no gap.
@@ -91,17 +108,26 @@ class RunRecorderInstrumentedTest {
 
     @Test
     fun aKilledServiceResumesByReplayingTheStoredFixes() {
-        // Recovery: the process dies after the first half, so a new recorder replays the stored fixes
-        // (those and the ones that arrive after the restart). Same guided events, same result.
-        val live = RunRecorder(opts).use { rec ->
-            fixes.forEach(rec::pushFix)
+        // The uninterrupted run, with every event it produced.
+        val half = fixes.size / 2
+        val uninterrupted = mutableListOf<RunEvent>()
+        val whole = RunRecorder(opts).use { rec ->
+            fixes.forEach { uninterrupted += rec.pushFix(it).events }
             rec.finish()
         }
-        val replayed = RunRecorder(opts).use { rec ->
-            fixes.take(fixes.size / 2).forEach(rec::pushFix) // the stored half
-            fixes.drop(fixes.size / 2).forEach(rec::pushFix) // then the live fixes
-            rec.finish()
+        // Recorder A takes the first half and is dropped, as when the process dies. Recorder B replays
+        // the stored half (the events it returns are the ones A already delivered) and carries on with
+        // the fixes that arrive after the restart.
+        val delivered = mutableListOf<RunEvent>()
+        RunRecorder(opts).use { a -> fixes.take(half).forEach { delivered += a.pushFix(it).events } }
+        val replayed = mutableListOf<RunEvent>()
+        val resumed = RunRecorder(opts).use { b ->
+            fixes.take(half).forEach { replayed += b.pushFix(it).events }
+            fixes.drop(half).forEach { delivered += b.pushFix(it).events }
+            b.finish()
         }
-        assertEquals(live, replayed)
+        assertEquals("the replay re-derives what was already delivered", delivered.take(replayed.size), replayed)
+        assertEquals("events delivered across the restart equal the uninterrupted run's", uninterrupted, delivered)
+        assertEquals(whole, resumed)
     }
 }

@@ -1,6 +1,6 @@
 //! Periodic audio cues: every N metres of distance and every N seconds of moving time (PLAN 8a:
 //! "every 0.5 or 1 mi or every 5 min", settings). New in R1: there is no TS original, so Rust is
-//! the definition (DECISIONS D04) and the unit tests below are its spec. The step and
+//! the definition (DECISIONS S6: Rust is the main implementation) and the unit tests below are its spec. The step and
 //! speed-up/slow-down calls come from [`super::guided`]; these are the ones that read out the
 //! time, the distance and the average pace.
 //!

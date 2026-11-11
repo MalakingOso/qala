@@ -10,8 +10,9 @@
 //! bit for bit in `lat`, `lon` and `speedMps`, and in 83% of `distM` (worst relative difference
 //! 5.8e-12). The pure-Rust `libm` crate was tried in place of std and matched V8 worse (8% of
 //! `distM`, worst 8e-10), because V8's `sin` and `cos` come from glibc. So the host build is the
-//! closest to the oracle. Android's bionic is a third libm; the emulator replay shows how far it
-//! is. If a target ever exceeds 1e-9 on the vectors, change the bodies below and nothing else in
+//! closest to the oracle. Android's bionic is a third libm: on the x86_64 emulator the 2 h replay differs
+//! from the TS vector by at most 2.5e-10 relative in `distM` and not at all in `lat`, `lon` and
+//! `speedMps` (an arm64 phone is unmeasured). If a target ever exceeds 1e-9 on the vectors, change the bodies below and nothing else in
 //! `run` moves.
 //!
 //! `hypot2` is `Math.hypot` as V8 implements it (scale by the larger magnitude, Kahan sum of
