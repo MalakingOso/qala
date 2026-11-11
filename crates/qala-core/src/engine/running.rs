@@ -1,9 +1,14 @@
-//! Running in the engine: `packages/engine/running.ts` lines 1-161 (PLAN 6.4,
+//! Running in the engine: `packages/engine/running.ts` lines 1-264 (PLAN 6.4,
 //! docs/research/RESEARCH-running.md). SI units in and out. The cross-modal rules that follow
-//! in the TS file are out of scope for this port.
+//! in the TS file are out of scope for this port. Lines 160-240 hold the run-load helpers merged
+//! in from `packages/run/load.ts` (R1): guarded for NaN and zero, on this module's one
+//! `gap_factor`.
 //!
 //! All set-equivalent weights are derived assumptions (docs/PLAN.md 6.4). `**` in TS is
 //! `powf` here, never `powi`, so the polynomial goes through the same libm `pow` path.
+
+// `!(x > 0.0)` in the run-load helpers is the NaN-aware form the TS uses; see `run/mod.rs`.
+#![allow(clippy::neg_cmp_op_on_partial_ord)]
 
 use super::state::{BestEffort, GradeSegment, SrpeRtssPair};
 use crate::js::js_max;
@@ -81,6 +86,76 @@ pub fn vdot_from_effort(distance_m: f64, seconds: f64) -> f64 {
 /// Riegel `T2 = T1 x (D2/D1)^1.06`, valid for 3.5 to 230 min (assumption, PLAN 6.4).
 pub fn riegel(seconds1: f64, d1: f64, d2: f64) -> f64 {
     seconds1 * (d2 / d1).powf(1.06)
+}
+
+// ---- Run load helpers (merged from packages/run/load.ts) ----
+
+/// Grade-adjusted speed: the flat speed costing the same effort. 0 for a speed that is not
+/// positive (NaN included).
+pub fn grade_adjusted_speed(speed_mps: f64, grade: f64) -> f64 {
+    if !(speed_mps > 0.0) {
+        return 0.0;
+    }
+    speed_mps * gap_factor(grade)
+}
+
+/// Grade-adjusted pace in s/m. Infinity for a pace that is not positive.
+pub fn grade_adjusted_pace(pace_sec_per_m: f64, grade: f64) -> f64 {
+    if !(pace_sec_per_m > 0.0) {
+        return f64::INFINITY;
+    }
+    pace_sec_per_m / gap_factor(grade)
+}
+
+/// Total grade-adjusted distance: the sum of `meters x gap_factor(grade)` over segments with a
+/// positive length.
+pub fn gap_distance_m(segments: &[GradeSegment]) -> f64 {
+    let mut total = 0.0;
+    for s in segments {
+        if s.meters > 0.0 {
+            total += s.meters * gap_factor(s.grade);
+        }
+    }
+    total
+}
+
+/// Normalised graded pace as a speed (m/s): grade-adjusted distance over moving time. This is the
+/// distance-weighted mean GAP speed; TrainingPeaks' exact NGP quartic weighting is proprietary.
+/// 0 when the time is not positive or the distance is negative or NaN.
+pub fn ngp_from_gap_distance(gap_dist_m: f64, moving_sec: f64) -> f64 {
+    if !(moving_sec > 0.0) || !(gap_dist_m >= 0.0) {
+        return 0.0;
+    }
+    gap_dist_m / moving_sec
+}
+
+/// rTSS straight from a grade-adjusted run: 0 on a non-positive threshold or time. The engine's
+/// [`intensity_factor`] and [`rtss`] stay unguarded (they have vectors), so the guards live here.
+pub fn rtss_from_run(gap_dist_m: f64, moving_sec: f64, threshold_mps: f64) -> f64 {
+    let ngp_value = ngp_from_gap_distance(gap_dist_m, moving_sec);
+    let intensity = if threshold_mps > 0.0 && ngp_value >= 0.0 {
+        intensity_factor(ngp_value, threshold_mps)
+    } else {
+        0.0
+    };
+    let hours = moving_sec / 3600.0;
+    if hours >= 0.0 && intensity >= 0.0 {
+        rtss(hours, intensity)
+    } else {
+        0.0
+    }
+}
+
+/// Threshold speed (m/s) from a recent race: Riegel-project to one hour, the fastest pace
+/// sustainable for about an hour. An assumption until critical speed has three efforts. The
+/// inverse of [`riegel`], written out so the bits match the TS.
+pub fn threshold_pace_from_race(race_dist_m: f64, race_sec: f64) -> f64 {
+    if !(race_dist_m > 0.0) || !(race_sec > 0.0) {
+        return 0.0;
+    }
+    // Distance coverable in 3600 s at Riegel-equivalent effort, over 3600 s.
+    let d = race_dist_m * (3600.0 / race_sec).powf(1.0 / 1.06);
+    d / 3600.0
 }
 
 /// A distance and the time it took.
@@ -287,6 +362,28 @@ mod tests {
         let v = vdot_from_effort(5000.0, 1200.0);
         assert!((v - 49.8).abs() < 0.2, "{v}");
         close(riegel(1200.0, 5000.0, 10_000.0), 1200.0 * 2f64.powf(1.06));
+    }
+
+    #[test]
+    fn run_load_helpers_guard_zero_and_nan() {
+        let seg = |grade, meters| GradeSegment { grade, meters };
+        assert_eq!(rtss_from_run(1000.0, 300.0, 0.0), 0.0);
+        assert_eq!(rtss_from_run(1000.0, 0.0, 4.0), 0.0);
+        assert_eq!(rtss_from_run(f64::NAN, 300.0, 4.0), 0.0);
+        assert_eq!(rtss_from_run(4.0 * 3600.0, 3600.0, 4.0), 100.0);
+        assert_eq!(ngp_from_gap_distance(500.0, 0.0), 0.0);
+        assert_eq!(grade_adjusted_speed(0.0, 0.05), 0.0);
+        assert_eq!(grade_adjusted_pace(0.0, 0.05), f64::INFINITY);
+        close(grade_adjusted_speed(3.0, 0.1), 3.0 * gap_factor(0.1));
+        close(grade_adjusted_pace(0.4, 0.1), 0.4 / gap_factor(0.1));
+        close(
+            gap_distance_m(&[seg(0.0, 1000.0), seg(0.1, 1000.0), seg(0.1, -50.0)]),
+            1000.0 + 1000.0 * gap_factor(0.1),
+        );
+        // 20:00 for 5 km: about 4.2 m/s over an hour.
+        let t = threshold_pace_from_race(5000.0, 1200.0);
+        assert!(t > 3.9 && t < 4.5, "{t}");
+        assert_eq!(threshold_pace_from_race(0.0, 100.0), 0.0);
     }
 
     #[test]

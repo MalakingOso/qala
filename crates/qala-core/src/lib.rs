@@ -12,4 +12,5 @@ pub mod js;
 pub mod muscles;
 pub mod plates;
 pub mod records;
+pub mod run;
 pub mod time;

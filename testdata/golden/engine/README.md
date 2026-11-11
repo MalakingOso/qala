@@ -23,7 +23,7 @@ and aborts when one does not.
 | `decay.json` | 78 | `decay.ts` |
 | `e1rm.json` | 539 | `e1rm.ts`, `rtsTable.ts` |
 | `kalman.json` | 189 | `kalman.ts`, with update chains |
-| `running.json` | 265 | `running.ts` lines 1-161 |
+| `running.json` | 377 | `running.ts` lines 1-264 |
 | `log_session.json` | 241 | `logSession`, chained scenarios and edge cases |
 | `calibrate.json` | 21 | `calibrate` over whole histories |
 | `readiness.json` | 98 | `predictReadiness` with `now == state.updated` |
@@ -279,7 +279,7 @@ the unlock boundary (updates from obs 18, 19, 20, 21).
 
 ## running.json
 
-Module `running.ts`, lines 1-161. `input = {fn, args}`. Grades are fractions
+Module `running.ts`, lines 1-264. `input = {fn, args}`. Grades are fractions
 (0.05 = 5%).
 
 | `fn` | `args` | `expected` | tolerance |
@@ -300,6 +300,17 @@ Module `running.ts`, lines 1-161. `input = {fn, args}`. Grades are fractions
 | `descentDamage` | `{descentM, rbe}` | `{quads, calves}` | 1e-9 |
 | `srpeLoadRatio` | `{pairs: [{srpeLoad, rTSS}]}` | number; the 3.6 prior when fewer than 10 pairs or the sum of `rTSS` is `<= 0` | 1e-9 |
 | `SRPE_PER_100_RTSS_PRIOR` | `{}` | `3.6` | exact |
+| `gradeAdjustedSpeed` | `{speedMps, grade}` | number; 0 unless `speedMps > 0` | 1e-9 |
+| `gradeAdjustedPace` | `{paceSecPerM, grade}` | number; `"Infinity"` unless `paceSecPerM > 0` | 1e-9 |
+| `gapDistanceM` | `{segments: [{grade, meters}]}` | sum of `meters * gapFactor(grade)` over segments with `meters > 0` | 1e-9 |
+| `ngpFromGapDistance` | `{gapDistM, movingSec}` | number; 0 unless `movingSec > 0` and `gapDistM >= 0` | 1e-9 |
+| `rtssFromRun` | `{gapDistM, movingSec, thresholdMps}` | number; 0 when the threshold is not positive or the time or distance is negative or NaN | 1e-9 |
+| `thresholdPaceFromRace` | `{raceDistM, raceSec}` | number; 0 unless both are positive | 1e-9 |
+
+The last six are the run-load helpers merged in from `packages/run/load.ts`
+(R1, `testdata/golden/run/README.md`). Unlike `intensityFactor` and `rtss`
+they guard NaN and zero, so a zero threshold gives rTSS 0, not `Infinity`.
+They were appended to the file, so the cases before them are unchanged.
 
 `criticalSpeed` keeps efforts with `distanceM === 400 | 800 | 5000` (exact
 float equality) and `Date.parse(date) >= Date.parse(nowIso) - 90 days` (no upper

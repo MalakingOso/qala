@@ -36,20 +36,26 @@ import {
 import {
   criticalSpeed,
   descentDamage,
+  gapDistanceM,
   gapFactor,
+  gradeAdjustedPace,
+  gradeAdjustedSpeed,
   intensityFactor,
   meanGapFactor,
   minettiCost,
   minettiRatio,
   ngp,
+  ngpFromGapDistance,
   rbeFactor,
   riegel,
   rtss,
+  rtssFromRun,
   runSetEquivalents,
   type RunZone,
   runZone,
   SRPE_PER_100_RTSS_PRIOR,
   srpeLoadRatio,
+  thresholdPaceFromRace,
   vdotFromEffort,
 } from "../packages/engine/running.ts";
 import {
@@ -1593,6 +1599,205 @@ function genRunning(): void {
       "constant",
       {},
       () => SRPE_PER_100_RTSS_PRIOR,
+    ),
+  );
+
+  // The helpers merged in from packages/run/load.ts (R1). Fixed arguments only,
+  // so no generator state moves and the cases above stay byte-identical.
+  for (const grade of [-0.3, -0.18, -0.1, -0.02, 0, 0.02, 0.05, 0.12, 0.3]) {
+    for (const speedMps of [0, 2.5, 3.3, 5]) {
+      cs.push(
+        fcase(
+          "gradeAdjustedSpeed",
+          `speed ${speedMps} grade ${grade}`,
+          { speedMps, grade },
+          (a) => gradeAdjustedSpeed(a.speedMps, a.grade),
+          TOL,
+        ),
+      );
+    }
+    for (const paceSecPerM of [0, 0.3, 0.45]) {
+      cs.push(
+        fcase(
+          "gradeAdjustedPace",
+          `pace ${paceSecPerM} grade ${grade}`,
+          { paceSecPerM, grade },
+          (a) => gradeAdjustedPace(a.paceSecPerM, a.grade),
+          TOL,
+        ),
+      );
+    }
+  }
+  for (
+    const [name, speedMps, grade] of [
+      ["negative speed", -3, 0.05],
+      ["nonfinite: NaN speed", NaN, 0.05],
+      ["nonfinite: NaN grade", 3, NaN],
+      ["nonfinite: infinite speed", Infinity, 0.02],
+    ] as [string, number, number][]
+  ) {
+    cs.push(
+      fcase(
+        "gradeAdjustedSpeed",
+        name,
+        { speedMps, grade },
+        (a) => gradeAdjustedSpeed(a.speedMps, a.grade),
+        TOL,
+      ),
+    );
+  }
+  for (
+    const [name, paceSecPerM, grade] of [
+      ["negative pace", -0.3, 0.05],
+      ["nonfinite: NaN pace", NaN, 0.05],
+      ["nonfinite: NaN grade", 0.3, NaN],
+    ] as [string, number, number][]
+  ) {
+    cs.push(
+      fcase(
+        "gradeAdjustedPace",
+        name,
+        { paceSecPerM, grade },
+        (a) => gradeAdjustedPace(a.paceSecPerM, a.grade),
+        TOL,
+      ),
+    );
+  }
+  const gd = (name: string, segments: { grade: number; meters: number }[]) =>
+    cs.push(
+      fcase(
+        "gapDistanceM",
+        name,
+        { segments },
+        (a) => gapDistanceM(a.segments),
+        TOL,
+      ),
+    );
+  gd("empty", []);
+  gd("flat", [{ grade: 0, meters: 1000 }]);
+  gd("rolling course", [
+    { grade: 0.03, meters: 1500 },
+    { grade: -0.03, meters: 1500 },
+    { grade: 0.05, meters: 800 },
+    { grade: -0.06, meters: 1200 },
+    { grade: 0, meters: 5000 },
+  ]);
+  gd("exactly -18% counts as 1.0", [{ grade: -0.18, meters: 400 }, {
+    grade: 0.1,
+    meters: 400,
+  }]);
+  gd("steep downhill counts as 1.0", [{ grade: -0.25, meters: 300 }]);
+  gd("zero and negative lengths are skipped", [
+    { grade: 0.1, meters: 0 },
+    { grade: 0.1, meters: -50 },
+    { grade: 0.05, meters: 700 },
+  ]);
+  gd("nonfinite: NaN grade poisons the sum", [{ grade: NaN, meters: 100 }, {
+    grade: 0,
+    meters: 100,
+  }]);
+  gd("nonfinite: NaN meters is skipped", [{ grade: 0.1, meters: NaN }, {
+    grade: 0,
+    meters: 100,
+  }]);
+  for (
+    const [gapDistM, movingSec] of [
+      [12000, 3600],
+      [0, 100],
+      [5000, 0],
+      [5000, -10],
+      [-5, 100],
+      [3.3 * 3600, 3600],
+      [1e-9, 1e-9],
+    ]
+  ) {
+    cs.push(
+      fcase(
+        "ngpFromGapDistance",
+        `gap distance ${gapDistM} over ${movingSec} s`,
+        { gapDistM, movingSec },
+        (a) => ngpFromGapDistance(a.gapDistM, a.movingSec),
+        TOL,
+      ),
+    );
+  }
+  cs.push(
+    fcase(
+      "ngpFromGapDistance",
+      "nonfinite: NaN distance",
+      { gapDistM: NaN, movingSec: 100 },
+      (a) => ngpFromGapDistance(a.gapDistM, a.movingSec),
+      TOL,
+    ),
+  );
+  cs.push(
+    fcase(
+      "ngpFromGapDistance",
+      "nonfinite: NaN time",
+      { gapDistM: 100, movingSec: NaN },
+      (a) => ngpFromGapDistance(a.gapDistM, a.movingSec),
+      TOL,
+    ),
+  );
+  for (
+    const [name, gapDistM, movingSec, thresholdMps] of [
+      ["one hour at threshold on flat is 100", 4 * 3600, 3600, 4],
+      ["half an hour easy", 2.9 * 1800, 1800, 4],
+      ["a 5 km race", 5000, 1200, 4.2],
+      ["a long run above threshold", 21000, 6000, 3.0],
+      ["threshold 0 gives 0", 1000, 300, 0],
+      ["negative threshold gives 0", 1000, 300, -4],
+      ["moving time 0 gives 0", 1000, 0, 4],
+      ["negative moving time gives 0", 1000, -300, 4],
+      ["negative distance gives 0", -1000, 300, 4],
+      ["zero distance gives 0", 0, 300, 4],
+      ["nonfinite: NaN threshold gives 0", 1000, 300, NaN],
+      ["nonfinite: NaN distance gives 0", NaN, 300, 4],
+      ["nonfinite: infinite distance", Infinity, 300, 4],
+      ["nonfinite: infinite threshold", 1000, 300, Infinity],
+    ] as [string, number, number, number][]
+  ) {
+    cs.push(
+      fcase(
+        "rtssFromRun",
+        name,
+        { gapDistM, movingSec, thresholdMps },
+        (a) => rtssFromRun(a),
+        TOL,
+      ),
+    );
+  }
+  for (
+    const [raceDistM, raceSec] of [
+      [5000, 1200],
+      [10000, 2400],
+      [21097.5, 5400],
+      [42195, 12600],
+      [1609.344, 330],
+      [400, 60],
+      [0, 100],
+      [5000, 0],
+      [-5000, 1200],
+      [5000, -1200],
+    ]
+  ) {
+    cs.push(
+      fcase(
+        "thresholdPaceFromRace",
+        `${raceDistM} m in ${raceSec} s`,
+        { raceDistM, raceSec },
+        (a) => thresholdPaceFromRace(a.raceDistM, a.raceSec),
+        TOL,
+      ),
+    );
+  }
+  cs.push(
+    fcase(
+      "thresholdPaceFromRace",
+      "nonfinite: NaN distance",
+      { raceDistM: NaN, raceSec: 1200 },
+      (a) => thresholdPaceFromRace(a.raceDistM, a.raceSec),
+      TOL,
     ),
   );
   emit("running", "ts", cs);
