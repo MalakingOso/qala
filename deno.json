@@ -43,6 +43,7 @@
     "dem:fetch": "deno run --allow-all scripts/dem_fetch.ts",
     "golden:liftoscript": "deno run -A scripts/golden_liftoscript.ts",
     "golden:engine": "deno run -A scripts/golden_engine.ts",
+    "golden:run": "deno run -A scripts/golden_run.ts",
     "golden:plates": "deno run -A scripts/golden_plates.ts",
     "gen:lspp": "scripts/gen_liftoscript_testdata.sh",
     "fuzz:liftoscript": "deno run -A scripts/gen_program_fuzz.ts",
