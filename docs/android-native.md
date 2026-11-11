@@ -68,7 +68,7 @@ Decided 2026-11-11 (D11): approve all. This is the hardest part and the owner's 
 | Cues | `CuePlayer`: `TextToSpeech` plus `AudioFocusRequest(AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK)` with `USAGE_ASSISTANCE_NAVIGATION_GUIDANCE`. Focus is requested before speaking and abandoned in `onDone` and `onError`. `SoundPool` tones are the fallback and use the same focus request. |
 | Heart rate | Native `BluetoothGatt`, not Nordic's Kotlin-BLE-Library v2 (still alpha). `connectGatt(autoConnect = true)`, write the CCCD, parse 0x2A37 (handle both uint8 and uint16 formats), reconnect with backoff, HR-lost event after 30 s. HR samples go to Room with the fixes. Android 16 drops a lost bond with a re-pair dialog and doesn't auto re-pair; handle it. |
 | Battery | Request `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS`, hold a `PARTIAL_WAKE_LOCK` while recording (release in `finally`). Nothing OS is near-stock, and dontkillmyapp.com has no Nothing page, so this is secondary evidence; the 2 h gate is the real test. |
-| Recovery | On start, any run with `endedAt IS NULL` is resumed: replay stored fixes into a new `RunRecorder`, mark the gap. |
+| Recovery | On start, any run with `endedAt IS NULL` is resumed: replay stored fixes into a new `RunRecorder`, mark the gap. Persist each manual `advance()` with the fix it followed and replay it at the same point: it is not in the fixes. The guided clock is causal, so a replay gives the cues the live run gave. |
 | Elevation | Server DEM (Copernicus GLO-30) after upload, never GPS altitude (PLAN 3). Unchanged. |
 
 Don't put recording in WorkManager or JobScheduler; Android 16 tightened their runtime quotas, including for jobs alongside a foreground service. WorkManager is fine for blob upload.
