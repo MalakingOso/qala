@@ -7,7 +7,7 @@ import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
 /**
- * Time at the Rust boundary (docs/PLAN-m1-rust-core.md, DECISIONS S25). Instants are stored as UTC epoch ms
+ * Time at the Rust boundary (docs/archive/completed.md, M1 as built, DECISIONS S25). Instants are stored as UTC epoch ms
  * plus the device offset in minutes at write time; the core takes ISO 8601 with an explicit offset and local
  * `YYYY-MM-DD` keys for calendar days. Weekdays count from Monday = 0, like `trainingWeekdays`.
  */

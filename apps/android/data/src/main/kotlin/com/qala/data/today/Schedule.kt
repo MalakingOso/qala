@@ -64,7 +64,7 @@ class WeekPlan(val weekStart: String, val days: List<DayPlan>) {
 }
 
 /**
- * The calendar side of the program (docs/PLAN-m2-room-data.md, Today's day and stages).
+ * The calendar side of the program (docs/archive/completed.md, M2 as built).
  *
  * The program rotates over `dayCount` days. The day after a logged lift is `last % dayCount + 1`, and a
  * lift that is never logged is simply done again (a miss is not a skip, nothing moves). Skips move the plan

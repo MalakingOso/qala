@@ -1,5 +1,5 @@
 //! The stored record types: what Room holds on the phone and what the adapter reads
-//! (docs/PLAN-m1-rust-core.md, "Records").
+//! (docs/archive/completed.md, M1 as built, "Records").
 //!
 //! All JSON is camelCase, `Option` fields are omitted when `None`, and unknown fields are
 //! ignored on read so a newer client's records still load. Instants are ISO 8601 strings with an

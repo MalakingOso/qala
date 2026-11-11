@@ -53,7 +53,7 @@ sealed interface ApplyResult {
 }
 
 /**
- * The only code that writes record tables (docs/PLAN-m2-room-data.md, Write path). One call is one
+ * The only code that writes record tables (docs/archive/completed.md, M2 as built). One call is one
  * transaction: tick the HLC (Rust `hlc_tick` at `nowMs`), write the entity rows, upsert a `field_clock`
  * row for every field written, append one outbox row per field, and persist the new HLC to `meta`.
  * A call ticks once, so every field it writes carries the same clock; that is safe because clocks are

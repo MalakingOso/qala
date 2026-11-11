@@ -39,7 +39,7 @@ data class ProgramAdvance(
     val exerciseData: JsonObject? = null,
 )
 
-/** Which stage a "Mark done" stub completes (docs/PLAN-m2-room-data.md, Stub-stage records). */
+/** Which stage a "Mark done" stub completes (docs/archive/completed.md, M2 as built). */
 enum class StubStage(internal val column: String) {
     WARM_UP(LiftStage.WARMUP),
     LIFT(LiftStage.LIFT),

@@ -4,7 +4,7 @@
 //! normalised local and systemic fatigue. Load-driven fatigue feeds the Kalman observation and
 //! per-muscle bindings, not readiness directly.
 //!
-//! DELIBERATE DIVERGENCE from TS (docs/PLAN-m1-rust-core.md): TS `predictReadiness` reads
+//! DELIBERATE DIVERGENCE from TS (docs/archive/completed.md, M1 as built): TS `predictReadiness` reads
 //! fatigue as of `state.updated`. [`predict_readiness`] first decays every fatigue field from
 //! `state.updated` to an explicit `now`, with the constants and the no-decay-when-`dt <= 0`
 //! rule of `decayAll`, and uses `now` as the reference time of the PRS window. For

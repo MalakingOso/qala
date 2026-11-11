@@ -1,4 +1,4 @@
-//! Stored records to engine state (docs/PLAN-m1-rust-core.md, "Adapter").
+//! Stored records to engine state (docs/archive/completed.md, M1 as built).
 //!
 //! The phone stores `SessionRecord`s and `CheckInRecord`s; the engine reads `Workout`s. This
 //! module converts one into the other and replays the result. Everything here is pure: dates are

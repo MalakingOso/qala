@@ -8,124 +8,21 @@ Every choice the owner still has to make, in one list. `docs/DECISIONS.md` is th
 
 The owner goes through this file with an agent, one item at a time. The agent running the session follows this protocol exactly.
 
-1. Start by reading this file and saying how many items are still open. Ask which item to take: the owner names one (`D06`) or says `next`, which means the first open item in file order.
+1. Start by reading this file and saying how many items are still open. Ask which item to take: the owner names one (`D07`) or says `next`, which means the first open item in file order.
 2. Present the item: its question, the options, the default or recommendation, and what it blocks. Keep it short. Do not present more than one item at once.
 3. The owner answers. A default is not a decision: if the owner says "go with the default" or "your call", that counts as an explicit answer and you record it as decided with that note. Silence, a skipped item, or an unrelated reply never decides anything.
 4. The moment the owner answers, before presenting the next item, update every document in the item's Record in list:
    - In `docs/DECISIONS.md`, set the named row's status to decided with the date, and adjust the decision text if the owner overturned the default.
    - In the named spec sections, change the text to match the choice. If the owner overturned a "default in the plan", rewrite the plan text; do not leave the old default standing next to a contradicting log row.
    - In `docs/rust-core.md` appendix B, mark the named question settled or answered, same as the existing settled entries.
-   - Here, tick the item's box, add the date and a one-line answer.
+   - Here, remove the decided item from this file.
 5. Read back the changed lines so the owner can check them, then ask for the next item.
    - Decide now, build later (owner, 2026-10-14): the session changes docs only. When a Record in names code, or the answer needs code work, add a line to "To implement" at the end of this file instead, and build the list after the session.
 6. If an answer contradicts an earlier decided row, stop and say so before writing anything. The owner resolves the conflict first.
 7. If a session turns up a new pending choice that has no item here, append it with the next free D number and the same fields, then carry on.
 8. If the owner ends the session with items still open, say how many remain and which one is next.
 
-## Look and feel
-
-### D01 Overall register (L18)
-
-- Status: [x] decided 2026-10-13: serious minimal, the current Beamer direction; the cartoon-like direction drops.
-- Question: keep the serious, minimal Beamer direction, or lean playful, almost cartoon-like?
-- Options: serious minimal (current) / playful cartoon-like. One wins and the other drops.
-- Default: none. This is the only open row in the decision log.
-- Blocks: any further visual direction work.
-- Record in: `docs/DECISIONS.md` L18, `docs/DESIGN.md` 1.
-
-### D02 Desktop sans face (L16)
-
-- Status: [x] decided 2026-10-14: DM Sans, as one variable Latin woff2 in `apps/web/public/fonts`, with the system stack behind it.
-- Question: which proportional sans for desktop UI text? `--font-ui` is a system stack stand-in.
-- Options: name a face (then a one-line change plus a font file) / keep the stack.
-- Default: keep the stack until the owner picks.
-- Blocks: nothing. Cosmetic.
-- Record in: `docs/DECISIONS.md` L16, `docs/DESIGN.md` 3.1, `apps/web/src/theme/desktop.css`.
-
-## Rust core and shared logic
-
-### D03 Generator port (S6, B31)
-
-- Status: [x] decided 2026-10-14: defer. Later the phone should add workouts and pull generated workouts from the server (D36).
-- Question: the Rust core plan is built past the point of approval: `qala-core` (engine, HLC, records, plates), LS++ and the Kotlin FFI are merged and in use. What's left is B31: port the generator to Rust anyway, for one implementation, when no phone screen authors programs? (B36, Kotlin instead of Rust for shared logic, moved to D32.)
-- Options: defer / port it.
-- Default: defer, revisit after R3.
-- Blocks: R4 only.
-- Record in: `docs/DECISIONS.md` S6 note, `docs/rust-core.md` 7 (R4), appendix B question 31.
-
-### D04 TS and Rust coexistence rules (B6, B7, B8)
-
-- Status: [x] decided 2026-10-14: Rust is the main implementation; each TS package is deleted once its Rust port checks out on every target, and TS is only the reference for that check (B6, B7). Upstream liftosaur is not followed (B8).
-- Question: confirm two rules the build already follows, and answer one it hasn't hit yet. B6: both implementations live with no deadline, and TS goes per package only after golden vectors pass on all targets (every TS package is still in `packages/`). B7: TS is the oracle until a case is reviewed by hand (the vectors come from the `golden:engine`, `golden:plates` and `golden:liftoscript` Deno tasks and Rust is tested against them). B8: who owns upstream liftosaur fixes now that Rust is the phone's runtime?
-- Options: confirm B6 and B7 / reopen either; for B8, accept the default or set another.
-- Default: confirm; B8 tracked in a list and ported by hand on request.
-- Blocks: nothing new; B8 bites the first time upstream ships a fix worth taking.
-- Record in: `docs/DECISIONS.md` S6 and S17 notes, `docs/rust-core.md` 9, appendix B questions 6, 7, 8.
-
-### D05 Platform direction (B2, B3, B4)
-
-- Status: [x] decided 2026-10-14: confirmed all three. Android only, one generated token source, Rust for logic that must match across platforms and Kotlin for UI and platform glue.
-- Question: B2 is settled in practice: the app is native Kotlin on Jetpack Compose (not Compose Multiplatform), Android only, with the shared logic in Rust behind UniFFI, which Swift can also call. Confirm it. B3 is built as the plan's default: `scripts/tokens_to_kotlin.ts` generates Android's `design/.../Tokens.kt` from the web's `theme/tokens.css` (`deno task gen:android`), both sides test contrast on those tokens, and nothing else is shared. Confirm it. B4: is Rust a language you'll maintain, or should it sit behind a stable API you rarely touch? D32 is the live case.
-- Options: confirm B2 and B3 / reopen either. B4: accept the default / change it.
-- Default: confirm B2 and B3; B4 Rust only for logic that must match across platforms.
-- Blocks: design drift policy (B3), how much logic goes into Rust vs Kotlin (B4).
-- Record in: `docs/DECISIONS.md` S7 note, `docs/android-native.md` 3 and 4, appendix B questions 2, 3, 4.
-
-### D06 Record sync, server side (S11, B11, B13)
-
-- Status: [ ] open
-- Question: the phone side of record sync is built in S11's shape: typed Room tables, the `field_clock` sidecar, the outbox, and the HLC in Rust with golden vectors. The server and the phone's HTTP client aren't built. Two questions are left. B11: per-user SQLite on the server, and accept losing one write silently on a same-field conflict? B13: sync in the background (WorkManager) or only with the app open?
-- Options: per question.
-- Default: yes to SQLite and the silent loser; sync on app open, run end and workout end.
-- Blocks: A3, the server sync rewrite, real data in the web app.
-- Record in: `docs/DECISIONS.md` S11, `docs/rust-core.md` 4, `docs/android-native.md` 6 and 9, appendix B questions 11 and 13.
-
-### D07 Tracks as blobs (S9, B10)
-
-- Status: [ ] open
-- Question: approve raw fixes living in Room plus content-addressed blobs, never as sync records? B10 says it is still worth measuring before it locks in.
-- Options: approve / approve after a measurement (say what measurement) / reject.
-- Default: approve, with a measurement first.
-- Blocks: the `schemaVersion` migration and A3.
-- Record in: `docs/DECISIONS.md` S9, `docs/rust-core.md` 5, appendix B question 10.
-
-### D08 Engine state as derived cache (S8)
-
-- Status: [ ] open
-- Question: confirm what the build already does. The engine state is rebuilt on the device from history (`data/.../engine/EngineCompute.kt` calls `buildEngineState` over the records), it has no Room table and is never synced, and `qala-core` owns no store.
-- Options: confirm / reopen.
-- Default: confirm.
-- Blocks: nothing now; the sync design assumes it.
-- Record in: `docs/DECISIONS.md` S8, `docs/rust-core.md` 4.
-
-### D09 Review the landed LS++ port (S12, S17)
-
-- Status: [ ] open
-- Question: the evaluation path is ported, merged and green. Approve it as built? Includes S17: the vendored-upstream rule ends for the Rust code (small modules by responsibility), the TS copy stays the oracle.
-- Options: approve / approve with rework (say what) / reject.
-- Default: approve. The port's status section is `docs/rust-core.md` Status.
-- Blocks: A4 consumes the port; approval unblocks treating it as settled.
-- Record in: `docs/DECISIONS.md` S12 and S17, `docs/rust-core.md` 8. Note: recording the vendored upstream commit in NOTICE or a VENDORED file stays an open chore either way (the vendor script clones depth-1 at master, so no hash is on record).
-
-### D10 Coach stays TypeScript (S14, B33)
-
-- Status: [x] decided 2026-10-14: approve. The Coach stays TypeScript behind a new server route that the Android Coach tab calls.
-- Question: approve the Coach staying TS behind a new server route the Android tab calls, instead of porting `packages/llm` to Rust?
-- Options: approve / port it to Rust instead.
-- Default: approve (it needs the network regardless).
-- Blocks: A6 and the server Coach route.
-- Record in: `docs/DECISIONS.md` S14, `docs/rust-core.md` 7, appendix B question 33.
-
 ## Android app
-
-### D11 Android run stack (S15, B16, B20, B21)
-
-- Status: [ ] open
-- Question: approve the run stack in `docs/android-native.md` 5? Includes B16 (depend on Play Services for Fused location, with the `LocationManager` fallback?), B20 (speech cues with ducking, tones as fallback?), B21 (resume a killed run silently and mark the gap?).
-- Options: approve as written / approve with changes.
-- Default: approve all three sub-answers as written.
-- Blocks: A2.
-- Record in: `docs/DECISIONS.md` S15, `docs/android-native.md` 5, appendix B questions 16, 20, 21.
 
 ### D12 Android maps (S16, B23)
 
@@ -259,7 +156,7 @@ These come from the four new roadmap sections in `docs/PLAN.md` 16c to 16f. None
 - Options: track 1 first / track 2 first / both, sequenced; fixed program or generated.
 - Default: track 1 first, generated per person, because track 2 needs a threshold pace or a recent race time that a cold runner does not have. The fixed program is the fallback if the brief shows generation buys nothing at interval level.
 - Blocks: `runPlans` schema work (the `walk` step kind and the week advance rule are shared, so they do not wait on this).
-- Record in: `docs/DECISIONS.md` R7, `docs/PLAN.md` 16c, `docs/research/RESEARCH-run-plans-beginner-and-races.md` 3 and 4.
+- Record in: `docs/DECISIONS.md` R7, `docs/PLAN.md` 16c, `docs/research/BRIEFS.md` brief 4, sections 3 and 4.
 
 ### D26 In-app breathing fallback (R8)
 
@@ -268,7 +165,7 @@ These come from the four new roadmap sections in `docs/PLAN.md` 16c to 16f. None
 - Options: ship the routine / links only / decide after the brief's breath-work read.
 - Default: decide after the brief. The acute breath-work evidence is a different literature from mindfulness practice over weeks and should be read before anything is built.
 - Blocks: nothing until the mindfulness work starts.
-- Record in: `docs/DECISIONS.md` R8, `docs/PLAN.md` 16e item 5, `docs/research/RESEARCH-mindfulness.md` 2 and 5.
+- Record in: `docs/DECISIONS.md` R8, `docs/PLAN.md` 16e item 5, `docs/research/BRIEFS.md` brief 3, sections 2 and 5.
 
 ### D27 Where the beginner exposition lives (T12)
 
@@ -304,16 +201,16 @@ These come from the four new roadmap sections in `docs/PLAN.md` 16c to 16f. None
 - Options: no photos / photos as blobs with a retention rule the owner sets / photos local to the device only, never synced.
 - Default: no photos until this is answered. Every other part of the body-composition thread can ship without them.
 - Blocks: the `bodyMeasures` schema, nothing else.
-- Record in: `docs/DECISIONS.md` P7, `docs/PLAN.md` 16f item 5, `docs/research/RESEARCH-body-composition.md` 5.
+- Record in: `docs/DECISIONS.md` P7, `docs/PLAN.md` 16f item 5, `docs/research/BRIEFS.md` brief 2, section 5.
 
 ### D31 Record the Deno to Bun move (S1)
 
 - Status: [ ] open
-- Question: write the DECISIONS row for replacing Deno with Bun? `docs/PLAN-bun-migration.md` says "Decided 2026-10-13 (owner)", and another session's notes say the owner chose Bun that day (artifact "Qala Deno Exit"), but S1 still says Deno 2 and no row records the change.
+- Question: write the DECISIONS row for replacing Deno with Bun? `docs/ROADMAP.md` Tooling says "Decided 2026-10-13 (owner)", and another session's notes say the owner chose Bun that day (artifact "Qala Deno Exit"), but S1 still says Deno 2 and no row records the change.
 - Options: record it as decided, amending S1 / reopen the choice.
 - Default: record it as decided, with the move still waiting on the LS++ port and the retirement of `packages/liftoscript`, as the plan says.
 - Blocks: nothing now; the move itself waits on LS++.
-- Record in: `docs/DECISIONS.md` S1 (amend) and a new row, `docs/PLAN-bun-migration.md` status line, `docs/ROADMAP.md` tooling track.
+- Record in: `docs/DECISIONS.md` S1 (amend) and a new row, `docs/ROADMAP.md` Tooling.
 
 ### D32 Rest and warm-up planning: Kotlin or Rust (S6, R3)
 
@@ -368,7 +265,7 @@ These come from the four new roadmap sections in `docs/PLAN.md` 16c to 16f. None
 - Options: LS++'s `dp()` without the RPE gate (simple, loses the gate) / a `custom()` progress script per rule that keeps the gate / a new S21-style LS++ builtin for RPE-gated double progression.
 - Default: `custom()` scripts for now, since they need no language change and keep the generator's intent; revisit a builtin if the scripts get repetitive.
 - Blocks: generated blocks that progress on their own.
-- Record in: `docs/DECISIONS.md` (new row, near S21), `docs/ls-plus-plus.md`, `docs/ROADMAP.md` Web and desktop.
+- Record in: `docs/DECISIONS.md` (new row, near S21), `docs/rust-core.md` section 12, `docs/ROADMAP.md` Web and desktop.
 
 ### D38 Equipment on imported lifts
 
@@ -377,7 +274,7 @@ These come from the four new roadmap sections in `docs/PLAN.md` 16c to 16f. None
 - Options: aliases and words in the source ("barbell", "BB", "DB", "cable", "machine") carry equipment through to a `, Barbell`-style suffix / always ask when the catalog default isn't barbell and the line has a barbell-sized weight / leave it and only warn.
 - Default: carry equipment from aliases and source words to the suffix, and have the import check add a note to the proposal whenever the evaluated weight differs from the stated one, so a silent change can't get through.
 - Blocks: nothing; it's a correctness fix on import (text, PDF and speech).
-- Record in: `docs/DECISIONS.md` S19 note, `docs/ls-plus-plus.md` (import section), `docs/ROADMAP.md` Rust core and LS++.
+- Record in: `docs/DECISIONS.md` S19 note, `docs/rust-core.md` section 12 (import section), `docs/ROADMAP.md` Rust core and LS++.
 
 ### D39 A blank weight with an RPE
 
@@ -386,7 +283,16 @@ These come from the four new roadmap sections in `docs/PLAN.md` 16c to 16f. None
 - Options: change the evaluator so `?+` always stays blank and the RPE is kept as the target (an LS++ semantics change, in Rust with a golden for it) / keep the language as it is and make both emitters drop the RPE from blank sets into a note.
 - Default: change the evaluator, since `?+` is the language's own promise to ask, and a guessed 0 lb or 57.5 lb is worse than a blank.
 - Blocks: nothing; it's correctness on import and on generated blocks.
-- Record in: `docs/DECISIONS.md` S21 note, `docs/ls-plus-plus.md` 1, `docs/ROADMAP.md` Rust core and LS++.
+- Record in: `docs/DECISIONS.md` S21 note, `docs/rust-core.md` section 12 1, `docs/ROADMAP.md` Rust core and LS++.
+
+### D40 Desktop look questions left from the 2026-10-01 update
+
+- Status: [ ] open
+- Question: six questions from the deleted `desktop-look-update-notes.md` that were recorded nowhere else. (a) Chip shape: 4px rounded (built) or pills? (b) Confirm there is no avatar, and that the toolbar search (pages, lifts, exercises, sessions, Ctrl or Cmd K) and the week switcher are wanted new behavior. (c) Past versus future look in the week chart: week 2 as past, week 4 dashed as the plan (built), or both flanks as history? (d) Deload in week 6 everywhere (built). (e) Confirm Muse's invented numbers ("+1.5 vs plan", a "holds at 245" quote) stay out. (f) Keep the load zoom's "Workouts" title and Table toggle under the page title, or hide them?
+- Options: per item, confirm the built choice or overrule it.
+- Default: confirm as built. Items (c), (d) and (f) touch what the load zoom (U27) later rebuilt, so they may already be overtaken; the owner has not said so.
+- Blocks: nothing.
+- Record in: `docs/DECISIONS.md` (new rows or notes on L16, U20 to U27), `docs/DESIGN.md` 7.15.
 
 ## To implement
 
@@ -399,4 +305,4 @@ Code work owed by decided items, built after the session (protocol step 5). An e
 These need the owner's data or device, not an opinion. They stay open until measured.
 
 - V01 Route-matching thresholds (R5): about 80% overlap inside a 50 m corridor. Validate against real GPS drift and out-and-back routes, then confirm or retune in `docs/DECISIONS.md` R5 and `docs/PLAN.md` 16a.
-- V02 Voice recheck (S20): E4B beat whisper on synthetic clips. Recheck both on the owner's real voice in gym noise before relying on either, then confirm in `docs/DECISIONS.md` S20 and `docs/ls-plus-plus.md` 5.
+- V02 Voice recheck (S20): E4B beat whisper on synthetic clips. Recheck both on the owner's real voice in gym noise before relying on either, then confirm in `docs/DECISIONS.md` S20 and `docs/rust-core.md` section 12 5.

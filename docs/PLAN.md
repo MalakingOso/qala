@@ -2,7 +2,7 @@
 
 This document is the build plan. It records every decision made with berkley (the owner) in design sessions on 2026-09-13, the environment facts verified on this machine, and the research numbers the engine is built on. Two companion files carry the rest: `docs/DECISIONS.md` is the owner's decision log (what was chosen, what it replaced, what's still open) and wins over older wording anywhere else; `docs/DESIGN.md` is the design system and the screen-by-screen spec behind the mockups. Evidence lives in `docs/research/RESEARCH-*.md`. Do not re-litigate settled decisions; where something is marked "assumption", it was chosen without asking and can be changed cheaply.
 
-Status 2026-10-13: the v1 web build exists and the Android app is in progress; `docs/ROADMAP.md` says where things stand. This file is the 2026-09-13 handoff plan, kept current in places. Sections 6 (engine rules), 12 (generator), 14 (gates) and 16a to 16f (roadmap items) are still the reference. Sections 2 to 4 and 7 to 9 describe the original plan, and several parts are superseded: the Capacitor phone (S2), the Automerge document and WebSocket sync (S3, S11), and Tailscale-header auth (S22). When this file and `docs/DECISIONS.md` disagree, DECISIONS wins.
+Status 2026-11-11: the v1 web build exists and the Android app is in progress; `docs/ROADMAP.md` says where things stand. This file is the 2026-09-13 handoff plan, trimmed the same day: sections 6 (engine rules), 12 (generator), 14 (gates) and 16a to 16f (roadmap items) are still the reference and are kept in full. Superseded sections (2, 3, 4, 7 to 10, 13, 15) are now one-paragraph pointers to the living doc that replaced them, with their headings kept so citations like "PLAN 6.3" still land. When this file and `docs/DECISIONS.md` disagree, DECISIONS wins.
 
 ## 1. Goal
 
@@ -12,76 +12,15 @@ Name: **Qala**. Location: `/home/berkley/Programming/qala`. Systemd unit `qala.s
 
 ## 2. Environment facts (verified 2026-09-13)
 
-- Machine `callisto`, Ubuntu, Tailscale installed. Tailnet hostname `callisto.taila63f23.ts.net`, IP `100.105.14.62`. Owner's phone `nothing-phone-4a-pro` (Android) is on the tailnet.
-- `tailscale serve` already maps `https://callisto.taila63f23.ts.net/` -> `127.0.0.1:8080` (llama-server) and `/sync` -> `127.0.0.1:8081` (Beamer sync server). Qala must use its own port: `tailscale serve --bg --https=8443 http://127.0.0.1:8500`.
-- llama-server (llama.cpp SYCL build on an Intel Arc Pro B60) runs as systemd user unit `llama-beamer` on `127.0.0.1:8080`, OpenAI-compatible, models in `~/models/beamer/`: `gemma-4-E4B_q4_0-it.gguf` (default), `gemma-4-E2B_q4_0-it.gguf`. Preset `/home/berkley/Programming/Beamer/deploy/llama-models.ini` sets `temp = 0`, thinking disabled, `sleep-idle-seconds = 300`. Qala shares this server; do not spawn another.
-- Beamer (`/home/berkley/Programming/Beamer`) is Rust + Dioxus desktop. Reuse from it: design tokens in `assets/styles.css` lines 13-55, DM Mono in `assets/fonts/` (Qala copies it; Beamer's Recursive is not used), the LLM client shape in `src/llm/` (60 s request timeout, 5 s connect, degrade gracefully when the server is absent), the systemd unit shape in `deploy/llama-beamer.service`. Beamer tokens: `--bg #f5f5f7; --bg-surface #fff; --fg #0f152a; --fg-secondary #64708b; --fg-muted #94a0b8; --accent #4B0082; --border rgba(75,0,130,.12); --radius 4/6/8px; --shadow-card 2px 4px 0 0 rgba(75,0,130,.12); --shadow-cta 2px 4px 0 0 #4a4a4a, 0 0 0 1px #4B0082`. Qala keeps the token names, swaps the accent to ember `#C2410C`, and derives borders and card shadows from the neutral ink `#0f152a` instead of Beamer's indigo (`docs/DESIGN.md` section 2).
-- No liftosaur checkout exists locally. Clone `https://github.com/astashov/liftosaur` (AGPL-3.0) into a scratch dir when vendoring.
-- Owner's prose rules for commits, docs, README: no em dashes, no "Co-Authored-By: Claude" or similar trailers, plain colleague voice.
+Superseded. The 2026-09-13 facts (callisto over Tailscale, the shared llama-server, Beamer tokens) described the starting point. Hosting and auth are now DECISIONS S22 and `docs/plan-accounts-logins.md`; the model hosts are in `docs/rust-core.md` section 12. Do not build from the addresses or ports that were here.
 
 ## 3. Decisions (settled; do not reopen)
 
-| Area | Decision |
-|---|---|
-| Build route | New TypeScript codebase. Vendor liftosaur's two grammars, evaluator, planner chain, exercise DB (as seed), built-in programs, muscle SVGs. Not a fork of their app. |
-| License | AGPL-3.0, public repo, NOTICE crediting liftosaur. Owner accepted this explicitly. |
-| Runtime | Deno 2 for server, tooling, tests. Frontend React 19 + Vite (revised 2026-09-13 from Preact: liftosaur's own frontend is React 19.2, so vendored UI ports without compat shims; `@automerge/automerge-repo-react-hooks` is official; Capacitor's docs and plugin examples target React). Synced state through `useDocument`/`useHandle`; the live run store through `useSyncExternalStore`. No component kit (Ionic's look fights the design). CodeMirror 6 editor. Proposed 2026-09-30: add a Rust workspace for logic shared with the Android app (run pipeline, math, engine, LS++ evaluation), built to wasm for web and Deno and to UniFFI for Kotlin; the TS packages stay as the oracle and the desktop's authoring runtime. `docs/DECISIONS.md` S6, S12, S17, `docs/rust-core.md`. The LS++ port is built and merged; the rest is still proposed. |
-| Sync | One automerge document per user; `@automerge/automerge-repo` on the server with filesystem storage; WebSocket transport; offline-first on both devices. Proposed 2026-09-30: Automerge is dropped for record sync (immutable records, last-write-wins per field with a hybrid logical clock, `POST /api/sync`, server authoritative); raw GPS tracks are content-addressed blobs, not sync records. `docs/DECISIONS.md` S3, S9, S11. |
-| Auth v1 | Tailscale identity headers (`Tailscale-User-Login`) injected by `tailscale serve`. Server keys every document by a stable user id from day one so passkeys/magic-link behind Tailscale Funnel is a module swap later. |
-| Phone | Revised 2026-09-13: the Capacitor fallback fired. Run recording needs GPS with the screen locked, and the W3C Geolocation spec (CR 2026-03-26) delivers position only to visible pages; Chromium enforces it and WebKit stops updates for inactive pages. Wake Lock keeps the screen on but one power-button press ends the recording. So the phone shell was to be one Capacitor 8 app with the React build bundled into the APK (not loaded from a URL), sideloaded on the Nothing Phone, sync still over Tailscale. The plugin picks were `@capgo/background-geolocation` (MPL-2.0, free; `@capacitor-community/background-geolocation` MIT as fallback; Transistorsoft rejected at $399/app) for GPS, `@capacitor-community/text-to-speech` for TTS and `@capacitor-community/bluetooth-le` for HR. The desktop author shell stays a PWA, and the phone shell still builds as a PWA for iOS users who only lift. iOS native waits until a friend wants runs ($99/yr, a Mac, TestFlight rebuild every 90 days). No Dioxus mobile, no watch. Evidence: `docs/research/RESEARCH-run-tracking.md` section 1. Proposed 2026-09-30, supersedes the Capacitor wrapper above (never built; `apps/phone` is removed): the phone app is native Kotlin and Jetpack Compose (minSdk 34, targetSdk 36, arm64), with the run pipeline in the Rust core so cues work with the screen locked. The React phone shell is frozen as a PWA. 8a's gates stand and run on the native app. `docs/DECISIONS.md` S7, S13, S15, `docs/android-native.md`. |
-| Shells | One codebase, two distinct shells. Desktop is stats-first (DECISIONS U11): an Overview dashboard home, then Lifts/Running/Body/History stats with drill-downs, grouped above the author tools (editor + live preview, exercise DB, coach memory, calibration). Phone = logger and run recorder (check-in, set table with big steppers, RPE, rest timer, GPS run recording, guided runs, read-only program and run plan). No authoring on the phone. Decided 2026-10-01: the phone shell above is the Kotlin app; the React phone shell is kept only as a frozen PWA for lifting-only use (DECISIONS S7, S13). |
-| Authority | The LS++ program is the source of truth for weights. The engine exposes numeric bindings into LS++ and ships a default adaptive program that uses them. |
-| LLM bounds | Gemma may adjust the engine recommendation inside an envelope: weight -10% to +2.5%, sets -2 to +1. Adjusted and engine values are both shown; one tap reverts; every adjustment is logged with the model's one-sentence reason. Out-of-envelope or unparseable output is clamped/discarded and logged. |
-| Check-in | Session start: per relevant muscle group, RP 4-point soreness (1 never sore, 2 healed well before, 3 healed just in time, 4 still sore now); one Perceived Recovery Status tap 0-10; optional free-text line parsed by Gemma. After each muscle group's last set: one tap performance (1 exceeded, 2 hit, 3 struggled, 4 could not match last time). Session end: session RPE (CR-10) and auto duration. Daily sleep/stress 1-7 optional, off by default. |
-| Model | Evidence-based variant with the spec's API surface kept (section 6). |
-| Deloads | Reactive per-muscle, reactive whole-body, and planned block deloads (section 6). |
-| Generator | Deterministic rules engine emits a real LS++ program; Gemma maps free text to parameters and explains. Block types: hypertrophy, strength, powerlifting meet prep (taper to a date), athletic in-season maintenance. |
-| Training approaches (added 2026-09-13) | Every LS++ program carries `approach: 'strength' \| 'hypertrophy' \| 'maintenance'` and `periodization: 'linear' \| 'dup' \| 'block'`. Running lives in `runPlans`, never in programs. Hybrid training is an active program plus an active run plan plus `settings.hybridPriority`. Owner's numbers are authoritative. Strength/powerlifting: squat, bench, deadlift and variations, 1-6 reps at 80-95% 1RM, linear or DUP, key metrics 1RM progression and volume at >85%. Hypertrophy/bodybuilding: 8-15 reps at 60-80%, 10-20 sets per muscle per week, key metrics weekly volume per muscle and progressive overload. Section 6.3 and 12 carry the rules. |
-| Running (added 2026-09-13) | Qala records runs itself, Runkeeper-style: live time, distance, current and average pace, splits, route map with mile markers, audio cues, guided workouts, running plans. Owner's complaint that forced this: lifting apps can't also record the run. Runs feed the same fatigue engine as lifting (section 6.4). |
-| Run plan representation | Runs are not LS++. The planner grammar knows nothing about distance or pace and extending it buys nothing. Runs get a small typed schema in the user document (`runPlans`, section 7), produced by the same generator, edited on the desktop with a form editor, and shown next to the LS++ program in one week view. LS++ stays the source of truth for weights; `runPlans` is the source of truth for runs. |
-| Units | Display: `settings.units = { weight: 'lb', distance: 'mi' }`, pace in min/mi. Storage: lifting weights as liftosaur's `{value, unit}`; everything running in SI (metres, seconds, m/s) in the document and the engine, converted only in the UI and when placing split boundaries. |
-| Maps and elevation | MapLibre GL JS over self-hosted Protomaps PMTiles for the owner's region, served by the Deno server; elevation from Copernicus GLO-30 on the server, never GPS altitude. No Google, no OSM public tile servers. Android (proposed 2026-09-30): MapLibre Native with a downloaded `.pmtiles` file. `docs/DECISIONS.md` S16. |
-| Gemma learning | Visible, editable per-user coach-memory document (dated, sourced facts) plus a computed profile injected into every prompt. Numeric learning is the calibration step. No fine-tuning. |
-| Exercise DB | Liftosaur's 422-entry DB is read-only seed; each user has an overlay: custom exercises (must carry target/synergist muscle tags), hidden list, per-exercise overrides (increment, rounding). Editing happens on the desktop shell. |
-| Weight steps | Barbell 5 lb steps (2.5 lb plates), dumbbells 5 lb steps. |
-| History | Starts cold. Population defaults for ~6 weeks, then calibrate. Importers are "later". |
-| Look | Beamer first, light and breezy (owner after round 1: "we really leaned in super hard to runkeeper"). `#f5f5f7` ground, white surfaces, 2px borders, hard offset shadows, 4/6/8px radii, no pills, ember `#C2410C` as the one action color. Runkeeper survives only on run screens: big stacked numerals, the route line, heart-rate zone colors. No ASICS font, stripes, wordmark or badge art. `docs/DESIGN.md` sections 1-2. |
-| Type | Titles and big numbers in **Qala Test**, the owner's own face (a Muse-made OFL fork of Faustina); Faustina is the fallback and the alternate. Everything else in **DM Mono**. Ticking numbers use tabular lining figures. Rejected along the way: Recursive, Recursive oblique, Archivo condensed, DM Mono titles, and the open stand-ins for Trade Gothic, FF Scala and PMN Caecilia. `docs/DESIGN.md` section 3. |
-| Icons | Lucide (`lucide-react`, ISC). Runs use `sport-shoe`, not `footprints` (owner). Phosphor was considered and dropped. `docs/DESIGN.md` section 4. |
-| Charts | A real TypeScript charting stack (owner): visx 4 (`@visx/*`, MIT, React 19) for every in-app chart, built directly on the design tokens; uPlot 1.6 (MIT, canvas, 21 KB) for dense or zoomable time series such as a run's pace, heart rate and elevation or years of e1RM. Recharts, ECharts, Observable Plot and Chart.js rejected for size or styling control. Mockups stay hand-drawn. `docs/DESIGN.md` section 6. Web only from 2026-09-30; Android uses Vico plus hand-drawn Canvas (proposed). `docs/DECISIONS.md` S10. |
-| Navigation | Tabs follow Qala's capabilities, not Runkeeper's: Today, Plan, Body, Progress, Coach (decided 2026-09-13; `docs/DECISIONS.md` U2). `docs/DESIGN.md` 7.0. |
-| Today | A hero card per stage of the day with this week's load (today outlined, highlighted and named, "Lower A · Squat day"), a readiness ring out of 100 with the owner's average and a low line, a large Start button, and a timeline rail on the left that flicks between stages; the card changes after the workout. `docs/DESIGN.md` 7.1. |
-| Workout flow | Plan after the Volt reference (week arrows, a tab per day, overview grid); warm-up before lifting (6.7); one exercise at a time with zoom-out; adaptive rest (6.6); plate calculator (6.8); exercise notes that come back; session complete as charts. `docs/DESIGN.md` 7.2-7.8. |
-| Illustrations | None in v1 (liftosaur serves theirs from a CDN; they are not in the AGPL repo). Their `images/front-muscles.svg` and `back-muscles.svg` are in the repo and are used for the soreness grid. |
+Superseded as a table. Every row that was here is in `docs/DECISIONS.md`, which wins over this file. The headings below it in git history (runtime, sync, auth, phone, shells) are DECISIONS S1 to S22; LS++ is section 5 of this file and `docs/rust-core.md` section 12.
 
 ## 4. Repository layout (Deno workspace)
 
-```
-qala/
-  deno.json                 workspace; tasks: dev, build, test, serve, vendor, build:android (Gradle `assembleDebug` of `apps/android`), gen:android (Kotlin tokens and icons from the web sources), tiles:extract (pmtiles extract + unpack to z/x/y), dem:fetch (GLO-30 tiles for the region), golden:liftoscript, golden:engine, golden:plates and gen:lspp (oracle goldens), build:wasm and smoke:wasm (the LS++ wasm build)
-  LICENSE (AGPL-3.0), NOTICE (liftosaur, fonts, Lucide, visx, uPlot attributions), README.md
-  assets/fonts/             QalaTest-*, DMMono-*, Faustina-* faces; qala-test/work/ (font build scripts)
-  mockups/                  build.mjs and the generated review canvas; not app code
-  packages/
-    liftoscript/            vendored from liftosaur, same file names; runtime.ts is ours. The TS oracle and the desktop authoring runtime.
-    core/                   data model, automerge doc schema + migrations, exercise seed + overlay, units/rounding
-    engine/                 adaptive engine, pure TS, no DOM, no automerge
-    generator/              rules -> LS++ program text
-    llm/                    prompt builders, JSON schemas, response validation; transport injected; the import edit-list schema, matcher and emitter
-    run/                    pure TS: GPS fix filter, distance, pace smoothing, auto-pause, splits, grade-adjusted pace, run load, guided-workout step machine
-  crates/                   Rust: qala-core (pure logic: engine, availability, HLC, records, plate math), qala-ffi (UniFFI for Kotlin, exports qala-core and LS++), and the LS++ port: qala-lspp, qala-lspp-json (shared JSON boundary), qala-lspp-wasm (web, Deno)
-  apps/web/                 React 19 PWA: src/shell-desktop, src/shell-phone, src/shared (charts/ on visx and uPlot), src/theme (tokens.css, fonts.css)
-  apps/android/             native Kotlin and Jetpack Compose phone app: app/ (activity, navigation, screens), design/ (generated tokens and icons, fonts, Beamer components), data/ (Room, repositories, the Rust build and UniFFI bindings); run/ follows (docs/android-native.md 3)
-  server/                   Deno: automerge-repo sync (to be replaced by record sync, S11), Tailscale-header auth (to be replaced by accounts, S22), /api/llm proxy, /api/import/text, /api/import/pdf, /api/transcribe, static files, tiles/ (PMTiles + unpacked z/x/y), elevation.ts (GLO-30)
-  deploy/                   qala.service (systemd --user, runs server/mod.ts), tailscale-serve.md
-  docs/                     README.md (index), ROADMAP.md (where we are and what's next), PLAN.md (this plan), DECISIONS.md (the owner's decision log), DESIGN.md (the design system and screens),
-                            CONTEXT.md (the glossary), ls-plus-plus.md (the language), rust-core.md (the Rust core plan),
-                            android-native.md (the Kotlin app), plan-accounts-logins.md (accounts),
-                            decisions-pending.md (the open choices), adr/ (decision records), research/ (RESEARCH-*.md; finished
-                            evidence reports and RESEARCH-*.md briefs, which are open questions and are not findings),
-                            blog/ (the owner's writing, drafts), podcast/ (episode scripts for beginners; audio is not in git),
-                            archive/ (finished handoffs and spikes)
-```
+Superseded. The layout is in the repo itself and in the root `README.md`. One change from the tree that was here: `docs/` no longer holds the completed milestone plans (see `docs/archive/completed.md`), and LS++ is documented in `docs/rust-core.md` section 12, not in a separate file.
 
 ## 5. Milestone M1: vendor liftoscript (`packages/liftoscript`, now the LS++ oracle)
 
@@ -93,7 +32,7 @@ Copy from liftosaur master, keeping file names so upstream diffs stay readable:
 - Seed data: `programs/builtin/*.md` (60 programs, YAML frontmatter + ```liftoscript block). SVGs: `images/front-muscles.svg`, `images/back-muscles.svg`.
 - Runtime to lift out and rewrite (they import ducks, lens-shmens, navigation thunks, api/service): `Program_runFinishDayScript` (program.ts ~line 529), `Program_runAllFinishDayScripts` (~652), `Program_forceEvaluate`, `Program_nextDay`, `Progress_createScriptBindings` (progress.ts ~243), `Progress_createScriptFunctions`, `Progress_runUpdateScriptForEntry` (~959). Put them in `packages/liftoscript/runtime.ts` against `@qala/core` types.
 - LS++ semantics to preserve (liftosaur's, from their docs): `progress: custom(state...) {~ ~}` runs once after the workout per exercise and may write `weights[week:day:variation:set]`, `reps`, `RPE`, `timers`, `numberOfSets`, `rm1`, `setVariationIndex`, `exerciseVariationIndex`, `descriptionIndex`, `state.*`; `update: custom() {~ ~}` runs at `setIndex == 0` and after every set and writes only the current entry. Built-in progressions `lp(...)`, `dp(...)`, `sum(...)`. Bindings: `day, week, dayInWeek, weights/w, originalWeights, completedWeights/cw, rm1, reps/r, minReps/mr, completedReps/cr, completedRepsLeft, RPE, completedRPE, amraps, askweights, logrpes, timers, setTime, completedSetTime, completedSetTimeLeft, isCompleted, ns/numberOfSets, programNumberOfSets, completedNumberOfSets, setIndex, setVariationIndex, exerciseVariationIndex, descriptionIndex, bodyweight`, `state.<name>`, `var.<name>`.
-- New engine bindings added to `VScriptBindings`, all numbers so the evaluator's type system is untouched: `readiness` (0-1), `prs` (0-10), `soreness` (max RP score over the exercise's target muscles, 1-4), `fatigueLocal` (0-1 normalised per-muscle fatigue), `deload` (0 none, 1 muscle, 2 systemic), `recWeightPct` (engine's recommended weight change, -10..2.5), `recSets` (-2..1). Documented in `docs/ls-plus-plus.md` section 7.
+- New engine bindings added to `VScriptBindings`, all numbers so the evaluator's type system is untouched: `readiness` (0-1), `prs` (0-10), `soreness` (max RP score over the exercise's target muscles, 1-4), `fatigueLocal` (0-1 normalised per-muscle fatigue), `deload` (0 none, 1 muscle, 2 systemic), `recWeightPct` (engine's recommended weight change, -10..2.5), `recSets` (-2..1). Documented in `docs/rust-core.md` section 12.
 - Tests: parse and evaluate all 60 builtin programs without error; simulate 3 training days of GZCLP and assert next-day weights match liftosaur's documented progression.
 
 ## 6. Milestone M2: engine (`packages/engine`)
@@ -313,70 +252,11 @@ Tests: 245 lb on a 45 lb bar gives 45+45+10 per side; with only one pair of 45s 
 
 ## 7. Milestone M3: core data model, server, sync
 
-`packages/core` document shape (automerge, one per user):
-
-```
-{ schemaVersion,
-  settings: { units: { weight: 'lb', distance: 'mi' }, barbellStep: 5, dumbbellStep: 5, mainLifts: [ids], theme: 'light'|'dark'|'system', dailyWellness: false,
-              run: { hrMax?, hrRest?, audioCueEvery: { distance?: 0.5|1 /* in settings.units.distance */, minutes?: 5 }, autoPause: true, mapRegion, recentRace?: { distanceM, seconds, date } },
-              hybridPriority: 'lifting'|'running', injuries: [ { date, area, kind: 'lifting'|'running', resolved? } ],
-              plates: { unit: 'lb'|'kg', collarWeight: 0, bars: [ { id, name, weight, default? } ],                 // 6.8; owner's real inventory still to enter
-                        plates: [ { weight, pairs: number|'enough', color } ], colorScheme: 'bumper'|'iron'|'custom' },
-              warmup: { enabled: true, softTissue: true, preferPercussion: true, minutes: 15 },                       // 6.7; preferPercussion is the owner's preference
-              rest: { auto: true, learnFromTaps: true, showNextPlates: true, alert: 'vibrate+sound' },                   // 6.6
-              titleFont: 'qalaTest'|'faustina' },                                                                         // DESIGN 3.3
-  exercises: { hidden: [ids], custom: { [id]: Exercise with targetMuscles/synergistMuscles/equipment }, overrides: { [id]: { increment?, rounding?, bar?, restClass?: 'main'|'secondary'|'isolation' } } },
-  exerciseNotes: { [exerciseId]: [ { id, date, sessionId, text, showNext: true, pinned: false, resolved: false } ] },
-  equipment: { recovery: ['foamRoller', 'percussionMassager'], cardio: [ 'bike'|'rower'|'treadmill'|'jumpRope'|'outdoor' ], gym: [ids] },   // owner owns a foam roller and a Theragun
-  restProfile: { byClass: { [approachAndClass]: { m, samples } }, byExercise: { [exerciseId]: { m, samples } } },   // 6.6 multiplier; per-exercise m takes over after 20 rests
-  programs: { [id]: { name, text, state, approach: 'strength'|'hypertrophy'|'maintenance', periodization,
-                      referenceRm: { [exerciseId]: { weight, date, source: 'kalman'|'tested' } } } }, activeProgramId,   // reference 1RM fixed per block (6.3)
-  runPlans: { [id]: { name, goal: { kind: 'distance'|'race'|'base', raceDate?, raceDistanceM?, targetSec? },
-                      weeks: [ { days: [ { dayOfWeek, workout: RunWorkout } ] } ] } }, activeRunPlanId,
-  // RunWorkout = { type: 'easy'|'long'|'tempo'|'intervals'|'surges'|'recovery'|'race',
-  //               steps: [ { kind: 'warmup'|'work'|'recover'|'cooldown', distanceM? | seconds?, paceZone?, hrZone?, repeat? } ] }
-  history: [ { id, kind: 'lift', date, programId, day, entries: [ { exerciseId, sets: [ { w, r, rpe, completed, note, jointPain, tested1rm?, warmup?: true, restPrescribedSec?, restActualSec?, restReasons? } ] } ],
-               warmup?: { blocks: [ { kind: 'general'|'softTissue'|'mobility', items: [ { name, tool?, muscle?, seconds?, reps? } ], done } ], skipped? },
-               exerciseOrder?: [exerciseId],   // actual order when done out of plan order
-               checkin: { prs, soreness: { [muscle]: 1..4 }, text, parsed? }, perf: { [muscle]: 1..4 }, srpe, minutes }
-           | { id, kind: 'run', date, runPlanId?, workout?: RunWorkout, checkin?,
-               track: { encoding: 'delta-v1', t, lat, lon, alt, acc, hr? },   // columnar delta-encoded arrays, not per-point objects
-               distanceM, movingSec, elapsedSec, elevGainM, elevLossM, gapSpeedMps, rTSS?, cadence?,   // all SI; UI converts
-               splits: [ { index, distM, sec, gapSec, elevGainM, hr? } ],   // boundaries at each unit of settings.units.distance when recorded
-               hrAvg?, hrMax?, trimp?, srpe, minutes, notes } ],
-  engineSnapshots: [ { date, state } ],          // derived cache, rebuildable from history
-  coachMemory: [ { id, date, source: 'user'|'gemma'|'engine', text, accepted } ],
-  llmLog: [ { date, kind, promptHash, output, accepted } ] }
-```
-
-`server/` is one Deno 2 process on `127.0.0.1:8500`:
-- `@automerge/automerge-repo` with `NodeFSStorageAdapter` under Deno's Node compat; if it fails, a ~40-line `DenoFSStorageAdapter`. WebSocket transport via `@automerge/automerge-repo-network-websocket`; its server side assumes Node `ws`, so expect to write a ~60-line adapter over `Deno.upgradeWebSocket` (known risk, budget half a day).
-- Auth middleware: read `Tailscale-User-Login`; map to `data/users/<login>.json` holding the user's document id; refuse any document id not owned by the requester; refuse non-loopback binds (same rule as Beamer's sync_server). The phone is a tailnet peer, so `tailscale serve` injects the identity header on its requests; auth is the header only, never Origin (browsers send the tailnet hostname, the native client sends none).
-- Serves the built PWA from `apps/web/dist`.
-- `deploy/qala.service` (systemd --user, `WantedBy=default.target`, restart on failure). `deploy/tailscale-serve.md` with `tailscale serve --bg --https=8443 http://127.0.0.1:8500`.
-- Tests: two in-memory repos edit the same document offline and merge cleanly; auth rejects cross-user access; server refuses to bind non-loopback; a WebSocket upgrade with a valid identity header is accepted whatever its Origin (including none), and one without the header is rejected.
+Superseded. The Automerge document and WebSocket sync that were specified here are replaced by record sync: DECISIONS S11, `docs/rust-core.md` sections 4 and 5, and `docs/android-native.md` section 6. The server still runs the old code; the ROADMAP Server and sync table says what is built.
 
 ## 8. Milestone M4: phone shell (logger)
 
-Screens, in the owner's words and choices, are specified in `docs/DESIGN.md` section 7; the decisions behind them are in `docs/DECISIONS.md` (U1-U8, T6-T10). What M4 builds, in order:
-1. **Tab shell.** Option A, decided (Today, Plan, Body, Progress, Coach; `docs/DECISIONS.md` U2). Settings and history are header buttons. No Start tab: a lift or run starts from Today or a Plan day.
-2. **Today** (`docs/DESIGN.md` 7.1): the timeline rail of the day's stages and one hero card per stage (before the lift, after the lift, evening), fed by readiness (6.2), daily session load done and planned, and the day's plan. Before the lift the card carries "Lower A · Squat day", the readiness ring with the 28-day average and the low line, this week's load with today outlined and named, and a 64px Start warm-up button; after the lift it shows the result and what's next.
-3. **Plan** (7.2): week navigator, a tab per day, Start workout, overview grid and details.
-4. **Check-in** (7.3), then **Warm-up** (7.4) from 6.7 with plate chips on every ramp step.
-5. **Workout** (7.5): one exercise at a time; swipe, progress segments or the All exercises overview (7.7) to move between exercises; returning exercise notes; plate shorthand.
-6. **Rest** (7.6) from 6.6 with its reasons, the next set's plate drawing and the change to the next exercise.
-7. **Session complete** (7.8) as charts, then the two quick questions and the day's run handoff.
-8. **Body, Progress, Coach, Plate calculator, Settings** (7.9-7.13).
-
-Exercise notes belong to an exercise, not a session, with "show next time" on by default: the next time that exercise opens, the note shows as a dismissible dated card above the numbers; notes can be pinned or resolved; the coach can cite them in memory proposals. Charts are visx components in `apps/web/src/shared/charts/`, uPlot only for dense time series (`docs/DESIGN.md` 6.1), each with a table view.
-
-Components (anatomy in `docs/DESIGN.md` section 5):
-- Check-in grid drawn over liftosaur's front/back muscle SVGs; tapping a region cycles 1-4; only muscles the session hits plus anything scored >= 3 last time are active; PRS 0-10 row with anchors (0-2 worse session expected, 3-7 normal, 8-10 better); one free-text line parsed by the coach into removable chips.
-- Logger: big weight x reps figures with -/+ steppers (weight by the exercise's increment, reps by 1), RPE chips 7-10 in half steps, Info / Swap / Note / Log set, joint-pain toggle, per-set note, plate shorthand chips with a calculator button (6.8).
-- Post-muscle-group performance tap (4 options) when a muscle's last set completes; session RPE and auto duration at the end.
-- Rest timer from 6.6 with its reasons and the next set's plate drawing; a program's explicit `timers` value replaces the base rest (assumption). Screen Wake Lock during a workout; notification on expiry.
-- Engine banner: recommendation, engine vs coach numbers, revert tap, reason text.
-- Service worker, web manifest and icons for the PWA build (desktop, and iOS users who only lift).
+Superseded. The React phone shell is frozen as a PWA (DECISIONS S13) and the phone app is native Kotlin: `docs/android-native.md`. The screens this section specified are the design reference in `docs/DESIGN.md` section 7.
 
 ## 8a. Milestone M4a: run recorder (`packages/run` + Android phone app)
 
@@ -420,17 +300,11 @@ Gate before building the rest of M4a (on the real Nothing Phone): a 2 h backgrou
 
 ## 9. Milestone M5: desktop shell (stats-first, revised 2026-09-13 per DECISIONS U11)
 
-Stats group: an Overview dashboard home (stat tiles, readiness, this week's load, squat trend, sets by muscle, recent sessions); Lifts (index cards linking into per-lift e1RM history, NL85 and calibration); Running (VDOT trend, run list linking into pace/HR/elevation detail); Body (readiness, sets by muscle linking into per-muscle volume-vs-band and fatigue detail); History (every session, linking into a set-by-set breakdown with editable notes and dismissible PR flags). Author group below it, unchanged in substance: program list; CodeMirror 6 editor with Lezer highlighting for both grammars and inline parse errors; live evaluated preview beside it (weeks, days, sets, computed weights, reps at 85%+, sets per muscle, time including warm-ups); exercise DB table (seed + custom, hide/edit, muscle tags required on custom entries, per-exercise bar and rest-class overrides); coach-memory editor with accept/reject for Gemma-proposed facts; calibration view (per-lift `p0, k1, theta`, residuals, observation count). Screen spec: `docs/DESIGN.md` 7.15-7.16.
-
-Graphs (library split and chart rules in `docs/DESIGN.md` section 6; visx for most, uPlot where marked): e1RM per main lift with daily best dots, the Kalman line and tested-1RM diamonds (uPlot, zoomable over the full history); weekly NL85/T85 per main lift against the block table; weekly `directSets_m`/`fracSets_m` per muscle against the band and RP caps; rep and load PRs per exercise; fitness and fatigue curves for lifting and running (uPlot); VDOT trend; readiness with the average and low line; combined sRPE-load with the lift/run split; weekly distance with long-run and growth flags; run detail pace, heart rate and elevation (uPlot); calibration residuals (uPlot). Every chart has a table view.
-
-Theme, type, icons and components are specified once in `docs/DESIGN.md` (tokens section 2, type section 3, icons section 4, components section 5, charts section 6) and implemented in `apps/web/src/theme/tokens.css`, `apps/web/src/theme/fonts.css` and `apps/web/src/shared/charts/`, shared by both shells. Font files are already in the repo: `assets/fonts/QalaTest-*.woff2` (the owner's Qala Test face; build scripts in `qala-test/work/`), `assets/fonts/DMMono-*.woff2`, and `assets/fonts/Faustina-*-qala.woff2` as the fallback; checksums in `docs/DESIGN.md` 3.2. `assets/fonts/Recursive-*` was removed 2026-09-13. Add the OFL texts (Qala Test, Faustina, DM Mono) and the Lucide, visx and uPlot licenses to NOTICE.
+Built. The desktop shell is DECISIONS U11 and `docs/DESIGN.md` 7.15, with the refined look (U21) and the load zoom (U27) on top. Sample data still drives it; see the ROADMAP Web and desktop table.
 
 ## 10. Milestone M6: wire check-in, engine, and the default adaptive program
 
-Check-in -> `predictReadiness` -> bindings -> program evaluation -> workout screen. Ship `programs/adaptive-default.md`: upper/lower 4-day, double progression, `update:` and `progress:` scripts that read `deload`, `recWeightPct`, `recSets`, `soreness`. Both deload paths visible in the workout screen with the reason text. Engine snapshot appended to `engineSnapshots` after each session; rebuild from history if the schema changes.
-
-Runs take the same path: run saved -> server fills elevation -> `logSession` applies the 6.4 inputs -> engine snapshot -> cross-modal reason codes reach both the Start screen (a planned hard run shown as easy, with the reason) and the next lift's bindings (`fatigueLocal`, lower expected reps). The default program's lower-body `progress:` scripts read `recWeightPct`, which the 6.4 no-load-increase rule sets to 0. Test end to end: log a tempo run, open the next day's squat session, and see the lower rep target and the reason.
+Built on Android, not on the web. The phone sequence (check-in, readiness, engine bindings, LS++ evaluation, workout) is `docs/android-native.md` section 6. The web app still runs on sample data.
 
 ## 11. Milestone M7: LLM layer
 
@@ -503,7 +377,7 @@ Hybrid scheduler (runs whenever both `activeProgramId` and `activeRunPlanId` are
 
 ## 13. Milestone M9: polish, deploy, docs
 
-Desktop PWA install prompt, icons, offline check; iOS home-screen PWA test for lift-only users on a real device or simulator; Android release build of `apps/android` (Gradle `assembleRelease`; `deno task build:android` builds the debug APK) with the signing keystore kept outside the repo; `deploy/android-sideload.md` (install from unknown sources, battery-optimisation exemption for Qala, which permissions to grant and when); README with AGPL notice and liftosaur attribution, PLAN 6 citations complete, `deploy/` docs, systemd unit enabled.
+Superseded by the ROADMAP. Deploy is `deploy/qala.service` plus `docs/plan-accounts-logins.md` section 7 for the VPS move; nothing in the checklist that was here is still the reference.
 
 ## 14. Verification
 
@@ -517,15 +391,15 @@ Desktop PWA install prompt, icons, offline check; iOS home-screen PWA test for l
 
 ## 15. Assumptions made without asking (cheap to change)
 
-Vite as the bundler (React itself is a decision, section 3); Deno's built-in test runner; ports 8500 (server) and 8443 (tailscale); default main lifts squat, bench, deadlift, overhead press; set-time estimates in the generator; per-set `setFactor` RPE weighting in section 6.2. Added 2026-09-13: every running set-equivalent weight and threshold in 6.4 (derived, no study reports running in set units); the 3.6 sRPE-load per 100 rTSS prior; Riegel as the threshold-pace fallback before CS exists; the GPS pipeline parameters in 8a (25 m accuracy gate, 7 m/s jump gate, 20/30 s pace windows, auto-pause 0.6/1.0 m/s); bodyweight load factors in 6.3; the DUP strength day capped by RPE; observation noise for a tested 1RM at one quarter of an e1RM's; the 1-point disagreement threshold for RTS table cells; a program's explicit `timers` value replacing the 6.6 base rest; the readiness low line at 50 before 14 check-ins; plate colors for 10, 5 and 2.5 lb; which charts use uPlot (past about 2,000 points or needing zoom). `docs/DECISIONS.md` lists these; nav Option A, the Today rail's 10 s snap-back and rest-day stages, and the cross-block volume carry-over rule were assumptions here but are now decided (`docs/DECISIONS.md` U2, U9, U10, T5).
+Folded into `docs/DECISIONS.md`, where each one carries its status (decided, recommended, assumption or open). Anything still genuinely open is in `docs/decisions-pending.md`.
 
 ## 15a. Mockups (owner review before any build)
 
-`mockups/build.mjs` generates the review canvas `mockups/qala-app-mockups.html`, published at https://claude.ai/code/artifact/250bf70f-3bed-4593-ad17-afc44bb14a0c (version 5 on 2026-09-13; made private 2026-09-13, `docs/DECISIONS.md` section 7). Regenerate with `LUCIDE_JSON=<extracted Lucide paths> node mockups/build.mjs`, then assemble and republish with the design canvas tool. Four review rounds so far; what each round changed and the owner's comments are in `docs/DECISIONS.md` section 8, and the current screen spec is `docs/DESIGN.md` section 7. The mockups are hand-drawn HTML and SVG with sample data: they don't use the production chart libraries. Fold owner comments into `docs/DECISIONS.md`, `docs/DESIGN.md` and this plan before building.
+Done. The mockup rounds and what the owner picked in each are recorded in `docs/DECISIONS.md` section 8. The canvas is private and the files are not in this repo's docs.
 
 ## 16. Later (explicitly out of v1)
 
-Accounts (now planned on the VPS with no Tailscale at all, `docs/DECISIONS.md` S22 and `docs/adr/0002-friends-family-auth.md`; the Tailscale Funnel idea is dropped); speech check-in; exercise illustrations (draw, license, or generate); importers (GymRun CSV, liftosaur JSON, GPX/TCX run import; PDF and voice import are `docs/ls-plus-plus.md` 4); watch app (owner said no). Date-range controls with previous-period comparisons on the desktop workspace, and matching empty, loading and offline states for new screens (kept from the retired visual-refinement notes). Running extras: iOS native build (waits for a friend who wants runs), Runkeeper-style Feed and Challenges (social; v1 has one user), Strava upload (new API apps start at 1 connected athlete, self-upgradable to 10), Health Connect / HealthKit write-back, weather on runs, shoe mileage.
+Accounts (now planned on the VPS with no Tailscale at all, `docs/DECISIONS.md` S22 and `docs/adr/0002-friends-family-auth.md`; the Tailscale Funnel idea is dropped); speech check-in; exercise illustrations (draw, license, or generate); importers (GymRun CSV, liftosaur JSON, GPX/TCX run import; PDF and voice import are `docs/rust-core.md` section 12); watch app (owner said no). Date-range controls with previous-period comparisons on the desktop workspace, and matching empty, loading and offline states for new screens (kept from the retired visual-refinement notes). Running extras: iOS native build (waits for a friend who wants runs), Runkeeper-style Feed and Challenges (social; v1 has one user), Strava upload (new API apps start at 1 connected athlete, self-upgradable to 10), Health Connect / HealthKit write-back, weather on runs, shoe mileage.
 
 ## 16a. Roadmap: run additions from the Stride review (added 2026-09-30)
 
@@ -542,7 +416,7 @@ Add Blender renders of the bars, starting with the EZ-curl bar, for the plate ca
 
 ## 16c. Roadmap: run plans for beginners and for race distances
 
-Added 2026-10-02 (owner: bring in Couch to 5K, plus 10K and marathon prep). Evidence brief: `docs/research/RESEARCH-run-plans-beginner-and-races.md`. Not in v1; `docs/DECISIONS.md` R7. Two distinct tracks, because they are different products.
+Added 2026-10-02 (owner: bring in Couch to 5K, plus 10K and marathon prep). Evidence brief: `docs/research/BRIEFS.md` brief 4. Not in v1; `docs/DECISIONS.md` R7. Two distinct tracks, because they are different products.
 
 **Track 1, getting to a continuous run.** The NHS Couch to 5K is the reference shape, borrowed as a public-health programme and not as evidence: 9 weeks, 3 runs a week, a brisk 5-minute walk to start, alternating run and walk intervals, a rest day between runs, and a last week of 25, 28 and 30 minute continuous runs with day 1 repeated. Qala's own version has three things the NHS version does not: it knows what the person actually did, it adjusts the next session, and it knows whether they are also lifting.
 
@@ -562,7 +436,7 @@ Added 2026-10-02 (owner: bring in Couch to 5K, plus 10K and marathon prep). Evid
 
 ## 16d. Roadmap: starting strength, for people who have never lifted
 
-Added 2026-10-02 (owner: starting strength for beginning lifters, with more exposition). Evidence brief: `docs/research/RESEARCH-beginner-lifting.md`. Not in v1; `docs/DECISIONS.md` T12.
+Added 2026-10-02 (owner: starting strength for beginning lifters, with more exposition). Evidence brief: `docs/research/BRIEFS.md` brief 1. Not in v1; `docs/DECISIONS.md` T12.
 
 The plan today is written for someone who already trains. Section 6.3 uses RP's landmarks "for intermediate lifters", section 12's templates open at 4x5 or 4x8 with a `referenceRm` in hand, and the default progression is double progression with a deload every 5-6 weeks. None of that is wrong for a beginner; it is wrong *for* a beginner, in three specific ways: there is no reference 1RM to freeze, the volume table is the wrong column, and a cold lifter needs the load to go up often enough to keep proving the muscle is trainable rather than a deload.
 
@@ -581,7 +455,7 @@ The plan today is written for someone who already trains. Section 6.3 uses RP's 
 
 ## 16e. Roadmap: mindfulness at the start of a workout
 
-Added 2026-10-02 (owner: recommend Headspace and Sam Harris's app as a starting point). Evidence brief: `docs/research/RESEARCH-mindfulness.md`. Not in v1; `docs/DECISIONS.md` R8.
+Added 2026-10-02 (owner: recommend Headspace and Sam Harris's app as a starting point). Evidence brief: `docs/research/BRIEFS.md` brief 3. Not in v1; `docs/DECISIONS.md` R8.
 
 The owner's instruction is a recommendation, not a feature, and the shape should follow from that: **Headspace** and **Waking Up** (Sam Harris's app), one tap to open each, and no attempt to replace them. Qala is a log, a planner and an engine; it has no standing to teach meditation, and the sport evidence for mindfulness is thin and mostly about anxiety and performance surrogates rather than anything Qala measures.
 

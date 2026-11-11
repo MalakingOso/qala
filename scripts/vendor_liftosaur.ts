@@ -15,7 +15,7 @@
 // After copying, reapply the documented local patches (the script lists them
 // and exits nonzero until you confirm with --patched):
 //   - src/parser.ts: stub `rollbar` and `utils/dialog` imports
-//   - src/liftoscriptFns.ts: engine bindings (see docs/ls-plus-plus.md 7)
+//   - src/liftoscriptFns.ts: engine bindings (see docs/rust-core.md section 12, Engine bindings)
 
 import { join } from "node:path";
 
@@ -68,7 +68,7 @@ const PROGRAMS_DIR = "programs/builtin";
 
 const PATCHES = [
   "src/parser.ts: stub `rollbar` and `utils/dialog` imports",
-  "src/liftoscriptFns.ts: engine bindings (docs/ls-plus-plus.md 7)",
+  "src/liftoscriptFns.ts: engine bindings (docs/rust-core.md section 12, Engine bindings)",
 ];
 
 function arg(name: string, def?: string): string | undefined {

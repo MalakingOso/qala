@@ -66,7 +66,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
-// Motion tokens (docs/HANDOFF-rail-refresh.md): open 260 ms expo-out, close 200 ms ease-in, rows 25 ms apart from 40 ms.
+// Motion tokens (docs/archive/completed.md, Type and rail as built): open 260 ms expo-out, close 200 ms ease-in, rows 25 ms apart from 40 ms.
 private const val OpenMs = 260
 private const val CloseMs = 200
 private const val RowDelayMs = 40f

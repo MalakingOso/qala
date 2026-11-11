@@ -1,4 +1,4 @@
-// PDF import: chunking and merging (DECISIONS S19, docs/ls-plus-plus.md 4).
+// PDF import: chunking and merging (DECISIONS S19, docs/rust-core.md section 12).
 //
 // The callisto context is 8192 tokens, so a PDF goes to the model in pieces:
 // one per day when the document has day headings, one per week when it only

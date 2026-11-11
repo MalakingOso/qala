@@ -1,49 +1,23 @@
 # Rust core: migration plan
 
-Status 2026-10-13: in progress. Built and merged: LS++ (R5, section 8); `qala-core` with the engine port (state, decay, e1RM, Kalman, running, readiness, `log_session`, `calibrate`), availability, HLC, the record types, the history-to-engine adapter, the Today numbers, and plate math with rounding (2026-10-13, vectors in `testdata/golden/plates`), all exported to Kotlin through `qala-ffi`. Not built: the run pipeline and `RunRecorder` (R1), the engine's volume, rest and warm-up modules and `recommend_next_session` (the rest of R3), record sync and blob routes on the server, and the generator (R4, deferred). Read with `docs/android-native.md` (the Kotlin app); the spike report is appendix A and the open questions appendix B. Decision rows are DECISIONS S6 to S17, plus S18 to S21 for LS++ and S22 for accounts (S22 will change the auth sentences in sections 4 and 5 when it ships; `docs/plan-accounts-logins.md` 10). Revised 2026-09-30 after the owner asked for liftoscript in Rust and asked whether something beats Automerge: Automerge is out, record-based sync is in (section 4), and there is no quickjs interim (section 6).
+Status 2026-10-13: in progress. Built and merged: LS++ (R5, section 8); `qala-core` with the engine port (state, decay, e1RM, Kalman, running, readiness, `log_session`, `calibrate`), availability, HLC, the record types, the history-to-engine adapter, the Today numbers, and plate math with rounding (2026-10-13, vectors in `testdata/golden/plates`), all exported to Kotlin through `qala-ffi`. Not built: the run pipeline and `RunRecorder` (R1), the engine's volume, rest and warm-up modules and `recommend_next_session` (the rest of R3), record sync and blob routes on the server, and the generator (R4, deferred). Read with `docs/android-native.md` (the Kotlin app). Section 12 is the LS++ language reference (it replaces the old `ls-plus-plus.md`). Open questions are the appendix. Decision rows are DECISIONS S6 to S17, plus S18 to S21 for LS++ and S22 for accounts (S22 will change the auth sentences in sections 4 and 5 when it ships; `docs/plan-accounts-logins.md` 10). Revised 2026-09-30 after the owner asked for liftoscript in Rust and asked whether something beats Automerge: Automerge is out, record-based sync is in (section 4), and there is no quickjs interim (section 6).
 
-## Status (2026-10-01, LS++ snapshot)
+## Status note
 
-This section is the LS++ port as of 2026-10-01; the current overall status is the paragraph at the top.
-
-The liftoscript evaluation path is ported in `crates/qala-lspp` (about 27k lines including tests) and matches the TS oracle on the golden suite:
-- All 60 built-in programs, both stages (planner parse and full evaluation), in lb, plus 5 in kg.
-- `Program_nextHistoryEntry`, every finish-day scenario including the chained GZCLP replay, and the engine-binding cases.
-- Both parsers match Lezer's trees node for node on every golden and fuzz input (valid input only; error recovery is best effort).
-- 132 unit tests (about 12,000 generated script cases, 2,192 planner-exercise cases, 111 program-to-planner cases) and 5 golden suites pass. Clippy is clean.
-"Matches the oracle" means after these documented normalizations: `<uid>` placeholders on random ids; the Lezer node reference dropped; NaN and Infinity compared as null; a Set-typed `stateKeys` compared as an empty object; object key order ignored on `vtype: set` and `history_entry` objects; key order of `description` relaxed in 6 built-ins on the program-to-planner path; nested `reuse` pruned for `shortcut-to-size`; and parser error-recovery trees on invalid input not matched to Lezer's (about 300 script cases, counted separately).
-
-Two bugs found while finishing it. First, a lone backslash made the planner parser loop forever, pushing empty nodes until the OOM killer fired; fixed with a progress check in `program()`. That cause is inferred from timing (the parser file changed one minute before the first OOM) and from the test inputs, and confirmed on the 34 inputs of `bad_input_does_not_panic`, not proven for every input. The second OOM at 05:12 was my own `cargo test` at the start of a session. Second, `numberOfSets` had no upper bound, so `numberOfSets = 1e9` would allocate tens of GB: it is now capped at `MAX_SETS = 30` in `script_eval.rs` (the owner's limit), with a script error past it, and index writes past the cap are dropped. This is a deliberate divergence from TS, which allows any count; the oracle's own corpus sets `numberOfSets` from weights like 135, and 14 of 12,290 generated cases are exempted for that reason in `script_eval_tests.rs`. Run tests only through `scripts/cargo-test-safe.sh -p qala-lspp`.
-
-Since that writeup the port, the rename and the S21 extensions were merged (`2b92d93`, `415fb07`, `32cb81c`); the UniFFI and wasm shims exist (`crates/qala-ffi`, `crates/qala-lspp-wasm`), and the generated `cases_*.json` are gitignored and regenerated with the Deno scripts. Still open: the private duplicate helpers in `program_exercise.rs` and `program_to_planner.rs` that belong in `planner_program_exercise.rs` and `program_set.rs`; a program-level differential fuzz. The FFI exports of the six S21 functions are done (2026-10-14): `qala-ffi` has `diagnose_planner`, `diagnose_script`, `dry_run`, `unresolved_sets`, `lint_planner` and `format_planner`, like the wasm crate. The wasm build is loaded by the desktop editor (diagnostics, lint, Format, dry run) and by the server (the import check), since 2026-10-14.
+The LS++ port landed 2026-10-01 and was approved as built 2026-11-11 (D09). It matches the TS oracle on all 60 built-in programs in lb plus 5 in kg, on `Program_nextHistoryEntry` and the finish-day scenarios, and on both parsers for valid input. Two divergences are deliberate and kept: `MAX_SETS = 30` caps `numberOfSets` in Rust where TS allows any count, and native readiness decays to an explicit `now` (DECISIONS S26). Exact normalizations and the FFI and wasm status are in section 12. Run Rust tests only through `scripts/cargo-test-safe.sh`.
 
 ## 1. Conclusions
 
 1. Build a Rust workspace for the logic that has to behave identically on the phone, the web and the server: run pipeline, math (rounding, units, plates), engine, and the LS++ evaluation path. The TS packages stay as the oracle and as the desktop's authoring runtime until each Rust module passes conformance.
 2. Drop Automerge. Sync becomes immutable records with UUIDs, last-write-wins per field with a hybrid logical clock, and plain HTTP with the server as authority (section 4). The Rust core never holds a synced store; it takes state in and returns state out as JSON.
 3. Raw GPS fixes never go through sync as records. They live in Room on the phone and upload as immutable content-addressed blobs (section 5). This amends the constraint "run recording writes to the local document continuously".
-4. LS++ is the Rust port of liftosaur's liftoscript, evaluation path only (about 9 to 11k lines of logic, reorganized into small modules, not a mirror of the TS layout). There is no quickjs interim: the phase order puts the port ahead of the phone's lifting screens (section 6). Built and merged; `docs/ls-plus-plus.md` is the language reference now.
+4. LS++ is the Rust port of liftosaur's liftoscript, evaluation path only (about 9 to 11k lines of logic, reorganized into small modules, not a mirror of the TS layout). There is no quickjs interim: the phase order puts the port ahead of the phone's lifting screens (section 6). Built and merged; section 12 below is the language reference now.
 5. Defer the generator port (owner, 2026-10-14). The phone will later pull generated workouts from the server, which runs the TS generator, so the generator still has no consumer that needs it in Rust.
 6. Rust is the reason the foreground service can run guided cues with the screen locked: there is no WebView and no JS there. That is why the run pipeline goes first.
 
-## 2. Inventory
+## 2. Inventory (2026-09-30 snapshot)
 
-Counts are from `find` and `grep` over `packages/` on 2026-09-30. "Tests" counts `Deno.test(` declarations, so the runner reports more because of nested steps (README says 222 total).
-
-| Package | Source lines | Test lines | Tests | Pure and portable? | Blockers |
-|---|---|---|---|---|---|
-| `core` | 1,290 | 321 | 22 | Yes. Types, units, rounding, plates, migrations. | `schema.ts` is types only. `plates.ts` is the one module the phone UI already calls. |
-| `engine` | 2,552 | 1,227 | 62 | Yes. `state.ts` says "no DOM, no automerge". | Date arithmetic (`daysBetween`, decay). `JSON.parse(JSON.stringify(s))` clone idiom. |
-| `generator` | 2,645 | 1,109 | 41 | Yes. Emits liftoscript text. | Its tests parse and evaluate the output with liftoscript, so evaluation stays a TS check. |
-| `run` | 1,534 | 612 | 28 | Yes. No DOM, no platform imports. | The pipeline is batch (`filterFixes`, `computePauses`, `computeSplits` take the whole array). Only `GuidedRun` is stateful. Live use needs a new incremental recorder. `gpx.ts`, `tcx.ts`, `xml.ts` are exporters with no phone caller. |
-| `llm` | 940 | 324 | 8 | Yes. Prompt builders and response validation. | `valibot`. Not in the port list; see section 7, R6. |
-| `liftoscript` | 24,344 | 568 | 10 | Mostly. Vendored from liftosaur, upstream file names kept. | `@lezer/*` parser (the thing a Rust parser replaces). `Dialog_*` and `Storage_*` are stubs. Tests read built-ins through `Deno.readDirSync`. Large planner and mutator surface beyond `parser.ts` and the evaluator. |
-
-Automerge: no package imports it. The only mentions are comments and stub error messages in three files (`engine/state.ts`, `core/schema.ts`, `liftoscript/src/models/storage.ts`). The packages are pure with respect to sync.
-
-Numeric and time hotspots in core, engine, run and generator: about 45 `Math.round`, `toFixed`, `Math.trunc` and `Math.sign` call sites, and about 42 `Date` uses. Those are where Rust and JS can disagree.
-
-What the phone actually calls today: the phone shell is a prototype on sample data. It imports `core/plates.ts` and nothing else from `packages/*`. Engine, run, generator, liftoscript and llm are not wired to any phone screen. So the port is mostly greenfield wiring, not translation of working paths.
+Counts from `packages/` when the port was scoped. `liftoscript` was 24,344 source lines (mostly off the evaluation path), `engine` 2,552, `generator` 2,645, `run` 1,534, `core` 1,290 and `llm` 940. No package imported Automerge. About 45 `Math.round` and `toFixed` sites and about 42 `Date` uses across core, engine, run and generator are where Rust and JS can disagree, which is why section 3 has the `js_round` rule. At the time the phone called only `core/plates.ts`; the rest was greenfield wiring. Current state is section 7, not this table.
 
 ## 3. Architecture
 
@@ -59,7 +33,7 @@ crates/
   qala-lspp/  from R5, section 8
 ```
 
-`docs/archive/spike-qcore/` is a throwaway. The real crates are written fresh against the golden vectors.
+The 2026-09-30 spike (see `docs/archive/completed.md`) was throwaway. The real crates are written fresh against the golden vectors.
 
 As built (2026-10-13): `qala-core`, `qala-ffi`, `qala-lspp`, `qala-lspp-json` and `qala-lspp-wasm`. `qala-lspp-ffi` was folded into `qala-ffi`. There is no `qala-wasm`: `qala-core` has no wasm shim. The LS++ wasm build (`qala-lspp-wasm`) is loaded since 2026-10-14 by the desktop editor (`apps/web/src/lspp/load.ts`) and the server (`server/lspp.ts`), from one `--target web` build in `target/wasm-out/web/`, through the typed client in `packages/lspp`. The wasm isn't committed: `deno task build:wasm` makes it, and the editor and the server run without it (the editor's checks go off, the import route answers 500 until it is built).
 
@@ -95,21 +69,21 @@ Why: Automerge is built for many writers merging freely. You are one person on t
 **Model.**
 - Every entity is a record: `id` (UUID), `type`, `fields`, `deleted`. Each field carries its own hybrid logical clock value `(wallMs, counter, nodeId)`.
 - Sessions, sets, runs and engine inputs are created once and then immutable. Edits (session notes, PR-flag dismissal, exercise notes, settings, program text) are field writes. For two writes to the same field, the higher HLC wins. Settings are one record per group, each leaf a field. A program's text is one field; it is edited only on the desktop, so conflicts are not a real case.
-- `engineSnapshots` is a derived cache, rebuildable from history (PLAN 7). It is not synced; each device rebuilds it. That removes the need to write engine state anywhere shared.
+- `engineSnapshots` is a derived cache, rebuildable from history (PLAN 7). It is not synced; each device rebuilds it (decided 2026-11-11, D08). That removes the need to write engine state anywhere shared.
 
-**Protocol.** `POST /api/sync` with `{ since, changes: [...] }` returns `{ cursor, changes: [...] }`. The client sends its local changes and receives everything newer than its cursor in one round trip. The server assigns a monotonically increasing sequence number per user; applying a change is idempotent on `(recordId, field, hlc)`, so retries are safe. Auth is the existing Tailscale identity header through `requireUser`; Origin is ignored. The server stores per user in SQLite (check that `node:sqlite` is solid in Deno 2.9, otherwise an append-only file).
+**Protocol.** `POST /api/sync` with `{ since, changes: [...] }` returns `{ cursor, changes: [...] }`. The client sends its local changes and receives everything newer than its cursor in one round trip. The server assigns a monotonically increasing sequence number per user; applying a change is idempotent on `(recordId, field, hlc)`, so retries are safe. Auth is the existing Tailscale identity header through `requireUser`; Origin is ignored. The server stores per user in SQLite (decided 2026-11-11, D06; check that `node:sqlite` is solid in Deno 2.9, otherwise an append-only file). Sync runs in the foreground on app open, run end, workout end, and any in-app change such as a history edit; no background sync in v1 (decided 2026-11-11, D06).
 
 **Clients.** Room on Android; IndexedDB on the web (replacing the `localStorage` outbox, `offlineQueue.ts` becomes the upload queue's shape). HLC compare, tick, receive and field merge live in `qala-core` (`hlc.rs`) with golden vectors in `testdata/golden/hlc/`. Kotlin calls them through UniFFI; the web and the server replay the same vectors when the sync endpoint is built (DECISIONS S11).
 
 **Clock skew.** HLC keeps the clock monotonic per device. The server rejects a write whose wall time is more than a day ahead of server time, so a bad phone clock can't win every future conflict.
 
-**What this costs.** `server/sync.ts` and `server/ws.ts` (and their tests) are replaced, the `@automerge/*` dependencies leave `server/` and `apps/web`, and the Kotlin and web clients are new work. It is less work than a CBOR protocol client and a document hydrator. Concurrent edits to the same field lose one write silently; for one person that is acceptable, and the loser could be kept in a small history table later.
+**What this costs.** `server/sync.ts` and `server/ws.ts` (and their tests) are replaced, the `@automerge/*` dependencies leave `server/` and `apps/web`, and the Kotlin and web clients are new work. It is less work than a CBOR protocol client and a document hydrator. Concurrent edits to the same field lose one write silently; decided 2026-11-11 (D06) for one person, with the loser kept in a small history table later if it ever matters.
 
 **Alternatives rejected.** Automerge with an OkHttp CBOR client (the earlier plan); samod over UniFFI (experimental); Loro or Yjs (no maintained Kotlin package found); cr-sqlite (low activity).
 
 ## 5. Raw tracks
 
-At 1 Hz, a run is about 3,600 fixes an hour across five or six columns. Fixes are not sync records; syncing them as fields would bury the store in tiny rows.
+Decided 2026-11-11 (D07): approve as written. At 1 Hz, a run is about 3,600 fixes an hour across five or six columns. Fixes are not sync records; syncing them as fields would bury the store in tiny rows.
 
 - On the phone, each fix is written to Room (WAL, one insert per fix, `INSERT OR IGNORE` on `(runId, fixTimeMs)`) from a dedicated thread. That is the continuous, crash-safe local record.
 - The run record holds the summary (distance, moving time, splits, elevation gain, HR aggregates) plus `trackBlobId`, the content hash of the encoded track.
@@ -165,46 +139,13 @@ Accept:
 
 **R6. `llm`.** Stays TS. Server-side route for the phone (S14).
 
-## 8. LS++ plan
+## 8. LS++ plan, as built
 
-Status 2026-10-02: built and merged; the TS package stays as oracle and authoring runtime. What follows is the plan it was built against.
+Status 2026-11-11: built, merged and approved as built by the owner (D09); the TS package stays as oracle and authoring runtime. Section 12 is the language reference.
 
-This is a real project. Scope it to the evaluation path, because the phone doesn't author programs (PLAN 3). `packages/liftoscript` is about 24k lines, but most of that is not on the evaluation path.
+The port covers the evaluation path only, about 9 to 11k lines of logic: both parsers, the script and planner evaluators, `program.ts` progression entry points, `progress.ts` bindings, `weight`, `set` and the Qala `runtime.ts` adapter. Not ported: the exercise database (exported once to JSON), and authoring, which stays TS on the desktop (the `PlannerStructure_*` mutators and `programToPlanner`). The Rust crate is organized by responsibility in small modules, not mirrored from the TS layout. The vendored upstream commit is in `packages/liftoscript/VENDORED`; upstream is not followed (DECISIONS S17).
 
-**Port (about 9 to 11k lines of logic):**
-- Two lexers and parsers from the 95-line `liftoscript.grammar` and the 80-line `plannerExercise.grammar`.
-- `liftoscriptEvaluator.ts` (1,408), `liftoscriptFns.ts`, `parser.ts` (`ScriptRunner`).
-- `plannerExerciseEvaluator.ts` (1,427), `plannerEvaluator.ts` (1,254), the evaluate half of `plannerProgram.ts`, `plannerProgramExercise.ts`.
-- On the model side: `program.ts` (`Program_nextHistoryEntry`), `progress.ts` (script bindings and functions), `weight.ts`, `set.ts`, `programSet.ts`, `programExercise.ts`, `utils/*`.
-- `runtime.ts` (681), the Qala adapter, which is the seam the engine feeds.
-
-**Don't port:**
-- `exercise.ts` (5,172) is mostly the seed database (211 entries in the TS source; PLAN 3 says 422, which may count equipment variants). Export it once to JSON from Deno and load it with serde.
-- Authoring stays TS on the desktop: the 17 `PlannerStructure_*` mutators (1,919), `programToPlanner.ts` (1,163), `plannerExerciseEvaluatorText.ts`, `plannerExerciseStyles.ts`, `exerciseImage.ts`, `dialog.ts`, `storage.ts`.
-- Confirm this split with a grep of what `apps/web/src/shell-desktop/ProgramEditorPage.tsx` imports against what `runtime.ts` uses before starting.
-
-**Structure.** The vendored-upstream rule (same file names as liftosaur so diffs stay readable) ends for the new Rust code. The Rust crate is organized by responsibility in small modules (`lexer`, `parse_script`, `parse_planner`, `eval_script`, `eval_planner`, `weight`, `progress`, `runtime`, ...), not mirrored from the TS layout. The TS copy stays vendored and untouched as the oracle and the desktop's authoring runtime (the editor's checks, Format and dry run run on the Rust port through wasm, not on it). The vendored upstream commit is recorded in `packages/liftoscript/VENDORED` (written by `scripts/vendor_liftosaur.ts`). Upstream isn't followed after that: LS++ is Qala's own language, and upstream fixes are neither tracked nor ported (owner, 2026-10-14).
-
-**Parser.** Hand-written lexer plus recursive descent per grammar, producing a typed AST whose node kinds mirror the grammar rule names. Not an emulation of Lezer's generic tree. Error-recovery fidelity is low priority: programs reach the phone already validated by the desktop editor, which checks them with this parser through wasm. Two quirks to handle on purpose:
-- The planner lexer is context-sensitive. `ExerciseName` is `NonSeparator+`, and the `@precedence` blocks decide `Weight` over `Keyword` and `SetTimer` over `Int`.
-- In the liftoscript lexer, `IncAssignment` must win over `Plus`, and `Percentage` over `Number` over `Plus`.
-
-**Oracle first.** Before porting, write `scripts/golden_liftoscript.ts` (Deno) that dumps canonical JSON into `testdata/golden/lspp/`:
-- for each of the 60 built-in programs, the result of `forceEvaluateText` (the same call `tests/builtins_test.ts` makes, with `qalaSettingsToLiftoscript` settings);
-- `Program_nextHistoryEntry` across several days;
-- `runFinishDayScript` and `runAllFinishDayScripts` with synthetic completed sets, covering the GZCLP progression in `tests/gzclp_test.ts` (501 lines);
-- `createEngineBindings` and `evaluateQalaProgram` from `runtime.ts`.
-Check what the TS tests actually assert so the dump covers the same shape.
-
-**Acceptance.**
-- All 60 built-in programs evaluate to canonical JSON identical to the oracle, with no errors.
-- The GZCLP progression matches over several simulated sessions.
-- A differential fuzz of generated expressions, set schemes and `progress:` scripts matches the oracle with zero mismatches.
-- The desktop plan, done 2026-10-14: the Rust parser is exposed to wasm and the CodeMirror editor draws its diagnostics (`ProgramEditorPage.tsx`, with Format and a dry run beside them). Diagnostics come from Rust as `{from, to, message, line, col, suggestion?}` with UTF-16 offsets already converted on the Rust side, so markers hold on non-ASCII text (`server/lspp_test.ts` checks it). The editor has no Lezer language extension, so there is no Lezer highlighting or bracket matching yet.
-
-**Rust-specific traps.** Use `js_round` (`(x + 0.5).floor()`) wherever TS uses `Math.round`. Write `js_number_to_string` for number-to-string (JS prints `1` and switches to exponent form at 1e21 and 1e-7, `-0` prints `0`), and `js_to_fixed` (JS rounds on the exact decimal expansion). Follow `Number()` rules where strings are parsed. Avoid `HashMap` iteration order in any output; TS object insertion order maps to an ordered map. Check `==` on weights and percentages for JS coercion.
-
-**Estimate.** 3 to 5 weeks for a conformant port of the evaluator and planner, mostly bug-for-bug matching (research agent's estimate, not mine). It is the largest single item in the plan.
+Oracle first, as built: `scripts/golden_liftoscript.ts` dumps canonical JSON for all 60 built-ins, `Program_nextHistoryEntry`, the finish-day scripts including GZCLP, and the engine bindings, into `testdata/golden/lspp/`. Acceptance was all 60 matching with no errors, the GZCLP progression matching over simulated sessions, and a differential fuzz with zero mismatches. The desktop editor now draws this parser's diagnostics through wasm, with UTF-16 offsets converted on the Rust side. Rust traps (`js_round`, `js_number_to_string`, `js_to_fixed`, ordered maps, JS `==` on weights) are section 3's rules; they apply here unchanged.
 
 ## 9. Golden vectors
 
@@ -243,130 +184,102 @@ Files under `testdata/golden/<package>/<function>.json`:
 - PLAN 8a and 14: the phone gates (2 h locked-screen recording, TTS ducking) stay as written and now run against the Kotlin app.
 - The "recording writes to the local document continuously" constraint, for tracks, per section 5.
 
-## Appendix A. Rust core spike report
+## 12. LS++ language
 
-2026-09-30. Folded in from `docs/rust-core-spike.md` (deleted 2026-10-02). The spike crate is `docs/archive/spike-qcore/` (throwaway; the real crates are specified in the plan). Nothing in `packages/` was touched.
+Status 2026-10-30: built and merged, with leftovers. The name is decided (DECISIONS S18). The port and the S21 extensions are in `crates/qala-lspp`. The text import (S19) has its TS half merged (`POST /api/import/text`) and both front ends built on it (`POST /api/import/pdf`, `POST /api/transcribe`, dictation on the desktop) and run live 2026-10-30; see the ROADMAP Rust track for those rows. The wasm build is loaded by the desktop editor (checks, Format, dry run, `apps/web/src/lspp/load.ts`) and by the server (`server/lspp.ts`), from one build in `target/wasm-out/web/`. The import screen is `apps/web/src/shell-desktop/ImportPanel.tsx`; its confirm step posts `{ editList: { items }, resolutions, units }` back to the text route. Open: phone and Android mic capture (D36), equipment on imported lifts (D38), a blank weight with an RPE (D39), and suggestions for evaluation-time errors and fmt for standalone scripts. Decision rows are DECISIONS S18 to S21.
 
-The spike was a few hours of work by a research agent plus my own re-run of the cheap parts, not the full day the task allowed. It answers question 2c and part of 2b. It does not answer 2a at all, and 2b stops short of an arm64 build. The "Not done" section is as important as the results.
+LS++ is liftosaur's liftoscript plus additive extensions. Programs are plain text. The vendored TS package stays as the oracle (S17; its upstream commit is in `packages/liftoscript/VENDORED`), so every extension leaves the 60 built-in programs evaluating exactly as before.
 
-### Environment
+### What already works
 
-- Machine: Ubuntu, x86_64. System toolchain `cargo 1.94.1` (rustup, `~/.cargo`). The spike used `rustc 1.98.1` from a scratch rustup. The plan pins 1.98.1 in a `rust-toolchain.toml`, so run `rustup toolchain install 1.98.1` first.
-- Deno 2.9.6. Node present. No JDK, Android SDK, NDK, Gradle or adb.
-- Locked versions (`docs/archive/spike-qcore/Cargo.lock`): wasm-bindgen 0.2.129, uniffi 0.32.2, automerge 0.12.0. The wasm-bindgen CLI must match the crate version exactly.
+A set with no weight is valid, and the language already has a way to say "ask for the weight":
 
-### What the spike crate does
+```
+Split Squat / 3x8 ?+          -> askWeight: true, no weight
+Split Squat / 3x8 0lb+        -> askWeight: true, weight 0 lb
+Split Squat / 3x8             -> no weight, askWeight: false
+```
 
-One crate, `crate-type = ["cdylib", "rlib"]`, release profile `opt-level = "z"`, LTO, `codegen-units = 1`, `panic = "abort"`, `strip = true`. A plain-Rust core (`step_json`, `sum_fixes`) with two feature-gated shims: `wasm` (wasm-bindgen) and `ffi` (UniFFI proc-macros). An optional `am` feature pulls in automerge. On wasm32 it adds `getrandom 0.4` with the `wasm_js` feature.
+The built-in `lp` script treats `weights[i] == 0` with a nonzero completed weight as an initial weight and builds on it. So a blank weight needs no language change: importers emit `?+`, the workout screen shows an empty required field, and the entered value becomes the starting weight.
 
-### Verified
+A `?+` set that also carries an RPE is not blank (found 2026-10-30): the evaluator infers a weight from the 1RM through the RPE table, and `unresolved_sets` does not list it. With default settings that gave "Pull Up @ 0 lb" and "Bent Over Row @ 57.5 lb". The generator now writes `?+` alone and keeps the RPE in its note; the import emitter still writes `?+ / @8`. Whether `?+` should win over the RPE is D39.
 
-Items marked "re-run" I ran myself today; the rest are from the research agent's run and its saved artifacts.
+### Language improvements (S21)
 
-| Claim | Evidence |
-|---|---|
-| One crate builds to native and wasm32 from feature-gated shims | Agent: `cargo build --release --target wasm32-unknown-unknown --features wasm`. Saved artifact `target/wasm32-unknown-unknown/release/qcore.wasm` is 825,524 bytes (with the `am` feature), 743,005 bytes after `wasm-bindgen`, 241,614 bytes gzipped. Agent's build without automerge: about 110 KB. No `wasm-opt` run, so these are upper bounds. |
-| `wasm-bindgen --target deno` output loads and runs under Deno 2 | Re-run: `deno run -A t.ts` in the output directory. 200,000 `Float64Array` elements summed 20 times in 3.98 ms total. |
-| JS and Rust disagree on rounding | Re-run: plate step on -6.25 (`(w / 2.5).round() * 2.5`) gives -7.5 from the wasm build and -5 from `Math.round(-6.25 / 2.5) * 2.5` in JS. `Math.round(-2.5)` is -2 in JS; Rust `(-2.5f64).round()` is -3. Re-run `cargo test --lib`: the native assertion `(-2.5).round() == -3.0` passes, so native and wasm agree with each other and both disagree with JS. |
-| automerge-rs builds on wasm32 only with a getrandom feature | Agent: the first build failed asking for `wasm_js`; adding `getrandom = { version = "0.4", features = ["wasm_js"] }` under `cfg(target_arch = "wasm32")` fixed it. Automerge costs about 715 KB raw. |
-| UniFFI 0.32.2 proc-macro mode generates Kotlin | The saved `kt/uniffi/qcore/qcore.kt` is 1,047 lines. `Vec<f64>` becomes `List<Double>` through a per-element converter, so large arrays are boxed and copied. Pass fixes as one `ByteArray` or a JSON string. |
-| Host x86_64 `.so` size | 454,240 bytes stripped with `z` and LTO for a toy crate. A proxy only, not an arm64 number. |
+All additive, all built and merged (`32cb81c`). Error messages carry line, column, span and a one-line fix suggestion; note the TS evaluator returns `errors[]` rather than throwing, and its error lines are relative to the day block. TS also accepts `99999x8` where only Rust caps sets, so importers bound every number themselves. `fmt` is one canonical text form and never adds, removes or merges blank lines, because blank lines are meaningful to the evaluator; `fmt(fmt(x)) == fmt(x)` and `evaluate(fmt(x)) == evaluate(x)` over the 60 built-ins. Lint has four rules after checking the built-ins: `too-many-sets`, `unused-state`, `empty-program`, `mixed-units`. A read-only dry run shows upcoming weeks with no history written. Partial prescriptions (`?+`) are a state to resolve, not an error, and `unresolved_sets` lists the sets still waiting.
 
-Registry facts (agent, crates.io API, 2026-09-30): uniffi 0.32.2, wasm-bindgen 0.2.129, automerge 0.12.0 (2026-09-16), autosurgeon 0.14.0, samod 0.15.0, pest 2.9.2, chumsky 0.13.0, lalrpop 0.23.1, tree-sitter 0.27.0. gobley's UniFFI Gradle plugin 0.3.7, per its docs.
+### Name and rename scope (S18)
 
-### Not done (assumed, or untested)
+Display name Liftoscript++, short form LS++, file extension `.lspp`. Crates and the wasm and Kotlin namespaces use `lspp` or `ls_pp`. Done: the crates are renamed (`415fb07`), goldens live in `testdata/golden/lspp/`, and `deno task gen:lspp` regenerates test data. Never touched: `packages/liftoscript`, NOTICE, and the liftosaur credit. Named for the TS oracle on purpose and kept: `deno task golden:liftoscript` and `fuzz:liftoscript`, `scripts/golden_liftoscript*.ts`, and `qala_settings_to_liftoscript` and `liftoscriptSettings`, which build the oracle's `ISettings`. Liftosaur programs stay importable; programs using LS++ extensions do not export back.
 
-- **No arm64 build.** No NDK on this machine. Unmeasured: real `.so` size with run and engine code, `cargo-ndk` behaviour, 16 KB page alignment, call latency on the phone.
-- **No Vite load.** The same wasm under Vite (`vite-plugin-wasm` or `--target web` with an explicit `init(url)`) was assumed to work and untested when the spike ran. It works (2026-10-14): `--target web` loads under Vite by URL with an explicit `init`, in dev and in a production build served by the Deno server (`apps/web/lsppWasmPlugin.ts`, `apps/web/e2e/program_editor.mjs`).
-- **No sync of any kind.** Not tested: a Rust or Kotlin client against `server/ws.ts`; samod against the Deno server; `org.automerge:automerge` 0.0.9 opening a document and exchanging sync messages on Android; whether it exposes the sync-state API or incremental save; whether it can hydrate a whole document to a tree or JSON.
-- **No Kotlin ran anywhere.** Codegen output was read, never compiled or executed on a device.
-- **samod on wasm32** is unlikely (tokio, rand, chrono in its dependency list) but not tried.
-- **wasm-opt** and gzip numbers for the shipping build are unmeasured.
-- The `p0`/Kalman and generator code were not ported; conformance is untested beyond the rounding case.
+### Import: PDF and voice (S19)
 
-### Answers to the task's spike questions
+One pipeline, two front ends. A small model never writes program text.
 
-**2a. Rust automerge on Android, sync against the Deno server.** Not tested, and superseded: Automerge is dropped (DECISIONS S3 amended, S8, S11). What follows is the earlier analysis, kept for the record. The research said not to build it that way. The Rust core never holds a document on any platform. On Android the document owner is the Kotlin binding `org.automerge:automerge` (0.0.x, wraps Rust through JNI). Sync is a small OkHttp WebSocket adapter that does the automerge-repo v1 handshake (CBOR `join`, `peer`) and relays `request` and `sync` messages, using the binding's sync-state calls for the payloads. `server/ws.ts` already implements the stock v1 protocol, so no server change is expected. samod (Rust, v0.15, experimental) probably speaks the same wire protocol and has a sans-IO core meant for FFI, but driving it from Kotlin is a large surface for one document. Revisit it when it has a stable release and a wasm or Android story. Automerge in the spike's wasm build exists only to size it: about 715 KB, a cost the web does not need to pay because JS automerge already ships there.
+```
+PDF  -> MinerU (layout, tables, scans) -> markdown chunks \
+                                                            -> callisto agent, json_schema -> edit list
+voice -> Gemma 4 E4B audio -> transcript                    /
+edit list -> exercise matching (fuzzy, confirm ambiguous) -> emitter (LS++ text) -> parser + lint
+          -> diff shown to the owner -> confirm -> applied
+```
 
-**2b. UniFFI.** Codegen works and produces idiomatic Kotlin for records and enums. The boundary guidance is above: JSON strings for state, one `ByteArray` for columnar fixes. Gradle integration is gobley or a hand-built `cargo ndk` plus `uniffi-bindgen generate --library` step; the pairing of gobley with UniFFI 0.32 is unchecked. The arm64 and APK-size half is not done.
+Merged (`8f5bd5c`): the edit-list schema, matcher and emitter in `packages/llm`, and `POST /api/import/text` in `server/import.ts`, with the confirm step on the same endpoint via `resolutions`. Built since and run live 2026-10-30: `POST /api/import/pdf` (`server/importPdf.ts`, chunking in `packages/llm/importChunk.ts`), `POST /api/transcribe` (`server/transcribe.ts`), and the desktop import screen. Open: equipment on imported lifts (D38). Neither PDF nor transcribe calls `requireUser`; they rely on the tailnet, capped at one in-flight read per identity when the header is present.
 
-**2c. Same crate with Vite and Deno.** Deno: yes, verified. Vite: assumed.
+The edit list is the schema: day or week, exercise name, sets, reps, optional weight, RPE, rest, notes. A missing weight becomes `?+`. The model sees chunks, not the whole PDF (the callisto context is 8192 tokens): `chunkProgramText` splits on `Week N` and `Day N` headings into chunks of at most 3000 characters, `importChunks` runs them one at a time, and code owns the week and day numbers. One failed chunk fails the whole import. A merged list holds up to 600 items. Validation failures go back to the model once with the parser's messages, then to manual entry; a down or slow backend never blocks the user. "Split squat" is ambiguous, so the matcher asks.
 
-### Go/no-go criterion after the next spike
+PDF text is untrusted: the model only fills a fixed schema, nothing it returns is executed, and the owner confirms a diff. Caps are 10 MB and 40 pages, helper programs run from an argument array with a scrubbed environment and a timeout, and uploads are read with a byte cap counted while reading, a total deadline, a shared pool of four read slots and one per identity. MinerU runs on Sonoro; if it is down, `pdftotext -layout` stands in for born-digital PDFs with a notice, and scans fail clearly. MinerU is reached by running Sonoro's `sidecar/mineru_adapter.py` as a subprocess from `server/mineru.ts`, not through the sidecar's magazine `/ingest` route, which would send text off the machine. If that should become HTTP, the sidecar needs a raw `/mineru` route.
 
-The next spike (milestone A0 in `docs/android-native.md`) must pass these before any porting starts. All five are on-device or against the real server.
+### Models (S20)
 
-| # | Check | Pass |
+| Job | Pick | Why |
 |---|---|---|
-| 1 | arm64 build with NDK, loaded from a Kotlin test, 20,000-fix `ByteArray` through a stub `step` | `.so` under 2 MB stripped, call under 5 ms, 16 KB aligned |
-| 2 | Differential fuzz of `roundWeight`, `doubleProgression` and `e1rm` (Rust against Deno) over 1,000,000 random inputs including half-integers and negatives | zero mismatches, with `js_round` in place |
-| 3 | Sync round trip: a throwaway `POST /api/sync` in the Deno server and a Kotlin client against it, one record edited offline on a JS peer and on the phone | both converge; the higher HLC wins the conflicting field; 1,000 records sync in under 1 s |
-| 4 | Port `filterFixes` and `computeSplits` into `crates/qala-core` as the R0 and R1 scaffold (not the throwaway spike crate), compare to fixtures captured from TS | equal to 1e-9 on every fixture |
-| 5 | Oracle dump: `scripts/golden_liftoscript.ts` writes canonical JSON for all 60 built-ins; a Rust lexer and parser for `liftoscript.grammar` evaluates the first five programs identically | identical canonical JSON, no errors |
+| PDF to text and tables | MinerU (Sonoro) | One path for text PDFs, tables and scans; already served. `pdftotext` is the degraded path. |
+| Speech to text | Gemma 4 E4B with its mmproj (llama-server :8083) | One model covers dictation, page photos and extraction. Whisper.cpp is the fallback. |
+| Edit-list extraction | Gemma 4 E4B on callisto, `json_schema` | Already the Qala agent. |
 
-Checks 3 and 5 changed on 2026-09-30: sync is records over HTTP (Automerge dropped) and liftoscript is a Rust port with no quickjs interim. If check 5 shows the port is much bigger than 3 to 5 weeks, the stopgap is quickjs-kt (0.92 MB `.so`, one maintainer, unverified on our bundle).
+E4B accepts image and audio through its mmproj, but the callisto router loads it without one, so the mmproj build runs as its own llama-server on the B60 at :8083 (alias `gemma-4-E4B-mm`). Only the open-weight Voxtral Mini 4B Realtime would be self-hosted; Mistral's hosted Voxtral API sends audio off the machine and is not used.
 
-## Appendix B. Open questions
+Benchmark 2026-10-01: 20 synthetic gym clips, two Kokoro voices, a clip right only if every number is right. E4B 20 of 20 unprompted at about 0.85 s median; whisper.cpp 15 of 20 unprompted (spoken weights came out as times), 20 of 20 with an initial prompt of example weights, at about 0.4 s. Whisper adds punctuation, E4B does not. Neither has been rechecked on the owner's real voice in gym noise; that is V02 in `docs/decisions-pending.md`. Whisper stays on :8082 (`scripts/whisper-serve.sh`) as the fallback.
 
-Folded in from `docs/rust-core-open-questions.md` (deleted 2026-10-02). Collected 2026-09-30 during planning. Answer whenever they come up; each says what it blocks and the default I'll assume until told otherwise. Questions where the plan already took a default are marked **Default in the plan**. Those are Claude's recommendations, written down as proposed, and every one is still open for you to overturn.
+### Build order, as built
 
-### Scope and direction
+Rename done (`415fb07`). Error positions, `fmt`, lint, dry run and `unresolved_sets` done in Rust (`32cb81c`); `qala-ffi` exports all six S21 functions plus the evaluation calls, the Gradle build generates their Kotlin bindings, and `LsppToolsFfiTest` calls each one. No Kotlin wrapper uses them yet. Edit-list schema, emitter and validator done (`8f5bd5c`). `POST /api/import/text` merged, PDF and transcribe built and run live. `POST /api/transcribe` takes webm, ogg, mp4, mp3, flac or wav, caps 8 MB and 30 s, converts with ffmpeg and returns `{ text, engine, fallback }`; it returns the transcript only and the client calls `/api/import/text` next, so a misheard number is visible first. Desktop mic capture is built in the program editor with a 30 s cap; phone and Android capture are open (D36).
 
-1. Does the React phone shell survive? PLAN 3 says it stays as a PWA for iOS friends who only lift. If it goes, the web only needs the desktop shell and the Rust wasm build gets simpler. Default: keep it, frozen, no new features. **Settled 2026-10-01** (S13): frozen as a PWA; the Capacitor wrapper is deleted.
-2. Is native Kotlin the only Android app, or do you want Compose Multiplatform kept open for iOS later? Blocks module layout. Default: Android only, but keep the native layer isolated from the Rust core so iOS stays possible. **Settled 2026-10-14**: as the default; no Compose Multiplatform.
-3. Do you accept two UI codebases (React for desktop, Compose for phone) drifting on design? Default: share one token JSON and the chart validation script, and nothing else. **Settled 2026-10-14**: as built, `tokens.css` generates Android's `Tokens.kt` and both sides test contrast on it; nothing else is shared.
-4. Is Rust acceptable as a language you will maintain, or should it be hidden behind a stable API you rarely touch? Affects how much logic I put in Rust versus Kotlin. Default: Rust only for logic that must match across platforms. **Settled 2026-10-14**: as the default; Kotlin keeps the UI and platform glue, and rest and warm-up planning is D32.
+### Engine bindings
 
-### Rust core
+Added to `VScriptBindings` (`src/liftoscriptFns.ts`) as plain numbers, so the evaluator's type system is untouched:
 
-5. ~~Is the liftoscript port worth it?~~ Answered 2026-09-30: yes, to Rust, evaluation path only (S12). **Landed 2026-10-01 as LS++** (`docs/ls-plus-plus.md`); the quickjs-kt stopgap question is moot.
-6. How long will you tolerate the existing TS packages and the Rust crates both existing? The plan keeps TS until each Rust replacement passes conformance. Default: no deadline, delete TS per package only after golden vectors pass on all targets. **Settled 2026-10-14**: as the default; Rust is the main implementation and each TS package goes once its port checks out.
-7. Rust and TS will disagree on edge cases (rounding of .5, float formatting, Date handling). When they differ, which one is right? Default: TS is the oracle until a case is reviewed and the vector is edited by hand. **Settled 2026-10-14**: Rust is the main implementation; TS is only the reference for the check, a disagreement is reviewed by hand, and after the TS is deleted the vectors are Rust's regression suite.
-8. Who owns upstream liftosaur fixes once the vendored copy stops being the runtime? Default: tracked in an issue list, ported by hand when you ask. **Settled 2026-10-14**: nobody; upstream isn't followed, Qala is its own thing now.
+| Binding | Range | Neutral | Meaning |
+|---|---|---|---|
+| `readiness` | 0-1 | 1 | Derived session readiness from the check-in. |
+| `prs` | 0-10 | 0 | Perceived Recovery Status tap at session start. |
+| `soreness` | 1-4 | 1 | Max RP soreness over the exercise's target muscles. |
+| `fatigueLocal` | 0-1 | 0 | Normalised per-muscle fatigue for the prime movers. |
+| `deload` | 0, 1, 2 | 0 | None, per-muscle reactive, systemic. |
+| `recWeightPct` | -10 to 2.5 | 0 | Engine's recommended weight change, percent. |
+| `recSets` | -2 to 1 | 0 | Engine's recommended set-count change. |
 
-### Document and sync
+Semantics preserved from liftosaur: `progress: custom(state...) {~ ~}` runs once after the workout per exercise and may write `weights[...]`, `reps`, `RPE`, `timers`, `numberOfSets`, `rm1`, the variation indexes and `state.*`; `update: custom() {~ ~}` runs at `setIndex == 0` and after every set and writes only the current entry. Built-in progressions `lp(...)`, `dp(...)`, `sum(...)` are unchanged.
 
-9. ~~Document ownership~~ Moot: Automerge is dropped (S11). Say so if you want it kept after all.
-10. **Default in the plan**: tracks are not sync records; they are Room plus content-addressed blobs (S9). Still worth measuring before it is locked in.
-11. ~~Fallback if Kotlin sync fails~~ Moot with record sync. New: is per-user SQLite on the server fine, and do you accept losing one write silently on a same-field conflict? Default: yes to both.
-12. Answered by the decision to drop Automerge: you edit on one device at a time, so last-write-wins per field is enough. Say if concurrent editing matters more than that.
-13. Do you want the phone to sync in the background (WorkManager) or only when the app is open? Default: on app open, on run end, and on workout end.
+Wiring in the TS oracle, mirrored by Rust through `qala-lspp-json`: `createEngineBindings(input)` in `src/runtime.ts` builds clamped bindings with the neutral defaults above; `createScriptBindings` and `applyEngineBindings` merge them before a run; `Progress_defaultEngineBindings()` in `src/models/progress.ts` is the single source of the defaults, so scripts reading a binding without the engine attached see neutral values, not errors; `runFinishDayScript` accepts `{ engine }` and `runAllFinishDayScripts` accepts `engineFor(entry)`. Oracle notes: `rollbar` and `utils/dialog` are stubbed to console output in `src/parser.ts`, `micro-memoize` is replaced by `src/utils/memoize.ts`, the exercise database and pure helpers are unchanged, `exerciseDescriptions.ts` (862 KB of prose) is skipped, and the Lezer grammars ship as liftosaur's prebuilt parsers with no codegen step.
 
-### Android specifics
+## Appendix. Open questions
 
-14. minSdk 33 or 34 is fine for one Nothing Phone 4a Pro. Does any other device need to run this? Default: only your phone. **Default in the plan** (S7): minSdk 34. Only changes if another device needs to run it.
-15. Are you willing to move targetSdk to 37 once Nothing OS 5.0 (Android 17) is stable? Default: target 36 now, retest foreground service and audio ducking on 37 in October. **Default in the plan** (S7): target 36, move to 37 after the October retest.
-16. Play Services dependency: Fused location is the recommended single position source, with a LocationManager fallback. OK to depend on Google Play Services on this phone? Default: yes, fallback kept. **Default in the plan** (S15): Fused as the single source, `LocationManager` fallback.
-17. Does the phone have an L5 band? Unknown; a 5-minute GnssStatus test settles it. Do you want me to write that test app first? Default: add it to the spike. **Default in the plan**: it is part of milestone A0.
-18. Will you test on the phone during the build, or only at gates? The Android toolchain (JDK, SDK, Gradle, adb) is not installed on this machine at all. Default: I provision it as milestone zero, you plug the phone in for gates only. **Default in the plan**: milestone A0 provisions the toolchain.
-19. Heart-rate strap: which model do you have, or will you buy one? Blocks BLE testing. Default: standard 0x180D strap, tested when you have one.
+Collected 2026-09-30. Settled items are one line each; open items keep their default. The session queue for anything that needs an owner call is `docs/decisions-pending.md`, which wins if the two disagree.
 
-### Product behavior
+Settled: phone shell frozen as a PWA (S13); Android only, no Compose Multiplatform, Compose kept out of `data/` and the core (2026-10-14); only tokens shared between the UIs; Rust only for logic that must match across platforms; TS deleted per package once its port checks out, Rust is the main implementation (S6); upstream liftosaur not followed (S17); tracks are blobs, not sync records (D07, S9); per-user SQLite and silent same-field loss (D06, S11); foreground sync only (D06); Fused location with `LocationManager` fallback, TTS ducking with tones fallback, resume silently with the gap marked (D11, S15); Gradle wrapper checked in; generator port deferred, the phone pulls generated workouts from the server (D36); Coach stays TypeScript behind a server route (S14).
 
-20. Cue audio: speech, tones, or both? Spotify ducking is untested. Default: speech with navigation-guidance ducking, tones as the fallback. **Default in the plan** (S15): speech with ducking, tones as fallback.
-21. When the recorder service is killed mid-run, should the app resume the run silently or ask? Default: resume and mark the gap. **Default in the plan** (S15): resume from Room and mark the gap.
-22. Do you want TalkBack and a table view on every chart (DESIGN 6.2 says yes)? It costs real Canvas work on Android. Default: yes, built by hand for the Canvas charts.
-23. Offline map: download one `.pmtiles` file for your region once, instead of the z/x/y fallback? Default: yes. The server also needs to serve glyphs and sprites, or the app bundles them. **Default in the plan** (S16): downloaded `.pmtiles`; glyphs and sprites still need a home.
+Open, with the default the build assumes until told otherwise:
 
-### Charts, fonts and assets
+- targetSdk: 36 now, move to 37 after retesting the foreground service and ducking on Nothing OS 5.0 (D14). minSdk stays 34 unless another device appears.
+- L5 check: does the phone track L5 (about 1176 MHz)? Part of the real-phone pass (D15).
+- Testing: owner at gates only; the toolchain is provisioned (D15).
+- HR strap: a standard 0x180D strap when one exists (D15).
+- Charts: TalkBack plus a table view on every chart, hand-built for Canvas (D16). Vico plus Canvas split, with a run-series spike at 7,000 points (D13).
+- Maps: downloaded region `.pmtiles`; glyphs and sprites bundled or served, and one pinned MapLibre native line (D12).
+- Fonts and icons: DM Mono and Qala Test TTFs converted locally from the repo woff2; Lucide as generated Compose vectors, `sport-shoe` for runs. Both built, awaiting confirmation (D17).
+- Process leftovers: Android on main with no long branch, the decision log written with the plan and approved through the queue, nothing else from the Stride review changing with Kotlin (D18).
+- HR-zone coaching: build it once, in whichever language `guided` lives in then (D19).
+- Rest and warm-up planning in Kotlin or Rust (D32, with PLAN section 6.6 and 6.7 as the TS reference).
 
-24. Vico for standard charts and hand-drawn Canvas for the week strip, readiness ring and run series. OK? A 1-day spike on 7,000 points with a synced crosshair decides whether the run series stays in Vico. Default: as stated. **Default in the plan** (S10), pending the run-series spike.
-25. Android needs TTF files for DM Mono (only woff2 is in the repo) and Qala Test and Faustina. The OFL permits conversion. Fine to fetch DM Mono TTF from Google Fonts? Default: yes.
-26. Lucide icons: use the Lucide vector set converted to Compose ImageVectors, with `sport-shoe` for runs. OK? Default: yes.
-
-### Process
-
-27. Branching: one long-lived `android-native` branch, or small PRs into main behind a module? Default: new `apps/android` module on main, no long branch.
-28. Do you want the decision log updated now (S1 and S2 superseded with dated notes, new S-series rows) or only after you review the plan? Default: written with the plan, marked "proposed" until you approve.
-29. Uncommitted R5 and R6 edits in docs/DECISIONS.md and docs/PLAN.md (from the Stride review) stay as they are. Anything else in that review that should change with the move to Kotlin? Default: no.
-
-### Added after the plan was written
-
-30. Check in the Gradle wrapper jar (about 60 KB)? The deleted Capacitor wrapper's `package.json` (`apps/phone`, in git history) said "no Gradle binaries in the repo". Default: check it in for the native project. **Settled 2026-10-01**: the wrapper jar is checked in (`docs/android-native.md` 11).
-31. The generator port is deferred because the phone doesn't author programs. Do you want it ported anyway for one-implementation purity? Default: defer. **Settled 2026-10-14**: defer. Later the phone adds workouts and pulls generated ones from the server (`docs/decisions-pending.md` D36).
-32. ~~Liftoscript to Rust go/no-go~~ Answered: go (S12).
-33. The Coach on the phone calls a new server route that builds the prompt and validates the response, so `packages/llm` stays TypeScript. OK? Default: yes. **Settled 2026-10-14**: yes, the Coach stays TypeScript behind a server route.
-34. HR-zone coaching (R6) isn't built. Build it in TS now or wait for the Rust `guided` port? Default: wait, build once.
-35. ~~Automerge hydration~~ Moot.
-36. With liftoscript going to Rust, would you rather the run, math and engine also stay out of Rust and live in Kotlin on the phone (one phone language, accept the fork with the web)? Default: no, keep the Rust core so the three targets share one implementation.
-37. Do you still want a one-day oracle dump for liftoscript before anything else is ported? Default: yes, it is the first step of the port. **Done 2026-10-01**: the dump exists (`scripts/golden_liftoscript.ts`, `testdata/golden/lspp/`).

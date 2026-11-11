@@ -1,4 +1,4 @@
-/* Import screen for the program editor (docs/ls-plus-plus.md 4, DECISIONS
+/* Import screen for the program editor (docs/rust-core.md section 12, DECISIONS
  * S19). Paste or dictate a program, or choose a PDF; the server reads it into
  * an edit list, asks about any exercise name it can't place, and proposes LS++
  * text. The owner answers, sees the diff against the editor and puts the text

@@ -1,4 +1,4 @@
-// POST /api/transcribe (DECISIONS S20, docs/ls-plus-plus.md 4 and 5).
+// POST /api/transcribe (DECISIONS S20, docs/rust-core.md section 12).
 //
 // Audio in, transcript out. The upload is capped in size, sniffed against a
 // short list of audio containers, converted to 16 kHz mono WAV with ffmpeg, and

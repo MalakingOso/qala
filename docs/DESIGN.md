@@ -2,7 +2,7 @@
 
 The single reference for how Qala looks and behaves on screen. The owner's choices behind it are in `docs/DECISIONS.md` (codes like L4 or U3 below point there). Engine rules the screens display are in `docs/PLAN.md` section 6. The review canvas that shows all of this is `mockups/qala-app-mockups.html` (section 8 below).
 
-Status 2026-10-13: this describes the web app (desktop and the frozen phone PWA). The native Android app takes its tokens, plates and icons from here but departs on type (Recursive for UI text, DECISIONS L19), on Today's fixed day rail with notched cards and glass (S23), and on the Today cards. Those are specified in `docs/PLAN-rail-refresh.md` and the code, and this file has not been brought in line.
+Status 2026-10-13: this describes the web app (desktop and the frozen phone PWA). The native Android app takes its tokens, plates and icons from here but departs on type (Recursive for UI text, DECISIONS L19), on Today's fixed day rail with notched cards and glass (S23), and on the Today cards. Those are specified in `docs/archive/completed.md` (Type and rail, as built) and the code, and this file has not been brought in line.
 
 Visual refinement, 2026-09-13: a smoothing pass gave the app responsive
 charts, consistent controls, a full-height desktop workspace and a

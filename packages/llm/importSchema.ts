@@ -1,4 +1,4 @@
-// Edit-list schema for text import (DECISIONS S19, docs/ls-plus-plus.md 4).
+// Edit-list schema for text import (DECISIONS S19, docs/rust-core.md section 12).
 //
 // The model fills this fixed schema and nothing else. It never writes program
 // text. Everything it returns is untrusted: validateEditList checks every

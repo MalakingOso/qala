@@ -36,7 +36,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 
 /**
- * Hand-written dependency injection (docs/PLAN-m2-room-data.md, DI): constructor injection and no library. The
+ * Hand-written dependency injection (docs/archive/completed.md, M2 as built): constructor injection and no library. The
  * container owns the Room database, the [RecordWriter], the repositories and the [EngineRepository], and
  * screens reach it through [LocalAppContainer].
  *

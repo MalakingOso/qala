@@ -34,7 +34,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonObject
 
 /**
- * The in-memory engine snapshot (docs/PLAN-m2-room-data.md, Repositories). It is rebuilt on launch and
+ * The in-memory engine snapshot (docs/archive/completed.md, M2 as built). It is rebuilt on launch and
  * whenever sessions, runs, check-ins, weights, skips, the status, the settings or the program change: the
  * records are collected, debounced by [debounceMs] so a burst of writes costs one build, and handed to
  * [EngineCompute] on `Dispatchers.Default`. The snapshot holds the engine state, the readiness summary,

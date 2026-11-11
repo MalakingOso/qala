@@ -71,7 +71,7 @@ class TodayInput(
 
 /**
  * Today's kind, day and stages, mirroring `StageState` in `apps/web/src/store/types.ts` plus the passive
- * interludes (docs/PLAN-m2-room-data.md, Today's day and stages). Pure: no clock, no storage.
+ * interludes (docs/archive/completed.md, M2 as built). Pure: no clock, no storage.
  *
  * - A lift day is a training weekday that is not skipped and has a program to lift (or any day with a lift
  *   already logged, since a logged day stays logged). It has six stages: check-in, warm-up, lift, run, recover,

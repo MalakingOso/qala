@@ -1,4 +1,4 @@
-//! The derived numbers the Today screen needs (docs/PLAN-m1-rust-core.md, "Derived numbers").
+//! The derived numbers the Today screen needs (docs/archive/completed.md, M1 as built).
 //!
 //! None of these has a TS source, so every definition below is an assumption written down. The
 //! goldens in `testdata/golden/derived/` are worked by hand from these definitions.

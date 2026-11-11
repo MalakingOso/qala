@@ -1,4 +1,4 @@
-//! JSON entry points for the adapter and the derived numbers (docs/PLAN-m1-rust-core.md, API
+//! JSON entry points for the adapter and the derived numbers (docs/archive/completed.md, M1 as built, API
 //! table). `api.rs` re-exports the four functions.
 //!
 //! Every request is a JSON object with `"v": 1` and camelCase fields; unknown fields are

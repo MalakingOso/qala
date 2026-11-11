@@ -8,7 +8,7 @@ import androidx.room.PrimaryKey
 import androidx.room.Relation
 
 /*
- * One typed table per record type (docs/PLAN-m2-room-data.md, Tables). Ids are UUID strings, except the
+ * One typed table per record type (docs/archive/completed.md, M2 as built). Ids are UUID strings, except the
  * records that have a natural identity: a skip is "skip-<date>", availability is the single row
  * "availability", a settings group is "settings-<group>". The prefixes keep every record id unique across
  * types, so field_clock can be keyed by (recordId, field) alone.

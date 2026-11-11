@@ -1,4 +1,4 @@
-/* Dictation control (docs/ls-plus-plus.md 4): record up to 30 s with
+/* Dictation control (docs/rust-core.md section 12): record up to 30 s with
  * MediaRecorder, send the clip to POST /api/transcribe, hand the transcript
  * to the page. The import screen (ImportPanel.tsx) puts it in its text box,
  * where the owner reads and corrects it before sending it to

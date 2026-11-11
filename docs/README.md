@@ -1,49 +1,35 @@
 # Docs
 
-Start at `ROADMAP.md`: where each track stands and what it waits on. Every plan doc opens with a status line (done, in progress, planned, superseded or historical) and a date. When a plan and `DECISIONS.md` disagree, `DECISIONS.md` wins.
+Start at `ROADMAP.md`. It says where each track stands and what it waits on. This index is the whole folder on one page: ten living files at the top level, three decision records, one completed-work summary, and the research, blog and podcast folders.
 
-## Roadmap and decisions
+When files disagree, `DECISIONS.md` wins. Every living file opens with a status line and a date.
 
-| File | Status | What it is |
-|---|---|---|
-| `ROADMAP.md` | living | Done, in flight, next and blocked, by track. |
-| `DECISIONS.md` | living | The owner's decision log. Rows are added, never renumbered. |
-| `decisions-pending.md` | living | The queue of open choices (D01 to D35) and the protocol for deciding them. |
-| `adr/` | 0001 accepted, 0002 partly decided and not built, 0003 accepted in part | Decision records. |
-| `CONTEXT.md` | living | The glossary. |
+## Living files
 
-## Plans
+| File | What it is |
+|---|---|
+| `ROADMAP.md` | Done, in flight, next and blocked, by track. It also holds the Tooling plans: Deno to Bun (decided, not started) and the later Elixir model gateway. |
+| `DECISIONS.md` | The owner's decision log. Rows are added, never renumbered. |
+| `decisions-pending.md` | The queue of open choices (D12 to D40) and the protocol for deciding them. |
+| `CONTEXT.md` | The glossary. |
+| `DESIGN.md` | The design system and screen spec, for the web. The native app departs from it; see `android-native.md` and `archive/completed.md`. |
+| `PLAN.md` | The 2026-09-13 build plan, trimmed. Sections 6 (engine), 12 (generator), 14 (gates) and 16a to 16f are still the reference; superseded sections are pointers that keep their numbers so citations still land. |
+| `android-native.md` | The native Android app: platform, modules, run recorder, data layer, phases A0 to A7. |
+| `rust-core.md` | The Rust core: architecture, sync, porting order, golden vectors, and in section 12 the LS++ language, its import pipeline and engine bindings. |
+| `plan-accounts-logins.md` | Friends-and-family accounts without Tailscale. Planned, not started. |
 
-| File | Status | What it is |
-|---|---|---|
-| `PLAN.md` | partly superseded | The 2026-09-13 build plan. Sections 6, 12, 14 and 16a to 16f are still the reference. |
-| `DESIGN.md` | living, web | The design system and screen spec. The native app departs from it (see its status line). |
-| `android-native.md` | in progress | The native Android app: platform, modules, run recorder, data layer, phases A0 to A7. |
-| `rust-core.md` | in progress | The Rust core: architecture, sync, porting order, spike report, open questions. |
-| `ls-plus-plus.md` | built, with leftovers | The LS++ language, its extensions, the import pipeline. |
-| `plan-accounts-logins.md` | planned, not started | Friends-and-family accounts without Tailscale. |
-| `PLAN-bun-migration.md` | decided, not started | Deno to Bun, and the later Elixir model gateway. |
+## Decision records
 
-## Finished work, kept in place
+`adr/` holds three records: 0001 Coach open chat (accepted), 0002 friends-and-family auth (partly decided, not built), 0003 load zoom rework (accepted in part).
 
-Code comments and DECISIONS rows cite these by path, so they haven't moved.
+## Finished work
 
-| File | Status | What it is |
-|---|---|---|
-| `PLAN-rail-refresh.md` | done | The native phone refresh, M1 to M4. |
-| `PLAN-m1-rust-core.md` | done | Detail for M1: `qala-core`, `qala-ffi`, goldens. |
-| `PLAN-m2-room-data.md` | done | Detail for M2: the Room data module. |
-| `HANDOFF-rail-refresh.md` | historical | The design handoff the refresh was built from. |
-| `desktop-look-update-notes.md` | historical, with open questions | Notes on the refined desktop look. Its seven questions are open. |
+`archive/completed.md` is the one-page record of everything that shipped and the files that were removed to make room: the native refresh M1 to M4 and its detail plans, the desktop look update, the landing intro, the M4 mockups and the Rust spike. Code comments that cited those plans now point there.
 
 ## Evidence and writing
 
-| Folder | Status | What it is |
-|---|---|---|
-| `research/` | reports and briefs | `RESEARCH-*.md`. The reports are findings. The briefs (beginner lifting, body composition, mindfulness, run plans) say at the top that nothing in them is a finding yet. |
-| `blog/` | no drafts | The owner's blog: format, voice rules, template. |
-| `podcast/` | one script, no audio | Beginner podcast scripts. Audio isn't in git. |
-
-## Archive
-
-`archive/` holds finished handoffs and spikes: `handoff-intro-dust.md` (done), `mockups-m4-options.md` (historical) and `spike-qcore/` (a throwaway Rust spike, superseded by `crates/qala-core`). Nothing in the code cites them.
+| Folder | What it is |
+|---|---|
+| `research/` | Five evidence reports (`RESEARCH-*.md`, findings with tagged sources) plus `BRIEFS.md`, four briefs in one file where nothing is a finding yet. `research/README.md` indexes them. |
+| `blog/` | The owner's blog: format, voice rules, template. No drafts yet. |
+| `podcast/` | Beginner podcast scripts. One script, no audio. Audio is never in git. |

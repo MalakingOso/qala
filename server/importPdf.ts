@@ -1,4 +1,4 @@
-// POST /api/import/pdf (DECISIONS S19, docs/ls-plus-plus.md 4).
+// POST /api/import/pdf (DECISIONS S19, docs/rust-core.md section 12).
 //
 // The body is a PDF (raw, or a multipart `file` part). The route reads its
 // text with MinerU, or with `pdftotext -layout` when MinerU is down, cuts the

@@ -1,4 +1,4 @@
-/* Dictation helpers (docs/ls-plus-plus.md 4 and 5): pick a recording format,
+/* Dictation helpers (docs/rust-core.md section 12): pick a recording format,
  * show the clock, and send one clip to POST /api/transcribe. DOM-free, so the
  * component stays thin and tests can pass a fake fetch. */
 

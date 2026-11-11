@@ -12,8 +12,7 @@ import kotlinx.serialization.json.JsonClassDiscriminator
 import kotlinx.serialization.json.JsonObject
 
 /*
- * Request and result shapes of the qala-core calls, as in docs/PLAN-m1-rust-core.md "Final JSON shapes (as
- * built)". Requests do not carry `v`; QalaCore adds it. Where the plan's API table and the Rust code differ
+ * Request and result shapes of the qala-core calls, as in docs/archive/completed.md (M1 as built). Requests do not carry `v`; QalaCore adds it. Where the plan's API table and the Rust code differ
  * the Rust code wins: `build_engine_state` and `readiness_summary` take check-ins as their own list, not
  * inside `records`.
  */

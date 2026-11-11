@@ -1,4 +1,4 @@
-/* Program import (docs/ls-plus-plus.md 4, DECISIONS S19): send pasted or
+/* Program import (docs/rust-core.md section 12, DECISIONS S19): send pasted or
  * dictated text to POST /api/import/text, or a PDF to POST /api/import/pdf,
  * read the proposal back, and answer its questions through the confirm step
  * (the text route again, with the edit list and the owner's resolutions).

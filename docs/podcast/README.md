@@ -6,7 +6,7 @@ Plan section: `docs/PLAN.md` 16f. Decision: `docs/DECISIONS.md` P7.
 
 ## Rules
 
-1. **Sources before scripts.** Every claim in a script carries a marker like `[brief: RESEARCH-beginner-lifting.md 8]` on the sentence it supports. A marker that has not been resolved blocks recording.
+1. **Sources before scripts.** Every claim in a script carries a marker like `[brief: BRIEFS.md brief 1, section 8]` on the sentence it supports. A marker that has not been resolved blocks recording.
 2. **No invented numbers.** No rep ranges, gram targets, injury rates or timelines that do not trace to a sourced line in a brief. This is the same rule the plan follows everywhere else.
 3. **Plain voice, spoken.** Short sentences. Numbers written as people say them ("about a gram and a half per kilo"). No em dashes, no agent fingerprints, no hedging stacks.
 4. **No diagnosing.** The same line the app walks (PLAN 6.3): a flag is not a diagnosis, and a script is not medical advice.
@@ -35,7 +35,7 @@ Markdown, front matter with title, duration estimate and brief, then the script 
 ---
 title: Doing too much too soon
 minutes: 7
-brief: docs/research/RESEARCH-beginner-lifting.md
+brief: docs/research/BRIEFS.md (brief 1)
 status: draft
 ---
 

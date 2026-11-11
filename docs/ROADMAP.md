@@ -18,13 +18,13 @@ Beyond the queue, the order of work is the owner's call. The tables below give e
 
 ## Android app
 
-Plans: `docs/android-native.md` (the app), `docs/PLAN-rail-refresh.md` (the native refresh, M1 to M4).
+Plans: `docs/android-native.md` (the app). The native refresh M1 to M4 is done; see `docs/archive/completed.md`.
 
 | Item | State | Detail | Waiting on |
 |---|---|---|---|
 | Toolchain, design system, shell (A0, A1) | done 2026-10-01 | android-native 9, 11 | |
 | Capacitor removed (A7) | done 2026-10-01 | android-native 9 | |
-| Rust core and FFI, Room data layer, Today with day rail, check-in, skip sheet and status, weekday picker (M1 to M4) | done, merged by 2026-10-03 | PLAN-rail-refresh | |
+| Rust core and FFI, Room data layer, Today with day rail, check-in, skip sheet and status, weekday picker (M1 to M4) | done, merged by 2026-10-03 | archive/completed | |
 | Plate calculator | done 2026-10-13 | android-native 8 | |
 | History and All exercises | done 2026-10-13 | one All exercises grid, opened from the Warm-up, Workout and Rest headers, live during a workout | |
 | Warm-up, Workout, Rest | done 2026-10-13 | a finished workout saves real sets and advances the program through the finish-day scripts; per-side plates on the set rows and Rest; rest and warm-up planning is Kotlin, see the Rust track | |
@@ -41,11 +41,11 @@ Plans: `docs/android-native.md` (the app), `docs/PLAN-rail-refresh.md` (the nati
 
 ## Rust core and LS++
 
-Plans: `docs/rust-core.md`, `docs/ls-plus-plus.md`.
+Plans: `docs/rust-core.md` (the core, and section 12 for the LS++ language).
 
 | Item | State | Detail | Waiting on |
 |---|---|---|---|
-| LS++ port, S21 extensions, rename (R5) | done 2026-10-01 | ls-plus-plus 2, 3 | D09 (review) |
+| LS++ port, S21 extensions, rename (R5) | done 2026-10-01, approved 2026-11-11 (D09) | rust-core 12 | |
 | `qala-core`: engine, availability, HLC, records, adapter, Today numbers | done | rust-core 7 (R3 part) | |
 | Plate math with rounding and golden vectors | done 2026-10-13 | `testdata/golden/plates` | |
 | R1 run pipeline and `RunRecorder` | not started | rust-core 7; A2 needs it | |
@@ -62,7 +62,7 @@ Plans: `docs/rust-core.md`, `docs/ls-plus-plus.md`.
 | Rename leftovers | done 2026-10-14 | `testdata/golden/lspp/`, `gen:lspp`; names that run the TS oracle (`golden:liftoscript`, `fuzz:liftoscript`) keep them, per S18 | |
 | `gen:lspp` runs out of memory | fixed 2026-10-14 | the planner eval generator copied live Lezer nodes through their parent chains before collapsing them (not a Deno regression); now 15 s at about 300 MB. 13 of 555 cases in the gitignored `cases_planner_eval.json` changed, from expanded parse trees and two RangeError records to real data; no test reads that file | |
 | Generator port (R4) | deferred 2026-10-14 (owner) | rust-core 7; later the phone pulls generated workouts from the server instead | |
-| Retire `packages/liftoscript` as the oracle | not started | gate for the Bun move. Not unblocked: S17 keeps the TS copy as the desktop's authoring runtime until D36 settles where authoring runs, the port's review (D09) is open, and the server's import still reads the exercise catalog from it (`server/import.ts`), so a JSON catalog export comes first | D09, D36 |
+| Retire `packages/liftoscript` as the oracle | not started | gate for the Bun move. Not unblocked: S17 keeps the TS copy as the desktop's authoring runtime until D36 settles where authoring runs, and the server's import still reads the exercise catalog from it (`server/import.ts`), so a JSON catalog export comes first. The port's review (D09) was approved 2026-11-11 | D36 |
 
 ## Server and sync
 
@@ -96,7 +96,7 @@ Plans: `docs/android-native.md` 10, `docs/rust-core.md` 4 and 5, `docs/plan-acco
 |---|---|---|---|
 | Blog | no drafts yet | `docs/blog/` has the README and a template | D29 |
 | Podcast | one script, no audio | `docs/podcast/`; a script can't be recorded until its source markers resolve | D28 |
-| Research briefs (beginner lifting, body composition, mindfulness, run plans) | written 2026-10-02, "nothing in this file is a finding" | `docs/research/`; the sources still need reading in full | |
+| Research briefs (beginner lifting, body composition, mindfulness, run plans) | written 2026-10-02, "nothing in this file is a finding" | `docs/research/BRIEFS.md`; the sources still need reading in full | |
 | Starting-strength path (T12) | planned, nothing built | PLAN 16d | D27 |
 | Beginner and race run plans (R7) | planned, nothing built | PLAN 16c | D25 |
 | Mindfulness recommendation (R8) | planned | PLAN 16e | D26 |
@@ -108,8 +108,28 @@ Plans: `docs/android-native.md` 10, `docs/rust-core.md` 4 and 5, `docs/plan-acco
 
 | Item | State | Detail | Waiting on |
 |---|---|---|---|
-| Deno to Bun | decided 2026-10-13, not started | `docs/PLAN-bun-migration.md` | the LS++ port finished and `packages/liftoscript` retired as the oracle |
-| Elixir model gateway | later | same file, "Later". The seam is in: `server/llm.ts` reads `LLM_GATEWAY_URL` for the coach, import and chat routes (2026-10-30); `X-Qala-*` headers aren't passed yet, and transcription keeps its own `QALA_E4B_URL` and `QALA_WHISPER_URL` | queue waits over a couple of seconds, a second model host, or several people streaming coach chat |
+| Deno to Bun | decided 2026-10-13, not started | this section | the LS++ port finished and `packages/liftoscript` retired as the oracle |
+| Elixir model gateway | later | this section. The seam is in: `server/llm.ts` reads `LLM_GATEWAY_URL` for the coach, import and chat routes (2026-10-30); `X-Qala-*` headers aren't passed yet, and transcription keeps its own `QALA_E4B_URL` and `QALA_WHISPER_URL` | queue waits over a couple of seconds, a second model host, or several people streaming coach chat |
+
+### Deno to Bun (decided 2026-10-13, owner)
+
+Replace Deno with Bun. One binary covers what Deno does here: `bun test`, `bun fmt`, `bun lint`, `bun check`, `Bun.serve` and `bun:sqlite`. Fallback if the first check fails: Node with Vitest and tsx. Bun is not installed on this machine, and none of its commands have been run here. D31 in `docs/decisions-pending.md` still has to record this in DECISIONS; S1 still says Deno 2.
+
+Why wait: Bun runs JavaScriptCore, Deno and Node run V8, and the Rust ports are matched to V8 behavior (`crates/qala-lspp/src/js.rs` takes expected values from V8, for example `Math.round(-2.5)`). Retiring `packages/liftoscript` as the oracle removes the largest surface for that difference. Float-heavy goldens that stay TS can still differ in the last digit between engines. Bun 1.4 was also the first release written in Rust, which is a reason to re-read its docs at the time, not to rush.
+
+What Deno touches (2026-10-13 counts): 295 `Deno.test` declarations in 53 files, 34 `Deno.*` calls in the server outside tests (20 of them in `sync.ts` and `ws.ts`, which S11 replaces anyway), 16 scripts plus 5 generators, the root `deno.json` with 14 tasks and 8 workspace members, and the wasm bridge. About 10 of the 16 scripts are liftoscript-specific and go with the oracle.
+
+Steps, in order: (1) first check, record the `deno test` pass count, install Bun, re-run what remains and diff any surviving oracle output; (2) tooling base, `bunfig.toml`, a root `package.json`, `bun.lock`; (3) pure packages first (`engine`, `generator`, `run`, `llm`, web logic); (4) surviving scripts and the wasm load, through `Bun.file`; (5) record sync, then the server on `Bun.serve`; (6) cut over `deploy/qala.service`, run `bun fmt` as its own commit, drop `deno.json` and `deno.lock`; (7) record it in DECISIONS and a new ADR. Later, and separate: try Vite under Bun, swap `tsc --noEmit` for `bun check` once they agree, and revisit a Rust server.
+
+Open: whether Deno stays usable until the gate opens (the installed binary keeps running, new installs may not), which TS packages retire with LS++ and which retire later under S6, and whether the S22 VPS is live by then, which decides how much deploy risk the unit change carries.
+
+### Elixir model gateway (later)
+
+A small Elixir service between the app server and the model hosts (llama-server :8080, E4B-mm :8083, whisper.cpp :8082, Sonoro and MinerU), for queueing, fairness, streaming and fallback as the user count grows. Not part of the Deno exit, and Elixir is not installed here. Build it when queue waits pass a couple of seconds, a second model host appears, or several people stream coach chat at once.
+
+The split: the app server keeps session auth, prompts, schemas, matching and LS++ emit, and maps gateway failures to the existing 502 `{ degraded: true }` body. The gateway owns per-backend queues and concurrency limits, per-user fairness with interactive over batch, SSE passthrough that aborts upstream when the client drops, health checks and circuit breaking, and the E4B-to-whisper fallback. Contract: `POST /v1/chat/completions`, `POST /v1/transcribe`, `POST /v1/pdf`, and `GET /healthz` per backend. Between the services, `X-Qala-User`, `X-Qala-Ts` and an HMAC `X-Qala-Sig`, plus `X-Qala-Priority`. The gateway binds only to the private interface and never sees a cookie or passkey. One new client case: 429 with `Retry-After` when a user's queue cap is hit.
+
+It runs on callisto next to the GPUs, with the VPS app server calling in over a private link. That private link is the open item in ADR 0002: the VPS cannot reach callisto's loopback today, so `/api/llm/chat` there returns 502 degraded. S22 drops Tailscale for users, which a server-to-server link does not affect. A Phoenix app for the whole server was considered and rejected: it re-ports auth, tiles and elevation, and cannot share `qala-core` without Rustler NIFs.
 
 Run Rust tests only through `scripts/cargo-test-safe.sh -p <crate>`. A bare `cargo test` has OOM-killed the owner's terminal twice.
 
@@ -124,7 +144,6 @@ Run Rust tests only through `scripts/cargo-test-safe.sh -p <crate>`. A bare `car
 | Accounts | D21 public domain and DNS date, D23 hosted LLM fallback |
 | Charts, map, stats (A5) | D12 maps, D13 charts, D16 chart accessibility |
 | Android navigation | D20 keep the hand-written `Nav` or adopt a library, and the screenshot tool |
-| Rust core scope and rules | D09 review of the LS++ port |
 | Phone authoring (later) | D36 workouts from the phone |
 | Run extras (PLAN 16a) | D19 HR-zone timing |
 | Equipment renders | D24 bars |
@@ -138,16 +157,6 @@ Run Rust tests only through `scripts/cargo-test-safe.sh -p <crate>`. A bare `car
 
 The queue and the log disagree in places (S6 is marked decided while its leftovers sit in D03 and D04). This file follows the queue. Two real-data checks sit beside the queue: V01 (route-matching thresholds) and V02 (voice recheck on the owner's own voice).
 
-One decision is made and not in the log: Deno is replaced by Bun (2026-10-13, `docs/PLAN-bun-migration.md`). S1 still says Deno 2.
+One decision is made and not in the log: Deno is replaced by Bun (2026-10-13, Tooling above and queue item D31). S1 still says Deno 2.
 
-`docs/desktop-look-update-notes.md` holds seven questions recorded nowhere else:
-
-| Question | Overlap |
-|---|---|
-| 1 Which sans for desktop UI text | D02, decided: DM Sans |
-| 2 Chip shape, 4px rounded or pills | none |
-| 3 No avatar; the toolbar search and week switcher are new behavior | none |
-| 4 Past versus future look in the week chart | U27 rebuilt the chart |
-| 5 Deload in week 6 | U27's sample has the deload in week 6 |
-| 6 Muse's numbers not used | none |
-| 7 Chart title kept in the load zoom | U27 may have overtaken it |
+The desktop look update's seven questions are settled or queued: question 1 (which sans) was decided as DM Sans (D02, DECISIONS L16); the other six are queue item D40.

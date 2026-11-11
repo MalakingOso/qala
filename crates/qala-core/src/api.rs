@@ -1,4 +1,4 @@
-//! JSON string boundary over `qala-core` (docs/PLAN-m1-rust-core.md, API table).
+//! JSON string boundary over `qala-core` (docs/archive/completed.md, M1 as built, API table).
 //!
 //! Every function takes one request JSON string and returns the success envelope
 //! `{"v":1,"result":...}` as a string, or an `ApiError`. Same shape and conventions as

@@ -40,7 +40,7 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
 /**
- * Generates the debug seed (docs/PLAN-m2-room-data.md, Debug seed): about three weeks of Mon/Wed/Fri/Sat
+ * Generates the debug seed (docs/archive/completed.md, M2 as built): about three weeks of Mon/Wed/Fri/Sat
  * GZCLP lift days with two easy runs a week, a daily check-in, a weigh-in every two to three days and one
  * skipped day, ending the day before [generate]'s `today`.
  *

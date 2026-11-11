@@ -13,7 +13,7 @@ export const LLAMA_DEFAULTS = {
 
 /**
  * Where chat completions go: `LLM_GATEWAY_URL` when set (a gateway in front of
- * the model hosts, docs/PLAN-bun-migration.md "Later"), else the llama-server.
+ * the model hosts, docs/ROADMAP.md Tooling, Elixir model gateway), else the llama-server.
  */
 export function llmBaseUrl(
   gateway: string | undefined = Deno.env.get("LLM_GATEWAY_URL"),
