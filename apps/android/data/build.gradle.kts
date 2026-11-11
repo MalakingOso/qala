@@ -81,6 +81,25 @@ abstract class CargoNdkBuild : DefaultTask() {
     }
 }
 
+/** Copies the 2 h run vector into the instrumented tests' assets. Only that file: testdata/golden/run/fuzz is gitignored and large. */
+abstract class CopyRunVectors : DefaultTask() {
+    @get:InputFile @get:PathSensitive(PathSensitivity.NONE) abstract val source: RegularFileProperty
+    @get:OutputDirectory abstract val outDir: DirectoryProperty
+
+    @TaskAction
+    fun copy() {
+        val dir = outDir.get().asFile
+        dir.deleteRecursively()
+        dir.mkdirs()
+        source.get().asFile.copyTo(File(dir, "process_run_2h.json"))
+    }
+}
+
+val copyRunVectors = tasks.register<CopyRunVectors>("copyRunVectors") {
+    source.set(File(rustRoot, "testdata/golden/run/process_run_2h.json"))
+    outDir.set(layout.buildDirectory.dir("generated/runVectorAssets"))
+}
+
 val cargoHostBuild = tasks.register<CargoHostBuild>("cargoHostBuild") {
     this.repoRoot.set(project.provider { rustRoot })
     sources.from(rustSources())
@@ -105,6 +124,7 @@ androidComponents {
     onVariants { variant ->
         variant.sources.kotlin?.addGeneratedSourceDirectory(generateUniffi, GenerateUniffi::outDir)
         variant.sources.jniLibs?.addGeneratedSourceDirectory(cargoNdkBuild, CargoNdkBuild::jniLibs)
+        variant.androidTest?.sources?.assets?.addGeneratedSourceDirectory(copyRunVectors, CopyRunVectors::outDir)
     }
 }
 
