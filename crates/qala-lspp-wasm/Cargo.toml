@@ -3,7 +3,7 @@ name = "qala-lspp-wasm"
 version = "0.1.0"
 edition.workspace = true
 license.workspace = true
-description = "wasm-bindgen exports of the LS++ evaluation API (web, Deno)."
+description = "wasm-bindgen exports of the LS++ evaluation API (web, Bun)."
 
 [lib]
 crate-type = ["cdylib", "rlib"]

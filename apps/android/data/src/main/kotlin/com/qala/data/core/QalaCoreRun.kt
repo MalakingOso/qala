@@ -6,8 +6,8 @@ import uniffi.qala_ffi.RunRecorder as FfiRunRecorder
 import uniffi.qala_ffi.processRun as ffiProcessRun
 
 // ---- run pipeline (qala-core run/; docs/rust-core.md R1) ----
-// The TS pipeline in packages/run stays the oracle; these DTOs are the Kotlin face of the Rust port,
-// checked against it by testdata/golden/run. Distances are metres, times seconds, speeds m/s.
+// The Rust port is the pipeline (the TS oracle was deleted, S28); these DTOs are its Kotlin face,
+// checked by the frozen vectors in testdata/golden/run. Distances are metres, times seconds, speeds m/s.
 
 /** One raw GPS fix. [t] is seconds on the fix source's own clock (elapsedRealtimeNanos), never callback time. */
 @Serializable

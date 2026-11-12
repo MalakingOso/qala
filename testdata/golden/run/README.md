@@ -1,41 +1,15 @@
 # Run golden files
 
-Output of the TypeScript run pipeline (`packages/run`, the oracle) recorded as
+Output of the TypeScript run pipeline (`packages/run`, the oracle, now deleted) recorded as
 JSON so the Rust port in `crates/qala-core/src/run` can be checked against it.
 Nothing here is hand-edited.
 
-## Regenerate
+## Frozen fixtures
 
-```
-deno task golden:run        # same as: deno run -A scripts/golden_run.ts
-```
-
-Run it from the repo root. It rewrites every file below and nothing else. Two
-runs give byte-identical output: every generator draws from the seeded `Rng` in
-`scripts/fuzz_lib.ts`, never `Math.random`. The generator asserts, while it
-runs, that each scenario reaches the branch it is named for (a re-anchor, a
-pause, a prompt) and aborts when one does not.
-
-| file | cases | what it is |
-|---|---|---|
-| `geodesy.json` | 234 | `vincentyM` and `haversineM` (`filter.ts`) |
-| `filter.json` | 65 | `FixFilter` over raw fixes: points and what each push emitted |
-| `autopause.json` | 113 | `computePauses`, `causalClockTrace`, the `AutoPause` machine step by step, `pausedOverlap`, `movingElapsedAt` |
-| `splits.json` | 34 | `computeSplits` |
-| `pace.json` | 287 | `distAt`, `windowSpeed`, `currentPace`, `cuePace`, `averagePace` |
-| `guided.json` | 40 | `GuidedRun` driven by update and advance operations, `expandWorkout` |
-| `process_run.json` | 31 | `processRun` over whole runs, plus the guided clock at each point |
-| `process_run_2h.json` | 2 | the same over two hours at 1 Hz (7,200 fixes) |
-
-The format is the engine's (`testdata/golden/engine/README.md`): a file is
-`{fn, version: 1, oracle: "ts", cases}`, one case per line, `fn` is the file
-name, `input` is `{fn, args}` in multi-function files and the argument object in
-single-function files, `expected` is what TS returned, `tolerance` is present on
-every case that holds floats. Non-finite numbers are the strings `"NaN"`,
-`"Infinity"`, `"-Infinity"` in `input` and `expected`; every such case has a name
-starting `nonfinite:`. A TS `undefined` (an omitted optional field) is an absent
-key. A required field a case leaves out (a fix with no `lat`) is what TS sees as
-`undefined`, which every gate treats like NaN: the fix is dropped.
+The generator and the TypeScript oracle were deleted on 2026-11-12 (DECISIONS S28),
+so these files are frozen and cannot be regenerated. When an intended behavior
+change breaks a test that reads one, update the fixture from the Rust output or
+delete the test. DECISIONS S28 says where the oracle and its generators are.
 
 ## Comparing floats
 
@@ -70,7 +44,7 @@ of two large numbers).
 
 ## Inputs
 
-Every input of the 28 `Deno.test` cases in `packages/run` is a vector (the
+Every input of the 28 tests in `packages/run` (deleted, S28) is a vector (the
 pipeline, filter, auto-pause, pace, splits and guided tests; the GPX and TCX
 exporters stay in TS and are not ported), as are jara's four bugs (a fix
 delivered twice, a 60 m accuracy fix, batched late fixes, a 4 h run keeping its
@@ -104,8 +78,8 @@ holds while paused. That is a change from the earlier batch pass (owner,
 2026-11-11), made so a live recorder and the batch pipeline agree; a prefix of
 the fixes gives a prefix of the events.
 
-## Fuzz
+## Fuzz (deleted)
 
-`deno task fuzz:run` writes a much larger corpus to `testdata/golden/run/fuzz/`
-(gitignored); `crates/qala-core/tests/fuzz_core.rs` replays it. See
-`scripts/gen_run_fuzz.ts`.
+A much larger gitignored corpus was replayed against the oracle with zero
+mismatches. The generator, the corpus and the replay test were deleted on
+2026-11-12 (DECISIONS S28).

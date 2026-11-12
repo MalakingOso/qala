@@ -1,7 +1,7 @@
 //! Port of `models/exercise.ts`: the built-in exercise seed DB and the `Exercise_*` helpers that
 //! the evaluation path reaches (plus the small pure ones around them).
 //!
-//! The seed DB lives in `data/exercises.json` (written by `scripts/export_exercises.ts`) and is
+//! The seed DB lives in `data/exercises.json` (exported once from the TS exercise list; the script is deleted, S28) and is
 //! parsed once into a `OnceLock`.
 //!
 //! Settings integration: the helpers only read a handful of `ISettings` fields. Until `types.rs`

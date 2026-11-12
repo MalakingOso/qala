@@ -26,7 +26,7 @@ mod tests {
         v.iter().copied().collect()
     }
 
-    // Expected values follow directly from the TS definitions (checked in deno).
+    // Expected values follow directly from the TS definitions (checked in V8).
     #[test]
     fn set_ops() {
         assert!(are_equal(&s(&[1, 2]), &s(&[2, 1])));

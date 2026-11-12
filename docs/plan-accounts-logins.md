@@ -1,6 +1,6 @@
 # Plan: friends-and-family accounts + logins (explore/accounts-logins)
 
-Status 2026-10-13: planned, not started. No branch named `explore/accounts-logins` exists and nothing here is built: `server/auth.ts` still reads only the Tailscale header and `deploy/` still holds the Tailscale notes. DECISIONS S22 records the settled points. Blocked on D21 (the public domain and a DNS date). If the Deno to Bun move happens (`docs/ROADMAP.md` Tooling), the Deno-specific parts of this plan need rewriting.
+Status 2026-10-13: planned, not started. No branch named `explore/accounts-logins` exists and nothing here is built: `server/auth.ts` still reads only the Tailscale header and `deploy/` still holds the Tailscale notes. DECISIONS S22 records the settled points. Blocked on D21 (the public domain and a DNS date). The server runtime is now Bun (2026-11-12, DECISIONS S28). The library probes below ran on the pre-Bun runtime, so re-run them on Bun before building; Bun has `bun:sqlite` and `Bun.password`, which may replace `node:sqlite` and the argon2 package.
 
 Target branch (never created): `explore/accounts-logins`. Audience: Claude Code implementing
 the work. Status when written: plan, not decided, except section 1 settled points which
@@ -8,14 +8,13 @@ mirror `docs/adr/0002-friends-family-auth.md` verbatim in intent.
 
 Evidence note: the workflow research agents returned no usable evidence,
 so the library decisions were closed afterward by a runtime probe round on
-2026-10-01 (Deno 2.9.6, this machine): `node:sqlite` CRUD + WAL +
+2026-10-01 (the pre-Bun runtime, this machine): `node:sqlite` CRUD + WAL +
 `VACUUM INTO` verified, `db.backup()` confirmed absent; `npm:argon2@0.44.0`
 hash + verify true; `npm:@simplewebauthn/server@13.3.0` options calls return
-challenges, plus maintainer-doc confirmation of Deno v2.4+ support and JSR
-publishing; OWASP argon2id floor and the Capacitor/WebView WebAuthn limit
+challenges, plus maintainer-doc confirmation of server-runtime support; OWASP argon2id floor and the Capacitor/WebView WebAuthn limit
 confirmed via web sources. Everything else is grounded in inspected repo
 files (ADR 0002, server/auth.ts, server/mod.ts, server/sync.ts, server/llm.ts,
-server/deno.json, deploy/qala.service, deploy/tailscale-serve.md,
+the old server config, deploy/qala.service, deploy/tailscale-serve.md,
 docs/DECISIONS.md S3/S9/S11, docs/rust-core.md sections 4-5, apps/web shells).
 No library API is asserted from memory. Section 13 lists what is closed and
 the three items still genuinely open (U6/U7/U9).
@@ -70,26 +69,26 @@ DNS resolves.
    `Tailscale-User-Login` identity path is removed, not kept owner-only.
 5. Lockout recovery is owner reset only. No email, no self-service flow.
 6. Recommended shape (for review, not settled): session cookie HttpOnly +
-   Secure + SameSite=Lax with server-side expiring record; Deno on loopback
+   Secure + SameSite=Lax with server-side expiring record; Bun on loopback
    behind Caddy; Argon2id password hashes; single-use expiring invites;
    passkeys enrolled post-login in Settings with password as fallback; owner
    CLI reset in person; owner is a regular user (first invite redeems to the
    owner row); `server/auth.ts` header auth and the loopback-only bind rule
    are replaced; `deploy/tailscale-serve.md` is retired.
 
-## 2. Architecture (VPS + Caddy + Deno loopback, no Tailscale)
+## 2. Architecture (VPS + Caddy + Bun loopback, no Tailscale)
 
 ```
 browser/PWA  --HTTPS-->  Caddy (:443, PUBLIC_DOMAIN)  --HTTP-->
-127.0.0.1:8500 Deno (server/mod.ts) --> VPS disk (auth.sqlite + data/users/)
+127.0.0.1:8500 Bun (server/mod.ts) --> VPS disk (auth.sqlite + data/users/)
 ```
 
-- One Deno process on the VPS, still bound to loopback (`BIND_HOSTNAME`
+- One Bun process on the VPS, still bound to loopback (`BIND_HOSTNAME`
   127.0.0.1, `BIND_PORT` 8500, server/mod.ts). What changes is who fronts
   it: Caddy over public HTTPS replaces `tailscale serve` over the tailnet.
 - Caddy terminates TLS (automatic HTTPS needs the real `PUBLIC_DOMAIN`),
   proxies `/` to loopback, and owns HTTPS redirects + HSTS. No app TLS code.
-- Deno owns: session auth on every route, static PWA, `/api/*` (auth,
+- Bun owns: session auth on every route, static PWA, `/api/*` (auth,
   sync, blobs, llm proxy, elevation, tiles). Every route that serves user
   data calls the new session `requireUser`; `/health` stays open.
 - Storage on VPS disk: one `auth.sqlite` (users, invites, sessions,
@@ -157,15 +156,14 @@ may delete this row entirely.
 ### 3.3 Password hashing (CLOSED by probe 2026-10-01, closes U1)
 
 - Choice: Argon2id server-side (ADR 0002 recommended shape).
-- Library: `npm:argon2` pinned (probe used 0.44.0; re-pin to latest at
-  implement time). Verified on Deno 2.9.6 on this machine: `argon2.hash`
+- Library: `argon2` (npm) pinned (probe used 0.44.0; re-pin to latest at
+  implement time). Verified on the pre-Bun runtime on this machine (re-probe on Bun): `argon2.hash`
   with `{ type: argon2.argon2id }` returns a PHC string
   (`$argon2id$v=19$m=65536,t=3,p=4$...`) and `argon2.verify` returns true.
-  Deno handles it via `nodeModulesDir: auto` (probe printed that hint, no
-  config change needed). Native prebuilds assume glibc: VPS runs
+  Native prebuilds assume glibc: VPS runs
   Debian/Ubuntu (section 7), never Alpine/musl, or the install falls back
   to building from source. Fallback if the native binding ever fails:
-  `npm:hash-wasm` argon2id (pure WASM, slower, same PHC output).
+  `hash-wasm` argon2id (pure WASM, slower, same PHC output).
 - Params (explicit, do not rely on library defaults): memory 65536 KiB
   (64 MiB), iterations 3, parallelism 4. This exceeds the OWASP Password
   Storage floor (m=19456, t=2, p=1, confirmed via OWASP cheat-sheet
@@ -182,12 +180,11 @@ may delete this row entirely.
 
 - Library: `@simplewebauthn/server` v13 pinned (probe used 13.3.0;
   re-pin to latest v13 at implement time). Verified two ways: (1) runtime
-  probe on Deno 2.9.6, `npm:@simplewebauthn/server@13.3.0` —
+  probe on the pre-Bun runtime, `@simplewebauthn/server@13.3.0` —
   `generateRegistrationOptions` and `generateAuthenticationOptions` both
-  return challenges; (2) maintainer docs list Deno v2.4+ as supported and
-  publish `jsr:@simplewebauthn/server` (`deno add jsr:@simplewebauthn/server`).
-  Prefer the JSR specifier (Deno-native, no npm compat layer); npm is the
-  verified fallback. Client side: `@simplewebauthn/browser` v13 in the PWA.
+  return challenges; (2) maintainer docs list the server runtimes as supported and
+  publish the package on npm and JSR. Install it with
+  `bun add @simplewebauthn/server` and re-run the probe on Bun. Client side: `@simplewebauthn/browser` v13 in the PWA.
   Confirm exact `registrationInfo.credential` field names against the
   installed v13.x source at implement time; the storage mapping below
   follows the v13 shape (id base64url, publicKey COSE bytes, counter,
@@ -218,7 +215,7 @@ may delete this row entirely.
 
 ### 3.5 Rate limits (CLOSED, closes U5; values adopted as specified)
 
-Enforce server-side, in-memory timestamp buckets in v1 (single Deno
+Enforce server-side, in-memory timestamp buckets in v1 (single Bun
 process per section 7.3, so no shared store needed; a restart resets
 budgets, acceptable). Budgets below are final unless load testing says
 otherwise:
@@ -238,7 +235,7 @@ without logging passwords or tokens.
 
 ### 4.1 SQLite driver choice (CLOSED by probe 2026-10-01, closes U3)
 
-- Driver: `node:sqlite` (`DatabaseSync`), verified on Deno 2.9.6 on this
+- Driver: `node:sqlite` (`DatabaseSync`), verified on the pre-Bun runtime on this
   machine: open, `exec`, `prepare(...).all()` all work against `:memory:`
   and file DBs. No fallback needed; the append-only-JSONL branch in
   docs/rust-core.md section 4 is not taken.
@@ -246,9 +243,9 @@ without logging passwords or tokens.
   `PRAGMA foreign_keys=ON` (for the ON DELETE CASCADE clauses in 4.2) on
   every open.
 - Handles: one long-lived `DatabaseSync` per DB file (auth.sqlite plus one
-  per user). `node:sqlite` is synchronous and Deno runs it on the main
+  per user). `node:sqlite` is synchronous and the server runs it on the main
   thread; at friends-and-family write volume this is fine, no pool.
-- Backup API: `db.backup()` is UNDEFINED on Deno 2.9.6's `node:sqlite`
+- Backup API: `db.backup()` is UNDEFINED on the pre-Bun runtime's `node:sqlite`
   (probed `typeof db.backup === "undefined"`), so snapshots use
   `VACUUM INTO '<snapshot path>'`, verified working with a WAL DB (probe
   wrote a row, snapshotted, read it back from the snapshot). Section 8
@@ -338,35 +335,35 @@ CREATE INDEX idx_webauthn_user ON webauthn_credentials(user_id);
 ## 5. Invite + owner-reset runbooks (exact CLI commands, proposed)
 
 No CLI exists in the repo today; commands below are the proposed contract
-for a new `server/cli.ts` (Deno, same `node:sqlite` driver as section 4).
+for a new `server/cli.ts` (Bun, same driver as section 4).
 Implement exactly these verbs; flag names are part of the contract.
 
 ```sh
 # Create one invite (prints the code ONCE):
-ssh VPS_SSH 'deno run --allow-all /srv/qala/server/cli.ts invite-create --label "for X" --days 14'
+ssh VPS_SSH 'bun /srv/qala/server/cli.ts invite-create --label "for X" --days 14'
 # -> invite code=<CODE> expires=<ISO>
 
 # List invites (code prefixes only, no full codes):
-ssh VPS_SSH 'deno run --allow-all /srv/qala/server/cli.ts invite-list'
+ssh VPS_SSH 'bun /srv/qala/server/cli.ts invite-list'
 
 # Revoke an invite:
-ssh VPS_SSH 'deno run --allow-all /srv/qala/server/cli.ts invite-revoke --code <CODE>'
+ssh VPS_SSH 'bun /srv/qala/server/cli.ts invite-revoke --code <CODE>'
 
 # Owner bootstrap (first user; run once; <CODE> from invite-create):
 # redeem happens in the browser at https://PUBLIC_DOMAIN/#/signup?code=<CODE>
 
 # Lockout reset: set a one-time password AND clear passkeys (in person):
-ssh VPS_SSH 'deno run --allow-all /srv/qala/server/cli.ts user-reset --login <LOGIN>'
+ssh VPS_SSH 'bun /srv/qala/server/cli.ts user-reset --login <LOGIN>'
 # -> one-time password=<OTP> (user changes it at next login; all sessions revoked)
 
 # Clear passkeys only (keep password):
-ssh VPS_SSH 'deno run --allow-all /srv/qala/server/cli.ts user-clear-passkeys --login <LOGIN>'
+ssh VPS_SSH 'bun /srv/qala/server/cli.ts user-clear-passkeys --login <LOGIN>'
 
 # Revoke all sessions for a user:
-ssh VPS_SSH 'deno run --allow-all /srv/qala/server/cli.ts user-revoke-sessions --login <LOGIN>'
+ssh VPS_SSH 'bun /srv/qala/server/cli.ts user-revoke-sessions --login <LOGIN>'
 
 # Delete a user (auth row + their <userId>.sqlite + blobs kept; confirm prompt):
-ssh VPS_SSH 'deno run --allow-all /srv/qala/server/cli.ts user-delete --login <LOGIN> --yes-i-know'
+ssh VPS_SSH 'bun /srv/qala/server/cli.ts user-delete --login <LOGIN> --yes-i-know'
 ```
 
 Runbook rules: invites single-use + 14-day default expiry (proposal);
@@ -415,7 +412,7 @@ login first, passkey where the OS supports it (device gates, section 11).
 
 ```
 /srv/qala/            git checkout (branch explore/accounts-logins, then main)
-  server/             Deno server (mod.ts entry)
+  server/             Bun server (mod.ts entry)
 /srv/qala/data/       auth.sqlite + users/ + blobs/ (mode 700, qala:qala)
 /etc/qala/env         private env (mode 600, root:root), see section 4.4
 /etc/caddy/Caddyfile  section 7.2
@@ -450,7 +447,7 @@ PUBLIC_DOMAIN {
 }
 ```
 
-Caddy owns ports 80/443 + automatic HTTPS. Deno stays on 127.0.0.1:8500
+Caddy owns ports 80/443 + automatic HTTPS. Bun stays on 127.0.0.1:8500
 and is never reached directly from outside the VPS.
 
 ### 7.3 systemd unit (proposed; extends deploy/qala.service)
@@ -464,7 +461,7 @@ After=network.target
 User=qala
 Group=qala
 WorkingDirectory=/srv/qala
-ExecStart=/home/qala/.deno/bin/deno serve --allow-all /srv/qala/server/mod.ts
+ExecStart=/home/qala/.bun/bin/bun /srv/qala/server/mod.ts
 Environment=PORT=8500
 Environment=HOST=127.0.0.1
 EnvironmentFile=-/etc/qala/env
@@ -481,8 +478,8 @@ LimitNOFILE=4096
 WantedBy=multi-user.target
 ```
 
-Deploy steps: `ssh VPS_SSH`, install Deno 2.9.x + Caddy, create `qala`
-user, clone, `deno task build`, `systemctl enable --now qala`, install
+Deploy steps: `ssh VPS_SSH`, install Bun 1.4 + Caddy, create `qala`
+user, clone, `bun run build`, `systemctl enable --now qala`, install
 Caddyfile, `systemctl reload caddy`, `curl https://PUBLIC_DOMAIN/health`.
 
 ### 7.4 Hardening checklist (do all before first invite)
@@ -492,12 +489,12 @@ Caddyfile, `systemctl reload caddy`, `curl https://PUBLIC_DOMAIN/health`.
 - [ ] Auto security updates enabled on the VPS distro.
 - [ ] `/srv/qala/data` mode 700 `qala:qala`; `auth.sqlite` mode 600.
 - [ ] Caddy TLS valid + HSTS header present (`curl -I` check).
-- [ ] Deno process actually on 127.0.0.1 (`ss -tlnp | grep 8500`).
+- [ ] Bun process actually on 127.0.0.1 (`ss -tlnp | grep 8500`).
 - [ ] `/health` reachable publicly; no other unauthed data route (section 11).
 - [ ] Rate limits live (section 3.5 probe: 11 bad logins -> 429).
 - [ ] Backups running (section 8) before the owner invite is redeemed.
 - [ ] Log rotation live: Caddy `log { output file ... { roll_size 100mb
-  roll_keep 5 } }`, Deno via journald (`SystemMaxUse=1G`); 401/429 lines
+  roll_keep 5 } }`, Bun via journald (`SystemMaxUse=1G`); 401/429 lines
   kept 90 days, no passwords/tokens/cookies in any log (closes the U10
   logging item).
 
@@ -509,7 +506,7 @@ Why callisto: ADR 0002 recommended shape ("backed up to callisto").
 ```sh
 # Step 1, ON THE VPS (systemd timer, qala user): snapshot every sqlite db
 # with VACUUM INTO (CLOSED mechanism, closes U8; db.backup() does not exist
-# on Deno 2.9.6's node:sqlite, VACUUM INTO verified working, section 4.1).
+# on the pre-Bun runtime's node:sqlite, VACUUM INTO verified working, section 4.1).
 # Blobs are immutable content-addressed files, copied as-is.
 /srv/qala/scripts/snapshot.sh  # writes /srv/qala/data-snap/auth.sqlite etc.
 
@@ -630,14 +627,13 @@ removal, in this order (each step keeps the tree green):
    identity through requireUser" to "session cookie through requireUser".
    ADR 0002 stays as history (superseded-by note if the shape changes).
 
-## 11. Test plan (deno tests, device gates)
+## 11. Test plan (bun tests, device gates)
 
-Repo gate today: `deno task test` =
-`deno test --allow-all packages/ server/ apps/web/src/logic/` (root
-deno.json) plus `deno task test` in server/deno.json. All new tests join
-these; no new runner.
+Repo gate today: `bun run test` (root package.json), which runs
+`bun test` over packages/, server/ and apps/web/src/logic/. All new tests
+join these; no new runner.
 
-Deno tests (new/extended, all in server/):
+Bun tests (new/extended, all in server/):
 
 - auth units: redeem happy path (201 + cookie + user row + empty store);
   redeem twice with same code (410); redeem unknown code (404); expired
@@ -676,21 +672,21 @@ Device gates (all on `https://PUBLIC_DOMAIN`, installed PWA where noted):
 
 - Phase 0, probes + inputs (no behavior change): collect section 0 inputs
   (DNS resolving); re-run the section 4.1 probes on the VPS itself
-  (`node:sqlite` + `npm:argon2` + WebAuthn import) and pin versions in
-  server/deno.json; run the kill -9 + integrity_check gate. Libraries are
+  (`node:sqlite` or `bun:sqlite`, argon2 + WebAuthn import) and pin versions in
+  package.json; run the kill -9 + integrity_check gate. Libraries are
   already chosen (3.3/3.4), this phase only confirms them on the target
-  box. GATE: probe script + pins committed; `deno task test` green.
+  box. GATE: probe script + pins committed; `bun run test` green.
 - Phase 1, auth core on callisto (VPS untouched): auth.sqlite schema,
   all section 3 endpoints, session `requireUser`, rate limits,
-  section 5 CLI. GATE: all section 11 Deno tests pass; no Tailscale
+  section 5 CLI. GATE: all section 11 Bun tests pass; no Tailscale
   header in any new code path.
 - Phase 2, route lockdown + retirement: section 10 steps 1-4 + 7 (every
   data route authed, header auth deleted, tests converted). GATE:
   unauthed sweep green (every data route 401, /health 200); grep gate
-  `tailscale-user-login` clean; `deno task test` green.
+  `tailscale-user-login` clean; `bun run test` green.
 - Phase 3, PWA screens: section 6 A1-A3 + S1-S4 + E1. GATE: desktop
   Chrome + Android PWA loops from section 11 pass against callisto-local
-  Deno (PUBLIC_DOMAIN stubbed via /etc/hosts; RP ID exception documented
+  Bun (PUBLIC_DOMAIN stubbed via /etc/hosts; RP ID exception documented
   for the stub only).
 - Phase 4, VPS deploy + hardening: sections 7-8 (Caddy, systemd,
   firewall, backups running, restore drilled once). GATE: section 7.4
@@ -703,19 +699,18 @@ Device gates (all on `https://PUBLIC_DOMAIN`, installed PWA where noted):
   tailscale-serve.md, rewrite qala.service, docs sweep), coach-quiet copy
   (section 9). GATE: repo grep for `tailscale` returns only ADR history
   + this plan; PLAN/DECISIONS/rust-core/android-native auth sentences
-  updated; final `deno task test` green.
+  updated; final `bun run test` green.
 
 ## 13. Open questions
 
-Closed by the 2026-10-01 probe round (runtime probes on Deno 2.9.6 on
+Closed by the 2026-10-01 probe round (runtime probes on the pre-Bun runtime on
 callisto + doc verification; no library API asserted from memory):
 
-- U1 CLOSED (3.3): `npm:argon2` pinned, argon2id m=65536/t=3/p=4, PHC
+- U1 CLOSED (3.3): `argon2` (npm) pinned, argon2id m=65536/t=3/p=4, PHC
   strings. Probe: hash + verify true.
-- U2 CLOSED (3.4): `@simplewebauthn/server` v13 (JSR preferred, npm
-  verified), userVerification preferred, 60 s timeouts, attestation none.
+- U2 CLOSED (3.4): `@simplewebauthn/server` v13 (npm), userVerification preferred, 60 s timeouts, attestation none.
   Probe: both options calls return challenges; maintainer docs confirm
-  Deno v2.4+ support. Browser-PWA-only scope in v1 (native needs a
+  server-runtime support (re-probe on Bun). Browser-PWA-only scope in v1 (native needs a
   Credential Manager bridge later).
 - U3 CLOSED (4.1): `node:sqlite` DatabaseSync, WAL + foreign_keys pragmas,
   one handle per file. Probe: CRUD works; `db.backup()` undefined.

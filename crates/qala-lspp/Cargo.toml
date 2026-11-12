@@ -3,7 +3,7 @@ name = "qala-lspp"
 version = "0.1.0"
 edition.workspace = true
 license.workspace = true
-description = "LS++ (Liftoscript++) evaluation path in Rust (DECISIONS S12). Oracle: packages/liftoscript (TS)."
+description = "LS++ (Liftoscript++) evaluation path in Rust (DECISIONS S12). The TS oracle is deleted (S28); goldens are frozen."
 
 [dependencies]
 serde = { version = "1", features = ["derive"] }

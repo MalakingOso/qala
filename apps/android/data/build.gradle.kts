@@ -81,7 +81,7 @@ abstract class CargoNdkBuild : DefaultTask() {
     }
 }
 
-/** Copies the 2 h run vector into the instrumented tests' assets. Only that file: testdata/golden/run/fuzz is gitignored and large. */
+/** Copies the 2 h run vector into the instrumented tests' assets. Only that file: the rest of testdata/golden/run is large. */
 abstract class CopyRunVectors : DefaultTask() {
     @get:InputFile @get:PathSensitive(PathSensitivity.NONE) abstract val source: RegularFileProperty
     @get:OutputDirectory abstract val outDir: DirectoryProperty

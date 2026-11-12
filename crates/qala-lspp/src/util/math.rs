@@ -150,8 +150,8 @@ fn strip_trailing_zeros(s: &str) -> String {
 mod tests {
     use super::*;
 
-    // Expected values derived by evaluating the TS in deno, see scratch notes
-    // in the test body comments (MathUtils_* copied into a deno eval script).
+    // Expected values derived by evaluating the TS in V8, see scratch notes
+    // in the test body comments (MathUtils_* copied into a V8 script).
 
     #[test]
     fn rounding() {

@@ -6,7 +6,7 @@
 //! last-bit change moves the result by about `1e-16 * 6.4e6 / d` relative: 2e-10 for a 3 m stride.
 //! That is inside the golden tolerance (1e-9), so these call the platform's libm.
 //!
-//! Measured 2026-11-11 against Deno 2.9 (V8 15) on glibc: the golden filter points match V8
+//! Measured 2026-11-11 against V8 15 on glibc: the golden filter points match V8
 //! bit for bit in `lat`, `lon` and `speedMps`, and in 83% of `distM` (worst relative difference
 //! 5.8e-12). The pure-Rust `libm` crate was tried in place of std and matched V8 worse (8% of
 //! `distM`, worst 8e-10), because V8's `sin` and `cos` come from glibc. So the host build is the

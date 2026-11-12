@@ -209,7 +209,7 @@ pub fn clean_json(s: &str) -> String {
 mod tests {
     use super::*;
 
-    // Expected values derived by running the real StringUtils_* functions in deno.
+    // Expected values derived by running the real StringUtils_* functions in V8.
 
     #[test]
     fn basics() {

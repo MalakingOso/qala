@@ -1,21 +1,15 @@
 # LS++ golden files
 
 Output of the TypeScript liftoscript stack (`packages/liftoscript`, the
-oracle) recorded as JSON so the Rust port in `crates/qala-lspp` can be
+oracle, now deleted) recorded as JSON so the Rust port in `crates/qala-lspp` can be
 checked for identical behaviour. Nothing here is hand-edited.
 
-## Regenerate
+## Frozen fixtures
 
-```
-deno task golden:liftoscript        # same as: deno run -A scripts/golden_liftoscript.ts
-```
-
-Run it from the repo root. It rewrites everything listed below (and nothing
-else). Two runs give byte-identical output. The generator is
-`scripts/golden_liftoscript.ts` with helpers in `scripts/golden_liftoscript_lib.ts`
-(determinism, canonical JSON, uid scrubbing), cases in
-`scripts/golden_liftoscript_cases.ts` and hand-written scripts in
-`scripts/golden_liftoscript_scripts.ts`.
+The generator and the TypeScript oracle were deleted on 2026-11-12 (DECISIONS S28),
+so these files are frozen and cannot be regenerated. When an intended behavior
+change breaks a test that reads one, update the fixture from the Rust output or
+delete the test. DECISIONS S28 says where the oracle and its generators are.
 
 ## Canonical JSON
 

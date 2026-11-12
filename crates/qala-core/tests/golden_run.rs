@@ -1,8 +1,8 @@
 //! Golden tests for the run pipeline port: every case in `testdata/golden/run/*.json`, produced
-//! by the TS `packages/run` (the oracle), must be reproduced by `qala_core::run`.
+//! by the TS `packages/run` (the oracle, since deleted), must be reproduced by `qala_core::run`.
 //!
-//! The file format is the engine's (`testdata/golden/engine/README.md`) and the generator is
-//! `scripts/golden_run.ts`. Cases are compared as parsed JSON: floats with the case `tolerance`
+//! The file format is the engine's (`testdata/golden/engine/README.md`) and the generator
+//! (deleted, S28) was `scripts/golden_run.ts`. Cases are compared as parsed JSON: floats with the case `tolerance`
 //! (relative, plus an absolute floor of 1e-9), everything else exactly. For the whole-run files
 //! the structure is compared first (point counts, re-anchor flags, pause intervals, events) so a
 //! discrete difference reads as one, and only then the numbers.
@@ -32,7 +32,7 @@ const DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../testdata/golden/ru
 
 /// The absolute part of the float rule. A stationary run's speed or distance step is a few
 /// micro-units left over from a difference of large numbers; it moves in the 11th digit with the
-/// last bit of a libm call and means nothing (`scripts/golden_run.ts`, `ABS_FLOOR`).
+/// last bit of a libm call and means nothing (the deleted `scripts/golden_run.ts`, `ABS_FLOOR`).
 const ABS_FLOOR: f64 = 1e-9;
 
 // ---------------------------------------------------------------------------
