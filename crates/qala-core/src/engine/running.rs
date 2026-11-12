@@ -1,7 +1,7 @@
-//! Running in the engine: `packages/engine/running.ts` lines 1-264 (PLAN 6.4,
+//! Running in the engine: the deleted TS `engine/running.ts` lines 1-264 (PLAN 6.4,
 //! docs/research/RESEARCH-running.md). SI units in and out. The cross-modal rules that follow
 //! in the TS file are out of scope for this port. Lines 160-240 hold the run-load helpers merged
-//! in from `packages/run/load.ts` (R1): guarded for NaN and zero, on this module's one
+//! in from the deleted TS `run/load.ts` (R1): guarded for NaN and zero, on this module's one
 //! `gap_factor`.
 //!
 //! All set-equivalent weights are derived assumptions (docs/PLAN.md 6.4). `**` in TS is
@@ -88,7 +88,7 @@ pub fn riegel(seconds1: f64, d1: f64, d2: f64) -> f64 {
     seconds1 * (d2 / d1).powf(1.06)
 }
 
-// ---- Run load helpers (merged from packages/run/load.ts) ----
+// ---- Run load helpers (merged from the deleted TS run/load.ts) ----
 
 /// Grade-adjusted speed: the flat speed costing the same effort. 0 for a speed that is not
 /// positive (NaN included).

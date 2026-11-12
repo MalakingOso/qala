@@ -1,4 +1,4 @@
-//! JavaScript semantics helpers. The TS oracle runs on V8, so numbers, number
+//! JavaScript semantics helpers. The TS this was ported from ran on V8, so numbers, number
 //! formatting, parsing, sorting and object key order must match it exactly.
 //!
 //! Expected values in the tests were produced by evaluating the same

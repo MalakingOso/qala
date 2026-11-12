@@ -1,7 +1,7 @@
 //! Hand-written lexer and parser for the liftoscript script language.
 //!
 //! The output is a generic tree that mirrors the Lezer tree produced by
-//! `packages/liftoscript/liftoscript.grammar`, so the evaluator can be ported
+//! the deleted TS `liftoscript/liftoscript.grammar`, so the evaluator can be ported
 //! mechanically on top of it. Offsets are UTF-16 code units, matching JS string
 //! indices. Most scripts are ASCII, where they equal byte offsets.
 //!

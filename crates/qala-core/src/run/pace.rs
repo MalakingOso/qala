@@ -1,4 +1,4 @@
-//! Pace: `packages/run/pace.ts`. 20 s current pace, 30 s audio-cue pace, average pace.
+//! Pace: the deleted TS `run/pace.ts`. 20 s current pace, 30 s audio-cue pace, average pace.
 //!
 //! All windows key off fix timestamps, never callback wall clock. Speeds in m/s; `pace_sec_per_m`
 //! converts to min/mi in the UI. The window functions read `t` and `dist_m` of each point and

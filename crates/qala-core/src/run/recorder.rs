@@ -1,4 +1,4 @@
-//! The incremental recorder and the batch pipeline built on it. New in R1: `packages/run` has
+//! The incremental recorder and the batch pipeline built on it. New in R1: the old TS run package had
 //! only the batch `processRun`; a foreground service with the screen locked needs live numbers
 //! and cue events one fix at a time (docs/android-native.md 5).
 //!

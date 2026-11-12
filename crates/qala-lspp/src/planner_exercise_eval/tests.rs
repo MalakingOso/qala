@@ -118,7 +118,7 @@ fn error_messages_and_ranges() {
 }
 
 #[test]
-fn full_mode_day_data_is_one_ahead_like_the_oracle() {
+fn full_mode_day_data_is_one_ahead_like_liftosaur() {
     let s = settings("lb");
     let script = "# Week 1\n## Day 1\nSquat / 3x5\n## Day 2\nBench Press / 3x5\n# Week 2\n## Day 1\nSquat / 3x5";
     let tree = planner_parse::parse(script);

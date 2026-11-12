@@ -1,5 +1,5 @@
 //! End-to-end golden tests: replay every case in `testdata/golden/lspp/`
-//! through the Rust port and compare against the TS oracle's recorded output.
+//! through the Rust port and compare against the recorded output (frozen when the TS oracle was deleted).
 //!
 //! Comparison rules (see the golden README):
 //! - object key order matters (JSON objects compare as ordered key lists),

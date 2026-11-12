@@ -1,5 +1,5 @@
 //! Data types of the liftoscript evaluation path, ported from
-//! `packages/liftoscript/src/types.ts` and `pages/planner/models/types.ts`.
+//! the deleted TS `liftoscript/src/types.ts` and `pages/planner/models/types.ts`.
 //!
 //! Every type (de)serializes to the same JSON shape as its TS counterpart so
 //! golden JSON produced from the TS round-trips. Conventions:

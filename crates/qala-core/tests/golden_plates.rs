@@ -2,7 +2,7 @@
 //! the TS plate math, must be reproduced by `qala_core::plates`.
 //!
 //! The shape of the file is documented in `testdata/golden/plates/README.md`. Cases are exact:
-//! every expected number is a multiple of 0.25 or rounded to two decimals by the oracle, so
+//! every expected number is a multiple of 0.25 or rounded to two decimals when recorded, so
 //! numbers compare as `f64` with no tolerance and everything else compares exactly.
 
 use qala_core::plates::{
@@ -165,7 +165,7 @@ fn golden_plates() {
     let cases = load();
     assert!(
         cases.len() >= 20,
-        "expected the full oracle set, got {}",
+        "expected the full golden set, got {}",
         cases.len()
     );
     for case in &cases {

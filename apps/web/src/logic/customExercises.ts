@@ -130,7 +130,7 @@ export function toCustomExercise(draft: CustomDraft): CustomExercise {
 
 /* Liftosaur's vocabulary, for the record the evaluator reads. Each Qala group
  * takes one liftosaur muscle that its screen-muscle map files under the same
- * group (packages/liftoscript/src/models/muscle.ts), so liftosaur's own
+ * group (the deleted TS liftoscript/src/models/muscle.ts), so liftosaur's own
  * muscle counts would land where Qala's do. */
 const LIFTOSAUR_MUSCLE: Record<MuscleGroup, string> = {
   chest: "Pectoralis Major Sternal Head",

@@ -10,7 +10,7 @@ import com.qala.data.model.WeightUnit
 import com.qala.data.program.ExerciseClass
 
 /*
- * The warm-up (DESIGN 7.4, PLAN 6.7, DECISIONS T6), ported from packages/engine/warmup.ts: easy cardio, soft tissue
+ * The warm-up (DESIGN 7.4, PLAN 6.7, DECISIONS T6), ported from the deleted TS engine/warmup.ts: easy cardio, soft tissue
  * with the owner's tools, dynamic mobility, then ramp sets worked out from each exercise's working weight. What it is
  * built from (the tools owned, soft tissue, the Theragun preference, the time, the bar and the plates) is Settings,
  * passed in as [WarmupInput]. Pure: no Compose, no clock. Every weight it computes goes through [roundLoadable], so the

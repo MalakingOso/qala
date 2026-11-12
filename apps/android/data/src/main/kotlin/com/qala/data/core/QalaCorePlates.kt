@@ -19,8 +19,8 @@ import uniffi.qala_ffi.platesShorthand as ffiPlatesShorthand
 import uniffi.qala_ffi.roundWeight as ffiRoundWeight
 
 // ---- plates (qala-core plates.rs; docs/rust-core.md R2) ----
-// The TS plate math in packages/core stays the oracle; these DTOs are the
-// Kotlin face of the Rust port, checked against it by the golden vectors.
+// The Rust port is the plate math here; these DTOs are its Kotlin face,
+// checked by the frozen golden vectors.
 
 /** How many pairs of a plate the inventory holds: a count, or plenty. */
 sealed interface PlatePairs {

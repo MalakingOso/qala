@@ -1,5 +1,5 @@
 //! Plate calculator (docs/rust-core.md R2), ported from `packages/core/plates.ts` and
-//! `packages/core/rounding.ts`, which stay the oracle (see `testdata/golden/plates`).
+//! `packages/core/rounding.ts`, which the web app still uses; the frozen vectors in `testdata/golden/plates` pin the port.
 //!
 //! The per-side picker is a bounded knapsack in 0.25 units minimising, in order:
 //! `|achieved - t|`, plate count, then heavier plates. Greedy is wrong once pair

@@ -1,4 +1,4 @@
-//! GPS fix filter: `packages/run/filter.ts` lines 131-340. Dedupe by timestamp, accuracy gate,
+//! GPS fix filter: the deleted TS `run/filter.ts` lines 131-340. Dedupe by timestamp, accuracy gate,
 //! speed gate with re-anchor, constant-velocity Kalman filter, Vincenty distance.
 //!
 //! Streaming and causal: a fix is judged against what came before it only, so the same fixes give

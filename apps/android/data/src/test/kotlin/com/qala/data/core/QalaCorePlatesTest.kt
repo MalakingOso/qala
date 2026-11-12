@@ -45,7 +45,7 @@ class QalaCorePlatesTest {
     }
 
     @Test
-    fun changeInstructionsMatchTheOracleWords() {
+    fun changeInstructionsMatchTheGoldenWords() {
         assertEquals("take off 5, add 25 each side", QalaCore.describeChange(listOf(45.0, 5.0), listOf(45.0, 25.0)))
         assertEquals("no change", QalaCore.describeChange(listOf(45.0, 45.0, 10.0), listOf(45.0, 45.0, 10.0)))
         val next = QalaCore.chooseNextPlates(listOf(45.0, 25.0), 215.0, 45.0, DefaultLbPlates)

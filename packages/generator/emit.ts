@@ -2,8 +2,8 @@
 // opens in the editor as a normal program). Deterministic: exercises in workout order,
 // fixed number formatting, no randomness, no dates except meet-taper sessions.
 //
-// The shape follows the LS++ planner grammar (packages/liftoscript/src/pages/
-// planner/plannerExercise.grammar): `# Week N`, `## Day N: label`, and
+// The shape follows the LS++ planner grammar (liftosaur's plannerExercise.grammar,
+// vendored once and since deleted): `# Week N`, `## Day N: label`, and
 // `Exercise / 4x8 180lb @7.5`. A `///` line is a comment the evaluator drops;
 // a `//` line becomes the description of the exercise under it, which the
 // lifter sees on the workout screen. So the block's metadata goes in `///`
@@ -22,8 +22,8 @@ import type {
 } from "./types.ts";
 
 export interface LsppExercise {
-  /** Name as LS++ writes it: a built-in catalog name (packages/liftoscript
-   * allExercisesList), with `, Equipment` when the generator means other kit
+  /** Name as LS++ writes it: a built-in catalog name (`allExercisesList` in the
+   * deleted liftoscript copy, now crates/qala-lspp/data/exercises.json), with `, Equipment` when the generator means other kit
    * than the catalog's default, and `label: ` when the lift has no entry of
    * its own. */
   name: string;

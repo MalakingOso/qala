@@ -287,7 +287,7 @@ Module `running.ts`, lines 1-264. `input = {fn, args}`. Grades are fractions
 | `rtssFromRun` | `{gapDistM, movingSec, thresholdMps}` | number; 0 when the threshold is not positive or the time or distance is negative or NaN | 1e-9 |
 | `thresholdPaceFromRace` | `{raceDistM, raceSec}` | number; 0 unless both are positive | 1e-9 |
 
-The last six are the run-load helpers merged in from `packages/run/load.ts`
+The last six are the run-load helpers merged in from the deleted TS `run/load.ts`
 (R1, `testdata/golden/run/README.md`). Unlike `intensityFactor` and `rtss`
 they guard NaN and zero, so a zero threshold gives rTSS 0, not `Infinity`.
 They were appended to the file, so the cases before them are unchanged.
@@ -397,7 +397,7 @@ Oracle `ts+decay`. Same `input` shape as `readiness.json`, but `now` is **not**
 
 1. `s = clone(state)` and `dt = daysBetween(state.updated, now)`;
 2. `decayAll(s, dt)`, a copy of the non-exported `decayAll` in
-   `packages/engine/mod.ts` lines 81-96 (nothing happens when `!(dt > 0)`):
+   the deleted TS `engine/mod.ts` lines 81-96 (nothing happens when `!(dt > 0)`):
    `fitness` values with `TAU_FITNESS_LIFT` (45), `fatigueMuscle` and
    `runFatigueMuscle` with `decayRecord(..., muscleTau)`, `fatigueDamage` and
    `runFatigueDamage` with `TAU_DAMAGE` (5), `fatigueSystemic` with

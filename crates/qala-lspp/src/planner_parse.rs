@@ -1,5 +1,5 @@
 //! Hand-written lexer and recursive descent parser for the planner exercise language
-//! (packages/liftoscript/src/pages/planner/plannerExercise.grammar).
+//! (the deleted TS liftoscript/src/pages/planner/plannerExercise.grammar).
 //!
 //! The output is a generic tree shaped like the Lezer tree for valid input: only named
 //! grammar nodes appear (anonymous literals such as "/" or "[" are not nodes), and offsets

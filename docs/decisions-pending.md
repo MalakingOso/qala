@@ -206,8 +206,8 @@ These come from the four new roadmap sections in `docs/PLAN.md` 16c to 16f. None
 ### D32 Rest and warm-up planning: Kotlin or Rust (S6, R3)
 
 - Status: [ ] open
-- Question: the Android lifting flow shipped rest and warm-up planning in Kotlin (`app/.../workout/RestPlan.kt` and `Warmup.kt`, ports of `packages/engine/rest.ts` and `warmup.ts`). `docs/rust-core.md` 7 (R3) and `docs/android-native.md` 6 put them in Rust, so there are now two implementations that can drift. Keep Kotlin, or port to `qala-core`?
-- Options: port to Rust oracle-first with golden vectors (as the plates port did) and switch Kotlin to call it / keep Kotlin and amend R3.
+- Question: the Android lifting flow shipped rest and warm-up planning in Kotlin (`app/.../workout/RestPlan.kt` and `Warmup.kt`, ports of the deleted TS `engine/rest.ts` and `warmup.ts`). `docs/rust-core.md` 7 (R3) and `docs/android-native.md` 6 put them in Rust, so there are now two implementations that can drift. Keep Kotlin, or port to `qala-core`?
+- Options: port to Rust with its own tests (as the plates port did) and switch Kotlin to call it / keep Kotlin and amend R3.
 - Default: port to Rust. The Kotlin rest model is also a partial port (no learning multiplier, rep drift or low-readiness adjustment), so a port fixes that too.
 - Also answers appendix B question 36 (moved here from D03): keep run, math and engine logic in Rust, or let it live in Kotlin on the phone and accept the fork with the web? Default: keep the Rust core.
 - Blocks: R3's remainder, rest parity with the web.

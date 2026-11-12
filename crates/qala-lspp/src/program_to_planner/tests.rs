@@ -1,6 +1,5 @@
-//! Replays `ProgramToPlanner.convertToPlanner` + `PlannerProgram_generateFullText`
-//! against the TS oracle (`testdata/unit/gen_program_to_planner_cases.ts`), and checks the
-//! `plannerText` of the finish-day goldens.
+//! Checks the `plannerText` of the finish-day goldens against `generate_full_text` of the
+//! converted program, plus the JS regex and splice helpers.
 
 use std::path::PathBuf;
 

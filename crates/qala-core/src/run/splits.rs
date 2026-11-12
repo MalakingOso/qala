@@ -1,4 +1,4 @@
-//! Splits: `packages/run/splits.ts`. One boundary per split unit (mile by default, configurable),
+//! Splits: the deleted TS `run/splits.ts`. One boundary per split unit (mile by default, configurable),
 //! with the crossing time interpolated linearly between the two fixes straddling it.
 //!
 //! Split times use the fix clock (elapsed time, pauses included): a split covers the wall time

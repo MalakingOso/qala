@@ -368,7 +368,7 @@ mod tests {
     use super::*;
 
     // Expected values were derived by running the real CollectionUtils_* functions in V8
-    // (scratch script importing packages/liftoscript/src/utils/collection.ts) and printing JSON.
+    // (scratch script importing the deleted TS liftoscript/src/utils/collection.ts) and printing JSON.
 
     #[derive(Clone, Debug, PartialEq)]
     struct K {

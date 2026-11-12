@@ -1,4 +1,4 @@
-//! e1RM observation rules: `packages/engine/e1rm.ts` and `rtsTable.ts`.
+//! e1RM observation rules: the deleted TS `engine/e1rm.ts` and `rtsTable.ts`.
 //!
 //! Epley tracks the RTS RPE table within 2% from 2 to 10 reps; Brzycki runs away above 10.
 //! The RTS table is an unverified third-party reproduction (see the TS header); no cell is

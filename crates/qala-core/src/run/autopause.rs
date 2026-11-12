@@ -1,4 +1,4 @@
-//! Auto-pause: `packages/run/autopause.ts`. Below 0.6 m/s held 5 s pauses; above 1.0 m/s held
+//! Auto-pause: the deleted TS `run/autopause.ts`. Below 0.6 m/s held 5 s pauses; above 1.0 m/s held
 //! 3 s resumes. Paused time is excluded from moving time, never from elapsed.
 //!
 //! The pause interval starts retroactively at the first sub-threshold sample and ends at the

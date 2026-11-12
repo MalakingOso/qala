@@ -1,4 +1,4 @@
-//! The GPS run pipeline: a port of `packages/run` (docs/rust-core.md R1), plus the incremental
+//! The GPS run pipeline: a port of the deleted TS run package (docs/rust-core.md R1), plus the incremental
 //! [`recorder::Recorder`] the phone's foreground service drives with the screen locked.
 //!
 //! Units follow the TS package: metres, seconds, m/s. `Fix::t` is seconds on the fix source's own

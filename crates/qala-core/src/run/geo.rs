@@ -1,4 +1,4 @@
-//! Geodesy: `packages/run/filter.ts` lines 36-130 (Vincenty inverse on WGS-84, haversine).
+//! Geodesy: the deleted TS `run/filter.ts` lines 36-130 (Vincenty inverse on WGS-84, haversine).
 //!
 //! Every arithmetic expression keeps the TS association, so the same operations run in the same
 //! order: JS and Rust both evaluate `a * b - c * d * e` as `(a * b) - ((c * d) * e)`.

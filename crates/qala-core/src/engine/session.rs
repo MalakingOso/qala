@@ -1,4 +1,4 @@
-//! `logSession` and `calibrate`: `packages/engine/mod.ts` lines 72-301 and 475-482.
+//! `logSession` and `calibrate`: the deleted TS `engine/mod.ts` lines 72-301 and 475-482.
 //!
 //! The order of operations and of floating point sums follows the TS line by line, so the
 //! doubles match. Dates must parse: where `Date.parse` would give NaN and the TS code would

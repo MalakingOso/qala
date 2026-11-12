@@ -1,4 +1,4 @@
-//! Linear Kalman filter over e1RM observations: `packages/engine/kalman.ts` (PLAN 6.2, Kolossa
+//! Linear Kalman filter over e1RM observations: the deleted TS `engine/kalman.ts` (PLAN 6.2, Kolossa
 //! 2017).
 //!
 //! State `[p0, k1, k2]`, observation `y = p0 + k1*F - k2*(Gw + Gs)`. `theta = k2/k1` (prior 4.0

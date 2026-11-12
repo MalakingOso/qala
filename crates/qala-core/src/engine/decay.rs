@@ -1,4 +1,4 @@
-//! Discrete-time decay: `packages/engine/decay.ts`, plus `decayAll` from mod.ts.
+//! Discrete-time decay: the deleted TS `engine/decay.ts`, plus `decayAll` from mod.ts.
 //!
 //! `x_t = x_{t-1} * exp(-dt/tau) + k*input`, with `dt` in days from ISO 8601 instants (exact
 //! milliseconds, so DST and month lengths cannot skew it).

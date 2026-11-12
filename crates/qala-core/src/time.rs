@@ -5,7 +5,7 @@
 //! Gregorian calendar (Howard Hinnant's civil-from-days), so DST never enters: a DST day is a
 //! 23 or 25 hour span between two instants that each carry their own offset.
 //!
-//! TS reference: `Date.parse` and `daysBetween` in `packages/engine/decay.ts`, `addDaysKey` in
+//! TS reference: `Date.parse` and `daysBetween` in the deleted TS `engine/decay.ts`, `addDaysKey` in
 //! `packages/engine/availability.ts`. Where `Date.parse` yields NaN the TS code silently carries
 //! NaN along; the Rust port returns a [`TimeError`] instead.
 

@@ -58,7 +58,7 @@ Three conventions to know:
 - `filter.json` input is `{fixes, opts?}` and `expected` is `{points, emitted}`:
   `emitted[i]` is how many points the i-th push appended (0, 1, or up to
   `reanchorCount`). The 4 h run is stored as a generator (`line`, the arithmetic
-  of `lineFixes` in `packages/run/testutil.ts`) with `summary: N`, and its
+  of `lineFixes` in the deleted TS `run/testutil.ts`) with `summary: N`, and its
   `expected` is `{count, first, last, sampled, gaps, emittedTotal}` with every
   Nth point: 14,400 points would have added 3 MB for no extra coverage.
 - `process_run*.json` `expected` is the TS `ProcessedRun` plus `clock`: the

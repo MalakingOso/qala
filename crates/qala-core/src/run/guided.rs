@@ -1,4 +1,4 @@
-//! Guided-workout step machine: `packages/run/guided.ts`. Consumes a `RunWorkout`, emits step
+//! Guided-workout step machine: the deleted TS `run/guided.ts`. Consumes a `RunWorkout`, emits step
 //! changes and pace-zone speed up / slow down events from the 30 s cue pace.
 //!
 //! Hysteresis is two-fold so it does not nag at zone edges: prompts fire only outside a tolerance

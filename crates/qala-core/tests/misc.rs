@@ -254,7 +254,7 @@ fn every_hlc_golden_file_is_replayed() {
 }
 
 // ---------------------------------------------------------------------------------------
-// Availability: replay of the TS oracle, testdata/golden/engine/availability.json.
+// Availability: replay of testdata/golden/engine/availability.json.
 // ---------------------------------------------------------------------------------------
 
 use qala_core::availability::{
@@ -268,7 +268,7 @@ fn arg<T: DeserializeOwned>(args: &Value, key: &str) -> T {
     serde_json::from_value(v).unwrap_or_else(|e| panic!("arg {key}: {e}"))
 }
 
-/// Run one oracle call. `Err` is a call the TS function throws on (an invalid date key).
+/// Run one recorded call. `Err` is a call the TS function throws on (an invalid date key).
 fn availability_call(f: &str, args: &Value) -> Result<Value, String> {
     Ok(match f {
         "shiftsPlan" => to_json(&shifts_plan(arg::<SkipReason>(args, "reason"))),
@@ -334,7 +334,7 @@ fn same(a: &Value, b: &Value) -> bool {
 }
 
 #[test]
-fn availability_matches_the_ts_oracle() {
+fn availability_matches_the_golden() {
     let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../../testdata/golden/engine/availability.json");
     let text = std::fs::read_to_string(&path).expect("availability.json is generated");

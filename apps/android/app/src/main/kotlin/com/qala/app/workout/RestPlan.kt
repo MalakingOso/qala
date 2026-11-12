@@ -7,7 +7,7 @@ import kotlin.math.max
 import kotlin.math.min
 
 /*
- * How long to rest after a set (PLAN 6.6, ported from packages/engine/rest.ts) and the clock that counts it down. Pure:
+ * How long to rest after a set (PLAN 6.6, ported from the deleted TS engine/rest.ts) and the clock that counts it down. Pure:
  * no Compose, no Rust, no clock of its own. The learning multiplier is not ported: it needs a store of past rests,
  * and every set rests as if the multiplier were 1. Rep drift and low readiness need history and the check-in, and
  * are left out too, so a rest is never shorter than the web's would be and sometimes 30 s shorter.

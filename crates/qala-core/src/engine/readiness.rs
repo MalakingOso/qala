@@ -1,4 +1,4 @@
-//! Readiness at session start: `packages/engine/readiness.ts` (PLAN 6.2).
+//! Readiness at session start: the deleted TS `engine/readiness.ts` (PLAN 6.2).
 //!
 //! A 0-1 score from the PRS z-score (own rolling 4-week window), the soreness grid and the
 //! normalised local and systemic fatigue. Load-driven fatigue feeds the Kalman observation and

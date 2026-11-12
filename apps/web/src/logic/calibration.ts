@@ -1,4 +1,4 @@
-/* Which theta the calibration views show (PLAN 6.2, packages/engine/kalman.ts).
+/* Which theta the calibration views show (PLAN 6.2, the deleted TS engine/kalman.ts).
  * theta = k2/k1 starts at the population prior and the filter holds it there
  * until a lift has 20 observations; from then on it is the filter's estimate.
  * So a lift at 20 or more shows its estimate, and a lift under 20 shows the

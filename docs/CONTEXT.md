@@ -20,7 +20,7 @@ A sequence of blocks toward a long-term goal or a race/meet date.
 ### Program language
 
 **LS++ (Liftoscript++)**:
-Qala's program language: liftosaur's liftoscript plus additive extensions, file extension `.lspp`. The name covers the language, not one codebase: `packages/liftoscript` is the vendored TypeScript oracle and the desktop authoring runtime, `crates/qala-lspp` is the Rust port behind wasm (web, server) and UniFFI (Android).
+Qala's program language: liftosaur's liftoscript plus additive extensions, file extension `.lspp`. The name covers the language, not one codebase: the vendored TypeScript copy (`packages/liftoscript`) was deleted 2026-11-12, `crates/qala-lspp` is the Rust port behind wasm (web, server) and UniFFI (Android).
 _Avoid_: liftoscript for new programs (that name means liftosaur's language or the TS package)
 
 **Reference 1RM**:
