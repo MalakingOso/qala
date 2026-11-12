@@ -25,6 +25,9 @@ import {
   type WeightUnit,
 } from "../packages/llm/mod.ts";
 import type { LsppDiagnostic, LsppEvalError } from "../packages/lspp/mod.ts";
+import exercises from "../crates/qala-lspp/data/exercises.json" with {
+  type: "json",
+};
 import { readTextCapped } from "./body.ts";
 import {
   jsonSchemaFormat,
@@ -112,19 +115,16 @@ export function describeEvalError(e: LsppEvalError): string {
 
 /**
  * Live deps: the real exercise catalog and the real LS++ evaluator, which is the
- * wasm build (server/lspp.ts). Throws if the wasm is not built; the catalog stays
- * on the TS exercise list because nothing in the wasm exports it.
+ * wasm build (server/lspp.ts). Throws if the wasm is not built; the catalog is
+ * the exercise list the Rust crate embeds (crates/qala-lspp/data/exercises.json).
  */
 export async function liveImportDeps(
   baseUrl: string,
   fetchFn: typeof fetch = fetch,
 ): Promise<ImportRouteDeps> {
-  const { allExercisesList } = await import(
-    "../packages/liftoscript/src/models/exercise.ts"
-  );
   const { createBaselineDocument } = await import("../packages/core/mod.ts");
   const lspp = await loadLspp();
-  const catalog: CatalogEntry[] = Object.values(allExercisesList).map((e) => ({
+  const catalog: CatalogEntry[] = exercises.exercises.map((e) => ({
     id: e.id,
     name: e.name,
   }));

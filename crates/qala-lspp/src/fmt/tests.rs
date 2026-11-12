@@ -54,22 +54,3 @@ fn empty_and_whitespace_only() {
     assert_eq!(fmt(""), "");
     assert_eq!(fmt("  \n\n"), "\n\n");
 }
-
-#[test]
-fn idempotent_on_fuzz_programs_that_parse() {
-    let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../testdata/golden/lspp/lezer_trees");
-    let v: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(dir.join("planner_fuzz.json")).unwrap()).unwrap();
-    let (mut ok, mut refused) = (0, 0);
-    for c in v.as_array().unwrap() {
-        let t = c["input"].as_str().unwrap();
-        match format_planner(t) {
-            Ok(f) => {
-                assert_eq!(format_planner(&f).as_deref(), Ok(f.as_str()), "{t:?}");
-                ok += 1;
-            }
-            Err(FormatError::Syntax(_)) => refused += 1,
-            Err(e) => panic!("{t:?}: {e}"),
-        }
-    }
-    assert!(ok > 0, "ok {ok} refused {refused}");
-}

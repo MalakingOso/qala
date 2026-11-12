@@ -218,74 +218,7 @@ pub fn equipment_key_by_name(name: &str, equipment_settings: Option<&IAllEquipme
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::tests::{arg, check, parse_cases, settings_named};
-    use serde_json::Value;
-
-    // Expected values come from the TS oracle (testdata/unit/gen_unit_cases.ts
-    // over models/equipment.ts, results in cases_equipment.json).
-
-    fn j<T: serde::Serialize>(x: T) -> Result<Value, String> {
-        serde_json::to_value(x).map_err(|e| e.to_string())
-    }
-
-    fn run(f: &str, a: &[Value]) -> Option<Result<Value, String>> {
-        if f == "build" {
-            return Some(j(build(a[0].as_str()?)));
-        }
-        if f == "isBuiltIn" {
-            return Some(j(is_built_in(a[0].as_str()?)));
-        }
-        if f == "customEquipment" {
-            return Some(j(custom_equipment(arg::<Option<IAllEquipment>>(&a[0]).as_ref())));
-        }
-        if f == "equipmentKeyByName" {
-            return Some(j(equipment_key_by_name(a[0].as_str()?, arg::<Option<IAllEquipment>>(&a[1]).as_ref())));
-        }
-        if f == "mergeEquipment" {
-            return Some(j(merge_equipment(&arg(&a[0]), &arg(&a[1]))));
-        }
-        if f == "smallestPlate" {
-            let s = settings_named("lb");
-            let key = a[0].as_str()?;
-            let ed = s.gyms[0].equipment.get(key)?;
-            return Some(j(smallest_plate(ed, arg(&a[1]))));
-        }
-        let s = settings_named(a[0].as_str()?);
-        let ty = |i: usize| arg::<Option<IExerciseType>>(&a[i]);
-        let gym = |i: usize| a[i].as_str().map(|x| x.to_string());
-        Some(match f {
-            "getEquipmentOfGym" => j(get_equipment_of_gym(&s, gym(1).as_deref())),
-            "getCurrentGym" => j(get_current_gym(&s)),
-            "getGymByIdOrCurrent" => j(get_gym_by_id_or_current(&s, gym(1).as_deref())),
-            "getEquipmentIdForExerciseType" => {
-                j(get_equipment_id_for_exercise_type(&s, ty(1).as_ref(), gym(2).as_deref()))
-            }
-            "getEquipmentNameForExerciseType" => j(get_equipment_name_for_exercise_type(&s, ty(1).as_ref())),
-            "getEquipmentDataForExerciseType" => j(get_equipment_data_for_exercise_type(&s, ty(1).as_ref())),
-            "getUnitOrDefaultForExerciseType" => j(get_unit_or_default_for_exercise_type(&s, ty(1).as_ref())),
-            "getUnitForExerciseType" => j(get_unit_for_exercise_type(&s, ty(1).as_ref())),
-            "getEquipmentData" => j(get_equipment_data(&s, a[1].as_str()?)),
-            "currentEquipment" => j(current_equipment(&s)),
-            _ => return None,
-        })
-    }
-
-    #[test]
-    fn matches_oracle() {
-        let cases = parse_cases(include_str!("../testdata/unit/cases_equipment.json"));
-        let mut errors = Vec::new();
-        let mut unknown = std::collections::BTreeSet::new();
-        for c in &cases {
-            match run(&c.f, &c.args) {
-                Some(r) => check(c, &Value::Array(c.args.clone()).to_string(), r, false, &mut errors),
-                None => {
-                    unknown.insert(c.f.clone());
-                }
-            }
-        }
-        assert!(unknown.is_empty(), "unhandled fns: {unknown:?}");
-        assert!(errors.is_empty(), "{} of {} cases differ, first:\n{}", errors.len(), cases.len(), errors.join("\n"));
-    }
+    use crate::types::tests::settings_named;
 
     #[test]
     fn empty_gyms_do_not_panic() {

@@ -1,5 +1,5 @@
 {
   "name": "@qala/engine",
   "version": "0.1.0",
-  "exports": "./mod.ts"
+  "exports": "./availability.ts"
 }
