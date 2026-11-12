@@ -1,25 +1,16 @@
 // Qala server (docs/PLAN.md section 7): one Deno 2 process on 127.0.0.1:8500.
-// Automerge-repo sync over WebSocket, /api/llm proxy to llama-server,
+// /api/llm proxy to llama-server, the import and coach routes,
 // self-hosted map tiles, DEM elevation, and the built PWA.
 
-import type { PeerId } from "@automerge/automerge-repo";
-import {
-  assertLoopbackBind,
-  AuthError,
-  authErrorResponse,
-  checkWsUpgrade,
-  requireDocOwnership,
-} from "./auth.ts";
+import { assertLoopbackBind, AuthError, authErrorResponse } from "./auth.ts";
 import { serveCoachAsk } from "./coach.ts";
 import { lookupElevation } from "./elevation.ts";
 import { importDepsOnce, serveImportText } from "./import.ts";
 import { serveImportPdf } from "./importPdf.ts";
 import { llmBaseUrl, serveLlmChat } from "./llm.ts";
 import { serveStatic } from "./static.ts";
-import { UserSyncStore } from "./sync.ts";
 import { createTilesHandler } from "./tiles.ts";
 import { serveTranscribe } from "./transcribe.ts";
-import { DenoWebSocketServerAdapter, upgradeSyncSocket } from "./ws.ts";
 
 export const BIND_HOSTNAME = "127.0.0.1";
 export const BIND_PORT = 8500;
@@ -45,47 +36,10 @@ export function defaultOptions(): ServerOptions {
 
 export interface ServerState {
   options: ServerOptions;
-  store: UserSyncStore;
-  syncAdapter: DenoWebSocketServerAdapter;
 }
 
 export function createState(options: ServerOptions): ServerState {
-  const adapter = new DenoWebSocketServerAdapter();
-  adapter.connect("qala-server" as PeerId);
-  return {
-    options,
-    store: new UserSyncStore(options.dataRoot),
-    syncAdapter: adapter,
-  };
-}
-
-async function handleSync(
-  req: Request,
-  state: ServerState,
-): Promise<Response> {
-  let userId: string;
-  try {
-    ({ userId } = checkWsUpgrade(req));
-  } catch (err) {
-    return authErrorResponse(err);
-  }
-  const url = new URL(req.url);
-  const docId = url.searchParams.get("docId");
-  if (docId !== null) {
-    try {
-      const owned = await state.store.docForUser(userId);
-      requireDocOwnership(userId, docId, owned.docId);
-    } catch (err) {
-      return authErrorResponse(err);
-    }
-  } else {
-    // Ensure the user's document (and record) exists before syncing.
-    await state.store.docForUser(userId);
-  }
-  return upgradeSyncSocket(
-    req,
-    (socket) => state.syncAdapter.addSocket(socket),
-  );
+  return { options };
 }
 
 async function handleElevation(
@@ -120,9 +74,6 @@ export function createHandler(
         req.method === "GET" && (path === "/health" || path === "/api/health")
       ) {
         return Response.json({ ok: true });
-      }
-      if (path === "/sync" || path.startsWith("/sync/")) {
-        return await handleSync(req, state);
       }
       if (path === "/api/llm/chat") {
         return await serveLlmChat(req, state.options.llmBaseUrl);

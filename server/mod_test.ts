@@ -1,4 +1,4 @@
-// Server routing tests: health, sync auth gate, elevation, tiles, static.
+// Server routing tests: health, elevation, tiles, static.
 
 import { assert, assertEquals } from "@std/assert";
 import { createHandler, createState, type ServerOptions } from "./mod.ts";
@@ -31,35 +31,6 @@ Deno.test("health endpoint answers ok", async () => {
       assertEquals(res.status, 200);
       assertEquals((await res.json() as { ok: boolean }).ok, true);
     }
-  } finally {
-    await cleanup();
-  }
-});
-
-Deno.test("sync without identity is 401 and cross-user doc is 403", async () => {
-  const { state, cleanup } = await testState();
-  try {
-    const handle = createHandler(state);
-    const anon = await handle(new Request("http://127.0.0.1:8500/sync"));
-    assertEquals(anon.status, 401);
-
-    const alice = await state.store.docForUser("alice");
-    const bob = "bob";
-    await state.store.docForUser(bob);
-    const cross = await handle(
-      new Request(`http://127.0.0.1:8500/sync?docId=${alice.docId}`, {
-        headers: { "Tailscale-User-Login": bob },
-      }),
-    );
-    assertEquals(cross.status, 403);
-
-    // Non-upgrade request with valid auth reaches the socket route (426).
-    const plain = await handle(
-      new Request("http://127.0.0.1:8500/sync", {
-        headers: { "Tailscale-User-Login": "alice" },
-      }),
-    );
-    assertEquals(plain.status, 426);
   } finally {
     await cleanup();
   }
