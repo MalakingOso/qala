@@ -14,6 +14,10 @@
 // The upload is untrusted. ffmpeg only ever sees a format this file named
 // after checking the bytes, never a probed one, and never a network protocol.
 
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+
 import {
   type CommandRunner,
   createGate,
@@ -79,9 +83,9 @@ export function liveTranscribeDeps(): TranscribeDeps {
   return {
     run: runCommand,
     fetchFn: fetch,
-    e4bUrl: Deno.env.get("QALA_E4B_URL") ?? E4B_DEFAULTS.baseUrl,
-    whisperUrl: Deno.env.get("QALA_WHISPER_URL") ?? WHISPER_DEFAULTS.baseUrl,
-    ffmpeg: Deno.env.get("QALA_FFMPEG") ?? "/usr/bin/ffmpeg",
+    e4bUrl: process.env.QALA_E4B_URL ?? E4B_DEFAULTS.baseUrl,
+    whisperUrl: process.env.QALA_WHISPER_URL ?? WHISPER_DEFAULTS.baseUrl,
+    ffmpeg: process.env.QALA_FFMPEG ?? "/usr/bin/ffmpeg",
     gate: createGate(TRANSCRIBE_LIMITS.maxConcurrent),
   };
 }
@@ -176,11 +180,11 @@ export async function convertToWav(
   kind: AudioKind,
   deps: Pick<TranscribeDeps, "run" | "ffmpeg">,
 ): Promise<Converted> {
-  const dir = await Deno.makeTempDir({ prefix: "qala-audio-" });
+  const dir = await mkdtemp(join(tmpdir(), "qala-audio-"));
   try {
     const input = `${dir}/in.bin`;
     const output = `${dir}/out.wav`;
-    await Deno.writeFile(input, bytes);
+    await writeFile(input, bytes);
     const r = await deps.run({
       cmd: deps.ffmpeg,
       args: [
@@ -237,7 +241,7 @@ export async function convertToWav(
     }
     let wav: Uint8Array<ArrayBuffer>;
     try {
-      wav = await Deno.readFile(output);
+      wav = await readFile(output);
     } catch {
       return { ok: false, status: 422, error: "could not decode this audio" };
     }
@@ -266,7 +270,7 @@ export async function convertToWav(
     }
     return { ok: true, wav, durationSec: Math.round(durationSec * 10) / 10 };
   } finally {
-    await Deno.remove(dir, { recursive: true }).catch(() => {});
+    await rm(dir, { recursive: true, force: true }).catch(() => {});
   }
 }
 

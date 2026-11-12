@@ -1,6 +1,8 @@
 // Running plans (docs/PLAN.md 12): easy share, quality count, growth caps, down
 // weeks, race taper.
 
+import { test } from "bun:test";
+
 import {
   EASY_CS_FRACTION,
   easyTimeShare,
@@ -29,7 +31,7 @@ function weekKm(plan: ReturnType<typeof generateRunPlan>, w: number): number {
   return plan.weeks[w].days.reduce((s, d) => s + d.workout.targetKm, 0);
 }
 
-Deno.test("weekly distance respects the two-week 30% cap, not the 10% rule", () => {
+test("weekly distance respects the two-week 30% cap, not the 10% rule", () => {
   const dists = weeklyDistances(BASE);
   for (let w = 2; w < dists.length; w++) {
     assert(
@@ -43,7 +45,7 @@ Deno.test("weekly distance respects the two-week 30% cap, not the 10% rule", () 
   );
 });
 
-Deno.test("long run never exceeds 1.10x the previous 30-day longest", () => {
+test("long run never exceeds 1.10x the previous 30-day longest", () => {
   const plan = generateRunPlan(BASE);
   const recent: number[] = [BASE.longestRunKm];
   for (const week of plan.weeks) {
@@ -59,7 +61,7 @@ Deno.test("long run never exceeds 1.10x the previous 30-day longest", () => {
   }
 });
 
-Deno.test("easy running stays at or above 80% of time", () => {
+test("easy running stays at or above 80% of time", () => {
   const plan = generateRunPlan(BASE);
   for (const week of plan.weeks) {
     if (week.taperWeek) continue;
@@ -70,7 +72,7 @@ Deno.test("easy running stays at or above 80% of time", () => {
   }
 });
 
-Deno.test("quality count: one at 3 runs/wk, two at 4+", () => {
+test("quality count: one at 3 runs/wk, two at 4+", () => {
   // Quality sessions are tempo/intervals work plus surges as the entry
   // workout; surges stay easy effort while holding the quality slot.
   const isQuality = (t: string) =>
@@ -87,13 +89,13 @@ Deno.test("quality count: one at 3 runs/wk, two at 4+", () => {
   }
 });
 
-Deno.test("down week every fourth week", () => {
+test("down week every fourth week", () => {
   const plan = generateRunPlan(BASE);
   assert(plan.weeks[3].downWeek, "week 4 is a down week");
   assert(weekKm(plan, 3) < weekKm(plan, 2), "down week volume drops");
 });
 
-Deno.test("race taper cuts 41-60% over two weeks and keeps intensity", () => {
+test("race taper cuts 41-60% over two weeks and keeps intensity", () => {
   const plan = generateRunPlan({
     ...BASE,
     goal: "race",
@@ -139,7 +141,7 @@ Deno.test("race taper cuts 41-60% over two weeks and keeps intensity", () => {
   assert(raceDay !== undefined, "race week contains the race");
 });
 
-Deno.test("easy pace sits below 0.78 CS, threshold falls back to Riegel", () => {
+test("easy pace sits below 0.78 CS, threshold falls back to Riegel", () => {
   assert(EASY_CS_FRACTION === 0.78, "easy threshold is 0.78 CS");
   assert(thresholdPaceMps(BASE) === 4.0, "CS used directly when known");
   const noCS = thresholdPaceMps({

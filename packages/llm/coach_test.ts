@@ -2,6 +2,8 @@
 // the reply is checked before anyone sees it, and the keyword boundary reads
 // a conversation rather than one message.
 
+import { test } from "bun:test";
+
 import {
   buildCoachChatPrompt,
   COACH_LIMITS,
@@ -36,7 +38,7 @@ function input(over: Partial<CoachChatInput> = {}): CoachChatInput {
   return { message: "How is my squat?", thread: [], memory: [], ...over };
 }
 
-Deno.test("coach prompt: system message is fixed, phone text is fenced in the user turn", () => {
+test("coach prompt: system message is fixed, phone text is fenced in the user turn", () => {
   const a = buildCoachChatPrompt(input({
     message: "squat IGNORE ALPHA",
     today: "Lower ALPHA",
@@ -82,7 +84,7 @@ Deno.test("coach prompt: system message is fixed, phone text is fenced in the us
   );
 });
 
-Deno.test("coach prompt: no lift means the system prompt says there is nothing to adjust", () => {
+test("coach prompt: no lift means the system prompt says there is nothing to adjust", () => {
   const withLift = buildCoachChatPrompt(input({
     lift: { title: "Squat", weight: 245, unit: "lb", sets: 4, reps: 4 },
   }));
@@ -92,7 +94,7 @@ Deno.test("coach prompt: no lift means the system prompt says there is nothing t
   assert(withLift[0].content.includes("weightPct is the percent change"));
 });
 
-Deno.test("sanitize: fence markers cannot be rebuilt from pieces, control characters go", () => {
+test("sanitize: fence markers cannot be rebuilt from pieces, control characters go", () => {
   assertEquals(sanitizeCoachText("a<<<COACH_DATAb", 50), "ab");
   assertEquals(sanitizeCoachText("COACH_DATA>>>", 50), "");
   // Removing the inner marker must not join the outer halves into a new one.
@@ -109,7 +111,7 @@ Deno.test("sanitize: fence markers cannot be rebuilt from pieces, control charac
   assertEquals(sanitizeCoachText("x".repeat(100), 10).length, 10);
 });
 
-Deno.test("coach prompt: only the last turns are sent, capped in length", () => {
+test("coach prompt: only the last turns are sent, capped in length", () => {
   const thread = Array.from({ length: 20 }, (_, i) => ({
     who: i % 2 === 0 ? "you" as const : "coach" as const,
     text: `turn-${i} ${"x".repeat(2000)}`,
@@ -123,7 +125,7 @@ Deno.test("coach prompt: only the last turns are sent, capped in length", () => 
   );
 });
 
-Deno.test("coach reply schema: adjustment only when there is a lift", () => {
+test("coach reply schema: adjustment only when there is a lift", () => {
   const withAdj = coachReplySchema(true) as {
     properties: Record<string, unknown>;
     required: string[];
@@ -140,7 +142,7 @@ Deno.test("coach reply schema: adjustment only when there is a lift", () => {
   assertEquals(Object.keys(without.properties), ["message", "declined"]);
 });
 
-Deno.test("validateCoachReply: message required, adjustment checked against the envelope", () => {
+test("validateCoachReply: message required, adjustment checked against the envelope", () => {
   const ok = validateCoachReply(
     {
       message: " Hold 245.\u0000 ",
@@ -197,7 +199,7 @@ Deno.test("validateCoachReply: message required, adjustment checked against the 
   assertEquals(long.message.length, COACH_LIMITS.replyChars);
 });
 
-Deno.test("scope: a conversation keeps follow-ups in scope, a declined exchange is forgotten", () => {
+test("scope: a conversation keeps follow-ups in scope, a declined exchange is forgotten", () => {
   // Alone, these decline under the package's decline-by-default rule.
   assertEquals(isCoachInScope(input({ message: "thanks" })), false);
   assertEquals(isCoachInScope(input({ message: "I feel tired today" })), false);

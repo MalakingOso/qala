@@ -1,4 +1,5 @@
-import { assertEquals } from "@std/assert";
+import { test } from "bun:test";
+import assert from "node:assert/strict";
 import {
   acknowledge,
   deserialize,
@@ -17,22 +18,22 @@ function op(id: string): QueuedOp {
   };
 }
 
-Deno.test("outbox keeps FIFO order and acknowledges by id", () => {
+test("outbox keeps FIFO order and acknowledges by id", () => {
   const q = enqueue(enqueue([], op("a")), op("b"));
-  assertEquals(q.map((o) => o.id), ["a", "b"]);
-  assertEquals(acknowledge(q, "a").map((o) => o.id), ["b"]);
+  assert.deepStrictEqual(q.map((o) => o.id), ["a", "b"]);
+  assert.deepStrictEqual(acknowledge(q, "a").map((o) => o.id), ["b"]);
 });
 
-Deno.test("backoff doubles and caps at 60s", () => {
-  assertEquals(nextBackoffMs(0), 1000);
-  assertEquals(nextBackoffMs(3), 8000);
-  assertEquals(nextBackoffMs(99), 60_000);
+test("backoff doubles and caps at 60s", () => {
+  assert.deepStrictEqual(nextBackoffMs(0), 1000);
+  assert.deepStrictEqual(nextBackoffMs(3), 8000);
+  assert.deepStrictEqual(nextBackoffMs(99), 60_000);
 });
 
-Deno.test("deserialize rejects garbage and keeps valid ops", () => {
-  assertEquals(deserialize(null), []);
-  assertEquals(deserialize("not json"), []);
-  assertEquals(deserialize('{"x":1}'), []);
+test("deserialize rejects garbage and keeps valid ops", () => {
+  assert.deepStrictEqual(deserialize(null), []);
+  assert.deepStrictEqual(deserialize("not json"), []);
+  assert.deepStrictEqual(deserialize('{"x":1}'), []);
   const kept = deserialize(JSON.stringify([op("a"), { id: 7 }]));
-  assertEquals(kept.map((o) => o.id), ["a"]);
+  assert.deepStrictEqual(kept.map((o) => o.id), ["a"]);
 });

@@ -2,7 +2,7 @@
 // (docs/PLAN.md section 8a: `pmtiles extract --bbox --maxzoom 15`, then unpack to
 // z/x/y because a service worker cannot cache 206 responses).
 //
-//   deno run --allow-all scripts/tiles_extract.ts \
+//   bun scripts/tiles_extract.ts \
 //     --src ~/maps/protomaps-us.pmtiles --bbox "-84.6,42.6,-83.5,43.4" \
 //     --maxzoom 15 --out server/tiles --name region
 //
@@ -10,16 +10,17 @@
 // PLAN's size guidance: a metro area at z15 is tens to low hundreds of MB,
 // the whole US ~13-16 GB); (2) unpack every tile to <out>/<z>/<x>/<y>.mvt by
 // reading the PMTiles v3 archive directly (no extra tooling); (3) print a
-// size report. Requires nothing but Deno; the `pmtiles` CLI is NOT needed.
+// size report. Requires nothing but Bun; the `pmtiles` CLI is NOT needed.
 //
 // Bbox format: minlon,minlat,maxlon,maxlat (WGS84 degrees).
 
+import { copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
 function arg(name: string, def?: string): string | undefined {
-  const i = Deno.args.findIndex((a) => a === `--${name}`);
-  if (i >= 0) return Deno.args[i + 1] ?? def;
-  const kv = Deno.args.find((a) => a.startsWith(`--${name}=`));
+  const i = process.argv.slice(2).findIndex((a) => a === `--${name}`);
+  if (i >= 0) return process.argv.slice(2)[i + 1] ?? def;
+  const kv = process.argv.slice(2).find((a) => a.startsWith(`--${name}=`));
   return kv ? kv.slice(name.length + 3) : def;
 }
 
@@ -273,21 +274,21 @@ if (
   console.error(
     "usage: tiles_extract.ts --src <archive.pmtiles> --bbox minlon,minlat,maxlon,maxlat [--maxzoom 15] [--out server/tiles] [--name region]",
   );
-  Deno.exit(1);
+  process.exit(1);
 }
 const bbox = bboxArg.split(",").map(Number);
 if (bbox.length !== 4 || bbox.some((v) => !Number.isFinite(v))) {
   console.error("bad --bbox; want minlon,minlat,maxlon,maxlat");
-  Deno.exit(1);
+  process.exit(1);
 }
 const [minlon, minlat, maxlon, maxlat] = bbox;
 
 let archiveBytes: Uint8Array;
 try {
-  archiveBytes = await Deno.readFile(src);
+  archiveBytes = await readFile(src);
 } catch {
   console.error(`cannot read source archive: ${src}`);
-  Deno.exit(1);
+  process.exit(1);
 }
 const archive = openArchive(archiveBytes);
 const rootOffset = Number(archive.view.getBigUint64(8, true));
@@ -305,14 +306,14 @@ for (let z = 0; z <= maxzoom; z++) {
       const tile = await getTile(archive, root, zxyToTileId(z, x, y));
       if (!tile) continue;
       const path = join(outDir, String(z), String(x), `${y}.mvt`);
-      await Deno.mkdir(join(path, ".."), { recursive: true });
-      await Deno.writeFile(path, tile);
+      await mkdir(join(path, ".."), { recursive: true });
+      await writeFile(path, tile);
       wrote++;
       bytes += tile.length;
     }
   }
 }
-await Deno.copyFile(src, join(outDir, `${name}.pmtiles`));
+await copyFile(src, join(outDir, `${name}.pmtiles`));
 console.log(
   `tiles: ${wrote} tiles (${
     (bytes / 1048576).toFixed(1)

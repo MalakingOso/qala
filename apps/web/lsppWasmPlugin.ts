@@ -1,6 +1,6 @@
 // Serves the LS++ wasm build to the browser without making the app depend on it.
 //
-// `deno task build:wasm` writes target/wasm-out/web/ (gitignored). The editor loads it
+// `bun run build:wasm` writes target/wasm-out/web/ (gitignored). The editor loads it
 // at run time from a URL, never through an import Vite or tsc would have to resolve,
 // so a checkout that has not built the wasm still typechecks, runs and builds, and the
 // editor just runs without LS++ checks.
@@ -66,7 +66,7 @@ export function lsppWasm(): Plugin {
     writeBundle() {
       if (!hash) {
         this.warn(
-          "the LS++ wasm is not built, so the editor will run without its checks. Run `deno task build:wasm` first.",
+          "the LS++ wasm is not built, so the editor will run without its checks. Run `bun run build:wasm` first.",
         );
         return;
       }

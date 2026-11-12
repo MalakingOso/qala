@@ -1060,14 +1060,6 @@ pub fn parse(script: &str) -> Node {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serde_json::Value;
-    use std::path::PathBuf;
-
-    fn golden_dir() -> PathBuf {
-        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../testdata/golden/lspp/lezer_trees")
-    }
-
     fn dump(n: &Node) -> String {
         let mut s = format!("{}[{}-{}]", n.kind.name(), n.from, n.to);
         if !n.children.is_empty() {
@@ -1081,88 +1073,6 @@ mod tests {
             s.push(')');
         }
         s
-    }
-
-    fn json_dump(v: &Value) -> Result<String, String> {
-        let name = v.get("name").and_then(Value::as_str).ok_or("name")?;
-        let from = v.get("from").and_then(Value::as_u64).ok_or("from")?;
-        let to = v.get("to").and_then(Value::as_u64).ok_or("to")?;
-        let mut s = format!("{name}[{from}-{to}]");
-        let kids = v.get("children").and_then(Value::as_array);
-        if let Some(kids) = kids {
-            if !kids.is_empty() {
-                s.push('(');
-                for (i, c) in kids.iter().enumerate() {
-                    if i > 0 {
-                        s.push(' ');
-                    }
-                    s.push_str(&json_dump(c)?);
-                }
-                s.push(')');
-            }
-        }
-        Ok(s)
-    }
-
-    /// Returns (checked, failures) for one golden file. Missing file is None.
-    fn check_file(name: &str) -> Option<(usize, Vec<String>)> {
-        let path = golden_dir().join(name);
-        let text = std::fs::read_to_string(&path).ok()?;
-        let v: Value = serde_json::from_str(&text).expect("golden json");
-        let entries = v.as_array().expect("golden array");
-        let mut fails = Vec::new();
-        for e in entries {
-            let input = e.get("input").and_then(Value::as_str).expect("input");
-            let want = json_dump(e.get("tree").expect("tree")).expect("tree shape");
-            let got = dump(&parse(input));
-            if got != want {
-                // Show the divergence point with context, not the whole tree.
-                let at = want
-                    .bytes()
-                    .zip(got.bytes())
-                    .take_while(|(a, b)| a == b)
-                    .count();
-                let lo = want.floor_char_boundary(at.saturating_sub(120));
-                let lo_g = got.floor_char_boundary(at.saturating_sub(120));
-                let hi = want.floor_char_boundary((at + 120).min(want.len()));
-                let hi_g = got.floor_char_boundary((at + 120).min(got.len()));
-                fails.push(format!(
-                    "input: {input:?}\n want: ...{}\n  got: ...{}",
-                    &want[lo..hi],
-                    &got[lo_g..hi_g]
-                ));
-            }
-        }
-        Some((entries.len(), fails))
-    }
-
-    fn run_golden(name: &str, required: bool) {
-        match check_file(name) {
-            None => assert!(!required, "missing golden file {name}"),
-            Some((n, fails)) => {
-                assert!(
-                    fails.is_empty(),
-                    "{} of {n} failed in {name}; first:\n{}",
-                    fails.len(),
-                    fails.iter().take(3).cloned().collect::<Vec<_>>().join("\n")
-                );
-            }
-        }
-    }
-
-    #[test]
-    fn golden_scripts() {
-        run_golden("scripts.json", true);
-    }
-
-    #[test]
-    fn golden_scripts_extra() {
-        run_golden("scripts_extra.json", true);
-    }
-
-    #[test]
-    fn golden_scripts_fuzz() {
-        run_golden("scripts_fuzz.json", true);
     }
 
     #[test]

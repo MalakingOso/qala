@@ -1,7 +1,8 @@
 // Auth tests: Tailscale header identity, cross-user doc rejection,
 // loopback bind refusal, WebSocket Origin accept/reject policy.
 
-import { assert, assertEquals, assertThrows } from "@std/assert";
+import { test } from "bun:test";
+import assert from "node:assert/strict";
 import {
   assertLoopbackBind,
   AuthError,
@@ -17,26 +18,28 @@ function req(headers: Record<string, string> = {}): Request {
   return new Request("http://127.0.0.1:8500/sync", { headers });
 }
 
-Deno.test("identity header maps to a stable lowercase user id", () => {
-  assertEquals(
+test("identity header maps to a stable lowercase user id", () => {
+  assert.deepStrictEqual(
     userIdFromRequest(req({ "Tailscale-User-Login": "Berkley" })),
     "berkley",
   );
-  assertEquals(userIdFromRequest(req()), null);
-  assertEquals(userIdFromRequest(req({ "Tailscale-User-Login": "  " })), null);
+  assert.deepStrictEqual(userIdFromRequest(req()), null);
+  assert.deepStrictEqual(userIdFromRequest(req({ "Tailscale-User-Login": "  " })), null);
 });
 
-Deno.test("normalizeLogin trims and lowercases", () => {
-  assertEquals(normalizeLogin("  Alice@Example  "), "alice@example");
+test("normalizeLogin trims and lowercases", () => {
+  assert.deepStrictEqual(normalizeLogin("  Alice@Example  "), "alice@example");
 });
 
-Deno.test("missing identity header is a 401", () => {
-  const err = assertThrows(() => requireUser(req()), AuthError);
-  assertEquals(err.status, 401);
+test("missing identity header is a 401", () => {
+  assert.throws(
+    () => requireUser(req()),
+    (err) => err instanceof AuthError && err.status === 401,
+  );
 });
 
-Deno.test("cross-user document access is rejected", () => {
-  assertThrows(
+test("cross-user document access is rejected", () => {
+  assert.throws(
     () => requireDocOwnership("alice", "doc-bob", "doc-alice"),
     AuthError,
   );
@@ -47,30 +50,30 @@ Deno.test("cross-user document access is rejected", () => {
     assert(err instanceof AuthError && err.status === 403);
   }
   // Unknown users own nothing.
-  assertThrows(
+  assert.throws(
     () => requireDocOwnership("mallory", "doc-alice", null),
     AuthError,
   );
 });
 
-Deno.test("own document passes the ownership check", () => {
+test("own document passes the ownership check", () => {
   requireDocOwnership("alice", "doc-alice", "doc-alice");
 });
 
-Deno.test("non-loopback binds are refused", () => {
+test("non-loopback binds are refused", () => {
   assertLoopbackBind("127.0.0.1");
   assertLoopbackBind("127.0.0.2");
   assertLoopbackBind("::1");
   assertLoopbackBind("localhost");
-  assertThrows(() => assertLoopbackBind("0.0.0.0"), Error);
-  assertThrows(() => assertLoopbackBind("192.168.1.5"), Error);
-  assertThrows(() => assertLoopbackBind("100.105.14.62"), Error);
-  assertThrows(() => assertLoopbackBind("example.com"), Error);
+  assert.throws(() => assertLoopbackBind("0.0.0.0"), Error);
+  assert.throws(() => assertLoopbackBind("192.168.1.5"), Error);
+  assert.throws(() => assertLoopbackBind("100.105.14.62"), Error);
+  assert.throws(() => assertLoopbackBind("example.com"), Error);
   assert(!isLoopbackHost("128.0.0.1"));
   assert(isLoopbackHost("127.255.255.255"));
 });
 
-Deno.test("ws upgrade: localhost origin with header is accepted", () => {
+test("ws upgrade: localhost origin with header is accepted", () => {
   const { userId } = checkWsUpgrade(
     new Request("ws://127.0.0.1:8500/sync", {
       headers: {
@@ -79,19 +82,19 @@ Deno.test("ws upgrade: localhost origin with header is accepted", () => {
       },
     }),
   );
-  assertEquals(userId, "berkley");
+  assert.deepStrictEqual(userId, "berkley");
 });
 
-Deno.test("ws upgrade: no Origin with header is accepted (native client)", () => {
+test("ws upgrade: no Origin with header is accepted (native client)", () => {
   const { userId } = checkWsUpgrade(
     new Request("ws://127.0.0.1:8500/sync", {
       headers: { "Tailscale-User-Login": "berkley" },
     }),
   );
-  assertEquals(userId, "berkley");
+  assert.deepStrictEqual(userId, "berkley");
 });
 
-Deno.test("ws upgrade: tailnet origin with header is accepted (auth is header-only)", () => {
+test("ws upgrade: tailnet origin with header is accepted (auth is header-only)", () => {
   const { userId } = checkWsUpgrade(
     new Request("ws://127.0.0.1:8500/sync", {
       headers: {
@@ -100,10 +103,10 @@ Deno.test("ws upgrade: tailnet origin with header is accepted (auth is header-on
       },
     }),
   );
-  assertEquals(userId, "berkley");
+  assert.deepStrictEqual(userId, "berkley");
 });
 
-Deno.test("ws upgrade: any origin without the header is rejected", () => {
+test("ws upgrade: any origin without the header is rejected", () => {
   for (
     const origin of [
       "https://localhost",
@@ -111,15 +114,14 @@ Deno.test("ws upgrade: any origin without the header is rejected", () => {
       "https://evil.example",
     ]
   ) {
-    const err = assertThrows(
+    assert.throws(
       () =>
         checkWsUpgrade(
           new Request("ws://127.0.0.1:8500/sync", {
             headers: { Origin: origin },
           }),
         ),
-      AuthError,
+      (err) => err instanceof AuthError && err.status === 401,
     );
-    assertEquals(err.status, 401);
   }
 });

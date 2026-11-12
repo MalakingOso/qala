@@ -1,0 +1,21 @@
+{
+  "name": "qala",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun --watch server/mod.ts",
+    "serve": "bun server/mod.ts",
+    "build": "npm --prefix apps/web run build",
+    "test": "bun test --timeout 30000 ./packages ./server ./apps/web/src/logic",
+    "typecheck": "bun check",
+    "build:wasm": "scripts/build_wasm.sh",
+    "build:android": "bash -c 'source scripts/android-env.sh && apps/android/gradlew -p apps/android assembleDebug'",
+    "gen:android": "bun scripts/tokens_to_kotlin.ts && bun scripts/lucide_to_kotlin.ts && bun scripts/plates_to_android.ts",
+    "gen:android-gear": "bun scripts/gear_to_kotlin.ts",
+    "tiles:extract": "bun scripts/tiles_extract.ts",
+    "dem:fetch": "bun scripts/dem_fetch.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.4.4"
+  }
+}

@@ -1,4 +1,5 @@
-import { assert, assertEquals } from "@std/assert";
+import { test } from "bun:test";
+import assert from "node:assert/strict";
 import { defaultLbInventory } from "./plates.ts";
 import {
   barbellStepDefault,
@@ -9,28 +10,28 @@ import {
 
 const BAR = 45;
 
-Deno.test("barbellStep defaults to twice the smallest pair", () => {
-  assertEquals(barbellStepDefault(defaultLbInventory().plates), 5);
-  assertEquals(
+test("barbellStep defaults to twice the smallest pair", () => {
+  assert.deepStrictEqual(barbellStepDefault(defaultLbInventory().plates), 5);
+  assert.deepStrictEqual(
     barbellStepDefault([
       { weight: 25, pairs: 1, color: "red" },
       { weight: 1, pairs: 2, color: "green" },
     ]),
     2,
   );
-  assertEquals(barbellStepDefault([]), 5);
+  assert.deepStrictEqual(barbellStepDefault([]), 5);
 });
 
-Deno.test("roundWeight snaps to the nearest loadable weight", () => {
+test("roundWeight snaps to the nearest loadable weight", () => {
   const plates = defaultLbInventory().plates;
-  assertEquals(roundWeight(245, BAR, plates), 245);
+  assert.deepStrictEqual(roundWeight(245, BAR, plates), 245);
   // Default inventory steps in 2.5s: 243 -> t=99/side, nearer above (100/side).
-  assertEquals(roundWeight(243, BAR, plates), 245);
+  assert.deepStrictEqual(roundWeight(243, BAR, plates), 245);
   // 242 -> t=98.5/side, nearer below (97.5/side = 45+35+10+5+2.5).
-  assertEquals(roundWeight(242, BAR, plates), 240);
+  assert.deepStrictEqual(roundWeight(242, BAR, plates), 240);
 });
 
-Deno.test("roundWeight never prescribes an unloadable weight", () => {
+test("roundWeight never prescribes an unloadable weight", () => {
   const plates = defaultLbInventory().plates;
   for (let w = 45; w <= 315; w += 1.25) {
     const rounded = roundWeight(w, BAR, plates);
@@ -41,7 +42,7 @@ Deno.test("roundWeight never prescribes an unloadable weight", () => {
   }
 });
 
-Deno.test("roundWeight is loadable with limited inventory too", () => {
+test("roundWeight is loadable with limited inventory too", () => {
   const plates = defaultLbInventory().plates.map((p) =>
     p.weight === 45 ? { ...p, pairs: 1 as const } : p
   );
@@ -54,7 +55,7 @@ Deno.test("roundWeight is loadable with limited inventory too", () => {
   }
 });
 
-Deno.test("roundToStep rounds halves up", () => {
-  assertEquals(roundToStep(142.5, 5), 145);
-  assertEquals(roundToStep(141, 5), 140);
+test("roundToStep rounds halves up", () => {
+  assert.deepStrictEqual(roundToStep(142.5, 5), 145);
+  assert.deepStrictEqual(roundToStep(141, 5), 140);
 });

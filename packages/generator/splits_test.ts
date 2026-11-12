@@ -1,5 +1,7 @@
 // Split choice and main-lift frequency (docs/PLAN.md 12).
 
+import { test } from "bun:test";
+
 import {
   advancedFrequencyAlternatives,
   availableExercises,
@@ -15,7 +17,7 @@ function assert(cond: boolean, msg: string): void {
   if (!cond) throw new Error(`assert failed: ${msg}`);
 }
 
-Deno.test("split by days: 2-3 full body, 4 upper/lower, 5-6 ppl", () => {
+test("split by days: 2-3 full body, 4 upper/lower, 5-6 ppl", () => {
   assert(chooseSplit(2).name === "fullBody", "2d is full body");
   assert(chooseSplit(3).name === "fullBody", "3d is full body");
   assert(chooseSplit(4).name === "upperLower", "4d is upper/lower");
@@ -25,7 +27,7 @@ Deno.test("split by days: 2-3 full body, 4 upper/lower, 5-6 ppl", () => {
   assert(chooseSplit(6).days.length === 6, "6d has six days");
 });
 
-Deno.test("main-lift frequency meets the beginner band on every split", () => {
+test("main-lift frequency meets the beginner band on every split", () => {
   const band = frequencyBand("beginner");
   assert(band.lo === 2 && band.hi === 3, "beginner band is 2-3x");
   for (const days of [2, 3, 4, 5, 6]) {
@@ -43,7 +45,7 @@ Deno.test("main-lift frequency meets the beginner band on every split", () => {
   }
 });
 
-Deno.test("main-lift frequency meets the intermediate band on every split", () => {
+test("main-lift frequency meets the intermediate band on every split", () => {
   const band = frequencyBand("intermediate");
   assert(band.lo === 2 && band.hi === 4, "intermediate band is 2-4x");
   for (const days of [2, 3, 4, 5, 6]) {
@@ -54,7 +56,7 @@ Deno.test("main-lift frequency meets the intermediate band on every split", () =
   }
 });
 
-Deno.test("advanced alternatives: high 3-5x lower volume, low 1-2x higher volume", () => {
+test("advanced alternatives: high 3-5x lower volume, low 1-2x higher volume", () => {
   const alts = advancedFrequencyAlternatives();
   const high = alts.find((a) => a.scheme === "high")!;
   const low = alts.find((a) => a.scheme === "low")!;
@@ -76,7 +78,7 @@ Deno.test("advanced alternatives: high 3-5x lower volume, low 1-2x higher volume
   );
 });
 
-Deno.test("checkFrequency names the offending lift", () => {
+test("checkFrequency names the offending lift", () => {
   const problems = checkFrequency(chooseSplit(4), "beginner");
   assert(problems.length === 0, "4d upper/lower is fine for beginners");
   const thin = {
@@ -95,7 +97,7 @@ Deno.test("checkFrequency names the offending lift", () => {
   assert(bad.some((p) => p.includes("bench")), "missing bench is named");
 });
 
-Deno.test("slots honour equipment and exclusions", () => {
+test("slots honour equipment and exclusions", () => {
   const noBarbell = availableExercises([
     "dumbbell",
     "bench",

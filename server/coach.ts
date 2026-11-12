@@ -6,7 +6,7 @@
 // the degraded body that server/llm.ts uses, never a hang or a 500.
 //
 // The contract below is the one the Android client mirrors.
-// testdata/golden/coach/ holds a request and the responses; the Deno tests
+// testdata/golden/coach/ holds a request and the responses; the tests
 // here and the Kotlin tests in apps/android both check against those files.
 //
 //   Request: POST, JSON, identity from the Tailscale header (requireUser).

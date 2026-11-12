@@ -1,5 +1,5 @@
 // Typed calls over the LS++ wasm JSON boundary. Runtime-neutral: the caller loads
-// and initialises the wasm (Vite in apps/web, Deno in server/) and hands the module
+// and initialises the wasm (Vite in apps/web, Bun in server/) and hands the module
 // in. Every call returns a value and never throws. A wasm trap (the release build
 // aborts on a panic) marks the client dead, so later calls fail fast with that reason.
 

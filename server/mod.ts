@@ -1,25 +1,16 @@
-// Qala server (docs/PLAN.md section 7): one Deno 2 process on 127.0.0.1:8500.
-// Automerge-repo sync over WebSocket, /api/llm proxy to llama-server,
+// Qala server (docs/PLAN.md section 7): one Bun process on 127.0.0.1:8500.
+// /api/llm proxy to llama-server, the import and coach routes,
 // self-hosted map tiles, DEM elevation, and the built PWA.
 
-import type { PeerId } from "@automerge/automerge-repo";
-import {
-  assertLoopbackBind,
-  AuthError,
-  authErrorResponse,
-  checkWsUpgrade,
-  requireDocOwnership,
-} from "./auth.ts";
+import { assertLoopbackBind, AuthError, authErrorResponse } from "./auth.ts";
 import { serveCoachAsk } from "./coach.ts";
 import { lookupElevation } from "./elevation.ts";
 import { importDepsOnce, serveImportText } from "./import.ts";
 import { serveImportPdf } from "./importPdf.ts";
 import { llmBaseUrl, serveLlmChat } from "./llm.ts";
 import { serveStatic } from "./static.ts";
-import { UserSyncStore } from "./sync.ts";
 import { createTilesHandler } from "./tiles.ts";
 import { serveTranscribe } from "./transcribe.ts";
-import { DenoWebSocketServerAdapter, upgradeSyncSocket } from "./ws.ts";
 
 export const BIND_HOSTNAME = "127.0.0.1";
 export const BIND_PORT = 8500;
@@ -33,7 +24,7 @@ export interface ServerOptions {
 }
 
 export function defaultOptions(): ServerOptions {
-  const here = new URL(".", import.meta.url).pathname.replace(/\/+$/, "");
+  const here = import.meta.dir;
   return {
     dataRoot: `${here}/data`,
     distDir: `${here}/../apps/web/dist`,
@@ -45,47 +36,10 @@ export function defaultOptions(): ServerOptions {
 
 export interface ServerState {
   options: ServerOptions;
-  store: UserSyncStore;
-  syncAdapter: DenoWebSocketServerAdapter;
 }
 
 export function createState(options: ServerOptions): ServerState {
-  const adapter = new DenoWebSocketServerAdapter();
-  adapter.connect("qala-server" as PeerId);
-  return {
-    options,
-    store: new UserSyncStore(options.dataRoot),
-    syncAdapter: adapter,
-  };
-}
-
-async function handleSync(
-  req: Request,
-  state: ServerState,
-): Promise<Response> {
-  let userId: string;
-  try {
-    ({ userId } = checkWsUpgrade(req));
-  } catch (err) {
-    return authErrorResponse(err);
-  }
-  const url = new URL(req.url);
-  const docId = url.searchParams.get("docId");
-  if (docId !== null) {
-    try {
-      const owned = await state.store.docForUser(userId);
-      requireDocOwnership(userId, docId, owned.docId);
-    } catch (err) {
-      return authErrorResponse(err);
-    }
-  } else {
-    // Ensure the user's document (and record) exists before syncing.
-    await state.store.docForUser(userId);
-  }
-  return upgradeSyncSocket(
-    req,
-    (socket) => state.syncAdapter.addSocket(socket),
-  );
+  return { options };
 }
 
 async function handleElevation(
@@ -121,9 +75,6 @@ export function createHandler(
       ) {
         return Response.json({ ok: true });
       }
-      if (path === "/sync" || path.startsWith("/sync/")) {
-        return await handleSync(req, state);
-      }
       if (path === "/api/llm/chat") {
         return await serveLlmChat(req, state.options.llmBaseUrl);
       }
@@ -157,12 +108,20 @@ export function createHandler(
 export function startServer(
   options: ServerOptions = defaultOptions(),
   bind: { hostname?: string; port?: number } = {},
-): Deno.HttpServer {
+): Bun.Server<undefined> {
   const hostname = bind.hostname ?? BIND_HOSTNAME;
   const port = bind.port ?? BIND_PORT;
   assertLoopbackBind(hostname);
   const state = createState(options);
-  return Deno.serve({ hostname, port }, createHandler(state));
+  return Bun.serve({
+    hostname,
+    port,
+    fetch: createHandler(state),
+    // MinerU waits up to 240 s on a PDF import; Bun's default idle timeout is 10 s.
+    idleTimeout: 255,
+    development: false,
+    error: () => Response.json({ error: "internal server error" }, { status: 500 }),
+  });
 }
 
 if (import.meta.main) {

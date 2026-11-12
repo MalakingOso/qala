@@ -5,16 +5,18 @@ See LICENSE. This file credits the projects and fonts Qala builds on.
 
 ## liftosaur
 
-Qala vendors liftosaur's liftoscript grammars, evaluator, exercise database
-seed, built-in programs, and muscle diagrams.
+Qala's LS++ (crates/qala-lspp) is a Rust port of liftosaur's liftoscript
+grammars and evaluator, and Qala carries liftosaur's exercise database seed,
+built-in programs, and muscle diagrams. The vendored TypeScript copy was
+removed from the tree on 2026-11-12; the last-deno git tag still has it.
 
 - Project: https://github.com/astashov/liftosaur
 - License: GNU Affero General Public License v3.0 (AGPL-3.0)
 - Copyright: the liftosaur contributors (see the liftosaur repository)
 - Vendored commit: 5a73c877eabd4670fd21cb60a39df5421568f8c5 (master, 2026-09-13),
   the newest of 26 master commits whose files match the vendored copy.
-  packages/liftoscript/VENDORED holds the commit of the latest vendoring and how
-  this one was matched.
+  At the last-deno tag, packages/liftoscript/VENDORED holds the commit of the
+  latest vendoring and how this one was matched.
 
 ## Fonts (all SIL Open Font License 1.1)
 

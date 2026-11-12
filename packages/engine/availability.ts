@@ -1,5 +1,5 @@
 // Availability: skipped days and training status. Pure date-key logic over
-// the core document shape: no DOM, no Deno APIs, so the web shells import
+// the core document shape: no DOM, no runtime APIs, so the web shells import
 // this directly. Skipped days log no session, so fatigue decay and the
 // no-guilt rule (a skip is never a miss) fall out of logSession untouched.
 

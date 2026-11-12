@@ -1,35 +1,15 @@
 # Engine golden files
 
-Output of the TypeScript engine (`packages/engine`, the oracle) recorded as
+Output of the TypeScript engine (`packages/engine`, the oracle, now deleted) recorded as
 JSON so the Rust port in `crates/qala-core` can be checked against it.
 Nothing here is hand-edited.
 
-## Regenerate
+## Frozen fixtures
 
-```
-deno task golden:engine        # same as: deno run -A scripts/golden_engine.ts
-```
-
-Run it from the repo root. It rewrites every file listed below and nothing
-else. Two runs give byte-identical output, in any `TZ`. The generator is
-`scripts/golden_engine.ts`; it imports the determinism and canonical-JSON
-helpers from `scripts/golden_liftoscript_lib.ts` (seeded PRNG, `canon`). It
-also asserts, while generating, that each scenario reaches the branch it is
-named for (for example that run-before-lift really changes the Kalman update),
-and aborts when one does not.
-
-| file | cases | what it is |
-|---|---|---|
-| `decay.json` | 78 | `decay.ts` |
-| `e1rm.json` | 539 | `e1rm.ts`, `rtsTable.ts` |
-| `kalman.json` | 189 | `kalman.ts`, with update chains |
-| `running.json` | 265 | `running.ts` lines 1-161 |
-| `log_session.json` | 241 | `logSession`, chained scenarios and edge cases |
-| `calibrate.json` | 21 | `calibrate` over whole histories |
-| `readiness.json` | 98 | `predictReadiness` with `now == state.updated` |
-| `fatigue_local.json` | 18 | `fatigueLocal` |
-| `readiness_decay.json` | 88 | readiness with decay to `now` (oracle `ts+decay`) |
-| `availability.json` | 161 | `availability.ts` |
+The generator and the TypeScript oracle were deleted on 2026-11-12 (DECISIONS S28),
+so these files are frozen and cannot be regenerated. When an intended behavior
+change breaks a test that reads one, update the fixture from the Rust output or
+delete the test. DECISIONS S28 says where the oracle and its generators are.
 
 ## File format
 
@@ -279,7 +259,7 @@ the unlock boundary (updates from obs 18, 19, 20, 21).
 
 ## running.json
 
-Module `running.ts`, lines 1-161. `input = {fn, args}`. Grades are fractions
+Module `running.ts`, lines 1-264. `input = {fn, args}`. Grades are fractions
 (0.05 = 5%).
 
 | `fn` | `args` | `expected` | tolerance |
@@ -300,6 +280,17 @@ Module `running.ts`, lines 1-161. `input = {fn, args}`. Grades are fractions
 | `descentDamage` | `{descentM, rbe}` | `{quads, calves}` | 1e-9 |
 | `srpeLoadRatio` | `{pairs: [{srpeLoad, rTSS}]}` | number; the 3.6 prior when fewer than 10 pairs or the sum of `rTSS` is `<= 0` | 1e-9 |
 | `SRPE_PER_100_RTSS_PRIOR` | `{}` | `3.6` | exact |
+| `gradeAdjustedSpeed` | `{speedMps, grade}` | number; 0 unless `speedMps > 0` | 1e-9 |
+| `gradeAdjustedPace` | `{paceSecPerM, grade}` | number; `"Infinity"` unless `paceSecPerM > 0` | 1e-9 |
+| `gapDistanceM` | `{segments: [{grade, meters}]}` | sum of `meters * gapFactor(grade)` over segments with `meters > 0` | 1e-9 |
+| `ngpFromGapDistance` | `{gapDistM, movingSec}` | number; 0 unless `movingSec > 0` and `gapDistM >= 0` | 1e-9 |
+| `rtssFromRun` | `{gapDistM, movingSec, thresholdMps}` | number; 0 when the threshold is not positive or the time or distance is negative or NaN | 1e-9 |
+| `thresholdPaceFromRace` | `{raceDistM, raceSec}` | number; 0 unless both are positive | 1e-9 |
+
+The last six are the run-load helpers merged in from `packages/run/load.ts`
+(R1, `testdata/golden/run/README.md`). Unlike `intensityFactor` and `rtss`
+they guard NaN and zero, so a zero threshold gives rTSS 0, not `Infinity`.
+They were appended to the file, so the cases before them are unchanged.
 
 `criticalSpeed` keeps efforts with `distanceM === 400 | 800 | 5000` (exact
 float equality) and `Date.parse(date) >= Date.parse(nowIso) - 90 days` (no upper
@@ -498,14 +489,9 @@ The TS behaviour is the oracle; none of these was changed.
 13. **`checkRunBeforeLift`'s 8 h rule and `applyLift`'s differ in strictness**:
     exactly 8 h is a miss in both (`< 8`).
 
-## Differential fuzz
+## Differential fuzz (deleted)
 
-`deno task fuzz:engine` writes 1,500,000 random cases with the oracle's answers
-to `testdata/golden/engine/fuzz/` (gitignored, about 175 MB, a few seconds):
-1,000,000 e1RM cases (`observeSet`, `bestObservation`, `rtsLookup`) and 500,000
-date, decay and readiness cases (`daysBetween`, `decayValue`, `applyInput`,
-`decayRecord`, `muscleTau`, `addDaysKey`, `criticalSpeed`, `prsZScore` and the
-readiness core with and without the decay to `now`).
-`crates/qala-core/tests/fuzz_core.rs` replays them with the tolerance rule above
-and skips with a note when the directory is absent. The line formats and the
-date forms are in `scripts/gen_engine_fuzz.ts`.
+A 1,500,000-case differential fuzz (1,000,000 e1RM cases and 500,000 date, decay
+and readiness cases) was replayed against the oracle with zero mismatches under
+the tolerance rule above (2026-10-14). The generator, the corpus and the replay
+test were deleted on 2026-11-12 (DECISIONS S28).

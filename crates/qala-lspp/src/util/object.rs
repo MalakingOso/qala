@@ -263,7 +263,7 @@ mod tests {
     use super::*;
     use serde_json::json;
 
-    // Expected values derived by running the real ObjectUtils_* functions in deno.
+    // Expected values derived by running the real ObjectUtils_* functions in V8.
 
     fn im(pairs: &[(&str, i32)]) -> IndexMap<String, i32> {
         pairs.iter().map(|(k, v)| (k.to_string(), *v)).collect()

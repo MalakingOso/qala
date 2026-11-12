@@ -1,4 +1,5 @@
-import { assertEquals, assertThrows } from "@std/assert";
+import { test } from "bun:test";
+import assert from "node:assert/strict";
 import {
   createBaselineDocument,
   CURRENT_SCHEMA_VERSION,
@@ -6,38 +7,38 @@ import {
   migrateV0ToV1,
 } from "./migrations.ts";
 
-Deno.test("baseline document is v1 with required sections", () => {
+test("baseline document is v1 with required sections", () => {
   const doc = createBaselineDocument();
-  assertEquals(doc.schemaVersion, CURRENT_SCHEMA_VERSION);
-  assertEquals(doc.settings.units, { weight: "lb", distance: "mi" });
-  assertEquals(doc.settings.barbellStep, 5);
-  assertEquals(doc.settings.dumbbellStep, 5);
-  assertEquals(doc.settings.plates.bars, [
+  assert.deepStrictEqual(doc.schemaVersion, CURRENT_SCHEMA_VERSION);
+  assert.deepStrictEqual(doc.settings.units, { weight: "lb", distance: "mi" });
+  assert.deepStrictEqual(doc.settings.barbellStep, 5);
+  assert.deepStrictEqual(doc.settings.dumbbellStep, 5);
+  assert.deepStrictEqual(doc.settings.plates.bars, [
     { id: "bar-olympic", name: "Olympic bar", weight: 45, default: true },
   ]);
-  assertEquals(doc.equipment.recovery, ["foamRoller", "percussionMassager"]);
-  assertEquals(doc.history, []);
-  assertEquals(doc.activeProgramId, "");
-  assertEquals(doc.daySkips, []);
-  assertEquals(doc.availability, { status: "active" });
+  assert.deepStrictEqual(doc.equipment.recovery, ["foamRoller", "percussionMassager"]);
+  assert.deepStrictEqual(doc.history, []);
+  assert.deepStrictEqual(doc.activeProgramId, "");
+  assert.deepStrictEqual(doc.daySkips, []);
+  assert.deepStrictEqual(doc.availability, { status: "active" });
 });
 
-Deno.test("v0 document (no schemaVersion) migrates to v1 baseline", () => {
+test("v0 document (no schemaVersion) migrates to v1 baseline", () => {
   const doc = migrateV0ToV1({});
-  assertEquals(doc.schemaVersion, 1);
-  assertEquals(doc.settings.warmup.preferPercussion, true);
+  assert.deepStrictEqual(doc.schemaVersion, 1);
+  assert.deepStrictEqual(doc.settings.warmup.preferPercussion, true);
   // Partial v0 settings are preserved and completed.
   const partial = migrateV0ToV1({
     settings: { units: { weight: "kg", distance: "km" } },
   });
-  assertEquals(partial.settings.units, { weight: "kg", distance: "km" });
-  assertEquals(partial.settings.barbellStep, 5);
-  assertEquals(partial.history, []);
+  assert.deepStrictEqual(partial.settings.units, { weight: "kg", distance: "km" });
+  assert.deepStrictEqual(partial.settings.barbellStep, 5);
+  assert.deepStrictEqual(partial.history, []);
 });
 
-Deno.test("migrate passes v1 through and rejects the future", () => {
+test("migrate passes v1 through and rejects the future", () => {
   const v1 = createBaselineDocument();
-  assertEquals(migrate(v1), v1);
-  assertEquals(migrate({}).schemaVersion, 1);
-  assertThrows(() => migrate({ schemaVersion: 999 }), RangeError);
+  assert.deepStrictEqual(migrate(v1), v1);
+  assert.deepStrictEqual(migrate({}).schemaVersion, 1);
+  assert.throws(() => migrate({ schemaVersion: 999 }), RangeError);
 });

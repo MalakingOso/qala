@@ -1,5 +1,5 @@
-//! LS++ (Liftoscript++) evaluation path (DECISIONS S12, S18). The TS package `packages/liftoscript`
-//! is the oracle; golden vectors live in `testdata/golden/lspp/`.
+//! LS++ (Liftoscript++) evaluation path (DECISIONS S12, S18). The TS oracle was deleted on
+//! 2026-11-12 (S28); the golden vectors it left live in `testdata/golden/lspp/`.
 //! No I/O, no clock, no threads. Time and randomness enter as arguments.
 
 pub mod js;

@@ -7,7 +7,7 @@
 //! ever produce the same value.
 //!
 //! Nothing here reads a clock. Callers pass `now_ms`, and the sync layer on each platform
-//! (Room, IndexedDB, the Deno server) implements the same rules and replays the vectors in
+//! (Room, IndexedDB, the server) implements the same rules and replays the vectors in
 //! `testdata/golden/hlc/` to prove it.
 //!
 //! # Canonical range

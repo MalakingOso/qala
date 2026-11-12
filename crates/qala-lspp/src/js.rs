@@ -1,8 +1,8 @@
 //! JavaScript semantics helpers. The TS oracle runs on V8, so numbers, number
 //! formatting, parsing, sorting and object key order must match it exactly.
 //!
-//! Expected values in the tests were produced with `deno eval` against the same
-//! expressions (for example `(1.005).toFixed(2)`, `Math.round(-2.5)`).
+//! Expected values in the tests were produced by evaluating the same
+//! expressions in V8 (for example `(1.005).toFixed(2)`, `Math.round(-2.5)`).
 
 use indexmap::IndexMap;
 
@@ -737,8 +737,8 @@ impl<'de> serde::Deserialize<'de> for Num {
 mod tests {
     use super::*;
 
-    // Expected values below were derived with `deno eval` running the matching
-    // JS expression, e.g. deno eval 'console.log(Math.round(-2.5))'.
+    // Expected values below were derived by running the matching JS expression
+    // in V8, e.g. console.log(Math.round(-2.5)).
 
     #[test]
     fn round_halves() {

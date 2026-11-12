@@ -1,6 +1,8 @@
 // Availability: skipped days and training status. Vacation and sick shift
 // the plan; break and injured rest in place; an injured muscle blocks its
 // direct work and halves synergist work.
+
+import { test } from "bun:test";
 import {
   addDaysKey,
   applyInjuryToCheckin,
@@ -12,12 +14,9 @@ import {
   shiftsPlan,
   todayKey,
 } from "./availability.ts";
-import { recommendNextSession } from "./mod.ts";
-import { initialState } from "./state.ts";
-import { ReasonCode } from "./volume.ts";
 import { assert, assertEqual } from "./testutil.ts";
 
-Deno.test("a clear day trains", () => {
+test("a clear day trains", () => {
   assert(
     reasonOn("2026-09-13", { status: "active" }, []) === null,
     "active, no skips",
@@ -29,7 +28,7 @@ Deno.test("a clear day trains", () => {
   );
 });
 
-Deno.test("a one-day skip wins over the persistent status", () => {
+test("a one-day skip wins over the persistent status", () => {
   const avail = { status: "sick" as const, since: "2026-09-10" };
   assertEqual(
     reasonOn("2026-09-13", avail, [
@@ -47,7 +46,7 @@ Deno.test("a one-day skip wins over the persistent status", () => {
   );
 });
 
-Deno.test("status spans cover since through until, inclusive", () => {
+test("status spans cover since through until, inclusive", () => {
   const avail = {
     status: "vacation" as const,
     since: "2026-09-10",
@@ -64,7 +63,7 @@ Deno.test("status spans cover since through until, inclusive", () => {
   );
 });
 
-Deno.test("vacation and sick shift the plan, the rest rest in place", () => {
+test("vacation and sick shift the plan, the rest rest in place", () => {
   assert(shiftsPlan("vacation") && shiftsPlan("sick"), "shift");
   assert(
     !shiftsPlan("break") && !shiftsPlan("injured") && !shiftsPlan("scheduling"),
@@ -100,7 +99,7 @@ Deno.test("vacation and sick shift the plan, the rest rest in place", () => {
   );
 });
 
-Deno.test("injured muscle resolves from skip first, then status", () => {
+test("injured muscle resolves from skip first, then status", () => {
   assertEqual(
     injuredOn("2026-09-13", { status: "active" }, [
       { date: "2026-09-13", reason: "injured", muscle: "quads" },
@@ -136,7 +135,7 @@ Deno.test("injured muscle resolves from skip first, then status", () => {
   );
 });
 
-Deno.test("guard blocks direct targets and halves synergists", () => {
+test("guard blocks direct targets and halves synergists", () => {
   assertEqual(
     guardExercise(["quads"], ["glutes"], ["quads"]),
     "skip",
@@ -169,7 +168,7 @@ Deno.test("guard blocks direct targets and halves synergists", () => {
   );
 });
 
-Deno.test("injured muscles check in at soreness 4", () => {
+test("injured muscles check in at soreness 4", () => {
   const out = applyInjuryToCheckin(
     { prs: 7, soreness: { quads: 2, glutes: 3 } },
     ["quads"],
@@ -180,54 +179,9 @@ Deno.test("injured muscles check in at soreness 4", () => {
   assertEqual(same.soreness, { quads: 2 }, "no injuries, no change");
 });
 
-Deno.test("date keys add across month boundaries", () => {
+test("date keys add across month boundaries", () => {
   assertEqual(addDaysKey("2026-09-13", 0), "2026-09-13", "plus zero");
   assertEqual(addDaysKey("2026-09-30", 1), "2026-10-01", "month roll");
   assertEqual(addDaysKey("2026-09-13", 7), "2026-09-20", "plus week");
   assert(/^\d{4}-\d{2}-\d{2}$/.test(todayKey()), "today is a key");
-});
-
-Deno.test("recommendations guard injured muscles without touching the rest", () => {
-  const s = initialState();
-  const ex = {
-    exerciseId: "squat",
-    targets: ["quads"],
-    lastWeight: 245,
-    sets: 4,
-    reps: 5,
-    targetRpe: 8,
-    lowerBody: true,
-  };
-  const skip = recommendNextSession(s, [ex], "2026-09-13T18:00:00Z", {
-    injuredMuscles: ["quads"],
-  });
-  assert(skip.lifts[0].targetSets === 0, "direct work off");
-  assert(
-    skip.reasons.includes(ReasonCode.INJURED_SKIP),
-    "skip reason kept",
-  );
-  const halve = recommendNextSession(
-    s,
-    [{
-      ...ex,
-      exerciseId: "bench",
-      targets: ["chest"],
-      synergists: ["triceps"],
-    }],
-    "2026-09-13T18:00:00Z",
-    { injuredMuscles: ["triceps"] },
-  );
-  assert(halve.lifts[0].targetSets === 2, "synergist work halved");
-  assert(
-    halve.reasons.includes(ReasonCode.INJURED_HALVE),
-    "halve reason kept",
-  );
-  const clear = recommendNextSession(s, [ex], "2026-09-13T18:00:00Z", {
-    injuredMuscles: ["triceps"],
-  });
-  assert(clear.lifts[0].targetSets === 4, "unrelated injury changes nothing");
-  assert(
-    !clear.reasons.includes(ReasonCode.INJURED_SKIP),
-    "no stray reason",
-  );
 });

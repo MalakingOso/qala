@@ -123,7 +123,6 @@ function isRecord(v: unknown): v is Record<string, unknown> {
 /** Collapse whitespace, drop control characters, cap the length. */
 export function cleanText(v: unknown, max: number): string | undefined {
   if (typeof v !== "string") return undefined;
-  // deno-lint-ignore no-control-regex
   const s = v.replace(/[\u0000-\u001f\u007f]+/g, " ").replace(/\s+/g, " ")
     .trim();
   if (s === "") return undefined;

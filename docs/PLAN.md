@@ -18,11 +18,11 @@ Superseded. The 2026-09-13 facts (callisto over Tailscale, the shared llama-serv
 
 Superseded as a table. Every row that was here is in `docs/DECISIONS.md`, which wins over this file. The headings below it in git history (runtime, sync, auth, phone, shells) are DECISIONS S1 to S22; LS++ is section 5 of this file and `docs/rust-core.md` section 12.
 
-## 4. Repository layout (Deno workspace)
+## 4. Repository layout
 
 Superseded. The layout is in the repo itself and in the root `README.md`. One change from the tree that was here: `docs/` no longer holds the completed milestone plans (see `docs/archive/completed.md`), and LS++ is documented in `docs/rust-core.md` section 12, not in a separate file.
 
-## 5. Milestone M1: vendor liftoscript (`packages/liftoscript`, now the LS++ oracle)
+## 5. Milestone M1: vendor liftoscript (`packages/liftoscript`, deleted 2026-11-12, S28)
 
 Copy from liftosaur master, keeping file names so upstream diffs stay readable:
 
@@ -35,7 +35,7 @@ Copy from liftosaur master, keeping file names so upstream diffs stay readable:
 - New engine bindings added to `VScriptBindings`, all numbers so the evaluator's type system is untouched: `readiness` (0-1), `prs` (0-10), `soreness` (max RP score over the exercise's target muscles, 1-4), `fatigueLocal` (0-1 normalised per-muscle fatigue), `deload` (0 none, 1 muscle, 2 systemic), `recWeightPct` (engine's recommended weight change, -10..2.5), `recSets` (-2..1). Documented in `docs/rust-core.md` section 12.
 - Tests: parse and evaluate all 60 builtin programs without error; simulate 3 training days of GZCLP and assert next-day weights match liftosaur's documented progression.
 
-## 6. Milestone M2: engine (`packages/engine`)
+## 6. Milestone M2: engine (`packages/engine`, only `availability.ts` is left)
 
 Public API keeps the owner's spec: `logSession(state, workout) -> state`, `predictReadiness(state, checkin) -> Readiness`, `recommendNextSession(state, exercises, targetDate) -> Recommendation`, `calibrate(history) -> state`. Pure functions over an `EngineState` value; persistence belongs to the caller.
 
@@ -289,7 +289,7 @@ Phone app (Android first; written for the Capacitor wrapper, which is removed; s
 - Screens: Start (map, GPS signal indicator, audio-cue toggle, workout picker, Start button), Live (stacked numerals: time, distance, current pace, average pace; swipe pages for splits and map; pause/resume, long-press stop), Summary (map with mile markers colored by pace, splits table, pace and elevation charts, sRPE tap, notes).
 - Audio cues every 0.5 or 1 mi or every 5 min (settings): time, distance, average pace, and for guided workouts the step and speed-up/slow-down call. Test ducking against Spotify before building guided workouts; the native cue player requests transient ducking focus (`docs/android-native.md` 5).
 - HR strap over BLE Heart Rate Service 0x180D, characteristic 0x2A37. Optional.
-- Maps: MapLibre GL JS. Online, from self-hosted Protomaps PMTiles served by Deno (`serveDir` handles Range requests). Offline, the service worker can't cache 206 responses, so the server also unpacks the owner's region to plain `/tiles/{z}/{x}/{y}.mvt` and the app pre-caches the tiles around recent routes. Measure the extract with `pmtiles extract --bbox --maxzoom 15` before picking the region; a metro area is tens to low hundreds of MB, the whole US ~13-16 GB at z15 (estimate). OSM's public raster tiles forbid prefetching, so don't use them.
+- Maps: MapLibre GL JS. Online, from self-hosted Protomaps PMTiles served by the Bun server (`Bun.file().slice()` handles Range requests). Offline, the service worker can't cache 206 responses, so the server also unpacks the owner's region to plain `/tiles/{z}/{x}/{y}.mvt` and the app pre-caches the tiles around recent routes. Measure the extract with `pmtiles extract --bbox --maxzoom 15` before picking the region; a metro area is tens to low hundreds of MB, the whole US ~13-16 GB at z15 (estimate). OSM's public raster tiles forbid prefetching, so don't use them.
 
 Tests:
 - Replay tests: recorded raw-fix fixtures fed through the pipeline; assert distance within 1% of the fixture's known route length, split count and times, auto-pause intervals.
@@ -381,10 +381,10 @@ Superseded by the ROADMAP. Deploy is `deploy/qala.service` plus `docs/plan-accou
 
 ## 14. Verification
 
-- `deno task test` runs every package's tests (engine, liftoscript, generator, core, server).
+- `bun run test` runs every package's tests (core, generator, llm, lspp, engine availability, server, web logic).
 - Engine: the spec's 3-week validation test passes; synthetic Kalman recovery within tolerance.
-- LS++: all 60 builtin programs evaluate in both the TS oracle and the Rust port, with identical results; GZCLP simulation matches documented progression.
-- End to end: `deno task dev`; open the desktop shell on callisto; write a program; install the signed APK from `apps/android` on the Nothing Phone (sync target `wss://callisto.taila63f23.ts.net:8443`); log a session in airplane mode; reconnect; confirm the desktop shows the session and the engine snapshot updated.
+- LS++: all 60 builtin programs evaluate in the Rust port and match the frozen goldens; GZCLP simulation matches documented progression.
+- End to end: `bun run dev`; open the desktop shell on callisto; write a program; install the signed APK from `apps/android` on the Nothing Phone (sync target `wss://callisto.taila63f23.ts.net:8443`); log a session in airplane mode; reconnect; confirm the desktop shows the session and the engine snapshot updated.
 - Run recording, on the Nothing Phone: a run of 60 min or more with the screen locked and the phone in a pocket records continuously (no gap > 10 s in raw fixes); distance on a known measured route within 2%; an audio cue is heard with the screen locked and music playing; auto-pause triggers at a stoplight and resumes; airplane mode for the whole run, then the run appears on the desktop after reconnect with elevation and splits filled in; the map renders offline for an area loaded once online.
 - LLM: with `llama-beamer` running, check-in text yields valid JSON and an in-envelope adjustment; with it stopped, logging and recommendations still work and the UI says the coach is offline.
 - Look: a test computes WCAG contrast for every text/background token pair in `tokens.css`, light and dark, and fails below 4.5 (3.0 for large figures); screenshots of Today in all three stages, the Plan day view, the workout, rest, session complete and Settings screens compared against the mockup canvas and Beamer's Home and Settings pages, checking Qala Test on titles and figures, DM Mono elsewhere, 2px borders, flat-at-rest cards and the CTA shadow; a ticking number keeps the same width from 9:59 to 1:11; every chart palette passes the dataviz validator in both themes and every chart renders its table view.
@@ -475,7 +475,7 @@ Added 2026-10-02 (owner: podcasts for beginners to listen to; a blog about the o
 
 1. **Scripts before audio, and sources before scripts.** Every claim in a script carries a marker pointing at a line in one of the briefs in `docs/research/`. A marker that has not been resolved blocks recording. This is the same discipline as the rest of the plan: no number reaches the app or the microphone without a tag and a source. `docs/podcast/README.md` holds the format and the episode list; `docs/podcast/scripts/01-doing-too-much.md` is the worked example.
 2. **Audio is produced locally.** The owner already runs TTS in other repos: a Kokoro sidecar (`Sonoro/sidecar/tts.py`, `KPipeline`, sentence chunking, 24 kHz, then ffmpeg to MP3) and an OpenAI-compatible `/v1/audio/speech` served by OpenArc-glimmer, with Qwen3-TTS and Vibe Voice also present. Qala writes the scripts and reuses one of those paths; it does not add a TTS dependency. Note the bug Sonoro hit: do not round-robin the voice per request, or a re-run produces a different narrator.
-3. **Audio is not in git.** Scripts are text and live in the repo. Episodes are binaries: served by the Deno server from outside the working tree, or content-addressed like GPS tracks (S9) if they ever need per-user access. Pick one when the first episode is finished.
+3. **Audio is not in git.** Scripts are text and live in the repo. Episodes are binaries: served by the Bun server from outside the working tree, or content-addressed like GPS tracks (S9) if they ever need per-user access. Pick one when the first episode is finished.
 4. **In-app listening is later than the audio.** A player inside the workout flow needs the audio served, cached and played on the phone with the screen locked, which is the same class of problem as the run recorder (8a). Not before there are episodes.
 5. **Body composition is a product thread too**, not only an episode. Record shape sketched in the brief: `bodyScans` (method, fat mass, fat-free mass, bone mineral content, protocol, machine) and `bodyMeasures` (weight, circumferences, photo ids), with the daily weight shown as a 7-day rolling mean and band and never as a single number. Three positions the app must hold, each sourced: DXA's lean mass is not muscle (Tavoian 2019 found only a modest relationship between DXA-derived lean-mass change and MRI cross-sectional muscle area change), DXA assumes a fixed hydration of fat-free tissue, and the daily scale swings by a pound or several a day, which is the same size as the change a beginner is trying to detect in a month. `packages/engine` stays out of it: body composition is not fatigue and gets no engine input. Photos are the most sensitive thing this app will hold, so the retention story is decided before the field exists.
 6. **Tests.** Every claim marker in every script resolves to a sourced line in a brief; no unsourced number survives review; the trend window is the stated window; nothing in `packages/engine` imports the body records.

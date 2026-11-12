@@ -1,5 +1,5 @@
 // End-to-end check of the desktop program editor's LS++ checks, Format and dry run,
-// in a real Chromium. Run `deno task build:wasm` first, then:
+// in a real Chromium. Run `bun run build:wasm` first, then:
 //
 //   node apps/web/e2e/program_editor.mjs
 //

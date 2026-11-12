@@ -3,6 +3,8 @@
 // pre-caches (a service worker cannot cache 206 responses). Full Range
 // support, since MapLibre and the PMTiles client fetch by byte range.
 
+import { stat } from "node:fs/promises";
+
 const PMTILES_TYPE = "application/octet-stream";
 const MVT_TYPE = "application/vnd.mapbox-vector-tile";
 
@@ -77,19 +79,19 @@ export async function serveTileFile(
   if (req.method !== "GET" && req.method !== "HEAD") {
     return Response.json({ error: "method not allowed" }, { status: 405 });
   }
-  let stat;
+  let st;
   try {
-    stat = await Deno.stat(filePath);
+    st = await stat(filePath);
   } catch (err) {
-    if (err instanceof Deno.errors.NotFound) {
+    if ((err as { code?: string }).code === "ENOENT") {
       return Response.json({ error: "tile not found" }, { status: 404 });
     }
     throw err;
   }
-  if (!stat.isFile) {
+  if (!st.isFile()) {
     return Response.json({ error: "tile not found" }, { status: 404 });
   }
-  const size = stat.size;
+  const size = st.size;
   const type = filePath.endsWith(".pmtiles") ? PMTILES_TYPE : MVT_TYPE;
   const baseHeaders = { "content-type": type, "accept-ranges": "bytes" };
 
@@ -106,7 +108,7 @@ export async function serveTileFile(
       "content-length": String(size),
     });
     if (req.method === "HEAD") return new Response(null, { headers });
-    return new Response(await Deno.readFile(filePath), { headers });
+    return new Response(await Bun.file(filePath).arrayBuffer(), { headers });
   }
   const len = range.end - range.start + 1;
   const headers = new Headers({
@@ -117,21 +119,9 @@ export async function serveTileFile(
   if (req.method === "HEAD") {
     return new Response(null, { status: 206, headers });
   }
-  const file = await Deno.open(filePath, { read: true });
-  try {
-    const buf = new Uint8Array(len);
-    await file.seek(range.start, Deno.SeekMode.Start);
-    let filled = 0;
-    while (filled < len) {
-      const n = await file.read(buf.subarray(filled));
-      if (n === null) break;
-      filled += n;
-    }
-    const body = buf.subarray(0, filled).buffer.slice(0, filled) as ArrayBuffer;
-    return new Response(body, { status: 206, headers });
-  } finally {
-    file.close();
-  }
+  const body = await Bun.file(filePath).slice(range.start, range.end + 1)
+    .arrayBuffer();
+  return new Response(body, { status: 206, headers });
 }
 
 /** Route `/tiles/*` requests to the tile directory. */

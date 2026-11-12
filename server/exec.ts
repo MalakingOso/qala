@@ -43,7 +43,7 @@ const PIPE_DRAIN_MS = 2000;
 export function scrubbedEnv(): Record<string, string> {
   return {
     PATH: "/usr/local/bin:/usr/bin:/bin",
-    HOME: Deno.env.get("HOME") ?? "/tmp",
+    HOME: process.env.HOME ?? "/tmp",
     LANG: "C.UTF-8",
   };
 }
@@ -117,30 +117,28 @@ function failed(message: string): CommandResult {
   };
 }
 
-/** The real runner: Deno.Command. Never throws. */
+/** The real runner: Bun.spawn. Never throws. */
 export const runCommand: CommandRunner = async (spec) => {
   const program = spec.ownSession ? "setsid" : spec.cmd;
   const args = spec.ownSession ? [spec.cmd, ...spec.args] : spec.args;
-  let child: Deno.ChildProcess;
+  let child: Bun.Subprocess<"pipe" | "ignore", "pipe", "pipe">;
   try {
-    child = new Deno.Command(program, {
-      args,
-      stdin: spec.stdin ? "piped" : "null",
-      stdout: "piped",
-      stderr: "piped",
-      clearEnv: true,
+    child = Bun.spawn([program, ...args], {
+      stdin: spec.stdin ? "pipe" : "ignore",
+      stdout: "pipe",
+      stderr: "pipe",
       env: spec.env ?? scrubbedEnv(),
-    }).spawn();
+    });
   } catch (err) {
     return failed(
       `cannot run ${spec.cmd}: ${err instanceof Error ? err.message : err}`,
     );
   }
 
-  const signal = (sig: Deno.Signal) => {
+  const signal = (sig: NodeJS.Signals) => {
     try {
       // With setsid the child leads a new group, so -pid reaches its workers.
-      Deno.kill(spec.ownSession ? -child.pid : child.pid, sig);
+      process.kill(spec.ownSession ? -child.pid : child.pid, sig);
     } catch {
       // Already gone.
     }
@@ -162,15 +160,14 @@ export const runCommand: CommandRunner = async (spec) => {
 
   if (spec.stdin) {
     try {
-      const w = child.stdin.getWriter();
-      await w.write(spec.stdin);
-      await w.close();
+      child.stdin!.write(spec.stdin);
+      await child.stdin!.end();
     } catch {
       // The program exited before reading everything. Its exit code says why.
     }
   }
 
-  const status = await child.status;
+  const code = await child.exited;
   clearTimeout(timer);
   if (killTimer !== undefined) clearTimeout(killTimer);
   // A forked worker can keep the pipes open after the parent exits. Give the
@@ -186,7 +183,7 @@ export const runCommand: CommandRunner = async (spec) => {
   const stderrBytes = err.bytes();
   const tail = stderrBytes.slice(Math.max(0, stderrBytes.length - STDERR_KEEP));
   return {
-    code: timedOut || out.overflowed() ? null : status.code,
+    code: timedOut || out.overflowed() ? null : code,
     stdout: out.bytes(),
     stderr: new TextDecoder().decode(tail).trim(),
     timedOut,

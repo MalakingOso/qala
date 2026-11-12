@@ -13,6 +13,8 @@
 // Sonoro is read-only for this: nothing here edits it, and the adapter writes
 // only into the temp directory it is given.
 
+import { readdir, readFile, stat } from "node:fs/promises";
+
 import { type CommandRunner, scrubbedEnv } from "./exec.ts";
 
 export interface MineruConfig {
@@ -36,15 +38,15 @@ export const MINERU_DEFAULTS = {
  * Paths and the vLLM address can be overridden from the environment.
  */
 export function liveMineruConfig(): MineruConfig | null {
-  if (Deno.env.get("QALA_MINERU") === "off") return null;
-  const home = Deno.env.get("HOME") ?? "";
+  if (process.env.QALA_MINERU === "off") return null;
+  const home = process.env.HOME ?? "";
   const sidecar = `${home}/Programming/Sonoro/sidecar`;
   return {
-    python: Deno.env.get("QALA_MINERU_PYTHON") ?? `${sidecar}/.venv/bin/python`,
-    adapter: Deno.env.get("QALA_MINERU_ADAPTER") ??
+    python: process.env.QALA_MINERU_PYTHON ?? `${sidecar}/.venv/bin/python`,
+    adapter: process.env.QALA_MINERU_ADAPTER ??
       `${sidecar}/mineru_adapter.py`,
-    vlmUrl: Deno.env.get("QALA_MINERU_VLM_URL") ?? MINERU_DEFAULTS.vlmUrl,
-    vlmModel: Deno.env.get("QALA_MINERU_VLM_MODEL") ?? MINERU_DEFAULTS.vlmModel,
+    vlmUrl: process.env.QALA_MINERU_VLM_URL ?? MINERU_DEFAULTS.vlmUrl,
+    vlmModel: process.env.QALA_MINERU_VLM_MODEL ?? MINERU_DEFAULTS.vlmModel,
   };
 }
 
@@ -112,7 +114,7 @@ export async function runMineru(
   const outDir = `${workDir}/mineru`;
   const env = scrubbedEnv();
   for (const key of ["MINERU_HOME", "OPENARC_API_KEY"]) {
-    const v = Deno.env.get(key);
+    const v = process.env[key];
     if (v !== undefined) env[key] = v;
   }
   const r = await run({
@@ -160,9 +162,9 @@ export async function runMineru(
   }
   try {
     let file: string | undefined;
-    for await (const entry of Deno.readDir(outDir)) {
+    for (const entry of await readdir(outDir, { withFileTypes: true })) {
       if (
-        entry.isFile && entry.name.endsWith("_content_list.json") &&
+        entry.isFile() && entry.name.endsWith("_content_list.json") &&
         !entry.name.endsWith(".raw.json")
       ) {
         file = `${outDir}/${entry.name}`;
@@ -173,12 +175,12 @@ export async function runMineru(
       log("[mineru] the adapter wrote no content list");
       return { ok: false, reason: MINERU_REASONS.failed };
     }
-    const size = (await Deno.stat(file)).size;
+    const size = (await stat(file)).size;
     if (size > MINERU_DEFAULTS.maxContentListBytes) {
       log(`[mineru] content list is ${size} bytes, over the limit`);
       return { ok: false, reason: MINERU_REASONS.failed };
     }
-    return { ok: true, blocks: JSON.parse(await Deno.readTextFile(file)) };
+    return { ok: true, blocks: JSON.parse(await readFile(file, "utf8")) };
   } catch (err) {
     log(
       `[mineru] could not read the content list: ${

@@ -367,7 +367,7 @@ pub fn are_sorted_in_same_order<T, U>(coll1: &[T], coll2: &[U], are_equal: impl 
 mod tests {
     use super::*;
 
-    // Expected values were derived by running the real CollectionUtils_* functions in deno
+    // Expected values were derived by running the real CollectionUtils_* functions in V8
     // (scratch script importing packages/liftoscript/src/utils/collection.ts) and printing JSON.
 
     #[derive(Clone, Debug, PartialEq)]

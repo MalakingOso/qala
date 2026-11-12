@@ -1,6 +1,8 @@
 // Volume rules (docs/PLAN.md 6.3): fractional band inside RP caps, +2/week ramp in
 // hypertrophy blocks only, strength holds, deload x0.5, time fit.
 
+import { test } from "bun:test";
+
 import {
   approachFor,
   countDaySets,
@@ -67,7 +69,7 @@ function mkEx(
   } as PlannedExercise;
 }
 
-Deno.test("RP rows and owner bands match docs/PLAN.md 6.3", () => {
+test("RP rows and owner bands match docs/PLAN.md 6.3", () => {
   assert(rpRow("chest").mev.join() === "4,6", "chest MEV 4-6");
   assert(rpRow("back").mev.join() === "12,14", "back MEV 12-14");
   assert(rpRow("hamstrings").mrv.join() === "8,14", "hamstrings MRV 8-14");
@@ -86,7 +88,7 @@ Deno.test("RP rows and owner bands match docs/PLAN.md 6.3", () => {
   );
 });
 
-Deno.test("weekly ramp: +2/week hypertrophy, hold for strength", () => {
+test("weekly ramp: +2/week hypertrophy, hold for strength", () => {
   assert(
     weeklyFracTarget("chest", "grow", 0, 0, "hypertrophy").fracTarget === 10,
     "chest starts at 10",
@@ -109,7 +111,7 @@ Deno.test("weekly ramp: +2/week hypertrophy, hold for strength", () => {
   assert(DELOAD_FACTOR === 0.5, "deload halves volume");
 });
 
-Deno.test("hamstrings without hinge credit are capped with a reason code", () => {
+test("hamstrings without hinge credit are capped with a reason code", () => {
   const t = weeklyFracTarget("hamstrings", "grow", 0, 0, "hypertrophy");
   assert(t.capped, "hamstrings capped without credit");
   assert(t.reason === VOLUME_CAPPED_BY_MRV, "reason code carried");
@@ -126,7 +128,7 @@ Deno.test("hamstrings without hinge credit are capped with a reason code", () =>
   );
 });
 
-Deno.test("hard-set counting: direct plus half synergist", () => {
+test("hard-set counting: direct plus half synergist", () => {
   const day: PlannedExercise[] = [
     mkEx({ exerciseId: "bench", sets: 4, rpe: 8 }),
     mkEx({
@@ -142,7 +144,7 @@ Deno.test("hard-set counting: direct plus half synergist", () => {
   assert(!counts.get("biceps"), "untrained muscles absent");
 });
 
-Deno.test("time fit keeps the day within 10% and never cuts main lifts", () => {
+test("time fit keeps the day within 10% and never cuts main lifts", () => {
   const day: DayPlan = {
     label: "Upper A",
     focus: "upper",
@@ -189,7 +191,7 @@ Deno.test("time fit keeps the day within 10% and never cuts main lifts", () => {
   );
 });
 
-Deno.test("generated blocks: weekly direct sets within MEV..MRV or capped", () => {
+test("generated blocks: weekly direct sets within MEV..MRV or capped", () => {
   for (
     const goal of ["hypertrophy", "strength", "athleticMaintenance"] as const
   ) {
@@ -213,7 +215,7 @@ Deno.test("generated blocks: weekly direct sets within MEV..MRV or capped", () =
   }
 });
 
-Deno.test("generated hypertrophy blocks: fractional sets in band or capped", () => {
+test("generated hypertrophy blocks: fractional sets in band or capped", () => {
   for (const days of [2, 3, 4, 5, 6]) {
     const input: GeneratorInput = { ...BASE, daysPerWeek: days };
     const block = generateBlock(input);
@@ -229,7 +231,7 @@ Deno.test("generated hypertrophy blocks: fractional sets in band or capped", () 
   }
 });
 
-Deno.test("generated days fit the time budget within 10%", () => {
+test("generated days fit the time budget within 10%", () => {
   for (
     const goal of ["hypertrophy", "strength", "athleticMaintenance"] as const
   ) {
@@ -248,7 +250,7 @@ Deno.test("generated days fit the time budget within 10%", () => {
   }
 });
 
-Deno.test("strength blocks keep the main-lift minimum effective dose", () => {
+test("strength blocks keep the main-lift minimum effective dose", () => {
   // Androulakis-Korakakis 2021: about 3-6 sets of 1-5 reps above 80% per lift
   // per week at RPE 7.5-9.5, outside deloads.
   const input: GeneratorInput = { ...BASE, goal: "strength" };

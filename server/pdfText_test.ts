@@ -1,6 +1,7 @@
 // Reshaping MinerU's content list and pdftotext output into chunker input.
 
-import { assert, assertEquals } from "@std/assert";
+import { test } from "bun:test";
+import assert from "node:assert/strict";
 import {
   cleanPdftotext,
   contentListToMarkdown,
@@ -9,7 +10,7 @@ import {
   visibleChars,
 } from "./pdfText.ts";
 
-Deno.test("content list: headings, lists, tables and captions; chrome is dropped", () => {
+test("content list: headings, lists, tables and captions; chrome is dropped", () => {
   const md = contentListToMarkdown([
     { type: "header", text: "Running header" },
     { type: "text", text: "Program", text_level: 1 },
@@ -31,7 +32,7 @@ Deno.test("content list: headings, lists, tables and captions; chrome is dropped
     { type: "footer", text: "footer" },
     { type: "page_footnote", text: "note" },
   ]);
-  assertEquals(
+  assert.deepStrictEqual(
     md,
     [
       "# Program",
@@ -45,10 +46,10 @@ Deno.test("content list: headings, lists, tables and captions; chrome is dropped
   );
 });
 
-Deno.test("content list: malformed input is skipped, never thrown on", () => {
-  assertEquals(contentListToMarkdown(null), "");
-  assertEquals(contentListToMarkdown({ type: "text" }), "");
-  assertEquals(
+test("content list: malformed input is skipped, never thrown on", () => {
+  assert.deepStrictEqual(contentListToMarkdown(null), "");
+  assert.deepStrictEqual(contentListToMarkdown({ type: "text" }), "");
+  assert.deepStrictEqual(
     contentListToMarkdown([
       null,
       7,
@@ -65,7 +66,7 @@ Deno.test("content list: malformed input is skipped, never thrown on", () => {
   );
 });
 
-Deno.test("content list: output is capped", () => {
+test("content list: output is capped", () => {
   const blocks = Array.from({ length: 2000 }, () => ({
     type: "text",
     text: "x".repeat(1000),
@@ -73,23 +74,23 @@ Deno.test("content list: output is capped", () => {
   assert(contentListToMarkdown(blocks).length <= MAX_PDF_TEXT_CHARS);
 });
 
-Deno.test("html tables become rows, with entities decoded and tags and scripts stripped", () => {
+test("html tables become rows, with entities decoded and tags and scripts stripped", () => {
   const html =
     '<table><tr><th>Lift</th><th colspan="2">Sets &amp; reps</th></tr>' +
     "<tr><td>Squat</td><td>3x5</td><td></td></tr>" +
     "<tr><td>Bench&nbsp;Press<script>alert(1)</script></td><td>3&#x78;8</td><td>&#39;95&#39;</td></tr></table>";
-  assertEquals(
+  assert.deepStrictEqual(
     htmlTableToText(html),
     "Lift | Sets & reps\nSquat | 3x5\nBench Press alert(1) | 3x8 | '95'",
   );
-  assertEquals(htmlTableToText("not a table"), "not a table");
-  assertEquals(htmlTableToText("&#0;&#xD800;&#99999999;"), "&#99999999;");
+  assert.deepStrictEqual(htmlTableToText("not a table"), "not a table");
+  assert.deepStrictEqual(htmlTableToText("&#0;&#xD800;&#99999999;"), "&#99999999;");
 });
 
-Deno.test("pdftotext output: control characters out, column gaps shortened, pages split", () => {
+test("pdftotext output: control characters out, column gaps shortened, pages split", () => {
   const raw =
     "Week 1\r\n\tSquat        3x5      135\u0000\u0007\n\n\n\n\nDay 2\fBench 3x8\n";
-  assertEquals(
+  assert.deepStrictEqual(
     cleanPdftotext(raw),
     "Week 1\nSquat  3x5  135\n\nDay 2\n\nBench 3x8",
   );
@@ -99,7 +100,7 @@ Deno.test("pdftotext output: control characters out, column gaps shortened, page
   );
 });
 
-Deno.test("visibleChars ignores whitespace and form feeds", () => {
-  assertEquals(visibleChars(" \n\f\t "), 0);
-  assertEquals(visibleChars(" a b \n c"), 3);
+test("visibleChars ignores whitespace and form feeds", () => {
+  assert.deepStrictEqual(visibleChars(" \n\f\t "), 0);
+  assert.deepStrictEqual(visibleChars(" a b \n c"), 3);
 });

@@ -179,7 +179,7 @@ These come from the four new roadmap sections in `docs/PLAN.md` 16c to 16f. None
 ### D28 Podcast audio and delivery (P7)
 
 - Status: [ ] open
-- Question: where do the rendered episodes live (served by the Deno server from outside the working tree, or content-addressed like GPS tracks)? Is an in-app player wanted, given it has to work with the screen locked? Which Kokoro voice is the narrator?
+- Question: where do the rendered episodes live (served by the Bun server from outside the working tree, or content-addressed like GPS tracks)? Is an in-app player wanted, given it has to work with the screen locked? Which Kokoro voice is the narrator?
 - Options: per question. Pick the voice by listening to two or three, and pin it, since Sonoro's round-robin bug made a re-render sound like a different narrator.
 - Default: served from outside the repo, no in-app player until there are episodes, one pinned voice.
 - Blocks: nothing until the first script is finished.
@@ -202,15 +202,6 @@ These come from the four new roadmap sections in `docs/PLAN.md` 16c to 16f. None
 - Default: no photos until this is answered. Every other part of the body-composition thread can ship without them.
 - Blocks: the `bodyMeasures` schema, nothing else.
 - Record in: `docs/DECISIONS.md` P7, `docs/PLAN.md` 16f item 5, `docs/research/BRIEFS.md` brief 2, section 5.
-
-### D31 Record the Deno to Bun move (S1)
-
-- Status: [ ] open
-- Question: write the DECISIONS row for replacing Deno with Bun? `docs/ROADMAP.md` Tooling says "Decided 2026-10-13 (owner)", and another session's notes say the owner chose Bun that day (artifact "Qala Deno Exit"), but S1 still says Deno 2 and no row records the change.
-- Options: record it as decided, amending S1 / reopen the choice.
-- Default: record it as decided, with the move still waiting on the LS++ port and the retirement of `packages/liftoscript`, as the plan says.
-- Blocks: nothing now; the move itself waits on LS++.
-- Record in: `docs/DECISIONS.md` S1 (amend) and a new row, `docs/ROADMAP.md` Tooling.
 
 ### D32 Rest and warm-up planning: Kotlin or Rust (S6, R3)
 
@@ -252,9 +243,9 @@ These come from the four new roadmap sections in `docs/PLAN.md` 16c to 16f. None
 ### D36 Workouts from the phone
 
 - Status: [ ] open
-- Question: the owner wants the phone, later, to add workouts and to pull generated workouts from the server (D03). Three things are open. What does "add a workout" cover: a one-off session logged outside the program, or a day or exercise written into the program text? Where does that authoring run, given S12 keeps authoring in TS on the desktop: a server route, or an LS++ authoring port in Rust? And how do generated workouts reach the phone: a route the phone calls, or records the server writes and sync delivers?
+- Question: the owner wants the phone, later, to add workouts and to pull generated workouts from the server (D03). Three things are open. What does "add a workout" cover: a one-off session logged outside the program, or a day or exercise written into the program text? Where does that authoring run, given the TS authoring code was deleted with the oracle (S28): a server route, or an LS++ authoring port in Rust? And how do generated workouts reach the phone: a route the phone calls, or records the server writes and sync delivers?
 - Options: per question.
-- Default: one-off workouts first; program edits through a server route that runs the TS authoring code, the same pattern as the Coach (S14); generated workouts arrive as records through sync, so they work offline once pulled.
+- Default: one-off workouts first; program edits through a server route backed by a Rust authoring port (never TS), the same pattern as the Coach (S14); generated workouts arrive as records through sync, so they work offline once pulled.
 - Blocks: nothing now; any phone authoring work.
 - Record in: `docs/DECISIONS.md` (new row), `docs/rust-core.md` 7 (R4) and 8, `docs/android-native.md` (screens), `docs/ROADMAP.md` Android track.
 

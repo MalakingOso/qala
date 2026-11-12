@@ -4,14 +4,12 @@ Output of the TypeScript plate math (`packages/core/plates.ts` and
 `packages/core/rounding.ts`, the oracle) recorded as JSON so the Rust port in
 `crates/qala-core` can be checked against it. Nothing here is hand-edited.
 
-## Regenerate
+## Frozen fixtures
 
-```
-deno task golden:plates        # same as: deno run -A scripts/golden_plates.ts
-```
-
-Run it from the repo root. It rewrites `plates.json` and nothing else. Two
-runs give byte-identical output.
+The generator and the TypeScript oracle were deleted on 2026-11-12 (DECISIONS S28),
+so these files are frozen and cannot be regenerated. When an intended behavior
+change breaks a test that reads one, update the fixture from the Rust output or
+delete the test. DECISIONS S28 says where the oracle and its generators are.
 
 ## File format
 
@@ -44,11 +42,9 @@ runs give byte-identical output.
   plan. The two loadability loops in `rounding_test.ts` are properties; the
   Rust test checks them directly instead of listing hundreds of vectors.
 
-## Differential fuzz
+## Differential fuzz (deleted)
 
-`deno task fuzz:plates` writes 1,000,000 random cases with the oracle's answers
-to `testdata/golden/plates/fuzz/` (gitignored, about 80 MB, 1.5 minutes on a
-few cores). `crates/qala-core/tests/fuzz_core.rs` replays them and skips with a
-note when the directory is absent. The line formats are in
-`scripts/gen_plates_fuzz.ts`. Anything the fuzz finds goes into `plates.json`
-as a normal vector, so the plain golden test keeps covering it.
+A 1,000,000-case differential fuzz against the oracle had zero mismatches
+(2026-10-14). The generator, the corpus and the replay test were deleted on
+2026-11-12 (DECISIONS S28). Anything it found is in `plates.json` as a normal
+vector, so the plain golden test keeps covering it.

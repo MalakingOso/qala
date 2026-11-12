@@ -16,7 +16,7 @@ export const LLAMA_DEFAULTS = {
  * the model hosts, docs/ROADMAP.md Tooling, Elixir model gateway), else the llama-server.
  */
 export function llmBaseUrl(
-  gateway: string | undefined = Deno.env.get("LLM_GATEWAY_URL"),
+  gateway: string | undefined = process.env.LLM_GATEWAY_URL,
 ): string {
   const url = gateway?.trim().replace(/\/+$/, "");
   return url || LLAMA_DEFAULTS.baseUrl;

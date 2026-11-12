@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Builds crates/qala-lspp-wasm to wasm32 and runs wasm-bindgen for the web target.
 # Output: target/wasm-out/web/ (gitignored). One build serves every host: Vite serves and
-# bundles it for apps/web, and Deno (server/lspp.ts, scripts/wasm_smoke.ts) loads the same
+# bundles it for apps/web, and Bun (server/lspp.ts) loads the same
 # files with init({ module_or_path: bytes }). Needs the wasm32-unknown-unknown target and a
 # wasm-bindgen CLI whose version equals the wasm-bindgen crate in Cargo.lock.
 # If the pinned toolchain lacks the target, set RUSTUP_TOOLCHAIN, RUSTUP_HOME and CARGO_HOME

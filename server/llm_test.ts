@@ -1,7 +1,8 @@
 // LLM proxy tests: request shape forwarded to llama-server, and graceful
 // degradation when the backend is down, slow, or answers badly.
 
-import { assert, assertEquals } from "@std/assert";
+import { test } from "bun:test";
+import assert from "node:assert/strict";
 import {
   jsonSchemaFormat,
   LLAMA_DEFAULTS,
@@ -10,7 +11,7 @@ import {
   serveLlmChat,
 } from "./llm.ts";
 
-Deno.test("proxy forwards model, temperature 0, and json_schema format", async () => {
+test("proxy forwards model, temperature 0, and json_schema format", async () => {
   let seenUrl = "";
   let seenBody: Record<string, unknown> = {};
   const stubFetch = (
@@ -29,19 +30,19 @@ Deno.test("proxy forwards model, temperature 0, and json_schema format", async (
       messages: [{ role: "user", content: "hi" }],
       responseFormat: jsonSchemaFormat("checkin", schema),
     },
-    stubFetch as typeof fetch,
+    stubFetch as unknown as typeof fetch,
   );
   assert(result.ok);
-  assertEquals(seenUrl, `${LLAMA_DEFAULTS.baseUrl}/v1/chat/completions`);
-  assertEquals(seenBody["model"], LLAMA_DEFAULTS.model);
-  assertEquals(seenBody["temperature"], 0);
-  assertEquals(
+  assert.deepStrictEqual(seenUrl, `${LLAMA_DEFAULTS.baseUrl}/v1/chat/completions`);
+  assert.deepStrictEqual(seenBody["model"], LLAMA_DEFAULTS.model);
+  assert.deepStrictEqual(seenBody["temperature"], 0);
+  assert.deepStrictEqual(
     seenBody["response_format"],
     jsonSchemaFormat("checkin", schema),
   );
 });
 
-Deno.test("proxy degrades when the backend is down (never throws)", async () => {
+test("proxy degrades when the backend is down (never throws)", async () => {
   const refused = (): Promise<Response> =>
     Promise.reject(new TypeError("fetch failed: connection refused"));
   const result = await proxyChatCompletions(
@@ -52,7 +53,7 @@ Deno.test("proxy degrades when the backend is down (never throws)", async () => 
   assert(result.error.length > 0);
 });
 
-Deno.test("proxy degrades on timeout", async () => {
+test("proxy degrades on timeout", async () => {
   const slow = (
     _url: string | URL | Request,
     init?: RequestInit,
@@ -68,7 +69,7 @@ Deno.test("proxy degrades on timeout", async () => {
   assert(!result.ok && result.degraded);
 });
 
-Deno.test("proxy degrades on error status and non-JSON", async () => {
+test("proxy degrades on error status and non-JSON", async () => {
   const errStatus = (): Promise<Response> =>
     Promise.resolve(
       new Response(JSON.stringify({ error: { message: "no models" } }), {
@@ -77,7 +78,7 @@ Deno.test("proxy degrades on error status and non-JSON", async () => {
     );
   const failed = await proxyChatCompletions(
     { messages: [{ role: "user", content: "hi" }] },
-    errStatus as typeof fetch,
+    errStatus as unknown as typeof fetch,
   );
   assert(!failed.ok && failed.degraded && failed.status === 500);
 
@@ -85,12 +86,12 @@ Deno.test("proxy degrades on error status and non-JSON", async () => {
     Promise.resolve(new Response("not json", { status: 200 }));
   const garbled = await proxyChatCompletions(
     { messages: [{ role: "user", content: "hi" }] },
-    notJson as typeof fetch,
+    notJson as unknown as typeof fetch,
   );
   assert(!garbled.ok && garbled.degraded);
 });
 
-Deno.test("POST /api/llm/chat validates and maps degrade to 502", async () => {
+test("POST /api/llm/chat validates and maps degrade to 502", async () => {
   const down = (): Promise<Response> =>
     Promise.reject(new TypeError("connection refused"));
   const bad = await serveLlmChat(
@@ -101,7 +102,7 @@ Deno.test("POST /api/llm/chat validates and maps degrade to 502", async () => {
     "http://127.0.0.1:1",
     down as unknown as typeof fetch,
   );
-  assertEquals(bad.status, 400);
+  assert.deepStrictEqual(bad.status, 400);
 
   const degraded = await serveLlmChat(
     new Request("http://x/api/llm/chat", {
@@ -111,20 +112,20 @@ Deno.test("POST /api/llm/chat validates and maps degrade to 502", async () => {
     "http://127.0.0.1:1",
     down as unknown as typeof fetch,
   );
-  assertEquals(degraded.status, 502);
+  assert.deepStrictEqual(degraded.status, 502);
   const body = await degraded.json() as { degraded?: boolean };
-  assertEquals(body.degraded, true);
+  assert.deepStrictEqual(body.degraded, true);
 
   const wrongMethod = await serveLlmChat(
     new Request("http://x/api/llm/chat"),
     "http://127.0.0.1:1",
     down as unknown as typeof fetch,
   );
-  assertEquals(wrongMethod.status, 405);
+  assert.deepStrictEqual(wrongMethod.status, 405);
 });
 
-Deno.test("LLM_GATEWAY_URL replaces the llama-server base URL when set", () => {
-  assertEquals(llmBaseUrl(""), LLAMA_DEFAULTS.baseUrl);
-  assertEquals(llmBaseUrl("  "), LLAMA_DEFAULTS.baseUrl);
-  assertEquals(llmBaseUrl("http://127.0.0.1:4000/"), "http://127.0.0.1:4000");
+test("LLM_GATEWAY_URL replaces the llama-server base URL when set", () => {
+  assert.deepStrictEqual(llmBaseUrl(""), LLAMA_DEFAULTS.baseUrl);
+  assert.deepStrictEqual(llmBaseUrl("  "), LLAMA_DEFAULTS.baseUrl);
+  assert.deepStrictEqual(llmBaseUrl("http://127.0.0.1:4000/"), "http://127.0.0.1:4000");
 });

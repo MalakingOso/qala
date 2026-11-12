@@ -2,6 +2,8 @@
 // real wasm parser, evaluator and dry run check the same text in
 // apps/web/src/logic/nextBlock.test.ts.
 
+import { test } from "bun:test";
+
 import { emitProgram, generateBlock } from "./mod.ts";
 import type { GeneratorInput } from "./mod.ts";
 import { EXERCISE_CATALOG } from "./types.ts";
@@ -67,7 +69,7 @@ function assertShape(text: string, label: string): void {
   );
 }
 
-Deno.test("every goal and split emits well-shaped program text", () => {
+test("every goal and split emits well-shaped program text", () => {
   for (
     const goal of [
       "hypertrophy",
@@ -89,13 +91,13 @@ Deno.test("every goal and split emits well-shaped program text", () => {
   }
 });
 
-Deno.test("every generator exercise has an LS++ name", () => {
+test("every generator exercise has an LS++ name", () => {
   for (const ex of EXERCISE_CATALOG) {
     assert(LSPP_EXERCISES[ex.id] !== undefined, `LS++ name for ${ex.id}`);
   }
 });
 
-Deno.test("each day lists main lifts first, then secondary, then isolation", () => {
+test("each day lists main lifts first, then secondary, then isolation", () => {
   const rank = { main: 0, secondary: 1, isolation: 2 };
   for (const daysPerWeek of [3, 4, 5] as const) {
     const block = generateBlock({ ...BASE, goal: "strength", daysPerWeek });
@@ -121,13 +123,13 @@ Deno.test("each day lists main lifts first, then secondary, then isolation", () 
   }
 });
 
-Deno.test("emission is deterministic", () => {
+test("emission is deterministic", () => {
   const a = emitProgram(generateBlock(BASE), BASE);
   const b = emitProgram(generateBlock(BASE), BASE);
   assert(a === b, "same input gives byte-identical text");
 });
 
-Deno.test("a line with no reference 1RM asks for the weight", () => {
+test("a line with no reference 1RM asks for the weight", () => {
   const text = emitProgram(generateBlock(BASE), BASE);
   assert(
     /^Lateral Raise \/ \d+x12-15 \?\+$/m.test(text),
@@ -141,7 +143,7 @@ Deno.test("a line with no reference 1RM asks for the weight", () => {
   );
 });
 
-Deno.test("names the catalog lacks keep a note and the barbell suffix", () => {
+test("names the catalog lacks keep a note and the barbell suffix", () => {
   const input: GeneratorInput = { ...BASE, goal: "strength" };
   const text = emitProgram(generateBlock(input), input);
   assert(
@@ -155,7 +157,7 @@ Deno.test("names the catalog lacks keep a note and the barbell suffix", () => {
   assert(!/^Romanian Deadlift \//m.test(text), "never the dumbbell default");
 });
 
-Deno.test("strength programs progress by percentage with RPE autoregulation", () => {
+test("strength programs progress by percentage with RPE autoregulation", () => {
   const input: GeneratorInput = { ...BASE, goal: "strength" };
   const text = emitProgram(generateBlock(input), input);
   assert(
@@ -169,7 +171,7 @@ Deno.test("strength programs progress by percentage with RPE autoregulation", ()
   );
 });
 
-Deno.test("linear output matches the table after plate rounding", () => {
+test("linear output matches the table after plate rounding", () => {
   const input: GeneratorInput = {
     ...BASE,
     goal: "strength",
@@ -192,7 +194,7 @@ Deno.test("linear output matches the table after plate rounding", () => {
   );
 });
 
-Deno.test("deload week halves sets at RPE 6", () => {
+test("deload week halves sets at RPE 6", () => {
   const block = generateBlock(BASE);
   const hard = block.weeks[0];
   const deload = block.weeks[block.weeks.length - 1];
@@ -215,7 +217,7 @@ Deno.test("deload week halves sets at RPE 6", () => {
   assert(/^# Week \d+ - deload$/m.test(text), "deload week is labelled");
 });
 
-Deno.test("meet prep ends on the meet date with dated taper sessions", () => {
+test("meet prep ends on the meet date with dated taper sessions", () => {
   const input: GeneratorInput = {
     ...BASE,
     goal: "meetPrep",

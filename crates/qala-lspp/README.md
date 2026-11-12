@@ -1,6 +1,6 @@
 # qala-lspp
 
-LS++ (Liftoscript++): the program evaluation path in Rust (DECISIONS S12, S18). The TypeScript package `packages/liftoscript` is the oracle. Plan and status: `docs/ls-plus-plus.md`, port history in `docs/rust-core.md`.
+LS++ (Liftoscript++): the program evaluation path in Rust (DECISIONS S12, S18). The TypeScript oracle (`packages/liftoscript`) was deleted on 2026-11-12 (DECISIONS S28). Plan and status: `docs/ls-plus-plus.md`, port history in `docs/rust-core.md`.
 
 ## Tests
 
@@ -11,10 +11,6 @@ scripts/cargo-test-safe.sh -p qala-lspp            # whole suite, about 25 s, un
 scripts/cargo-test-safe.sh -p qala-lspp --lib planner_parse -- --test-threads=1
 ```
 
-About 80 MB of the test data is generated and gitignored. On a fresh clone, regenerate it first, or the tests will not compile (they `include_str!` the unit cases) or will skip:
-
-```sh
-deno task gen:lspp      # runs every generator against the TS oracle, deterministic
-```
+The tests need no generated data. The tracked goldens are frozen fixtures; when an intended behavior change breaks one, update the fixture from the Rust output or delete the test.
 
 Checked in: `testdata/golden/lspp/{builtins,builtins_kg}/`, the finish-day, next-history-entry, bindings and exercise goldens, and `data/`.

@@ -15,9 +15,10 @@ use qala_core::engine::e1rm::{best_observation, observe_set, rts_lookup, E1rmObs
 use qala_core::engine::kalman::{init_kalman, kalman_predict, kalman_update, theta_of};
 use qala_core::engine::readiness::{fatigue_local, predict_readiness};
 use qala_core::engine::running::{
-    critical_speed, descent_damage, gap_factor, intensity_factor, mean_gap_factor, minetti_cost,
-    minetti_ratio, ngp, rbe_factor, riegel, rtss, run_set_equivalents, run_zone, srpe_load_ratio,
-    vdot_from_effort, SRPE_PER_100_RTSS_PRIOR,
+    critical_speed, descent_damage, gap_distance_m, gap_factor, grade_adjusted_pace,
+    grade_adjusted_speed, intensity_factor, mean_gap_factor, minetti_cost, minetti_ratio, ngp,
+    ngp_from_gap_distance, rbe_factor, riegel, rtss, rtss_from_run, run_set_equivalents, run_zone,
+    srpe_load_ratio, threshold_pace_from_race, vdot_from_effort, SRPE_PER_100_RTSS_PRIOR,
 };
 use qala_core::engine::session::{calibrate, log_session};
 use qala_core::engine::state::{
@@ -550,6 +551,39 @@ fn run_running(case: &Case) -> Result<Value, String> {
             out_num(srpe_load_ratio(&pairs))
         }
         "SRPE_PER_100_RTSS_PRIOR" => out_num(SRPE_PER_100_RTSS_PRIOR),
+        "gradeAdjustedSpeed" => out_num(grade_adjusted_speed(
+            req_num(a, "speedMps"),
+            req_num(a, "grade"),
+        )),
+        "gradeAdjustedPace" => out_num(grade_adjusted_pace(
+            req_num(a, "paceSecPerM"),
+            req_num(a, "grade"),
+        )),
+        "gapDistanceM" => {
+            let segments: Vec<GradeSegment> = a["segments"]
+                .as_array()
+                .expect("segments")
+                .iter()
+                .map(|s| GradeSegment {
+                    grade: req_num(s, "grade"),
+                    meters: req_num(s, "meters"),
+                })
+                .collect();
+            out_num(gap_distance_m(&segments))
+        }
+        "ngpFromGapDistance" => out_num(ngp_from_gap_distance(
+            req_num(a, "gapDistM"),
+            req_num(a, "movingSec"),
+        )),
+        "rtssFromRun" => out_num(rtss_from_run(
+            req_num(a, "gapDistM"),
+            req_num(a, "movingSec"),
+            req_num(a, "thresholdMps"),
+        )),
+        "thresholdPaceFromRace" => out_num(threshold_pace_from_race(
+            req_num(a, "raceDistM"),
+            req_num(a, "raceSec"),
+        )),
         other => return Err(format!("unknown running fn {other}")),
     })
 }

@@ -14,6 +14,10 @@
 //
 // Query: `?units=kg` sets the unit for weights that name none (default lb).
 
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+
 import {
   type ChatTransport,
   chunkProgramText,
@@ -100,8 +104,8 @@ function liveBase(): Omit<PdfImportDeps, "imports"> {
     run: runCommand,
     mineru: liveMineruConfig(),
     gate: createGate(PDF_LIMITS.maxConcurrent),
-    pdfinfo: Deno.env.get("QALA_PDFINFO") ?? "/usr/bin/pdfinfo",
-    pdftotext: Deno.env.get("QALA_PDFTOTEXT") ?? "/usr/bin/pdftotext",
+    pdfinfo: process.env.QALA_PDFINFO ?? "/usr/bin/pdfinfo",
+    pdftotext: process.env.QALA_PDFTOTEXT ?? "/usr/bin/pdftotext",
   };
 }
 
@@ -239,9 +243,9 @@ export async function handlePdfImport(
   }
   let dir: string | undefined;
   try {
-    dir = await Deno.makeTempDir({ prefix: "qala-pdf-" });
+    dir = await mkdtemp(join(tmpdir(), "qala-pdf-"));
     const pdfPath = `${dir}/in.pdf`;
-    await Deno.writeFile(pdfPath, upload.bytes);
+    await writeFile(pdfPath, upload.bytes);
 
     const counted = await countPages(pdfPath, deps);
     if (!counted.ok) return fail(counted.status, counted.error);
@@ -341,7 +345,7 @@ export async function handlePdfImport(
   } finally {
     release();
     if (dir !== undefined) {
-      await Deno.remove(dir, { recursive: true }).catch(() => {});
+      await rm(dir, { recursive: true, force: true }).catch(() => {});
     }
   }
 }

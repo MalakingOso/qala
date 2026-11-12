@@ -13,7 +13,7 @@ explains the numbers. Runs feed the same fatigue model as lifting.
 [![License: AGPL-3.0-or-later](https://img.shields.io/badge/License-AGPL--3.0--or--later-0f152a?style=flat-square)](LICENSE)
 [![Web](https://img.shields.io/badge/Web-React%2019%20%2B%20Vite-485cc7?style=flat-square)](#)
 [![Android](https://img.shields.io/badge/Android-Kotlin%20%2B%20Compose-c2410c?style=flat-square)](#)
-[![Server](https://img.shields.io/badge/Server-Deno%202-0f152a?style=flat-square)](#)
+[![Server](https://img.shields.io/badge/Server-Bun-0f152a?style=flat-square)](#)
 [![Engine](https://img.shields.io/badge/Engine-TypeScript%20%2B%20Rust-0a8078?style=flat-square)](#)
 
 [Quick Start](#quick-start) • [Features](#features) • [Architecture](#architecture) • [Docs](#docs) • [License](#license)
@@ -49,19 +49,20 @@ design system `docs/DESIGN.md`, the decision log `docs/DECISIONS.md`.
 
 ## Quick Start
 
-Prereqs: Deno 2, Node 22 + npm.
+Prereqs: Bun 1.4, plus Node 22 and npm for the web build.
 
 ```sh
+bun install
 npm --prefix apps/web install
 ```
 
 ```sh
-deno task build:wasm   # LS++ wasm into target/wasm-out/web; docs/rust-core.md has the one-time installs
-deno task build        # typecheck + bundle the PWA into apps/web/dist
-deno task test         # every package's tests; server/ needs the wasm built first
-deno task dev          # server with watch on 127.0.0.1:8500, serves dist/
-deno task serve        # server without watch
-deno task build:android  # debug APK of apps/android; see docs/android-native.md section 11
+bun run build:wasm   # LS++ wasm into target/wasm-out/web; docs/rust-core.md has the one-time installs
+bun run build        # typecheck + bundle the PWA into apps/web/dist
+bun run test         # every package's tests; server/ needs the wasm built first
+bun run dev          # server with watch on 127.0.0.1:8500, serves dist/
+bun run serve        # server without watch
+bun run build:android  # debug APK of apps/android; see docs/android-native.md section 11
 ```
 
 The server listens on `127.0.0.1:8500` and is published on the tailnet with:
@@ -87,19 +88,17 @@ qala/
 │   └── android/        # Native Kotlin + Jetpack Compose: app, design, data (Room + Rust build)
 ├── packages/
 │   ├── core/           # Data model, document schema, exercise seed and overlay, units and rounding
-│   ├── engine/         # Adaptive training engine, pure TypeScript
+│   ├── engine/         # Availability (skipped days and training status) for the phone shell
 │   ├── generator/      # Rules engine that emits LS++ programs
 │   ├── llm/            # Prompt builders and response validation for the coach
-│   ├── liftoscript/    # liftosaur's grammars and evaluator, vendored (TS oracle and desktop authoring runtime)
-│   ├── lspp/           # Typed client over the LS++ wasm build (`deno task build:wasm` makes it)
-│   └── run/            # GPS pipeline and guided workout step machine, pure TypeScript
+│   └── lspp/           # Typed client over the LS++ wasm build (`bun run build:wasm` makes it)
 ├── crates/
 │   ├── qala-core/      # Pure logic: engine, availability, HLC, records, plate math
 │   ├── qala-ffi/       # UniFFI for Kotlin, exports qala-core and LS++
 │   ├── qala-lspp/      # Rust LS++ port
 │   ├── qala-lspp-json/ # LS++ JSON layer
 │   └── qala-lspp-wasm/ # LS++ wasm (web editor, server import check)
-├── server/             # Deno server on 127.0.0.1:8500: sync, Tailscale-header auth, tiles and elevation, LLM proxy, text import
+├── server/             # Bun server on 127.0.0.1:8500: Tailscale-header auth, tiles and elevation, LLM proxy, text import
 ├── assets/             # Source fonts and the 3D icon renders (assets/3d/)
 ├── deploy/             # systemd unit and Tailscale notes
 ├── docs/               # Start at ROADMAP.md; README.md there indexes the rest

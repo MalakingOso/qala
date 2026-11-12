@@ -4,7 +4,10 @@
 //! `qala-lspp-json`. One crate, one `.so`, so the app loads a single native library.
 
 use qala_core::api as core_api;
+use qala_core::run::Recorder;
+use qala_core::run_api;
 use qala_lspp_json as api;
+use std::sync::{Arc, Mutex};
 
 uniffi::setup_scaffolding!();
 
@@ -162,6 +165,55 @@ pub fn describe_change(request: String) -> Result<String, QalaError> {
 #[uniffi::export]
 pub fn plates_shorthand(request: String) -> Result<String, QalaError> {
     Ok(core_api::plates_shorthand(&request)?)
+}
+
+// Run pipeline (docs/rust-core.md R1). `process_run` is stateless; `RunRecorder` is the first stateful
+// export, an exception to "state in, state out" (DECISIONS S6): the foreground service pushes one fix
+// per call and a JSON round trip of the whole state each time would cost more than the push.
+// Requests and results are documented in `qala_core::run_api`.
+
+#[uniffi::export]
+pub fn process_run(request: String) -> Result<String, QalaError> {
+    Ok(run_api::process_run(&request)?)
+}
+
+/// The live recorder: `new(config)`, then `push_fix` per fix, `advance` to end an open-ended guided
+/// step, `finish` for the batch result. A push or advance after `finish` is an `Evaluation` error.
+/// Close the object when done (Kotlin: `use { }`); the state lives behind a mutex.
+#[derive(uniffi::Object)]
+pub struct RunRecorder {
+    inner: Mutex<Recorder>,
+}
+
+fn poisoned() -> QalaError {
+    QalaError::Internal("the recorder lock was poisoned by an earlier panic".to_string())
+}
+
+#[uniffi::export]
+impl RunRecorder {
+    /// `{v, opts?}`: see `run_api` for the options.
+    #[uniffi::constructor]
+    pub fn new(config: String) -> Result<Arc<Self>, QalaError> {
+        Ok(Arc::new(RunRecorder { inner: Mutex::new(run_api::recorder_new(&config)?) }))
+    }
+
+    /// One raw fix, `{v, t, lat, lon, acc, hr?, cad?, ele?}`; returns `{events, live}`.
+    pub fn push_fix(&self, fix: String) -> Result<String, QalaError> {
+        let mut rec = self.inner.lock().map_err(|_| poisoned())?;
+        Ok(run_api::recorder_push_fix(&mut rec, &fix)?)
+    }
+
+    /// End the current guided step by hand; returns `{events, live}`.
+    pub fn advance(&self) -> Result<String, QalaError> {
+        let mut rec = self.inner.lock().map_err(|_| poisoned())?;
+        Ok(run_api::recorder_advance(&mut rec)?)
+    }
+
+    /// The batch `ProcessedRun` over everything pushed.
+    pub fn finish(&self) -> Result<String, QalaError> {
+        let mut rec = self.inner.lock().map_err(|_| poisoned())?;
+        Ok(run_api::recorder_finish(&mut rec)?)
+    }
 }
 
 // LS++ evaluation API.

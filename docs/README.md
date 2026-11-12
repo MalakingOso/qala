@@ -8,7 +8,7 @@ When files disagree, `DECISIONS.md` wins. Every living file opens with a status 
 
 | File | What it is |
 |---|---|
-| `ROADMAP.md` | Done, in flight, next and blocked, by track. It also holds the Tooling plans: Deno to Bun (decided, not started) and the later Elixir model gateway. |
+| `ROADMAP.md` | Done, in flight, next and blocked, by track. It also holds the Tooling plans: the Bun move (done 2026-11-12) and the later Elixir model gateway. |
 | `DECISIONS.md` | The owner's decision log. Rows are added, never renumbered. |
 | `decisions-pending.md` | The queue of open choices (D12 to D40) and the protocol for deciding them. |
 | `CONTEXT.md` | The glossary. |

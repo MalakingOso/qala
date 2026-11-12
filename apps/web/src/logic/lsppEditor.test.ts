@@ -1,4 +1,5 @@
-import { assertEquals } from "@std/assert";
+import { test } from "bun:test";
+import assert from "node:assert/strict";
 import type {
   LsppDiagnostic,
   LsppDrySet,
@@ -50,23 +51,23 @@ const set = (over: Partial<LsppDrySet> = {}): LsppDrySet => ({
   ...over,
 });
 
-Deno.test("toIssues merges errors and warnings in text order, errors first on a tie", () => {
+test("toIssues merges errors and warnings in text order, errors first on a tie", () => {
   const issues = toIssues(
     [diag(20, 21, 2, 4, "late"), diag(5, 6, 1, 6, "early", "add a rep count")],
     [lint(5, 6, "too-many-sets")],
     100,
   );
-  assertEquals(issues.map((i) => [i.severity, i.from, i.message]), [
+  assert.deepStrictEqual(issues.map((i) => [i.severity, i.from, i.message]), [
     ["error", 5, "early"],
     ["warning", 5, "lint too-many-sets"],
     ["error", 20, "late"],
   ]);
-  assertEquals(issues[0].suggestion, "add a rep count");
-  assertEquals(issues[1].code, "too-many-sets");
-  assertEquals(issues[2].suggestion, undefined);
+  assert.deepStrictEqual(issues[0].suggestion, "add a rep count");
+  assert.deepStrictEqual(issues[1].code, "too-many-sets");
+  assert.deepStrictEqual(issues[2].suggestion, undefined);
 });
 
-Deno.test("toIssues keeps the leftmost error on a line and one warning per rule", () => {
+test("toIssues keeps the leftmost error on a line and one warning per rule", () => {
   const issues = toIssues(
     [
       diag(40, 41, 1, 41, "later on the line"),
@@ -81,7 +82,7 @@ Deno.test("toIssues keeps the leftmost error on a line and one warning per rule"
     ],
     100,
   );
-  assertEquals(issues.map((i) => [i.severity, i.message]), [
+  assert.deepStrictEqual(issues.map((i) => [i.severity, i.message]), [
     ["warning", "lint mixed-units"],
     ["warning", "lint unused-state"],
     ["error", "first on the line"],
@@ -89,39 +90,39 @@ Deno.test("toIssues keeps the leftmost error on a line and one warning per rule"
   ]);
 });
 
-Deno.test("toIssues keeps every mark inside the text and at least one character wide", () => {
+test("toIssues keeps every mark inside the text and at least one character wide", () => {
   const [past] = toIssues([diag(90, 95, 4, 1)], [], 40);
-  assertEquals([past.from, past.to], [39, 40]);
+  assert.deepStrictEqual([past.from, past.to], [39, 40]);
   const [empty] = toIssues([diag(12, 12, 1, 13)], [], 40);
-  assertEquals([empty.from, empty.to], [12, 13]);
+  assert.deepStrictEqual([empty.from, empty.to], [12, 13]);
   const [spill] = toIssues([diag(30, 80, 1, 31)], [], 40);
-  assertEquals([spill.from, spill.to], [30, 40]);
-  assertEquals(toIssues([], [], 0), []);
+  assert.deepStrictEqual([spill.from, spill.to], [30, 40]);
+  assert.deepStrictEqual(toIssues([], [], 0), []);
 });
 
-Deno.test("counts, summary and position text", () => {
+test("counts, summary and position text", () => {
   const issues = toIssues(
     [diag(1, 2, 1, 2), diag(8, 9, 2, 3)],
     [lint(3, 4, "mixed-units")],
     20,
   );
-  assertEquals(countIssues(issues), { errors: 2, warnings: 1 });
-  assertEquals(issueSummary(issues), "2 errors, 1 warning");
-  assertEquals(issueSummary(toIssues([diag(1, 2, 1, 2)], [], 9)), "1 error");
-  assertEquals(issueSummary([]), "No errors");
-  assertEquals(issuePosition(issues[0]), "1:2");
+  assert.deepStrictEqual(countIssues(issues), { errors: 2, warnings: 1 });
+  assert.deepStrictEqual(issueSummary(issues), "2 errors, 1 warning");
+  assert.deepStrictEqual(issueSummary(toIssues([diag(1, 2, 1, 2)], [], 9)), "1 error");
+  assert.deepStrictEqual(issueSummary([]), "No errors");
+  assert.deepStrictEqual(issuePosition(issues[0]), "1:2");
 });
 
-Deno.test("formatOutcome: new text, no change, syntax errors, and unsafe", () => {
-  assertEquals(
+test("formatOutcome: new text, no change, syntax errors, and unsafe", () => {
+  assert.deepStrictEqual(
     formatOutcome({ ok: true, text: "Squat / 3x5\n", changed: true }),
     { text: "Squat / 3x5\n", note: "Formatted." },
   );
-  assertEquals(
+  assert.deepStrictEqual(
     formatOutcome({ ok: true, text: "Squat / 3x5\n", changed: false }),
     { note: "Already formatted." },
   );
-  assertEquals(
+  assert.deepStrictEqual(
     formatOutcome({
       ok: false,
       reason: "syntax",
@@ -129,7 +130,7 @@ Deno.test("formatOutcome: new text, no change, syntax errors, and unsafe", () =>
     }),
     { note: "Can't format yet. Fix the syntax errors first." },
   );
-  assertEquals(
+  assert.deepStrictEqual(
     formatOutcome({
       ok: false,
       reason: "the result would not evaluate the same",
@@ -139,30 +140,30 @@ Deno.test("formatOutcome: new text, no change, syntax errors, and unsafe", () =>
   );
 });
 
-Deno.test("describeSets collapses runs and spells out reps, weight and RPE", () => {
-  assertEquals(describeSets([set(), set(), set()]), "3x5 @ 245 lb");
-  assertEquals(
+test("describeSets collapses runs and spells out reps, weight and RPE", () => {
+  assert.deepStrictEqual(describeSets([set(), set(), set()]), "3x5 @ 245 lb");
+  assert.deepStrictEqual(
     describeSets([set(), set({ weight: { value: 247.5, unit: "lb" } })]),
     "1x5 @ 245 lb, 1x5 @ 247.5 lb",
   );
-  assertEquals(
+  assert.deepStrictEqual(
     describeSets([set({ reps: 12, minReps: 8, weight: null, rpe: 8 })]),
     "1x8-12 RPE 8",
   );
-  assertEquals(describeSets([set({ isAmrap: true })]), "1x5+ @ 245 lb");
-  assertEquals(
+  assert.deepStrictEqual(describeSets([set({ isAmrap: true })]), "1x5+ @ 245 lb");
+  assert.deepStrictEqual(
     describeSets([
       set({ weight: null, askWeight: true, blank: true }),
       set({ weight: null, askWeight: true, blank: true }),
     ]),
     "2x5, weight to set",
   );
-  assertEquals(describeSets([]), "");
-  assertEquals(describeWeight(null), "");
-  assertEquals(describeWeight({ value: 100, unit: "kg" }), "100 kg");
+  assert.deepStrictEqual(describeSets([]), "");
+  assert.deepStrictEqual(describeWeight(null), "");
+  assert.deepStrictEqual(describeWeight({ value: 100, unit: "kg" }), "100 kg");
 });
 
-Deno.test("dryRunView names each session and counts the sets waiting for a weight", () => {
+test("dryRunView names each session and counts the sets waiting for a weight", () => {
   const view = dryRunView({
     blankSets: 2,
     finalText: "",
@@ -197,23 +198,23 @@ Deno.test("dryRunView names each session and counts the sets waiting for a weigh
       },
     ],
   });
-  assertEquals(view.summary, "2 sessions, 2 sets waiting for a weight");
-  assertEquals(view.sessions[0].title, "Week 1 · Day 1: Lower A");
-  assertEquals(view.sessions[0].lines, [
+  assert.deepStrictEqual(view.summary, "2 sessions, 2 sets waiting for a weight");
+  assert.deepStrictEqual(view.sessions[0].title, "Week 1 · Day 1: Lower A");
+  assert.deepStrictEqual(view.sessions[0].lines, [
     { name: "Squat", sets: "3x5 @ 245 lb" },
     { name: "Split Squat", sets: "2x5, weight to set" },
   ]);
-  assertEquals(view.sessions[1].errors, ["something broke"]);
+  assert.deepStrictEqual(view.sessions[1].errors, ["something broke"]);
 });
 
-Deno.test("caretAfterFormat keeps the line and clamps the column", () => {
+test("caretAfterFormat keeps the line and clamps the column", () => {
   const before = "Squat/3x5   100lb\nBench / 3x5\n";
   const after = "Squat / 3x5 100lb\nBench / 3x5\n";
   // On line 1 at the end of "Squat/3x5   100lb" (17 chars): the new line is the same length.
-  assertEquals(caretAfterFormat(before, 17, after), 17);
+  assert.deepStrictEqual(caretAfterFormat(before, 17, after), 17);
   // The end of a line that got shorter lands at its new end.
-  assertEquals(caretAfterFormat("a    b    c\nx", 11, "a b c\nx"), 5);
+  assert.deepStrictEqual(caretAfterFormat("a    b    c\nx", 11, "a b c\nx"), 5);
   // The start of line 2 stays the start of line 2.
-  assertEquals(caretAfterFormat(before, 18, after), 18);
-  assertEquals(caretAfterFormat("", 0, ""), 0);
+  assert.deepStrictEqual(caretAfterFormat(before, 18, after), 18);
+  assert.deepStrictEqual(caretAfterFormat("", 0, ""), 0);
 });
