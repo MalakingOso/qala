@@ -81,7 +81,6 @@ const CLOSE = "COACH_DATA>>>";
  */
 export function sanitizeCoachText(text: string, maxChars: number): string {
   let out = text
-    // deno-lint-ignore no-control-regex
     .replace(/[\u0000-\u001f\u007f]+/g, " ");
   for (;;) {
     const next = out.replaceAll(OPEN, "").replaceAll(CLOSE, "");
@@ -260,7 +259,6 @@ export type CoachReplyResult =
   | { ok: false; error: string };
 
 function stripControl(text: string): string {
-  // deno-lint-ignore no-control-regex
   return text.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, "")
     .trim();
 }

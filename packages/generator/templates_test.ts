@@ -1,5 +1,7 @@
 // Loading templates (docs/PLAN.md 12, RESEARCH B2-B4) and the meet taper table.
 
+import { test } from "bun:test";
+
 import {
   ALT_DUP_DAYS,
   altDupWeek,
@@ -29,7 +31,7 @@ function approx(a: number, b: number, msg: string, eps = 1e-9): void {
   }
 }
 
-Deno.test("linear table matches docs/PLAN.md 12 (squat and bench)", () => {
+test("linear table matches docs/PLAN.md 12 (squat and bench)", () => {
   const byWeek = new Map(LINEAR_TABLE.map((r) => [r.week, r]));
   const w1 = byWeek.get(1)!;
   assert(
@@ -61,7 +63,7 @@ Deno.test("linear table matches docs/PLAN.md 12 (squat and bench)", () => {
   );
 });
 
-Deno.test("DUP table matches docs/PLAN.md 12 (HPS order, RPE-capped strength day)", () => {
+test("DUP table matches docs/PLAN.md 12 (HPS order, RPE-capped strength day)", () => {
   const byWeek = new Map(DUP_TABLE.map((r) => [r.week, r]));
   const w1 = byWeek.get(1)!;
   assert(
@@ -88,7 +90,7 @@ Deno.test("DUP table matches docs/PLAN.md 12 (HPS order, RPE-capped strength day
   assert(DUP_WEEK5_OPENER_PCT === 95, "week 5 S day opens at 95%");
 });
 
-Deno.test("alternative DUP 5-3-1 with weekly +2%", () => {
+test("alternative DUP 5-3-1 with weekly +2%", () => {
   assert(
     ALT_DUP_DAYS[0].sets === 4 && ALT_DUP_DAYS[0].reps === 5 &&
       ALT_DUP_DAYS[0].basePct === 80,
@@ -117,7 +119,7 @@ Deno.test("alternative DUP 5-3-1 with weekly +2%", () => {
   );
 });
 
-Deno.test("hypertrophy RIR ramp matches docs/PLAN.md 12", () => {
+test("hypertrophy RIR ramp matches docs/PLAN.md 12", () => {
   const byWeek = new Map(HYPERTROPHY_TABLE.map((r) => [r.week, r]));
   const w1 = byWeek.get(1)!;
   assert(
@@ -141,7 +143,7 @@ Deno.test("hypertrophy RIR ramp matches docs/PLAN.md 12", () => {
   );
 });
 
-Deno.test("inverse Epley and plate rounding", () => {
+test("inverse Epley and plate rounding", () => {
   approx(pctForRepsRir(10, 2), 71.428, "10 reps RIR 2 loads 71.4%", 0.01);
   approx(pctForRepsRir(8, 3), 73.17, "8 reps RIR 3 loads 73.2%", 0.01);
   assert(rpeForRir(2) === 8, "RIR 2 is RPE 8");
@@ -150,7 +152,7 @@ Deno.test("inverse Epley and plate rounding", () => {
   assert(roundToPlates(212, 5) === 210, "212 rounds to 210 on 5 lb steps");
 });
 
-Deno.test("taper offsets sit inside the Pritchard/Travis ranges", () => {
+test("taper offsets sit inside the Pritchard/Travis ranges", () => {
   assert(
     TAPER.deadlift.lastHeavyDaysOut.join() === "8,10",
     "deadlift last heavy 8-10 d",
@@ -175,7 +177,7 @@ Deno.test("taper offsets sit inside the Pritchard/Travis ranges", () => {
   assert(TAPER_INTENSITY_FLOOR === 85, "intensity held at 85%+");
 });
 
-Deno.test("taper dates land the right days before the meet", () => {
+test("taper dates land the right days before the meet", () => {
   const sched = taperSchedule("2026-10-10");
   const get = (lift: string, kind: string) =>
     sched.find((s) => s.lift === lift && s.kind === kind)!;

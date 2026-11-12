@@ -1,7 +1,11 @@
 // POST /api/transcribe. ffmpeg is the real one (the fixtures are tiny), the
 // model servers are fakes behind an injected fetch.
 
-import { assert, assertEquals } from "@std/assert";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { test } from "bun:test";
+import assert from "node:assert/strict";
 import {
   type CommandSpec,
   createGate,
@@ -22,7 +26,7 @@ import {
 } from "./transcribe.ts";
 
 const fixture = (name: string) =>
-  Deno.readFile(new URL(`../testdata/import/${name}`, import.meta.url));
+  readFile(new URL(`../testdata/import/${name}`, import.meta.url));
 
 interface Seen {
   e4b: { url: string; body: Record<string, unknown> }[];
@@ -77,7 +81,7 @@ function fakeBackends(opts: {
       );
     }
     throw new Error(`unexpected fetch ${url}`);
-  }) as typeof fetch;
+  }) as unknown as typeof fetch;
   return { fetchFn, seen };
 }
 
@@ -113,50 +117,50 @@ function fromBase64(s: string): Uint8Array {
   return Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
 }
 
-Deno.test("sniffing names real containers and refuses everything else", async () => {
-  assertEquals(sniffAudio(await fixture("tone-8k.wav"))?.label, "wav");
-  assertEquals(sniffAudio(await fixture("tone.webm"))?.label, "webm");
-  assertEquals(sniffAudio(new TextEncoder().encode("OggS...."))?.label, "ogg");
-  assertEquals(
+test("sniffing names real containers and refuses everything else", async () => {
+  assert.deepStrictEqual(sniffAudio(await fixture("tone-8k.wav"))?.label, "wav");
+  assert.deepStrictEqual(sniffAudio(await fixture("tone.webm"))?.label, "webm");
+  assert.deepStrictEqual(sniffAudio(new TextEncoder().encode("OggS...."))?.label, "ogg");
+  assert.deepStrictEqual(
     sniffAudio(new Uint8Array([0xff, 0xfb, 0x90, 0x00]))?.label,
     "mp3",
   );
-  assertEquals(
+  assert.deepStrictEqual(
     sniffAudio(new TextEncoder().encode("....ftypM4A "))?.label,
     "mp4",
   );
-  assertEquals(
+  assert.deepStrictEqual(
     sniffAudio(new TextEncoder().encode("#EXTM3U\nfile:///etc/passwd")),
     null,
   );
-  assertEquals(
+  assert.deepStrictEqual(
     sniffAudio(new TextEncoder().encode("ffconcat version 1.0\n")),
     null,
   );
-  assertEquals(sniffAudio(new Uint8Array(0)), null);
-  assertEquals(sniffAudio(await fixture("workout.pdf")), null);
+  assert.deepStrictEqual(sniffAudio(new Uint8Array(0)), null);
+  assert.deepStrictEqual(sniffAudio(await fixture("workout.pdf")), null);
 });
 
-Deno.test("E4B answers: converted 16 kHz mono WAV goes out as input_audio", async () => {
+test("E4B answers: converted 16 kHz mono WAV goes out as input_audio", async () => {
   const { fetchFn, seen } = fakeBackends({ e4b: "ok", whisper: "down" });
   const { deps, specs } = depsWith(fetchFn);
   const res = await serveTranscribe(upload(await fixture("tone-8k.wav")), deps);
-  assertEquals(res.status, 200);
+  assert.deepStrictEqual(res.status, 200);
   const body = await res.json();
-  assertEquals(body.text, "bench press 3 sets of 5 at 135");
-  assertEquals(body.engine, "e4b");
-  assertEquals(body.fallback, false);
+  assert.deepStrictEqual(body.text, "bench press 3 sets of 5 at 135");
+  assert.deepStrictEqual(body.engine, "e4b");
+  assert.deepStrictEqual(body.fallback, false);
   assert(
     Math.abs(body.durationSec - 0.6) < 0.11,
     `duration ${body.durationSec}`,
   );
 
-  assertEquals(seen.e4b.length, 1);
-  assertEquals(seen.whisper.length, 0, "whisper untouched when E4B answers");
+  assert.deepStrictEqual(seen.e4b.length, 1);
+  assert.deepStrictEqual(seen.whisper.length, 0, "whisper untouched when E4B answers");
   const req = seen.e4b[0];
-  assertEquals(req.url, "http://127.0.0.1:8083/v1/chat/completions");
-  assertEquals(req.body["model"], "gemma-4-E4B-mm");
-  assertEquals(req.body["temperature"], 0);
+  assert.deepStrictEqual(req.url, "http://127.0.0.1:8083/v1/chat/completions");
+  assert.deepStrictEqual(req.body["model"], "gemma-4-E4B-mm");
+  assert.deepStrictEqual(req.body["temperature"], 0);
   const messages = req.body["messages"] as {
     role: string;
     content: {
@@ -165,15 +169,15 @@ Deno.test("E4B answers: converted 16 kHz mono WAV goes out as input_audio", asyn
       input_audio?: { data: string; format: string };
     }[];
   }[];
-  assertEquals(messages.length, 1);
-  assertEquals(messages[0].role, "user");
+  assert.deepStrictEqual(messages.length, 1);
+  assert.deepStrictEqual(messages[0].role, "user");
   const audio = messages[0].content.find((p) => p.type === "input_audio");
   const text = messages[0].content.find((p) => p.type === "text");
-  assertEquals(text?.text, E4B_INSTRUCTION);
-  assertEquals(audio?.input_audio?.format, "wav");
+  assert.deepStrictEqual(text?.text, E4B_INSTRUCTION);
+  assert.deepStrictEqual(audio?.input_audio?.format, "wav");
   const sent = fromBase64(audio!.input_audio!.data);
   const info = wavInfo(sent);
-  assertEquals(
+  assert.deepStrictEqual(
     [info?.sampleRate, info?.channels, info?.bits],
     [16000, 1, 16],
     "what E4B receives is 16 kHz mono 16-bit",
@@ -181,52 +185,52 @@ Deno.test("E4B answers: converted 16 kHz mono WAV goes out as input_audio", asyn
 
   // ffmpeg was spawned with an argument array that pins the format and the
   // protocol, not with a shell string.
-  assertEquals(specs.length, 1);
-  assertEquals(specs[0].cmd, "/usr/bin/ffmpeg");
+  assert.deepStrictEqual(specs.length, 1);
+  assert.deepStrictEqual(specs[0].cmd, "/usr/bin/ffmpeg");
   const args = specs[0].args;
-  assertEquals(args[args.indexOf("-f") + 1], "wav");
-  assertEquals(args[args.indexOf("-protocol_whitelist") + 1], "file");
-  assertEquals(args[args.indexOf("-t") + 1], "31");
+  assert.deepStrictEqual(args[args.indexOf("-f") + 1], "wav");
+  assert.deepStrictEqual(args[args.indexOf("-protocol_whitelist") + 1], "file");
+  assert.deepStrictEqual(args[args.indexOf("-t") + 1], "31");
 });
 
-Deno.test("a WebM/Opus upload (what the browser records) is decoded too", async () => {
+test("a WebM/Opus upload (what the browser records) is decoded too", async () => {
   const { fetchFn, seen } = fakeBackends({ e4b: "ok", whisper: "down" });
   const { deps } = depsWith(fetchFn);
   const res = await serveTranscribe(
     upload(await fixture("tone.webm"), "audio/webm"),
     deps,
   );
-  assertEquals(res.status, 200);
-  assertEquals((await res.json()).engine, "e4b");
-  assertEquals(seen.e4b.length, 1);
+  assert.deepStrictEqual(res.status, 200);
+  assert.deepStrictEqual((await res.json()).engine, "e4b");
+  assert.deepStrictEqual(seen.e4b.length, 1);
 });
 
-Deno.test("E4B down: whisper.cpp answers with the example-weights prompt", async () => {
+test("E4B down: whisper.cpp answers with the example-weights prompt", async () => {
   const { fetchFn, seen } = fakeBackends({ e4b: "down", whisper: "ok" });
   const { deps } = depsWith(fetchFn);
   const res = await serveTranscribe(upload(await fixture("tone-8k.wav")), deps);
-  assertEquals(res.status, 200);
+  assert.deepStrictEqual(res.status, 200);
   const body = await res.json();
-  assertEquals(body.engine, "whisper");
-  assertEquals(body.fallback, true);
-  assertEquals(body.text, "Bench press 3 sets of 5 at 135.");
+  assert.deepStrictEqual(body.engine, "whisper");
+  assert.deepStrictEqual(body.fallback, true);
+  assert.deepStrictEqual(body.text, "Bench press 3 sets of 5 at 135.");
   assert(
     body.fallbackReason.includes("connection refused"),
     body.fallbackReason,
   );
 
-  assertEquals(seen.whisper.length, 1);
+  assert.deepStrictEqual(seen.whisper.length, 1);
   const { url, form } = seen.whisper[0];
-  assertEquals(url, "http://127.0.0.1:8082/inference");
-  assertEquals(form.get("prompt"), WHISPER_PROMPT);
-  assertEquals(form.get("response_format"), "json");
-  assertEquals(form.get("temperature"), "0");
+  assert.deepStrictEqual(url, "http://127.0.0.1:8082/inference");
+  assert.deepStrictEqual(form.get("prompt"), WHISPER_PROMPT);
+  assert.deepStrictEqual(form.get("response_format"), "json");
+  assert.deepStrictEqual(form.get("temperature"), "0");
   const file = form.get("file") as File;
   const info = wavInfo(new Uint8Array(await file.arrayBuffer()));
-  assertEquals([info?.sampleRate, info?.channels, info?.bits], [16000, 1, 16]);
+  assert.deepStrictEqual([info?.sampleRate, info?.channels, info?.bits], [16000, 1, 16]);
 });
 
-Deno.test("E4B answering badly (500, non-JSON) also falls back", async () => {
+test("E4B answering badly (500, non-JSON) also falls back", async () => {
   for (const bad of ["http500", "notjson"] as const) {
     const { fetchFn, seen } = fakeBackends({ e4b: bad, whisper: "ok" });
     const { deps } = depsWith(fetchFn);
@@ -234,13 +238,13 @@ Deno.test("E4B answering badly (500, non-JSON) also falls back", async () => {
       upload(await fixture("tone-8k.wav")),
       deps,
     );
-    assertEquals(res.status, 200, bad);
-    assertEquals((await res.json()).engine, "whisper", bad);
-    assertEquals(seen.whisper.length, 1);
+    assert.deepStrictEqual(res.status, 200, bad);
+    assert.deepStrictEqual((await res.json()).engine, "whisper", bad);
+    assert.deepStrictEqual(seen.whisper.length, 1);
   }
 });
 
-Deno.test("whisper's blank-audio marker becomes an empty transcript", async () => {
+test("whisper's blank-audio marker becomes an empty transcript", async () => {
   const { fetchFn } = fakeBackends({
     e4b: "down",
     whisper: "ok",
@@ -248,29 +252,29 @@ Deno.test("whisper's blank-audio marker becomes an empty transcript", async () =
   });
   const { deps } = depsWith(fetchFn);
   const res = await serveTranscribe(upload(await fixture("tone-8k.wav")), deps);
-  assertEquals((await res.json()).text, "");
+  assert.deepStrictEqual((await res.json()).text, "");
 });
 
-Deno.test("both backends down is a 502 degraded response, not a 500 or a hang", async () => {
+test("both backends down is a 502 degraded response, not a 500 or a hang", async () => {
   const { fetchFn } = fakeBackends({ e4b: "down", whisper: "down" });
   const { deps } = depsWith(fetchFn);
   const res = await serveTranscribe(upload(await fixture("tone-8k.wav")), deps);
-  assertEquals(res.status, 502);
+  assert.deepStrictEqual(res.status, 502);
   const body = await res.json();
-  assertEquals(body.degraded, true);
+  assert.deepStrictEqual(body.degraded, true);
   assert(
     body.error.includes("E4B") && body.error.includes("whisper"),
     body.error,
   );
 });
 
-Deno.test("an oversize upload is refused before ffmpeg or any model runs", async () => {
+test("an oversize upload is refused before ffmpeg or any model runs", async () => {
   const { fetchFn, seen } = fakeBackends({ e4b: "ok", whisper: "ok" });
   const { deps, specs } = depsWith(fetchFn);
   const tooBig = new Uint8Array(TRANSCRIBE_LIMITS.maxUploadBytes + 2048);
   tooBig.set(new TextEncoder().encode("RIFF\0\0\0\0WAVE"));
   const res = await serveTranscribe(upload(tooBig), deps);
-  assertEquals(res.status, 413);
+  assert.deepStrictEqual(res.status, 413);
 
   // The same with no Content-Length: a chunked body is cut off while reading.
   let sent = 0;
@@ -287,19 +291,19 @@ Deno.test("an oversize upload is refused before ffmpeg or any model runs", async
     // @ts-expect-error duplex is required for stream bodies
     duplex: "half",
   });
-  assertEquals(chunked.headers.get("content-length"), null);
+  assert.deepStrictEqual(chunked.headers.get("content-length"), null);
   const res2 = await serveTranscribe(chunked, deps);
-  assertEquals(res2.status, 413);
+  assert.deepStrictEqual(res2.status, 413);
   assert(
     sent <= TRANSCRIBE_LIMITS.maxUploadBytes + 4 * 1024 * 1024,
     `read ${sent}`,
   );
 
-  assertEquals(specs.length, 0, "ffmpeg never ran");
-  assertEquals(seen.e4b.length + seen.whisper.length, 0, "no model call");
+  assert.deepStrictEqual(specs.length, 0, "ffmpeg never ran");
+  assert.deepStrictEqual(seen.e4b.length + seen.whisper.length, 0, "no model call");
 });
 
-Deno.test("a stalled upload times out with 408 and never holds the gate", async () => {
+test("a stalled upload times out with 408 and never holds the gate", async () => {
   const { fetchFn, seen } = fakeBackends({ e4b: "ok", whisper: "ok" });
   const gate = createGate(1);
   const { deps } = depsWith(fetchFn, { gate, uploadTimeoutMs: 300 });
@@ -324,16 +328,16 @@ Deno.test("a stalled upload times out with 408 and never holds the gate", async 
   // request runs to completion.
   const wav = await fixture("tone-8k.wav");
   const meanwhile = await serveTranscribe(upload(wav), deps);
-  assertEquals(meanwhile.status, 200);
+  assert.deepStrictEqual(meanwhile.status, 200);
   const res = await pending;
-  assertEquals(res.status, 408);
-  assertEquals(seen.e4b.length, 1, "only the finished upload reached a model");
+  assert.deepStrictEqual(res.status, 408);
+  assert.deepStrictEqual(seen.e4b.length, 1, "only the finished upload reached a model");
   const slot = gate.tryEnter();
   assert(slot !== null, "the gate is free after the timeout");
   slot();
 });
 
-Deno.test("a full read gate answers 503 degraded, and slots free after the deadline", async () => {
+test("a full read gate answers 503 degraded, and slots free after the deadline", async () => {
   const { fetchFn } = fakeBackends({ e4b: "ok", whisper: "ok" });
   const readGate = createGate(2);
   const { deps } = depsWith(fetchFn, { readGate, uploadTimeoutMs: 300 });
@@ -352,20 +356,20 @@ Deno.test("a full read gate answers 503 degraded, and slots free after the deadl
   const second = serveTranscribe(stall(), deps);
   const wav = await fixture("tone-8k.wav");
   const refused = await serveTranscribe(upload(wav), deps);
-  assertEquals(refused.status, 503);
-  assertEquals((await refused.json()).degraded, true);
+  assert.deepStrictEqual(refused.status, 503);
+  assert.deepStrictEqual((await refused.json()).degraded, true);
 
-  assertEquals((await first).status, 408);
-  assertEquals((await second).status, 408);
+  assert.deepStrictEqual((await first).status, 408);
+  assert.deepStrictEqual((await second).status, 408);
   const after = await serveTranscribe(upload(wav), deps);
-  assertEquals(
+  assert.deepStrictEqual(
     after.status,
     200,
     "slots are free once the deadline has passed",
   );
 });
 
-Deno.test("a second upload from the same identity while one is arriving is 429", async () => {
+test("a second upload from the same identity while one is arriving is 429", async () => {
   const { fetchFn } = fakeBackends({ e4b: "ok", whisper: "ok" });
   const { deps } = depsWith(fetchFn, {
     readGate: createGate(4),
@@ -388,16 +392,16 @@ Deno.test("a second upload from the same identity while one is arriving is 429",
   const first = serveTranscribe(as("me@example.com", stalled), deps);
   const wav = await fixture("tone-8k.wav");
   const second = await serveTranscribe(as("me@example.com", wav), deps);
-  assertEquals(second.status, 429);
+  assert.deepStrictEqual(second.status, 429);
   const other = await serveTranscribe(as("you@example.com", wav), deps);
-  assertEquals(other.status, 200);
-  assertEquals((await first).status, 408);
+  assert.deepStrictEqual(other.status, 200);
+  assert.deepStrictEqual((await first).status, 408);
   const again = await serveTranscribe(as("me@example.com", wav), deps);
-  assertEquals(again.status, 200, "free once the first read has ended");
+  assert.deepStrictEqual(again.status, 200, "free once the first read has ended");
 });
 
-Deno.test("a clip over 30 seconds is refused with a clear message", async () => {
-  const dir = await Deno.makeTempDir({ prefix: "qala-test-" });
+test("a clip over 30 seconds is refused with a clear message", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "qala-test-"));
   try {
     const long = `${dir}/long.wav`;
     const made = await runCommand({
@@ -419,54 +423,54 @@ Deno.test("a clip over 30 seconds is refused with a clear message", async () => 
       ],
       timeoutMs: 20_000,
     });
-    assertEquals(made.code, 0, made.stderr);
+    assert.deepStrictEqual(made.code, 0, made.stderr);
     const { fetchFn, seen } = fakeBackends({ e4b: "ok", whisper: "ok" });
     const { deps } = depsWith(fetchFn);
-    const res = await serveTranscribe(upload(await Deno.readFile(long)), deps);
-    assertEquals(res.status, 422);
+    const res = await serveTranscribe(upload(await readFile(long)), deps);
+    assert.deepStrictEqual(res.status, 422);
     assert((await res.json()).error.includes("longer than 30 seconds"));
-    assertEquals(seen.e4b.length, 0, "model never sees an over-length clip");
+    assert.deepStrictEqual(seen.e4b.length, 0, "model never sees an over-length clip");
   } finally {
-    await Deno.remove(dir, { recursive: true });
+    await rm(dir, { recursive: true, force: true });
   }
 });
 
-Deno.test("not audio, a playlist, and undecodable audio are refused", async () => {
+test("not audio, a playlist, and undecodable audio are refused", async () => {
   const { fetchFn, seen } = fakeBackends({ e4b: "ok", whisper: "ok" });
   const { deps, specs } = depsWith(fetchFn);
 
   const pdf = await serveTranscribe(upload(await fixture("workout.pdf")), deps);
-  assertEquals(pdf.status, 415);
+  assert.deepStrictEqual(pdf.status, 415);
   const m3u = await serveTranscribe(
     upload("#EXTM3U\n#EXT-X-VERSION:3\nfile:///etc/passwd\n"),
     deps,
   );
-  assertEquals(m3u.status, 415);
-  assertEquals(specs.length, 0, "ffmpeg is not even started for these");
+  assert.deepStrictEqual(m3u.status, 415);
+  assert.deepStrictEqual(specs.length, 0, "ffmpeg is not even started for these");
 
   const junk = new Uint8Array(2000);
   junk.set(new TextEncoder().encode("RIFF\0\0\0\0WAVEfmt "));
   const bad = await serveTranscribe(upload(junk), deps);
-  assertEquals(bad.status, 422);
-  assertEquals(specs.length, 1);
-  assertEquals(seen.e4b.length, 0);
+  assert.deepStrictEqual(bad.status, 422);
+  assert.deepStrictEqual(specs.length, 1);
+  assert.deepStrictEqual(seen.e4b.length, 0);
 
   const empty = await serveTranscribe(upload(new Uint8Array(0)), deps);
-  assertEquals(empty.status, 400);
+  assert.deepStrictEqual(empty.status, 400);
 });
 
-Deno.test("ffmpeg missing is a degraded 503, not a 500", async () => {
+test("ffmpeg missing is a degraded 503, not a 500", async () => {
   const { fetchFn } = fakeBackends({ e4b: "ok", whisper: "ok" });
   const { deps } = depsWith(fetchFn, { ffmpeg: "/nonexistent/ffmpeg" });
   const res = await serveTranscribe(upload(await fixture("tone-8k.wav")), deps);
-  assertEquals(res.status, 503);
-  assertEquals((await res.json()).degraded, true);
+  assert.deepStrictEqual(res.status, 503);
+  assert.deepStrictEqual((await res.json()).degraded, true);
 });
 
-Deno.test("only POST, and at most the gate's limit at once", async () => {
+test("only POST, and at most the gate's limit at once", async () => {
   const { fetchFn } = fakeBackends({ e4b: "ok", whisper: "ok" });
   const { deps } = depsWith(fetchFn);
-  assertEquals(
+  assert.deepStrictEqual(
     (await serveTranscribe(new Request("http://x/", { method: "GET" }), deps))
       .status,
     405,
@@ -482,20 +486,20 @@ Deno.test("only POST, and at most the gate's limit at once", async () => {
   for (let i = 0; i < 100 && slow.seen.e4b.length === 0; i++) {
     await new Promise((r) => setTimeout(r, 20));
   }
-  assertEquals(slow.seen.e4b.length, 1);
-  assertEquals((await serveTranscribe(upload(wav), one)).status, 429);
+  assert.deepStrictEqual(slow.seen.e4b.length, 1);
+  assert.deepStrictEqual((await serveTranscribe(upload(wav), one)).status, 429);
   release();
-  assertEquals((await first).status, 200);
-  assertEquals((await serveTranscribe(upload(wav), one)).status, 200);
+  assert.deepStrictEqual((await first).status, 200);
+  assert.deepStrictEqual((await serveTranscribe(upload(wav), one)).status, 200);
 });
 
-Deno.test("transcript cleanup: one line, no wrapping quotes, bounded", () => {
-  assertEquals(
+test("transcript cleanup: one line, no wrapping quotes, bounded", () => {
+  assert.deepStrictEqual(
     cleanTranscript(' "squat 5 by 5\nat 225" '),
     "squat 5 by 5 at 225",
   );
-  assertEquals(cleanTranscript("[BLANK_AUDIO]"), "");
-  assertEquals(
+  assert.deepStrictEqual(cleanTranscript("[BLANK_AUDIO]"), "");
+  assert.deepStrictEqual(
     cleanTranscript("x".repeat(5000)).length,
     TRANSCRIBE_LIMITS.maxTranscriptChars,
   );

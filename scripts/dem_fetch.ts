@@ -1,6 +1,6 @@
 // Fetch Copernicus GLO-30 DEM tiles covering a bbox (docs/PLAN.md section 8a).
 //
-//   deno run --allow-all scripts/dem_fetch.ts \
+//   bun scripts/dem_fetch.ts \
 //     --bbox "-84.6,42.6,-83.5,43.4" --out server/tiles/dem \
 //     --base-url https://example-mirror.org/glo30 [--dry-run]
 //
@@ -13,15 +13,16 @@
 //
 // Bbox format: minlon,minlat,maxlon,maxlat (WGS84 degrees).
 
+import { mkdir, rename, stat } from "node:fs/promises";
 import { glo30TileName } from "../server/elevation.ts";
 
 function arg(name: string, def?: string): string | undefined {
-  const i = Deno.args.findIndex((a) => a === `--${name}`);
-  if (i >= 0) return Deno.args[i + 1] ?? def;
-  const kv = Deno.args.find((a) => a.startsWith(`--${name}=`));
+  const i = process.argv.slice(2).findIndex((a) => a === `--${name}`);
+  if (i >= 0) return process.argv.slice(2)[i + 1] ?? def;
+  const kv = process.argv.slice(2).find((a) => a.startsWith(`--${name}=`));
   return kv ? kv.slice(name.length + 3) : def;
 }
-const flag = (name: string): boolean => Deno.args.includes(`--${name}`);
+const flag = (name: string): boolean => process.argv.slice(2).includes(`--${name}`);
 
 const bboxArg = arg("bbox");
 const outDir = arg("out", "server/tiles/dem") ?? "server/tiles/dem";
@@ -31,18 +32,18 @@ if (!bboxArg) {
   console.error(
     "usage: dem_fetch.ts --bbox minlon,minlat,maxlon,maxlat [--out server/tiles/dem] --base-url <mirror> [--dry-run]",
   );
-  Deno.exit(1);
+  process.exit(1);
 }
 const bbox = (bboxArg as string).split(",").map(Number);
 if (bbox.length !== 4 || bbox.some((v) => !Number.isFinite(v))) {
   console.error("bad --bbox; want minlon,minlat,maxlon,maxlat");
-  Deno.exit(1);
+  process.exit(1);
 }
 if (!dryRun && !base) {
   console.error(
     "pass --base-url <mirror holding <name> files> (or --dry-run to list cells)",
   );
-  Deno.exit(1);
+  process.exit(1);
 }
 const [minlon, minlat, maxlon, maxlat] = bbox;
 
@@ -57,16 +58,16 @@ const names = [...cells].sort();
 if (dryRun || !base) {
   console.log(`${names.length} cell(s):`);
   for (const n of names) console.log(`  ${n}`);
-  Deno.exit(0);
+  process.exit(0);
 }
 
-await Deno.mkdir(outDir, { recursive: true });
+await mkdir(outDir, { recursive: true });
 let fetched = 0;
 let skipped = 0;
 for (const n of names) {
   const dest = `${outDir}/${n}`;
   try {
-    await Deno.stat(dest);
+    await stat(dest);
     skipped++;
     continue;
   } catch {
@@ -79,14 +80,13 @@ for (const n of names) {
     console.error(`  HTTP ${res.status}; left for a later rerun`);
     continue;
   }
-  const file = await Deno.open(dest + ".part", { write: true, create: true });
   try {
-    await res.body.pipeTo(file.writable);
+    await Bun.write(dest + ".part", res);
   } catch (err) {
     console.error(`  download failed: ${(err as Error).message}`);
     continue;
   }
-  await Deno.rename(dest + ".part", dest);
+  await rename(dest + ".part", dest);
   fetched++;
 }
 console.log(

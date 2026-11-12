@@ -1,12 +1,16 @@
 // Server routing tests: health, elevation, tiles, static.
 
-import { assert, assertEquals } from "@std/assert";
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { test } from "bun:test";
+import assert from "node:assert/strict";
 import { createHandler, createState, type ServerOptions } from "./mod.ts";
 
 async function testState(): Promise<
   { state: ReturnType<typeof createState>; cleanup: () => Promise<void> }
 > {
-  const root = await Deno.makeTempDir({ prefix: "qala-mod-" });
+  const root = await mkdtemp(join(tmpdir(), "qala-mod-"));
   const options: ServerOptions = {
     dataRoot: `${root}/data`,
     distDir: `${root}/dist`,
@@ -14,104 +18,104 @@ async function testState(): Promise<
     demDir: `${root}/dem`,
     llmBaseUrl: "http://127.0.0.1:1",
   };
-  await Deno.mkdir(`${root}/dist`, { recursive: true });
-  await Deno.writeTextFile(`${root}/dist/index.html`, "<html>qala</html>");
+  await mkdir(`${root}/dist`, { recursive: true });
+  await writeFile(`${root}/dist/index.html`, "<html>qala</html>");
   return {
     state: createState(options),
-    cleanup: () => Deno.remove(root, { recursive: true }),
+    cleanup: () => rm(root, { recursive: true, force: true }),
   };
 }
 
-Deno.test("health endpoint answers ok", async () => {
+test("health endpoint answers ok", async () => {
   const { state, cleanup } = await testState();
   try {
     const handle = createHandler(state);
     for (const path of ["/health", "/api/health"]) {
       const res = await handle(new Request(`http://127.0.0.1:8500${path}`));
-      assertEquals(res.status, 200);
-      assertEquals((await res.json() as { ok: boolean }).ok, true);
+      assert.deepStrictEqual(res.status, 200);
+      assert.deepStrictEqual((await res.json() as { ok: boolean }).ok, true);
     }
   } finally {
     await cleanup();
   }
 });
 
-Deno.test("elevation endpoint validates and answers null without tiles", async () => {
+test("elevation endpoint validates and answers null without tiles", async () => {
   const { state, cleanup } = await testState();
   try {
     const handle = createHandler(state);
     const res = await handle(
       new Request("http://127.0.0.1:8500/api/elevation?lat=52.37&lon=4.9"),
     );
-    assertEquals(res.status, 200);
+    assert.deepStrictEqual(res.status, 200);
     const body = await res.json() as { elevationM: null };
-    assertEquals(body.elevationM, null);
+    assert.deepStrictEqual(body.elevationM, null);
 
     const bad = await handle(
       new Request("http://127.0.0.1:8500/api/elevation?lat=x"),
     );
-    assertEquals(bad.status, 400);
+    assert.deepStrictEqual(bad.status, 400);
   } finally {
     await cleanup();
   }
 });
 
-Deno.test("transcribe is routed and refuses what is not an audio POST", async () => {
+test("transcribe is routed and refuses what is not an audio POST", async () => {
   const { state, cleanup } = await testState();
   try {
     const handle = createHandler(state);
     const get = await handle(
       new Request("http://127.0.0.1:8500/api/transcribe"),
     );
-    assertEquals(get.status, 405);
+    assert.deepStrictEqual(get.status, 405);
     const text = await handle(
       new Request("http://127.0.0.1:8500/api/transcribe", {
         method: "POST",
         body: "not audio",
       }),
     );
-    assertEquals(text.status, 415);
+    assert.deepStrictEqual(text.status, 415);
   } finally {
     await cleanup();
   }
 });
 
-Deno.test("PDF import is routed and refuses what is not a PDF POST", async () => {
+test("PDF import is routed and refuses what is not a PDF POST", async () => {
   const { state, cleanup } = await testState();
   try {
     const handle = createHandler(state);
     const get = await handle(
       new Request("http://127.0.0.1:8500/api/import/pdf"),
     );
-    assertEquals(get.status, 405);
+    assert.deepStrictEqual(get.status, 405);
     const text = await handle(
       new Request("http://127.0.0.1:8500/api/import/pdf", {
         method: "POST",
         body: "not a pdf",
       }),
     );
-    assertEquals(text.status, 415);
+    assert.deepStrictEqual(text.status, 415);
   } finally {
     await cleanup();
   }
 });
 
-Deno.test("unknown paths fall through to static", async () => {
+test("unknown paths fall through to static", async () => {
   const { state, cleanup } = await testState();
   try {
     const handle = createHandler(state);
     const app = await handle(new Request("http://127.0.0.1:8500/plan"));
-    assertEquals(app.status, 200);
+    assert.deepStrictEqual(app.status, 200);
     const missing = await handle(
       new Request("http://127.0.0.1:8500/assets/gone.js"),
     );
-    assertEquals(missing.status, 404);
+    assert.deepStrictEqual(missing.status, 404);
   } finally {
     await cleanup();
   }
 });
 
-Deno.test("server refuses non-loopback binds before listening", async () => {
+test("server refuses non-loopback binds before listening", async () => {
   const { state, cleanup } = await testState();
   try {
     const { startServer } = await import("./mod.ts");

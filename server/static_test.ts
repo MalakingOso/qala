@@ -1,94 +1,98 @@
 // Static file tests: PWA dist serving, SPA fallback, traversal blocks.
 
-import { assert, assertEquals } from "@std/assert";
+import { copyFile, mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { test } from "bun:test";
+import assert from "node:assert/strict";
 import { parseRange, resolveStaticPath, serveStatic } from "./static.ts";
 
 async function fixtureDist(): Promise<string> {
-  const dir = await Deno.makeTempDir({ prefix: "qala-dist-" });
-  await Deno.mkdir(`${dir}/assets`, { recursive: true });
-  await Deno.writeTextFile(`${dir}/index.html`, "<html>qala</html>");
-  await Deno.writeTextFile(`${dir}/assets/app.js`, "console.log(1)");
+  const dir = await mkdtemp(join(tmpdir(), "qala-dist-"));
+  await mkdir(`${dir}/assets`, { recursive: true });
+  await writeFile(`${dir}/index.html`, "<html>qala</html>");
+  await writeFile(`${dir}/assets/app.js`, "console.log(1)");
   return dir;
 }
 
-Deno.test("static paths stay inside dist", async () => {
+test("static paths stay inside dist", async () => {
   const dir = await fixtureDist();
   try {
-    assertEquals(resolveStaticPath(dir, "/"), `${dir}/index.html`);
-    assertEquals(
+    assert.deepStrictEqual(resolveStaticPath(dir, "/"), `${dir}/index.html`);
+    assert.deepStrictEqual(
       resolveStaticPath(dir, "/assets/app.js"),
       `${dir}/assets/app.js`,
     );
-    assertEquals(resolveStaticPath(dir, "/../mod.ts"), null);
-    assertEquals(resolveStaticPath(dir, "/%2e%2e/mod.ts"), null);
+    assert.deepStrictEqual(resolveStaticPath(dir, "/../mod.ts"), null);
+    assert.deepStrictEqual(resolveStaticPath(dir, "/%2e%2e/mod.ts"), null);
   } finally {
-    await Deno.remove(dir, { recursive: true });
+    await rm(dir, { recursive: true, force: true });
   }
 });
 
-Deno.test("dist serves files, SPA fallback, and 404s", async () => {
+test("dist serves files, SPA fallback, and 404s", async () => {
   const dir = await fixtureDist();
   try {
     const js = await serveStatic(
       new Request("http://127.0.0.1:8500/assets/app.js"),
       dir,
     );
-    assertEquals(js.status, 200);
+    assert.deepStrictEqual(js.status, 200);
     assert(js.headers.get("content-type")?.includes("javascript") ?? false);
 
     const route = await serveStatic(
       new Request("http://127.0.0.1:8500/plan"),
       dir,
     );
-    assertEquals(route.status, 200);
+    assert.deepStrictEqual(route.status, 200);
     assert((await route.text()).includes("qala"));
 
     const missingAsset = await serveStatic(
       new Request("http://127.0.0.1:8500/assets/gone.js"),
       dir,
     );
-    assertEquals(missingAsset.status, 404);
+    assert.deepStrictEqual(missingAsset.status, 404);
   } finally {
-    await Deno.remove(dir, { recursive: true });
+    await rm(dir, { recursive: true, force: true });
   }
 });
 
 async function videoDist(): Promise<{ dir: string; bytes: Uint8Array }> {
-  const dir = await Deno.makeTempDir({ prefix: "qala-dist-" });
-  await Deno.mkdir(`${dir}/assets`, { recursive: true });
+  const dir = await mkdtemp(join(tmpdir(), "qala-dist-"));
+  await mkdir(`${dir}/assets`, { recursive: true });
   const bytes = Uint8Array.from({ length: 1000 }, (_, i) => i % 251);
-  await Deno.writeFile(`${dir}/assets/intro.mp4`, bytes);
-  await Deno.copyFile(`${dir}/assets/intro.mp4`, `${dir}/assets/intro.webm`);
+  await writeFile(`${dir}/assets/intro.mp4`, bytes);
+  await copyFile(`${dir}/assets/intro.mp4`, `${dir}/assets/intro.webm`);
   return { dir, bytes };
 }
 
-Deno.test("video files get video MIME types and advertise ranges", async () => {
+test("video files get video MIME types and advertise ranges", async () => {
   const { dir } = await videoDist();
   try {
     const mp4 = await serveStatic(
       new Request("http://127.0.0.1:8500/assets/intro.mp4"),
       dir,
     );
-    assertEquals(mp4.status, 200);
-    assertEquals(mp4.headers.get("content-type"), "video/mp4");
-    assertEquals(mp4.headers.get("accept-ranges"), "bytes");
+    assert.deepStrictEqual(mp4.status, 200);
+    assert.deepStrictEqual(mp4.headers.get("content-type"), "video/mp4");
+    assert.deepStrictEqual(mp4.headers.get("accept-ranges"), "bytes");
     await mp4.body?.cancel();
     const webm = await serveStatic(
       new Request("http://127.0.0.1:8500/assets/intro.webm"),
       dir,
     );
-    assertEquals(webm.headers.get("content-type"), "video/webm");
+    assert.deepStrictEqual(webm.headers.get("content-type"), "video/webm");
     await webm.body?.cancel();
   } finally {
-    await Deno.remove(dir, { recursive: true });
+    await rm(dir, { recursive: true, force: true });
   }
 });
 
-Deno.test("wasm files get the wasm MIME type, so browsers can stream-compile them", async () => {
+test("wasm files get the wasm MIME type, so browsers can stream-compile them", async () => {
   const dir = await fixtureDist();
   try {
-    await Deno.mkdir(`${dir}/wasm/abc123`, { recursive: true });
-    await Deno.writeFile(
+    await mkdir(`${dir}/wasm/abc123`, { recursive: true });
+    await writeFile(
       `${dir}/wasm/abc123/qala_lspp_wasm_bg.wasm`,
       new Uint8Array([0, 0x61, 0x73, 0x6d]),
     );
@@ -96,15 +100,15 @@ Deno.test("wasm files get the wasm MIME type, so browsers can stream-compile the
       new Request("http://127.0.0.1:8500/wasm/abc123/qala_lspp_wasm_bg.wasm"),
       dir,
     );
-    assertEquals(res.status, 200);
-    assertEquals(res.headers.get("content-type"), "application/wasm");
+    assert.deepStrictEqual(res.status, 200);
+    assert.deepStrictEqual(res.headers.get("content-type"), "application/wasm");
     await res.body?.cancel();
   } finally {
-    await Deno.remove(dir, { recursive: true });
+    await rm(dir, { recursive: true, force: true });
   }
 });
 
-Deno.test("Range requests answer 206 with the right bytes", async () => {
+test("Range requests answer 206 with the right bytes", async () => {
   const { dir, bytes } = await videoDist();
   const get = (range: string, method = "GET") =>
     serveStatic(
@@ -116,51 +120,51 @@ Deno.test("Range requests answer 206 with the right bytes", async () => {
     );
   try {
     const a = await get("bytes=10-19");
-    assertEquals(a.status, 206);
-    assertEquals(a.headers.get("content-range"), "bytes 10-19/1000");
-    assertEquals(a.headers.get("content-length"), "10");
-    assertEquals(
+    assert.deepStrictEqual(a.status, 206);
+    assert.deepStrictEqual(a.headers.get("content-range"), "bytes 10-19/1000");
+    assert.deepStrictEqual(a.headers.get("content-length"), "10");
+    assert.deepStrictEqual(
       new Uint8Array(await a.arrayBuffer()),
       bytes.subarray(10, 20),
     );
 
     const open = await get("bytes=990-");
-    assertEquals(open.status, 206);
-    assertEquals(open.headers.get("content-range"), "bytes 990-999/1000");
-    assertEquals(
+    assert.deepStrictEqual(open.status, 206);
+    assert.deepStrictEqual(open.headers.get("content-range"), "bytes 990-999/1000");
+    assert.deepStrictEqual(
       new Uint8Array(await open.arrayBuffer()),
       bytes.subarray(990),
     );
 
     const suffix = await get("bytes=-5");
-    assertEquals(suffix.headers.get("content-range"), "bytes 995-999/1000");
-    assertEquals(
+    assert.deepStrictEqual(suffix.headers.get("content-range"), "bytes 995-999/1000");
+    assert.deepStrictEqual(
       new Uint8Array(await suffix.arrayBuffer()),
       bytes.subarray(995),
     );
 
     // an end past the file is clamped, not an error
     const clamped = await get("bytes=900-5000");
-    assertEquals(clamped.status, 206);
-    assertEquals(clamped.headers.get("content-range"), "bytes 900-999/1000");
+    assert.deepStrictEqual(clamped.status, 206);
+    assert.deepStrictEqual(clamped.headers.get("content-range"), "bytes 900-999/1000");
     await clamped.body?.cancel();
 
     // Safari's first probe
     const probe = await get("bytes=0-1");
-    assertEquals(probe.status, 206);
-    assertEquals(probe.headers.get("content-range"), "bytes 0-1/1000");
+    assert.deepStrictEqual(probe.status, 206);
+    assert.deepStrictEqual(probe.headers.get("content-range"), "bytes 0-1/1000");
     await probe.body?.cancel();
 
     const head = await get("bytes=0-99", "HEAD");
-    assertEquals(head.status, 206);
-    assertEquals(head.headers.get("content-length"), "100");
-    assertEquals(head.body, null);
+    assert.deepStrictEqual(head.status, 206);
+    assert.deepStrictEqual(head.headers.get("content-length"), "100");
+    assert.deepStrictEqual(head.body, null);
   } finally {
-    await Deno.remove(dir, { recursive: true });
+    await rm(dir, { recursive: true, force: true });
   }
 });
 
-Deno.test("an unsatisfiable Range answers 416 with the size", async () => {
+test("an unsatisfiable Range answers 416 with the size", async () => {
   const { dir } = await videoDist();
   try {
     for (const range of ["bytes=1000-", "bytes=5000-6000", "bytes=-0"]) {
@@ -170,16 +174,16 @@ Deno.test("an unsatisfiable Range answers 416 with the size", async () => {
         }),
         dir,
       );
-      assertEquals(res.status, 416, range);
-      assertEquals(res.headers.get("content-range"), "bytes */1000", range);
+      assert.deepStrictEqual(res.status, 416, range);
+      assert.deepStrictEqual(res.headers.get("content-range"), "bytes */1000", range);
       await res.body?.cancel();
     }
   } finally {
-    await Deno.remove(dir, { recursive: true });
+    await rm(dir, { recursive: true, force: true });
   }
 });
 
-Deno.test("ranges we cannot honour are ignored, not rejected", async () => {
+test("ranges we cannot honour are ignored, not rejected", async () => {
   const { dir } = await videoDist();
   try {
     for (
@@ -191,8 +195,8 @@ Deno.test("ranges we cannot honour are ignored, not rejected", async () => {
         }),
         dir,
       );
-      assertEquals(res.status, 200, range);
-      assertEquals(res.headers.get("content-length"), "1000", range);
+      assert.deepStrictEqual(res.status, 200, range);
+      assert.deepStrictEqual(res.headers.get("content-length"), "1000", range);
       await res.body?.cancel();
     }
     const ifRange = await serveStatic(
@@ -201,18 +205,18 @@ Deno.test("ranges we cannot honour are ignored, not rejected", async () => {
       }),
       dir,
     );
-    assertEquals(ifRange.status, 200);
+    assert.deepStrictEqual(ifRange.status, 200);
     await ifRange.body?.cancel();
   } finally {
-    await Deno.remove(dir, { recursive: true });
+    await rm(dir, { recursive: true, force: true });
   }
 });
 
-Deno.test("parseRange covers the three forms", () => {
-  assertEquals(parseRange("bytes=0-499", 1000), { start: 0, end: 499 });
-  assertEquals(parseRange("bytes=500-", 1000), { start: 500, end: 999 });
-  assertEquals(parseRange("bytes=-200", 1000), { start: 800, end: 999 });
-  assertEquals(parseRange("bytes=-5000", 1000), { start: 0, end: 999 });
-  assertEquals(parseRange("bytes=1000-", 1000), "unsatisfiable");
-  assertEquals(parseRange(null, 1000), null);
+test("parseRange covers the three forms", () => {
+  assert.deepStrictEqual(parseRange("bytes=0-499", 1000), { start: 0, end: 499 });
+  assert.deepStrictEqual(parseRange("bytes=500-", 1000), { start: 500, end: 999 });
+  assert.deepStrictEqual(parseRange("bytes=-200", 1000), { start: 800, end: 999 });
+  assert.deepStrictEqual(parseRange("bytes=-5000", 1000), { start: 0, end: 999 });
+  assert.deepStrictEqual(parseRange("bytes=1000-", 1000), "unsatisfiable");
+  assert.deepStrictEqual(parseRange(null, 1000), null);
 });

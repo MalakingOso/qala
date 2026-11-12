@@ -1,13 +1,14 @@
-import { assertEquals } from "@std/assert";
+import { test } from "bun:test";
+import assert from "node:assert/strict";
 import { formatClock, formatRestWhy } from "./restFormat.ts";
 
-Deno.test("ticking clock pads seconds", () => {
-  assertEquals(formatClock(225), "3:45");
-  assertEquals(formatClock(9.2), "0:10");
+test("ticking clock pads seconds", () => {
+  assert.deepStrictEqual(formatClock(225), "3:45");
+  assert.deepStrictEqual(formatClock(9.2), "0:10");
 });
 
-Deno.test("why-line matches the DESIGN 7.6 shape", () => {
-  assertEquals(
+test("why-line matches the DESIGN 7.6 shape", () => {
+  assert.deepStrictEqual(
     formatRestWhy(225, {
       base: 180,
       adjustments: [

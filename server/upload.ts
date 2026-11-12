@@ -167,7 +167,11 @@ export async function readUpload(
     } catch {
       throw new UploadError(400, "could not read the multipart form");
     }
-    for (const [name, value] of form.entries()) {
+    for (
+    const [name, value] of form.entries() as Iterable<
+      [string, FormDataEntryValue]
+    >
+  ) {
       if (
         typeof value === "string" ||
         (name !== "file" && name !== "audio" && name !== "pdf")

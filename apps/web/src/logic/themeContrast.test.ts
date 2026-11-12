@@ -3,6 +3,9 @@
 // qualify as text, so large-figure 3.0 needs no separate allowance).
 // --fg-faint is decorative-only by design and is excluded by name.
 
+import { readFile } from "node:fs/promises";
+import { test } from "bun:test";
+
 import { parseThemes, ratio } from "./themeTokens.ts";
 
 const CSS_URL = new URL("../theme/tokens.css", import.meta.url);
@@ -37,8 +40,8 @@ const PAIRS: Array<[string, string, string]> = [
   ["dark", "on-accent", "accent"],
 ];
 
-Deno.test("theme text/background pairs meet WCAG 4.5", async () => {
-  const css = await Deno.readTextFile(CSS_URL);
+test("theme text/background pairs meet WCAG 4.5", async () => {
+  const css = await readFile(CSS_URL, "utf8");
   // dark is light with the dark overrides applied, as the apps see it
   const { light, dark } = parseThemes(css);
   const themes: Record<string, Map<string, string>> = { light, dark };

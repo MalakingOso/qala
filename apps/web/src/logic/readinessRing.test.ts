@@ -1,36 +1,37 @@
-import { assertEquals } from "@std/assert";
+import { test } from "bun:test";
+import assert from "node:assert/strict";
 import { readinessRing } from "./readinessRing.ts";
 
-Deno.test("sample ring: 72 with avg 76, low 64", () => {
+test("sample ring: 72 with avg 76, low 64", () => {
   const r = readinessRing(0.72, 76, 64, 20, 7);
-  assertEquals(r.value, 72);
-  assertEquals(r.low, false);
-  assertEquals(r.avgFrac, 0.76);
-  assertEquals(r.legendAvg, "your avg 76");
-  assertEquals(r.legendLow, "low under 64");
+  assert.deepStrictEqual(r.value, 72);
+  assert.deepStrictEqual(r.low, false);
+  assert.deepStrictEqual(r.avgFrac, 0.76);
+  assert.deepStrictEqual(r.legendAvg, "your avg 76");
+  assert.deepStrictEqual(r.legendLow, "low under 64");
 });
 
-Deno.test("PRS 4 or below is always low", () => {
-  assertEquals(readinessRing(0.8, 76, 64, 20, 4).low, true);
+test("PRS 4 or below is always low", () => {
+  assert.deepStrictEqual(readinessRing(0.8, 76, 64, 20, 4).low, true);
 });
 
-Deno.test("average hidden before 14 check-ins, low line at 50", () => {
+test("average hidden before 14 check-ins, low line at 50", () => {
   const r = readinessRing(0.72, 76, 64, 5, 7);
-  assertEquals(r.avgFrac, null);
-  assertEquals(r.lowFrac, 0.5);
-  assertEquals(r.legendLow, "low under 50");
+  assert.deepStrictEqual(r.avgFrac, null);
+  assert.deepStrictEqual(r.lowFrac, 0.5);
+  assert.deepStrictEqual(r.legendLow, "low under 50");
 });
 
-Deno.test("usual range is the average plus and minus one SD", () => {
+test("usual range is the average plus and minus one SD", () => {
   const r = readinessRing(0.72, 76, 64, 20, 7);
-  assertEquals(r.usualLoFrac, 0.68);
-  assertEquals(r.usualHiFrac, 0.84);
-  assertEquals(r.legendUsual, "68 to 84");
-  assertEquals(r.margin, 8);
+  assert.deepStrictEqual(r.usualLoFrac, 0.68);
+  assert.deepStrictEqual(r.usualHiFrac, 0.84);
+  assert.deepStrictEqual(r.legendUsual, "68 to 84");
+  assert.deepStrictEqual(r.margin, 8);
 });
 
-Deno.test("no usual range before 14 check-ins", () => {
+test("no usual range before 14 check-ins", () => {
   const r = readinessRing(0.58, 76, 64, 5, 7);
-  assertEquals(r.usualLoFrac, null);
-  assertEquals(r.margin, 8);
+  assert.deepStrictEqual(r.usualLoFrac, null);
+  assert.deepStrictEqual(r.margin, 8);
 });

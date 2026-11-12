@@ -1,7 +1,10 @@
 // The Android tokens are generated from tokens.css (scripts/tokens_to_kotlin.ts).
 // This is the gate behind "contrast passes on generated tokens": the contrast
 // test checks the CSS the generator reads, and this test fails when the
-// checked-in Tokens.kt no longer matches it. Fix with `deno task gen:android`.
+// checked-in Tokens.kt no longer matches it. Fix with `bun run gen:android`.
+
+import { readFile } from "node:fs/promises";
+import { test } from "bun:test";
 
 import {
   emitTokensKotlin,
@@ -21,21 +24,21 @@ function assert(cond: boolean, msg: string): asserts cond {
   if (!cond) throw new Error(msg);
 }
 
-Deno.test("Tokens.kt is up to date with tokens.css", async () => {
-  const css = await Deno.readTextFile(CSS_URL);
+test("Tokens.kt is up to date with tokens.css", async () => {
+  const css = await readFile(CSS_URL, "utf8");
   const fresh = emitTokensKotlin(css);
   let current = "";
   try {
-    current = await Deno.readTextFile(KT_URL);
+    current = await readFile(KT_URL, "utf8");
   } catch {
     // reported below
   }
-  assert(current === fresh, "Tokens.kt is stale; run `deno task gen:android`");
+  assert(current === fresh, "Tokens.kt is stale; run `bun run gen:android`");
 });
 
-Deno.test("both themes carry the same tokens and the dark merge is complete", async () => {
+test("both themes carry the same tokens and the dark merge is complete", async () => {
   const { light, dark, darkOverrides } = parseThemes(
-    await Deno.readTextFile(CSS_URL),
+    await readFile(CSS_URL, "utf8"),
   );
   assert(light.size > 0 && darkOverrides.size > 0, "empty theme block");
   assert(
@@ -50,7 +53,7 @@ Deno.test("both themes carry the same tokens and the dark merge is complete", as
   );
 });
 
-Deno.test("colour parsing accepts hex, rgba and a leading-dot alpha", () => {
+test("colour parsing accepts hex, rgba and a leading-dot alpha", () => {
   assert(parseColor("#fff").r === 255, "short hex");
   const c = parseColor("rgba(15,21,42,.10)");
   assert(c.r === 15 && c.b === 42 && Math.abs(c.a - 0.1) < 1e-9, "rgba .10");
@@ -63,8 +66,8 @@ Deno.test("colour parsing accepts hex, rgba and a leading-dot alpha", () => {
   assert(threw, "hsl must be rejected, not guessed");
 });
 
-Deno.test("shadows parse into an offset and an optional ring", async () => {
-  const { light, dark } = parseThemes(await Deno.readTextFile(CSS_URL));
+test("shadows parse into an offset and an optional ring", async () => {
+  const { light, dark } = parseThemes(await readFile(CSS_URL, "utf8"));
   const card = parseShadow(light.get("shadow-card")!, light);
   assert(card.dx === 2 && card.dy === 4 && card.ringColor === null, "card");
   const cta = parseShadow(light.get("shadow-cta")!, light);
@@ -90,7 +93,7 @@ Deno.test("shadows parse into an offset and an optional ring", async () => {
   assert(threw, "a blurred shadow must be rejected");
 });
 
-Deno.test("cubic-bezier parses to four numbers", () => {
+test("cubic-bezier parses to four numbers", () => {
   const b = parseCubicBezier("cubic-bezier(0.25, 1, 0.5, 1)");
   assert(b.join() === "0.25,1,0.5,1", "bezier");
 });

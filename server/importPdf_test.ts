@@ -3,7 +3,9 @@
 // answers for the adapter, and the transport reads the chunk it is given the
 // way a model would and answers with an edit list.
 
-import { assert, assertEquals } from "@std/assert";
+import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
+import { test } from "bun:test";
+import assert from "node:assert/strict";
 import type { ChatMessage, ChatTransport } from "../packages/llm/mod.ts";
 import { IMPORT_SYSTEM_PROMPT } from "../packages/llm/mod.ts";
 import {
@@ -24,7 +26,7 @@ import {
 import { type MineruConfig, redactLogLine } from "./mineru.ts";
 
 const fixture = (name: string) =>
-  Deno.readFile(new URL(`../testdata/import/${name}`, import.meta.url));
+  readFile(new URL(`../testdata/import/${name}`, import.meta.url));
 
 const live = await liveImportDeps("http://127.0.0.1:1");
 
@@ -127,13 +129,13 @@ function runnerFor(
               "[adapter] error: VLM server at http://127.0.0.1:30000 did not answer /v1/models: refused",
           };
         default: {
-          await Deno.mkdir(out, { recursive: true });
+          await mkdir(out, { recursive: true });
           const body = mode === "empty"
             ? "[]"
             : mode === "junk"
             ? "not json {"
             : JSON.stringify(CONTENT_LIST);
-          await Deno.writeTextFile(`${out}/in_content_list.json`, body);
+          await writeFile(`${out}/in_content_list.json`, body);
           return RESULT;
         }
       }
@@ -209,23 +211,23 @@ async function workoutPdf() {
   return await fixture("workout.pdf");
 }
 
-Deno.test("MinerU ok: chunks per day, week and day come from the headings", async () => {
+test("MinerU ok: chunks per day, week and day come from the headings", async () => {
   const seen: ChatMessage[][] = [];
   const specs: CommandSpec[] = [];
   const res = await handlePdfImport(
     upload(await workoutPdf()),
     depsFor("ok", { seen, specs }),
   );
-  assertEquals(res.status, 200);
+  assert.deepStrictEqual(res.status, 200);
   const body = await res.json();
-  assertEquals(body.status, "ready", JSON.stringify(body.errors));
-  assertEquals(body.source.engine, "mineru");
-  assertEquals(body.source.fallback, false);
-  assertEquals(body.source.pages, 1);
-  assertEquals(body.source.chunks, 4);
-  assertEquals(seen.length, 4, "one model call per day");
+  assert.deepStrictEqual(body.status, "ready", JSON.stringify(body.errors));
+  assert.deepStrictEqual(body.source.engine, "mineru");
+  assert.deepStrictEqual(body.source.fallback, false);
+  assert.deepStrictEqual(body.source.pages, 1);
+  assert.deepStrictEqual(body.source.chunks, 4);
+  assert.deepStrictEqual(seen.length, 4, "one model call per day");
 
-  assertEquals(
+  assert.deepStrictEqual(
     body.items.map((
       i: Record<string, unknown>,
     ) => [i.week, i.day, i.exercise, i.weight]),
@@ -256,37 +258,37 @@ Deno.test("MinerU ok: chunks per day, week and day come from the headings", asyn
   // The adapter ran as an argument array in its own session, then its
   // scratch directory was removed.
   const adapter = specs.find((s) => s.cmd === MINERU.python)!;
-  assertEquals(adapter.ownSession, true);
-  assertEquals(adapter.args[0], MINERU.adapter);
-  assertEquals(
+  assert.deepStrictEqual(adapter.ownSession, true);
+  assert.deepStrictEqual(adapter.args[0], MINERU.adapter);
+  assert.deepStrictEqual(
     adapter.args[adapter.args.indexOf("--vlm-url") + 1],
     MINERU.vlmUrl,
   );
   assert(adapter.args.includes("--no-image-analysis"));
   const out = adapter.args[adapter.args.indexOf("--out") + 1];
-  const gone = await Deno.stat(out.replace(/\/mineru$/, "")).then(
+  const gone = await stat(out.replace(/\/mineru$/, "")).then(
     () => false,
     () => true,
   );
   assert(gone, "scratch directory removed");
-  assertEquals(
+  assert.deepStrictEqual(
     specs.some((s) => s.cmd.endsWith("pdftotext")),
     false,
     "pdftotext not used when MinerU worked",
   );
 });
 
-Deno.test("MinerU down (adapter exit 2): pdftotext reads the PDF and the response says so", async () => {
+test("MinerU down (adapter exit 2): pdftotext reads the PDF and the response says so", async () => {
   const seen: ChatMessage[][] = [];
   const res = await handlePdfImport(
     upload(await workoutPdf()),
     depsFor("exit2", { seen }),
   );
-  assertEquals(res.status, 200);
+  assert.deepStrictEqual(res.status, 200);
   const body = await res.json();
-  assertEquals(body.status, "ready", JSON.stringify(body.errors));
-  assertEquals(body.source.engine, "pdftotext");
-  assertEquals(body.source.fallback, true);
+  assert.deepStrictEqual(body.status, "ready", JSON.stringify(body.errors));
+  assert.deepStrictEqual(body.source.engine, "pdftotext");
+  assert.deepStrictEqual(body.source.fallback, true);
   assert(
     body.source.notice.includes("MinerU is not ready"),
     body.source.notice,
@@ -296,13 +298,13 @@ Deno.test("MinerU down (adapter exit 2): pdftotext reads the PDF and the respons
       !body.source.notice.includes("127.0.0.1"),
     "the adapter's own message stays off the wire",
   );
-  assertEquals(body.notes[0], body.source.notice);
-  assertEquals(body.source.chunks, 4, "pdftotext text splits the same way");
-  assertEquals(body.items.length, 8);
-  assertEquals(body.items[4].week, 2);
+  assert.deepStrictEqual(body.notes[0], body.source.notice);
+  assert.deepStrictEqual(body.source.chunks, 4, "pdftotext text splits the same way");
+  assert.deepStrictEqual(body.items.length, 8);
+  assert.deepStrictEqual(body.items[4].week, 2);
 });
 
-Deno.test("the client gets fixed MinerU reasons; the raw stderr is logged redacted", async () => {
+test("the client gets fixed MinerU reasons; the raw stderr is logged redacted", async () => {
   const logged: string[] = [];
   for (const mode of ["exit2", "leaky"] as const) {
     const res = await handlePdfImport(
@@ -327,7 +329,7 @@ Deno.test("the client gets fixed MinerU reasons; the raw stderr is logged redact
       raw,
     );
   }
-  assertEquals(logged.length, 2);
+  assert.deepStrictEqual(logged.length, 2);
   assert(logged[0].startsWith("[mineru] adapter exit 2: "), logged[0]);
   assert(logged[0].includes("<url>"), "the URL is redacted in the log too");
   assert(logged[1].startsWith("[mineru] adapter exit 1: "), logged[1]);
@@ -336,29 +338,29 @@ Deno.test("the client gets fixed MinerU reasons; the raw stderr is logged redact
   }
 });
 
-Deno.test("log redaction takes out URLs, bearer tokens, key=value secrets and long tokens", () => {
-  assertEquals(
+test("log redaction takes out URLs, bearer tokens, key=value secrets and long tokens", () => {
+  assert.deepStrictEqual(
     redactLogLine("see https://user:pw@host.example:8443/path?x=1 now"),
     "see <url> now",
   );
-  assertEquals(
+  assert.deepStrictEqual(
     redactLogLine("Authorization: Bearer abc.def"),
     "Authorization=<redacted> <redacted>",
   );
-  assertEquals(redactLogLine("Bearer abc.def"), "Bearer <redacted>");
-  assertEquals(redactLogLine("api-key = hunter2 ok"), "api-key=<redacted> ok");
-  assertEquals(redactLogLine("sk-abcdefgh12345678"), "<redacted>");
-  assertEquals(
+  assert.deepStrictEqual(redactLogLine("Bearer abc.def"), "Bearer <redacted>");
+  assert.deepStrictEqual(redactLogLine("api-key = hunter2 ok"), "api-key=<redacted> ok");
+  assert.deepStrictEqual(redactLogLine("sk-abcdefgh12345678"), "<redacted>");
+  assert.deepStrictEqual(
     redactLogLine("id 0123456789abcdef01234567 end"),
     "id <redacted> end",
   );
-  assertEquals(
+  assert.deepStrictEqual(
     redactLogLine("plain words and 42 stay"),
     "plain words and 42 stay",
   );
 });
 
-Deno.test("every MinerU failure falls back: missing, timeout, no text, bad output, switched off", async () => {
+test("every MinerU failure falls back: missing, timeout, no text, bad output, switched off", async () => {
   const reasons: [MineruMode | "off", string][] = [
     ["missing", "not installed"],
     ["timeout", "timed out"],
@@ -371,39 +373,39 @@ Deno.test("every MinerU failure falls back: missing, timeout, no text, bad outpu
       upload(await workoutPdf()),
       depsFor(mode),
     );
-    assertEquals(res.status, 200, mode);
+    assert.deepStrictEqual(res.status, 200, mode);
     const body = await res.json();
-    assertEquals(body.source.engine, "pdftotext", mode);
+    assert.deepStrictEqual(body.source.engine, "pdftotext", mode);
     assert(
       body.source.notice.includes(reason),
       `${mode}: ${body.source.notice}`,
     );
-    assertEquals(body.items.length, 8, mode);
+    assert.deepStrictEqual(body.items.length, 8, mode);
   }
 });
 
-Deno.test("a scan with no text layer fails with a clear message and no model call", async () => {
+test("a scan with no text layer fails with a clear message and no model call", async () => {
   const seen: ChatMessage[][] = [];
   const scan = await fixture("scan.pdf");
   const res = await handlePdfImport(upload(scan), depsFor("exit2", { seen }));
-  assertEquals(res.status, 422);
+  assert.deepStrictEqual(res.status, 422);
   const body = await res.json();
-  assertEquals(body.error, SCAN_MESSAGE);
-  assertEquals(body.scan, true);
+  assert.deepStrictEqual(body.error, SCAN_MESSAGE);
+  assert.deepStrictEqual(body.scan, true);
   assert(body.error.includes("no text layer"));
-  assertEquals(seen.length, 0);
+  assert.deepStrictEqual(seen.length, 0);
 
   // MinerU ran fine and also found nothing: a different, honest message.
   const empty = await handlePdfImport(upload(scan), depsFor("empty", { seen }));
-  assertEquals(empty.status, 422);
-  assertEquals(
+  assert.deepStrictEqual(empty.status, 422);
+  assert.deepStrictEqual(
     (await empty.json()).error,
     "No text could be read from this PDF.",
   );
-  assertEquals(seen.length, 0);
+  assert.deepStrictEqual(seen.length, 0);
 });
 
-Deno.test("an oversize upload is refused before any program runs", async () => {
+test("an oversize upload is refused before any program runs", async () => {
   const specs: CommandSpec[] = [];
   const seen: ChatMessage[][] = [];
   const big = new Uint8Array(PDF_LIMITS.maxBytes + 4096);
@@ -412,7 +414,7 @@ Deno.test("an oversize upload is refused before any program runs", async () => {
     upload(big),
     depsFor("ok", { specs, seen }),
   );
-  assertEquals(res.status, 413);
+  assert.deepStrictEqual(res.status, 413);
 
   // A chunked body with no Content-Length is cut off while it is read.
   let sent = 0;
@@ -428,15 +430,15 @@ Deno.test("an oversize upload is refused before any program runs", async () => {
     // @ts-expect-error duplex is required for stream bodies
     duplex: "half",
   });
-  assertEquals(chunked.headers.get("content-length"), null);
+  assert.deepStrictEqual(chunked.headers.get("content-length"), null);
   const res2 = await handlePdfImport(chunked, depsFor("ok", { specs, seen }));
-  assertEquals(res2.status, 413);
+  assert.deepStrictEqual(res2.status, 413);
   assert(sent <= PDF_LIMITS.maxBytes + 4 * 1024 * 1024, `read ${sent} bytes`);
-  assertEquals(specs.length, 0, "no helper program ran");
-  assertEquals(seen.length, 0);
+  assert.deepStrictEqual(specs.length, 0, "no helper program ran");
+  assert.deepStrictEqual(seen.length, 0);
 });
 
-Deno.test("a stalled PDF upload times out with 408 and leaves both gates free", async () => {
+test("a stalled PDF upload times out with 408 and leaves both gates free", async () => {
   const readGate = createGate(1);
   const gate = createGate(1);
   const stalled = new Request("http://x/api/import/pdf", {
@@ -457,15 +459,15 @@ Deno.test("a stalled PDF upload times out with 408 and leaves both gates free", 
     upload(await workoutPdf()),
     depsFor("ok", { readGate, gate }),
   );
-  assertEquals(refused.status, 503, "the only read slot is taken");
-  assertEquals((await refused.json()).degraded, true);
-  assertEquals((await pending).status, 408);
+  assert.deepStrictEqual(refused.status, 503, "the only read slot is taken");
+  assert.deepStrictEqual((await refused.json()).degraded, true);
+  assert.deepStrictEqual((await pending).status, 408);
   const free = readGate.tryEnter();
   assert(free !== null && gate.tryEnter() !== null, "both gates are free");
   free();
 });
 
-Deno.test("a second PDF upload from the same identity while one is arriving is 429", async () => {
+test("a second PDF upload from the same identity while one is arriving is 429", async () => {
   const over = {
     readGate: createGate(4),
     identityGate: createKeyedGate(1),
@@ -495,16 +497,16 @@ Deno.test("a second PDF upload from the same identity while one is arriving is 4
     as("me@example.com", pdf),
     depsFor("ok", over),
   );
-  assertEquals(second.status, 429);
+  assert.deepStrictEqual(second.status, 429);
   const other = await handlePdfImport(
     as("you@example.com", pdf),
     depsFor("ok", over),
   );
-  assertEquals(other.status, 200);
-  assertEquals((await first).status, 408);
+  assert.deepStrictEqual(other.status, 200);
+  assert.deepStrictEqual((await first).status, 408);
 });
 
-Deno.test("page cap, password, corrupt and non-PDF files", async () => {
+test("page cap, password, corrupt and non-PDF files", async () => {
   const seen: ChatMessage[][] = [];
   const tooLong = await handlePdfImport(
     upload(await workoutPdf()),
@@ -516,7 +518,7 @@ Deno.test("page cap, password, corrupt and non-PDF files", async () => {
       },
     }),
   );
-  assertEquals(tooLong.status, 413);
+  assert.deepStrictEqual(tooLong.status, 413);
   assert((await tooLong.json()).error.includes("limit is 40"));
 
   const locked = await handlePdfImport(
@@ -530,36 +532,36 @@ Deno.test("page cap, password, corrupt and non-PDF files", async () => {
       },
     }),
   );
-  assertEquals(locked.status, 422);
+  assert.deepStrictEqual(locked.status, 422);
   assert((await locked.json()).error.includes("password protected"));
 
   const corrupt = new TextEncoder().encode(
     "%PDF-1.4\nthis is not a pdf at all\n",
   );
   const bad = await handlePdfImport(upload(corrupt), depsFor("ok", { seen }));
-  assertEquals(bad.status, 422);
+  assert.deepStrictEqual(bad.status, 422);
   assert((await bad.json()).error.includes("Could not read"));
 
   const text = await handlePdfImport(
     upload("just some text"),
     depsFor("ok", { seen }),
   );
-  assertEquals(text.status, 415);
+  assert.deepStrictEqual(text.status, 415);
   const png = await handlePdfImport(
     upload(new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0, 0, 0, 0])),
     depsFor("ok", { seen }),
   );
-  assertEquals(png.status, 415);
+  assert.deepStrictEqual(png.status, 415);
 
   const get = await handlePdfImport(
     new Request("http://x/", { method: "GET" }),
     depsFor("ok"),
   );
-  assertEquals(get.status, 405);
-  assertEquals(seen.length, 0, "the model was never called for these");
+  assert.deepStrictEqual(get.status, 405);
+  assert.deepStrictEqual(seen.length, 0, "the model was never called for these");
 });
 
-Deno.test("a missing program checker is a 503 degraded response, found before MinerU runs", async () => {
+test("a missing program checker is a 503 degraded response, found before MinerU runs", async () => {
   const specs: CommandSpec[] = [];
   const res = await handlePdfImport(
     upload(await workoutPdf()),
@@ -568,32 +570,32 @@ Deno.test("a missing program checker is a 503 degraded response, found before Mi
       imports: () => Promise.reject(new Error("wasm not built")),
     }),
   );
-  assertEquals(res.status, 503);
+  assert.deepStrictEqual(res.status, 503);
   const body = await res.json();
-  assertEquals(body.degraded, true);
-  assertEquals(body.error, "the program checker is not available");
-  assertEquals(
+  assert.deepStrictEqual(body.degraded, true);
+  assert.deepStrictEqual(body.error, "the program checker is not available");
+  assert.deepStrictEqual(
     specs.some((s) => s.cmd === MINERU.python),
     false,
     "no time spent in MinerU",
   );
 });
 
-Deno.test("the model down is a 502 degraded response that still names the source", async () => {
+test("the model down is a 502 degraded response that still names the source", async () => {
   const down: ChatTransport = () =>
     Promise.reject(new Error("connection refused"));
   const res = await handlePdfImport(
     upload(await workoutPdf()),
     depsFor("ok", { transport: down }),
   );
-  assertEquals(res.status, 502);
+  assert.deepStrictEqual(res.status, 502);
   const body = await res.json();
-  assertEquals(body.degraded, true);
+  assert.deepStrictEqual(body.degraded, true);
   assert(body.error.includes("Week 1 Day 1: connection refused"), body.error);
-  assertEquals(body.source.engine, "mineru");
+  assert.deepStrictEqual(body.source.engine, "mineru");
 });
 
-Deno.test("hostile PDF text stays in user messages and cannot reach the program", async () => {
+test("hostile PDF text stays in user messages and cannot reach the program", async () => {
   const hostile = [
     ...CONTENT_LIST.slice(0, 4),
     {
@@ -607,8 +609,8 @@ Deno.test("hostile PDF text stays in user messages and cannot reach the program"
   const run: CommandRunner = async (spec) => {
     if (spec.cmd === MINERU.python) {
       const out = spec.args[spec.args.indexOf("--out") + 1];
-      await Deno.mkdir(out, { recursive: true });
-      await Deno.writeTextFile(
+      await mkdir(out, { recursive: true });
+      await writeFile(
         `${out}/in_content_list.json`,
         JSON.stringify(hostile),
       );
@@ -640,7 +642,7 @@ Deno.test("hostile PDF text stays in user messages and cannot reach the program"
   );
   const body = await res.json();
   for (const messages of seen) {
-    assertEquals(
+    assert.deepStrictEqual(
       messages[0].content,
       IMPORT_SYSTEM_PROMPT,
       "system prompt is fixed",
@@ -651,14 +653,14 @@ Deno.test("hostile PDF text stays in user messages and cannot reach the program"
     );
   }
   assert(seen[0][1].content.includes("Ignore previous instructions"));
-  assertEquals(
+  assert.deepStrictEqual(
     seen[0][1].content.split("SOURCE_TEXT>>>").length,
     2,
     "fence cannot be closed early",
   );
   // The bad name needs the owner's decision, so nothing is emitted yet.
-  assertEquals(body.status, "needs_confirm");
-  assertEquals(body.programText, undefined);
+  assert.deepStrictEqual(body.status, "needs_confirm");
+  assert.deepStrictEqual(body.programText, undefined);
   assert(
     !JSON.stringify(body).includes("Day 99\\nSquat"),
     "no program text from the model's strings",
@@ -677,12 +679,12 @@ Deno.test("hostile PDF text stays in user messages and cannot reach the program"
     { ...live, transport: obedient },
   );
   const final = await done.json();
-  assertEquals(final.status, "ready");
+  assert.deepStrictEqual(final.status, "ready");
   assert(!final.programText.includes("rm -rf"), final.programText);
   assert(!final.programText.includes("Day 9"), final.programText);
 });
 
-Deno.test("the confirm step works on the PDF response through /api/import/text", async () => {
+test("the confirm step works on the PDF response through /api/import/text", async () => {
   const res = await handlePdfImport(upload(await workoutPdf()), depsFor("ok"));
   const body = await res.json();
   const confirm = await serveImportText(
@@ -695,13 +697,13 @@ Deno.test("the confirm step works on the PDF response through /api/import/text",
     }),
     live,
   );
-  assertEquals(confirm.status, 200);
+  assert.deepStrictEqual(confirm.status, 200);
   const done = await confirm.json();
-  assertEquals(done.status, "ready");
-  assertEquals(done.programText, body.programText);
+  assert.deepStrictEqual(done.status, "ready");
+  assert.deepStrictEqual(done.programText, body.programText);
 });
 
-Deno.test("units=kg, multipart upload, and the processing gate", async () => {
+test("units=kg, multipart upload, and the processing gate", async () => {
   const form = new FormData();
   form.set(
     "file",
@@ -716,7 +718,7 @@ Deno.test("units=kg, multipart upload, and the processing gate", async () => {
     depsFor("ok"),
   );
   const body = await kg.json();
-  assertEquals(kg.status, 200);
+  assert.deepStrictEqual(kg.status, 200);
   assert(body.programText.includes("135kg"), body.programText);
 
   const gate = createGate(1);
@@ -726,6 +728,6 @@ Deno.test("units=kg, multipart upload, and the processing gate", async () => {
     upload(await workoutPdf()),
     depsFor("ok", { gate }),
   );
-  assertEquals(busy.status, 429);
+  assert.deepStrictEqual(busy.status, 429);
   held();
 });

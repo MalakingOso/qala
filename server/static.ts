@@ -2,6 +2,8 @@
 // Single-page-app fallback: extensionless app routes serve index.html.
 // Byte ranges (206 / 416) are served too; iOS Safari needs them to play video.
 
+import { stat } from "node:fs/promises";
+
 const MIME: Record<string, string> = {
   ".html": "text/html; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
@@ -80,42 +82,29 @@ async function readSlice(
   filePath: string,
   start: number,
   length: number,
-): Promise<Uint8Array<ArrayBuffer>> {
-  const file = await Deno.open(filePath, { read: true });
-  try {
-    await file.seek(start, Deno.SeekMode.Start);
-    const buf = new Uint8Array(length);
-    let got = 0;
-    while (got < length) {
-      const n = await file.read(buf.subarray(got));
-      if (n === null) break;
-      got += n;
-    }
-    return buf.subarray(0, got) as Uint8Array<ArrayBuffer>;
-  } finally {
-    file.close();
-  }
+): Promise<ArrayBuffer> {
+  return await Bun.file(filePath).slice(start, start + length).arrayBuffer();
 }
 
 async function serveFile(
   req: Request,
   filePath: string,
 ): Promise<Response | null> {
-  let stat;
+  let st;
   try {
-    stat = await Deno.stat(filePath);
+    st = await stat(filePath);
   } catch (err) {
-    if (err instanceof Deno.errors.NotFound) return null;
+    if ((err as { code?: string }).code === "ENOENT") return null;
     throw err;
   }
-  if (stat.isDirectory) return await serveFile(req, `${filePath}/index.html`);
-  if (!stat.isFile) return null;
+  if (st.isDirectory()) return await serveFile(req, `${filePath}/index.html`);
+  if (!st.isFile()) return null;
   if (req.method !== "GET" && req.method !== "HEAD") {
     return new Response("method not allowed", { status: 405 });
   }
   const headers = new Headers({
     "content-type": contentType(filePath),
-    "content-length": String(stat.size),
+    "content-length": String(st.size),
     "accept-ranges": "bytes",
     "cache-control": filePath.endsWith("index.html")
       ? "no-cache"
@@ -125,9 +114,9 @@ async function serveFile(
   // so an If-Range cannot be validated: serve the whole file then.
   const range = req.headers.has("if-range")
     ? null
-    : parseRange(req.headers.get("range"), stat.size);
+    : parseRange(req.headers.get("range"), st.size);
   if (range === "unsatisfiable") {
-    headers.set("content-range", `bytes */${stat.size}`);
+    headers.set("content-range", `bytes */${st.size}`);
     headers.set("content-length", "0");
     return new Response(null, { status: 416, headers });
   }
@@ -135,7 +124,7 @@ async function serveFile(
     const length = range.end - range.start + 1;
     headers.set(
       "content-range",
-      `bytes ${range.start}-${range.end}/${stat.size}`,
+      `bytes ${range.start}-${range.end}/${st.size}`,
     );
     headers.set("content-length", String(length));
     if (req.method === "HEAD") {
@@ -147,12 +136,7 @@ async function serveFile(
     });
   }
   if (req.method === "HEAD") return new Response(null, { headers });
-  const bytes = await Deno.readFile(filePath);
-  const body = bytes.buffer.slice(
-    bytes.byteOffset,
-    bytes.byteOffset + bytes.byteLength,
-  ) as ArrayBuffer;
-  return new Response(body, { headers });
+  return new Response(await Bun.file(filePath).arrayBuffer(), { headers });
 }
 
 /**

@@ -3,6 +3,8 @@
 // discard of garbage, persona decline outside topics, memory round-trip,
 // and context injection in all 7 prompt builders.
 
+import { test } from "bun:test";
+
 import type { ChatTransport, PromptContext } from "./mod.ts";
 import {
   acceptedMemories,
@@ -93,7 +95,7 @@ function testContext(): PromptContext {
 
 // Feature 1: valid check-in JSON through the fake transport.
 
-Deno.test("checkin: valid JSON passes through", async () => {
+test("checkin: valid JSON passes through", async () => {
   const ctx = testContext();
   const messages = buildCheckinPrompt(
     ctx,
@@ -113,7 +115,7 @@ Deno.test("checkin: valid JSON passes through", async () => {
 
 // Feature 2: clamping of 7 over-envelope adjustments.
 
-Deno.test("envelope: 7 over-envelope adjustments are clamped", async () => {
+test("envelope: 7 over-envelope adjustments are clamped", async () => {
   const ctx = testContext();
   const cases: { raw: unknown; weightPct: number; sets: number }[] = [
     {
@@ -166,7 +168,7 @@ Deno.test("envelope: 7 over-envelope adjustments are clamped", async () => {
   }
 });
 
-Deno.test("envelope: in-envelope adjustment accepted unchanged", () => {
+test("envelope: in-envelope adjustment accepted unchanged", () => {
   const res = validateEnvelopeAdjustment(
     { weightPct: -5, sets: 1, reason: "mild fatigue" },
   );
@@ -179,7 +181,7 @@ Deno.test("envelope: in-envelope adjustment accepted unchanged", () => {
   assertEquals(res.log.accepted, true, "logged as accepted");
 });
 
-Deno.test("envelope: boundary values accepted unchanged", () => {
+test("envelope: boundary values accepted unchanged", () => {
   for (
     const raw of [
       { weightPct: -10, sets: -2, reason: "low edge" },
@@ -197,7 +199,7 @@ Deno.test("envelope: boundary values accepted unchanged", () => {
 
 // Discard of garbage.
 
-Deno.test("envelope: garbage is discarded and logged", () => {
+test("envelope: garbage is discarded and logged", () => {
   const garbage: unknown[] = [
     "not json at all {{{",
     "42",
@@ -228,7 +230,7 @@ Deno.test("envelope: garbage is discarded and logged", () => {
 
 // Persona boundary.
 
-Deno.test("coach: declines outside topics, keeps inside ones", () => {
+test("coach: declines outside topics, keeps inside ones", () => {
   const outside = [
     "File my taxes for me before the deadline",
     "Who should I vote for in the election?",
@@ -262,7 +264,7 @@ Deno.test("coach: declines outside topics, keeps inside ones", () => {
   }
 });
 
-Deno.test("classifier: out-of-scope phrases match whole words, not parts of words", () => {
+test("classifier: out-of-scope phrases match whole words, not parts of words", () => {
   for (
     const text of [
       "Give me an example of a deload week",
@@ -287,7 +289,7 @@ Deno.test("classifier: out-of-scope phrases match whole words, not parts of word
 
 // Memory round-trip.
 
-Deno.test("memory: propose, accept/reject, serialize round-trip", () => {
+test("memory: propose, accept/reject, serialize round-trip", () => {
   const proposals = proposeMemories([
     { text: "Trains best in the morning.", source: "user" },
     { text: "Quads recover slowly after tempo runs.", source: "gemma" },
@@ -313,7 +315,7 @@ Deno.test("memory: propose, accept/reject, serialize round-trip", () => {
 
 // Every builder injects all five context pieces.
 
-Deno.test("prompts: all 7 builders inject full context", () => {
+test("prompts: all 7 builders inject full context", () => {
   const ctx = testContext();
   const builders = [
     buildCheckinPrompt(ctx, "tired"),

@@ -140,7 +140,6 @@ export function cleanPdftotext(raw: string): string {
   const lines = raw
     .replace(/\r\n?/g, "\n")
     .replace(/\f/g, "\n\n")
-    // deno-lint-ignore no-control-regex
     .replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, "")
     .split("\n")
     .map((l) => l.replace(/\t/g, "  ").replace(/ {3,}/g, "  ").trim());

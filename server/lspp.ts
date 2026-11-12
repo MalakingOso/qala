@@ -1,5 +1,5 @@
 // The LS++ wasm build (crates/qala-lspp-wasm) loaded once for the server.
-// `deno task build:wasm` writes target/wasm-out/web/; this module reads the same
+// `bun run build:wasm` writes target/wasm-out/web/; this module reads the same
 // files the desktop editor ships. Nothing here runs until a caller asks, so a
 // server started before the build still serves every other route.
 
@@ -23,7 +23,7 @@ type Glue = LsppWasm & {
 /** Thrown when the wasm is missing or fails to instantiate. */
 export class LsppUnavailableError extends Error {
   constructor(detail: string) {
-    super(`LS++ wasm unavailable: ${detail}. Run \`deno task build:wasm\`.`);
+    super(`LS++ wasm unavailable: ${detail}. Run \`bun run build:wasm\`.`);
     this.name = "LsppUnavailableError";
   }
 }
@@ -33,7 +33,7 @@ export async function loadLsppFrom(dir: URL): Promise<Lspp> {
   let glue: Glue;
   let bytes: Uint8Array;
   try {
-    bytes = await Deno.readFile(new URL("qala_lspp_wasm_bg.wasm", dir));
+    bytes = await Bun.file(new URL("qala_lspp_wasm_bg.wasm", dir)).bytes();
     glue = await import(new URL("qala_lspp_wasm.js", dir).href);
     await glue.default({ module_or_path: bytes });
   } catch (e) {

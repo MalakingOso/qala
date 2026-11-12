@@ -1,4 +1,4 @@
-// Qala server (docs/PLAN.md section 7): one Deno 2 process on 127.0.0.1:8500.
+// Qala server (docs/PLAN.md section 7): one Bun process on 127.0.0.1:8500.
 // /api/llm proxy to llama-server, the import and coach routes,
 // self-hosted map tiles, DEM elevation, and the built PWA.
 
@@ -24,7 +24,7 @@ export interface ServerOptions {
 }
 
 export function defaultOptions(): ServerOptions {
-  const here = new URL(".", import.meta.url).pathname.replace(/\/+$/, "");
+  const here = import.meta.dir;
   return {
     dataRoot: `${here}/data`,
     distDir: `${here}/../apps/web/dist`,
@@ -108,12 +108,20 @@ export function createHandler(
 export function startServer(
   options: ServerOptions = defaultOptions(),
   bind: { hostname?: string; port?: number } = {},
-): Deno.HttpServer {
+): Bun.Server<undefined> {
   const hostname = bind.hostname ?? BIND_HOSTNAME;
   const port = bind.port ?? BIND_PORT;
   assertLoopbackBind(hostname);
   const state = createState(options);
-  return Deno.serve({ hostname, port }, createHandler(state));
+  return Bun.serve({
+    hostname,
+    port,
+    fetch: createHandler(state),
+    // MinerU waits up to 240 s on a PDF import; Bun's default idle timeout is 10 s.
+    idleTimeout: 255,
+    development: false,
+    error: () => Response.json({ error: "internal server error" }, { status: 500 }),
+  });
 }
 
 if (import.meta.main) {

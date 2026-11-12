@@ -2,6 +2,8 @@
 // the filtered run track (GPS altitude is never used), with a 3 m hysteresis
 // band for gain so barometer-style noise does not inflate climbing.
 
+import { stat } from "node:fs/promises";
+
 /** Hysteresis band in metres: smaller swings are treated as noise. */
 export const ELEVATION_HYSTERESIS_M = 3;
 
@@ -43,9 +45,9 @@ export async function lookupElevation(
   if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
   if (lat < -90 || lat > 90 || lon < -180 || lon > 180) return null;
   try {
-    await Deno.stat(tileFileFor(demDir, lat, lon));
+    await stat(tileFileFor(demDir, lat, lon));
   } catch (err) {
-    if (err instanceof Deno.errors.NotFound) return null;
+    if ((err as { code?: string }).code === "ENOENT") return null;
     throw err;
   }
   // Tile present but no decoder yet; see TODO above.

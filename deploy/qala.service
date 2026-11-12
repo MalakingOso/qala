@@ -4,7 +4,7 @@ After=network.target
 
 [Service]
 # server/mod.ts starts itself under import.meta.main and binds 127.0.0.1:8500 (BIND_HOSTNAME, BIND_PORT).
-ExecStart=/home/berkley/.deno/bin/deno run --allow-all /home/berkley/Programming/qala/server/mod.ts
+ExecStart=/home/berkley/.bun/bin/bun /home/berkley/Programming/qala/server/mod.ts
 Restart=on-failure
 
 [Install]

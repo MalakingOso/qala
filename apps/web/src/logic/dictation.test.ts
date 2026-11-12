@@ -1,4 +1,5 @@
-import { assert, assertEquals } from "@std/assert";
+import { test } from "bun:test";
+import assert from "node:assert/strict";
 import {
   formatClock,
   MAX_DICTATION_MS,
@@ -6,25 +7,25 @@ import {
   sendClip,
 } from "./dictation.ts";
 
-Deno.test("the cap matches what E4B takes", () => {
-  assertEquals(MAX_DICTATION_MS, 30_000);
+test("the cap matches what E4B takes", () => {
+  assert.deepStrictEqual(MAX_DICTATION_MS, 30_000);
 });
 
-Deno.test("recorder format: first supported candidate, undefined when none", () => {
-  assertEquals(
+test("recorder format: first supported candidate, undefined when none", () => {
+  assert.deepStrictEqual(
     pickRecorderMime((t) => t === "audio/webm"),
     "audio/webm",
   );
-  assertEquals(
+  assert.deepStrictEqual(
     pickRecorderMime(() => true),
     "audio/webm;codecs=opus",
   );
-  assertEquals(
+  assert.deepStrictEqual(
     pickRecorderMime((t) => t === "audio/mp4"),
     "audio/mp4",
   );
-  assertEquals(pickRecorderMime(() => false), undefined);
-  assertEquals(
+  assert.deepStrictEqual(pickRecorderMime(() => false), undefined);
+  assert.deepStrictEqual(
     pickRecorderMime(() => {
       throw new Error("no MediaRecorder");
     }),
@@ -32,12 +33,12 @@ Deno.test("recorder format: first supported candidate, undefined when none", () 
   );
 });
 
-Deno.test("clock reads m:ss", () => {
-  assertEquals(formatClock(0), "0:00");
-  assertEquals(formatClock(7400), "0:07");
-  assertEquals(formatClock(30_000), "0:30");
-  assertEquals(formatClock(75_000), "1:15");
-  assertEquals(formatClock(-5), "0:00");
+test("clock reads m:ss", () => {
+  assert.deepStrictEqual(formatClock(0), "0:00");
+  assert.deepStrictEqual(formatClock(7400), "0:07");
+  assert.deepStrictEqual(formatClock(30_000), "0:30");
+  assert.deepStrictEqual(formatClock(75_000), "1:15");
+  assert.deepStrictEqual(formatClock(-5), "0:00");
 });
 
 function fakeFetch(status: number, body: unknown, seen?: {
@@ -54,10 +55,10 @@ function fakeFetch(status: number, body: unknown, seen?: {
         ? new Response(body, { status })
         : Response.json(body, { status }),
     );
-  }) as typeof fetch;
+  }) as unknown as typeof fetch;
 }
 
-Deno.test("a clip is posted raw with its own type, and the transcript comes back", async () => {
+test("a clip is posted raw with its own type, and the transcript comes back", async () => {
   const seen: { url?: string; init?: RequestInit } = {};
   const clip = new Blob([new Uint8Array([1, 2, 3])], { type: "audio/webm" });
   const out = await sendClip(
@@ -73,19 +74,19 @@ Deno.test("a clip is posted raw with its own type, and the transcript comes back
       seen,
     ),
   );
-  assertEquals(seen.url, "/api/transcribe");
-  assertEquals(seen.init?.method, "POST");
-  assertEquals(
+  assert.deepStrictEqual(seen.url, "/api/transcribe");
+  assert.deepStrictEqual(seen.init?.method, "POST");
+  assert.deepStrictEqual(
     (seen.init?.headers as Record<string, string>)["content-type"],
     "audio/webm",
   );
   assert(seen.init?.body === clip);
   assert(out.ok);
-  assertEquals(out.result.text, "squat 5 by 5 at 225");
-  assertEquals(out.result.engine, "e4b");
+  assert.deepStrictEqual(out.result.text, "squat 5 by 5 at 225");
+  assert.deepStrictEqual(out.result.engine, "e4b");
 });
 
-Deno.test("whisper's fallback answer is passed through", async () => {
+test("whisper's fallback answer is passed through", async () => {
   const out = await sendClip(
     new Blob(["x"], { type: "audio/webm" }),
     fakeFetch(200, {
@@ -96,10 +97,10 @@ Deno.test("whisper's fallback answer is passed through", async () => {
     }),
   );
   assert(out.ok);
-  assertEquals([out.result.engine, out.result.fallback], ["whisper", true]);
+  assert.deepStrictEqual([out.result.engine, out.result.fallback], ["whisper", true]);
 });
 
-Deno.test("every failure becomes a sentence the owner can act on", async () => {
+test("every failure becomes a sentence the owner can act on", async () => {
   const clip = new Blob(["x"], { type: "audio/webm" });
   const degraded = await sendClip(
     clip,
@@ -116,7 +117,7 @@ Deno.test("every failure becomes a sentence the owner can act on", async () => {
     fakeFetch(422, { error: "the clip is longer than 30 seconds" }),
   );
   assert(!tooLong.ok);
-  assertEquals(tooLong.message, "the clip is longer than 30 seconds");
+  assert.deepStrictEqual(tooLong.message, "the clip is longer than 30 seconds");
 
   const saturated = await sendClip(
     clip,
@@ -126,7 +127,7 @@ Deno.test("every failure becomes a sentence the owner can act on", async () => {
     }),
   );
   assert(!saturated.ok);
-  assertEquals(
+  assert.deepStrictEqual(
     saturated.message,
     "too many uploads are in progress, try again shortly",
   );
@@ -137,12 +138,12 @@ Deno.test("every failure becomes a sentence the owner can act on", async () => {
 
   const html = await sendClip(clip, fakeFetch(500, "<html>oops</html>"));
   assert(!html.ok);
-  assertEquals(html.message, "The server answered 500.");
+  assert.deepStrictEqual(html.message, "The server answered 500.");
 
   const offline = await sendClip(
     clip,
-    (() => Promise.reject(new TypeError("offline"))) as typeof fetch,
+    (() => Promise.reject(new TypeError("offline"))) as unknown as typeof fetch,
   );
   assert(!offline.ok);
-  assertEquals(offline.message, "Could not reach the server.");
+  assert.deepStrictEqual(offline.message, "Could not reach the server.");
 });

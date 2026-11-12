@@ -2,6 +2,8 @@
 // on compatible days, and whatever cannot fit is reported as a traded rule
 // with the priority that won.
 
+import { test } from "bun:test";
+
 import { generateBlock, generateRunPlan, scheduleHybrid } from "./mod.ts";
 import type {
   DayPlan,
@@ -66,7 +68,7 @@ function mkWorkout(type: "easy" | "tempo" | "long", hard: boolean): RunWorkout {
   };
 }
 
-Deno.test("every run is placed with a note, trades carry rule and winner", () => {
+test("every run is placed with a note, trades carry rule and winner", () => {
   const hybrid = scheduleHybrid({
     liftDays: liftDays(),
     runWeek: runWeek(),
@@ -89,7 +91,7 @@ Deno.test("every run is placed with a note, trades carry rule and winner", () =>
   }
 });
 
-Deno.test("quality work prefers lower-body days with a 6 h gap", () => {
+test("quality work prefers lower-body days with a 6 h gap", () => {
   const week: RunPlanWeek = {
     week: 1,
     downWeek: false,
@@ -107,7 +109,7 @@ Deno.test("quality work prefers lower-body days with a 6 h gap", () => {
   assert(placed.gapHours === 6, "run at least 6 h after lifting");
 });
 
-Deno.test("strength priority reports the 24 h separation trade", () => {
+test("strength priority reports the 24 h separation trade", () => {
   const week: RunPlanWeek = {
     week: 1,
     downWeek: false,
@@ -128,7 +130,7 @@ Deno.test("strength priority reports the 24 h separation trade", () => {
   );
 });
 
-Deno.test("hard run after heavy lower body softens when lifting wins", () => {
+test("hard run after heavy lower body softens when lifting wins", () => {
   const week: RunPlanWeek = {
     week: 1,
     downWeek: false,
@@ -151,7 +153,7 @@ Deno.test("hard run after heavy lower body softens when lifting wins", () => {
   assert(placed.workout.type === "easy", "softened run is typed easy");
 });
 
-Deno.test("hard run after heavy lower body stands when running wins", () => {
+test("hard run after heavy lower body stands when running wins", () => {
   const week: RunPlanWeek = {
     week: 1,
     downWeek: false,
@@ -174,7 +176,7 @@ Deno.test("hard run after heavy lower body stands when running wins", () => {
   );
 });
 
-Deno.test("heavy lower body in marathon week is reported", () => {
+test("heavy lower body in marathon week is reported", () => {
   const hybrid = scheduleHybrid({
     liftDays: liftDays(),
     runWeek: runWeek(),

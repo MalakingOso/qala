@@ -10,7 +10,7 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
-    "test": "deno test src/logic/"
+    "test": "bun test src/logic"
   },
   "dependencies": {
     "@codemirror/lint": "^6.9.7",

@@ -1,7 +1,8 @@
 // POST /api/import/text: fake transport (no network, no model) and the real
 // LS++ evaluator as the program check.
 
-import { assert, assertEquals, assertRejects } from "@std/assert";
+import { test } from "bun:test";
+import assert from "node:assert/strict";
 import type { ChatMessage, ChatTransport } from "../packages/llm/mod.ts";
 import {
   describeSyntaxErrors,
@@ -53,41 +54,41 @@ const PROGRAM = {
   ],
 };
 
-Deno.test("clean import validates with the real evaluator", async () => {
+test("clean import validates with the real evaluator", async () => {
   const { deps } = depsWith(PROGRAM);
   const res = await serveImportText(post({ text: "my program" }), deps);
-  assertEquals(res.status, 200);
+  assert.deepStrictEqual(res.status, 200);
   const body = await res.json();
-  assertEquals(body.status, "ready");
+  assert.deepStrictEqual(body.status, "ready");
   assert(body.programText.includes("Bench Press / 3x5 ?+"), body.programText);
   assert(body.programText.includes("## Day 1: Push"), body.programText);
   assert(body.programText.includes("Pull Up / 3x8+ ?+"), body.programText);
   assert(body.programText.includes("Squat / 5x5 100kg"), body.programText);
-  assertEquals(body.errors, []);
+  assert.deepStrictEqual(body.errors, []);
 });
 
-Deno.test("evaluator really flags a broken program (check is not vacuous)", () => {
+test("evaluator really flags a broken program (check is not vacuous)", () => {
   const errors = live.validatorFor("lb")(
     "# Week 1\n## Day 1\nFoo Bar Baz / 3x8 ?+\n",
   );
   assert(errors.length > 0);
   assert(errors[0].includes("unknownExercise"), errors[0]);
-  assertEquals(
+  assert.deepStrictEqual(
     live.validatorFor("lb")("# Week 1\n## Day 1\nBench Press / 3x8 ?+\n"),
     [],
   );
 });
 
-Deno.test("a syntax error is reported with its line, column and fix idea", () => {
+test("a syntax error is reported with its line, column and fix idea", () => {
   const errors = live.validatorFor("lb")(
     "# Week 1\n## Day 1\nBench Press / 3x\n",
   );
-  assertEquals(errors.length, 1);
+  assert.deepStrictEqual(errors.length, 1);
   assert(errors[0].startsWith("syntax error at line 3, column "), errors[0]);
   assert(errors[0].includes("rep count"), errors[0]);
 });
 
-Deno.test("describeSyntaxErrors keeps one error per line and caps the list", () => {
+test("describeSyntaxErrors keeps one error per line and caps the list", () => {
   const at = (line: number, col: number, suggestion?: string) => ({
     from: 0,
     to: 1,
@@ -98,7 +99,7 @@ Deno.test("describeSyntaxErrors keeps one error per line and caps the list", () 
     endCol: col + 1,
     suggestion,
   });
-  assertEquals(
+  assert.deepStrictEqual(
     describeSyntaxErrors([at(4, 26, "add the missing }"), at(4, 27), at(5, 1)]),
     [
       "syntax error at line 4, column 26: Syntax error (add the missing })",
@@ -107,11 +108,11 @@ Deno.test("describeSyntaxErrors keeps one error per line and caps the list", () 
   );
   const many = Array.from({ length: 8 }, (_, i) => at(i + 1, 1));
   const out = describeSyntaxErrors(many, 3);
-  assertEquals(out.length, 4);
-  assertEquals(out[3], "and 5 more lines with errors");
+  assert.deepStrictEqual(out.length, 4);
+  assert.deepStrictEqual(out[3], "and 5 more lines with errors");
 });
 
-Deno.test("split squat comes back as a confirm item, then the owner resolves it", async () => {
+test("split squat comes back as a confirm item, then the owner resolves it", async () => {
   const { deps, calls } = depsWith({
     items: [
       { day: 1, exercise: "Squat", sets: 3, reps: 5 },
@@ -119,13 +120,13 @@ Deno.test("split squat comes back as a confirm item, then the owner resolves it"
     ],
   });
   const first = await serveImportText(post({ text: "x" }), deps);
-  assertEquals(first.status, 200);
+  assert.deepStrictEqual(first.status, 200);
   const proposal = await first.json();
-  assertEquals(proposal.status, "needs_confirm");
-  assertEquals(proposal.programText, undefined);
-  assertEquals(proposal.confirms.length, 1);
-  assertEquals(proposal.confirms[0].reason, "ambiguous");
-  assertEquals(
+  assert.deepStrictEqual(proposal.status, "needs_confirm");
+  assert.deepStrictEqual(proposal.programText, undefined);
+  assert.deepStrictEqual(proposal.confirms.length, 1);
+  assert.deepStrictEqual(proposal.confirms[0].reason, "ambiguous");
+  assert.deepStrictEqual(
     proposal.confirms[0].candidates.map((c: { name: string }) => c.name),
     ["Split Squat", "Bulgarian Split Squat"],
   );
@@ -140,12 +141,12 @@ Deno.test("split squat comes back as a confirm item, then the owner resolves it"
     deps,
   );
   const done = await second.json();
-  assertEquals(done.status, "ready");
+  assert.deepStrictEqual(done.status, "ready");
   assert(done.programText.includes("Bulgarian Split Squat / 3x8 ?+"));
-  assertEquals(calls.length, 1, "confirm step does not call the model");
+  assert.deepStrictEqual(calls.length, 1, "confirm step does not call the model");
 });
 
-Deno.test("diff is against currentProgram", async () => {
+test("diff is against currentProgram", async () => {
   const { deps } = depsWith({
     items: [{ day: 1, exercise: "Squat", sets: 3, reps: 5 }],
   });
@@ -157,12 +158,12 @@ Deno.test("diff is against currentProgram", async () => {
     deps,
   );
   const body = await res.json();
-  assertEquals(body.status, "ready");
+  assert.deepStrictEqual(body.status, "ready");
   const ops = body.diff.map((l: { op: string }) => l.op);
   assert(ops.includes("remove") && ops.includes("add"));
 });
 
-Deno.test("injected names and day labels never reach the evaluator input", async () => {
+test("injected names and day labels never reach the evaluator input", async () => {
   const { deps } = depsWith({
     items: [
       {
@@ -176,7 +177,7 @@ Deno.test("injected names and day labels never reach the evaluator input", async
     ],
   });
   const first = await (await serveImportText(post({ text: "x" }), deps)).json();
-  assertEquals(first.status, "needs_confirm");
+  assert.deepStrictEqual(first.status, "needs_confirm");
   const key = first.confirms[0].key;
   const done = await (await serveImportText(
     post({
@@ -185,28 +186,28 @@ Deno.test("injected names and day labels never reach the evaluator input", async
     }),
     deps,
   )).json();
-  assertEquals(done.status, "ready");
+  assert.deepStrictEqual(done.status, "ready");
   assert(!done.programText.includes("Evil"));
   assert(!done.programText.includes("progress"));
-  assertEquals(
+  assert.deepStrictEqual(
     done.programText.split("\n").filter((l: string) => l.startsWith("#"))
       .length,
     1 + 1,
   );
 });
 
-Deno.test("degraded backend is 502 with degraded true", async () => {
+test("degraded backend is 502 with degraded true", async () => {
   const deps: ImportRouteDeps = {
     ...live,
     transport: () => Promise.reject(new Error("connection refused")),
   };
   const res = await serveImportText(post({ text: "x" }), deps);
-  assertEquals(res.status, 502);
+  assert.deepStrictEqual(res.status, 502);
   const body = await res.json();
-  assertEquals(body.degraded, true);
+  assert.deepStrictEqual(body.degraded, true);
 });
 
-Deno.test("llamaTransport: real adapter degrades on a dead backend and bad JSON", async () => {
+test("llamaTransport: real adapter degrades on a dead backend and bad JSON", async () => {
   const refused =
     (() => Promise.reject(new TypeError("refused"))) as unknown as typeof fetch;
   let threw = false;
@@ -221,7 +222,7 @@ Deno.test("llamaTransport: real adapter degrades on a dead backend and bad JSON"
     Promise.resolve(Response.json({
       choices: [{ message: { content: '{"items":[]}' } }],
     }))) as unknown as typeof fetch;
-  assertEquals(await llamaTransport("http://x", good)([], {}), { items: [] });
+  assert.deepStrictEqual(await llamaTransport("http://x", good)([], {}), { items: [] });
 
   const bad = (() =>
     Promise.resolve(Response.json({
@@ -236,31 +237,31 @@ Deno.test("llamaTransport: real adapter degrades on a dead backend and bad JSON"
   assert(threw);
 });
 
-Deno.test("request validation: method, size, shape", async () => {
+test("request validation: method, size, shape", async () => {
   const { deps, calls } = depsWith(PROGRAM);
-  assertEquals(
+  assert.deepStrictEqual(
     (await serveImportText(new Request("http://x/", { method: "GET" }), deps))
       .status,
     405,
   );
-  assertEquals((await serveImportText(post("not json"), deps)).status, 400);
-  assertEquals((await serveImportText(post([1]), deps)).status, 400);
-  assertEquals((await serveImportText(post({}), deps)).status, 400);
-  assertEquals(
+  assert.deepStrictEqual((await serveImportText(post("not json"), deps)).status, 400);
+  assert.deepStrictEqual((await serveImportText(post([1]), deps)).status, 400);
+  assert.deepStrictEqual((await serveImportText(post({}), deps)).status, 400);
+  assert.deepStrictEqual(
     (await serveImportText(post({ text: "x".repeat(13_000) }), deps)).status,
     413,
   );
-  assertEquals(
+  assert.deepStrictEqual(
     (await serveImportText(
       post({ text: "x".repeat(MAX_IMPORT_BODY_BYTES + 1) }),
       deps,
     )).status,
     413,
   );
-  assertEquals(calls.length, 0, "model never called for rejected requests");
+  assert.deepStrictEqual(calls.length, 0, "model never called for rejected requests");
 });
 
-Deno.test("a chunked body with no Content-Length is capped while it is read", async () => {
+test("a chunked body with no Content-Length is capped while it is read", async () => {
   const { deps, calls } = depsWith(PROGRAM);
   let sent = 0;
   const stream = new ReadableStream<Uint8Array>({
@@ -273,17 +274,17 @@ Deno.test("a chunked body with no Content-Length is capped while it is read", as
     new Request("http://localhost/api/import/text", {
       method: "POST",
       body: stream,
-      // @ts-ignore Deno needs `duplex` for a stream body; the DOM types lack it.
+      // @ts-ignore fetch needs `duplex` for a stream body; the DOM types lack it.
       duplex: "half",
     }),
     deps,
   );
-  assertEquals(res.status, 413);
+  assert.deepStrictEqual(res.status, 413);
   assert(sent < MAX_IMPORT_BODY_BYTES + 16 * 1024, `read ${sent} bytes`);
-  assertEquals(calls.length, 0);
+  assert.deepStrictEqual(calls.length, 0);
 });
 
-Deno.test("a client-supplied edit list is validated like model output", async () => {
+test("a client-supplied edit list is validated like model output", async () => {
   const { deps } = depsWith(PROGRAM);
   const res = await serveImportText(
     post({
@@ -293,13 +294,13 @@ Deno.test("a client-supplied edit list is validated like model output", async ()
     }),
     deps,
   );
-  assertEquals(res.status, 422);
+  assert.deepStrictEqual(res.status, 422);
   const body = await res.json();
-  assertEquals(body.status, "invalid");
-  assertEquals(body.rejected.length, 1);
+  assert.deepStrictEqual(body.status, "invalid");
+  assert.deepStrictEqual(body.rejected.length, 1);
 });
 
-Deno.test("the confirm step takes a whole PDF edit list, past one reply's 200 items", async () => {
+test("the confirm step takes a whole PDF edit list, past one reply's 200 items", async () => {
   const { deps, calls } = depsWith(PROGRAM);
   const names = [
     "Squat",
@@ -316,15 +317,15 @@ Deno.test("the confirm step takes a whole PDF edit list, past one reply's 200 it
     reps: 5,
   }));
   const res = await serveImportText(post({ editList: { items } }), deps);
-  assertEquals(res.status, 200);
+  assert.deepStrictEqual(res.status, 200);
   const body = await res.json();
-  assertEquals(body.status, "ready");
-  assertEquals(body.items.length, 250);
-  assertEquals(body.rejected.length, 0);
-  assertEquals(calls.length, 0, "the confirm step never calls the model");
+  assert.deepStrictEqual(body.status, "ready");
+  assert.deepStrictEqual(body.items.length, 250);
+  assert.deepStrictEqual(body.rejected.length, 0);
+  assert.deepStrictEqual(calls.length, 0, "the confirm step never calls the model");
 });
 
-Deno.test("importDepsOnce shares one build and retries after a failed one", async () => {
+test("importDepsOnce shares one build and retries after a failed one", async () => {
   let builds = 0;
   const url = "http://127.0.0.1:1/importDepsOnce-test";
   const build = (): Promise<ImportRouteDeps> => {
@@ -336,10 +337,9 @@ Deno.test("importDepsOnce shares one build and retries after a failed one", asyn
   const quiet = console.error;
   console.error = () => {};
   try {
-    await assertRejects(
+    await assert.rejects(
       () => importDepsOnce(url, build),
-      Error,
-      "wasm not built",
+      /wasm not built/,
     );
   } finally {
     console.error = quiet;
@@ -350,5 +350,5 @@ Deno.test("importDepsOnce shares one build and retries after a failed one", asyn
   ]);
   assert(a === live && b === live);
   await importDepsOnce(url, build);
-  assertEquals(builds, 2);
+  assert.deepStrictEqual(builds, 2);
 });
