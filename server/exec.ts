@@ -160,7 +160,7 @@ export const runCommand: CommandRunner = async (spec) => {
 
   if (spec.stdin) {
     try {
-      child.stdin!.write(spec.stdin);
+      await child.stdin!.write(spec.stdin);
       await child.stdin!.end();
     } catch {
       // The program exited before reading everything. Its exit code says why.
