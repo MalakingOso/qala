@@ -80,13 +80,13 @@ class FieldCodecsTest {
                 "squat",
                 listOf(
                     LiftSetRecord(135.0, WeightUnit.Lb, 5.0, completed = true, warmup = true),
-                    LiftSetRecord(225.5, WeightUnit.Lb, 4.5, rpe = 8.5, targetRpe = 8.0, completed = true),
+                    LiftSetRecord(225.5, WeightUnit.Lb, 4.5, rpe = 8.5, targetRpe = 8.0, completed = true, restTakenSec = 95, restBaseSec = 120, restAdjustSec = 30),
                 ),
             ),
             LiftEntryRecord("benchPress"),
         )
         val bundle = LiftSessionBundle(
-            LiftSessionEntity("s1", 1_790_000_000_000, -240, 2, false, null, 74.5, 7.5, "heavy", false),
+            LiftSessionEntity("s1", 1_790_000_000_000, -240, 2, false, null, 74.5, 7.5, "heavy", false, warmupSec = 300, liftSec = 2400, restSec = 900),
             entries,
         )
         roundTrips(LiftSessionCodec, "s1", bundle)

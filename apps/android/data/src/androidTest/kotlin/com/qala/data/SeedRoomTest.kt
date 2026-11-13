@@ -138,7 +138,7 @@ class SeedRoomTest {
         val first = outbox.first { it.recordType == "lift_session" && it.field == "entries" }
         assertTrue(first.valueJson.startsWith("[{\"exerciseId\":\"squat\""))
         val clocked = db.fieldClockDao().forRecord(first.recordId)
-        assertEquals(setOf("startedAtMs", "offsetMin", "programDayIndex", "stub", "stage", "minutes", "srpe", "notes", "entries", "deleted"), clocked.map { it.field }.toSet())
+        assertEquals(setOf("startedAtMs", "offsetMin", "programDayIndex", "stub", "stage", "minutes", "srpe", "notes", "entries", "warmupSec", "liftSec", "restSec", "deleted"), clocked.map { it.field }.toSet())
     }
 
     @Test

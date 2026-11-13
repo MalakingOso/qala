@@ -1,17 +1,19 @@
 package com.qala.data.db
 
 import android.content.Context
+import androidx.room.AutoMigration
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 
-/** The phone's local store. Version 1; the schema is exported to data/schemas so migrations can be tested later. */
+/** The phone's local store. Version 2; the schema is exported to data/schemas so migrations can be tested later. */
 @Database(
     entities = [
         LiftSessionEntity::class,
         LiftEntryEntity::class,
         LiftSetEntity::class,
         RunSessionEntity::class,
+        RunFixEntity::class,
         CheckInEntity::class,
         BodyWeightEntity::class,
         DaySkipEntity::class,
@@ -22,12 +24,15 @@ import androidx.room.RoomDatabase
         OutboxEntity::class,
         MetaEntity::class,
     ],
-    version = 1,
+    version = 2,
     exportSchema = true,
+    // v2: the run_fix table, the time split on lift_session and the rest columns on lift_set (nothing else moved).
+    autoMigrations = [AutoMigration(from = 1, to = 2)],
 )
 abstract class QalaDatabase : RoomDatabase() {
     abstract fun liftSessionDao(): LiftSessionDao
     abstract fun runSessionDao(): RunSessionDao
+    abstract fun runFixDao(): RunFixDao
     abstract fun checkInDao(): CheckInDao
     abstract fun bodyWeightDao(): BodyWeightDao
     abstract fun daySkipDao(): DaySkipDao

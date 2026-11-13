@@ -57,6 +57,23 @@ interface RunSessionDao {
 }
 
 @Dao
+interface RunFixDao {
+    /** A fix delivered twice stays one row. */
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insert(fix: RunFixEntity)
+
+    @Query("SELECT * FROM run_fix WHERE runId = :runId ORDER BY tMs")
+    suspend fun fixes(runId: String): List<RunFixEntity>
+
+    /** A manual advance followed the newest fix of the run. */
+    @Query("UPDATE run_fix SET advances = advances + 1 WHERE runId = :runId AND tMs = (SELECT MAX(tMs) FROM run_fix WHERE runId = :runId)")
+    suspend fun advanceLast(runId: String)
+
+    @Query("DELETE FROM run_fix WHERE runId = :runId")
+    suspend fun deleteRun(runId: String)
+}
+
+@Dao
 interface CheckInDao {
     @Query("SELECT * FROM check_in WHERE deleted = 0 ORDER BY atMs, id")
     fun observeAll(): Flow<List<CheckInEntity>>

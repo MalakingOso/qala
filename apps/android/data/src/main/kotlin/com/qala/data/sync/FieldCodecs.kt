@@ -58,7 +58,8 @@ data class LiftSessionBundle(val session: LiftSessionEntity, val entries: List<L
 
 internal object LiftSessionCodec : FieldCodec<LiftSessionBundle> {
     override val fields = listOf(
-        "startedAtMs", "offsetMin", "programDayIndex", "stub", "stage", "minutes", "srpe", "notes", "entries", DELETED,
+        "startedAtMs", "offsetMin", "programDayIndex", "stub", "stage", "minutes", "srpe", "notes", "entries",
+        "warmupSec", "liftSec", "restSec", DELETED,
     )
 
     override fun blank(id: String) =
@@ -76,6 +77,9 @@ internal object LiftSessionCodec : FieldCodec<LiftSessionBundle> {
             "srpe" to s.srpe.toJson(),
             "notes" to s.notes.toJson(),
             "entries" to QalaJson.encodeToJsonElement(entity.entries),
+            "warmupSec" to s.warmupSec.toJson(),
+            "liftSec" to s.liftSec.toJson(),
+            "restSec" to s.restSec.toJson(),
             DELETED to s.deleted.toJson(),
         )
     }
@@ -94,6 +98,9 @@ internal object LiftSessionCodec : FieldCodec<LiftSessionBundle> {
             "entries" -> entity.copy(
                 entries = if (value is JsonNull) emptyList() else QalaJson.decodeFromJsonElement<List<LiftEntryRecord>>(value),
             )
+            "warmupSec" -> entity.copy(session = s.copy(warmupSec = value.intOrNull()))
+            "liftSec" -> entity.copy(session = s.copy(liftSec = value.intOrNull()))
+            "restSec" -> entity.copy(session = s.copy(restSec = value.intOrNull()))
             DELETED -> entity.copy(session = s.copy(deleted = value.bool()))
             else -> entity
         }

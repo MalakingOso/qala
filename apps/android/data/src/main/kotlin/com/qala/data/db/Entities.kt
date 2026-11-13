@@ -37,6 +37,10 @@ data class LiftSessionEntity(
     val srpe: Double?,
     val notes: String?,
     val deleted: Boolean,
+    /** The time split of the workout, in seconds: the warm-up, the lifting, the resting. Null when it was not measured. */
+    val warmupSec: Int? = null,
+    val liftSec: Int? = null,
+    val restSec: Int? = null,
 )
 
 /** Values of [LiftSessionEntity.stage]. */
@@ -94,6 +98,13 @@ data class LiftSetEntity(
     val warmup: Boolean,
     val tested1rm: Boolean,
     val jointPain: Boolean,
+    /**
+     * The rest that followed this set, for the rest planner's learning multiplier (D32): the seconds actually taken, the
+     * plan's base for the exercise, and the sum of the plan's adjustments. Null when no rest ran after the set.
+     */
+    val restTakenSec: Int? = null,
+    val restBaseSec: Int? = null,
+    val restAdjustSec: Int? = null,
 )
 
 /** An entry with its sets, as Room reads it. */
@@ -128,6 +139,26 @@ data class RunSessionEntity(
     val descentM: Double?,
     val notes: String?,
     val deleted: Boolean,
+)
+
+/**
+ * One GPS fix of a run, written before the recorder sees it so a killed service can replay the run (docs/android-native.md
+ * section 5). [tMs] is the fix's own clock (UTC epoch ms) and, with [runId], the key: a fix delivered twice is one row. [gap]
+ * is 1 on the first fix after a pause or a restart, [advances] counts the manual advances that followed this fix. Not synced:
+ * the run's summary is the record, the fixes are this install's.
+ */
+@Entity(tableName = "run_fix", primaryKeys = ["runId", "tMs"])
+data class RunFixEntity(
+    val runId: String,
+    val tMs: Long,
+    val lat: Double,
+    val lon: Double,
+    val acc: Double,
+    val hr: Double?,
+    /** GPS altitude in metres when the fix had one. */
+    val ele: Double?,
+    val gap: Int,
+    val advances: Int,
 )
 
 @Entity(tableName = "check_in", indices = [Index("atMs")])

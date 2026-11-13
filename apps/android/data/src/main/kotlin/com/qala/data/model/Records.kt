@@ -35,6 +35,10 @@ data class LiftSetRecord(
     /** Flagged test or meet attempt. Serialized as `tested1rm`, the Rust spelling. */
     val tested1rm: Boolean = false,
     val jointPain: Boolean = false,
+    /** The rest that followed the set (D32): seconds taken, the plan's base, the sum of its adjustments. The core ignores them. */
+    val restTakenSec: Int? = null,
+    val restBaseSec: Int? = null,
+    val restAdjustSec: Int? = null,
 )
 
 /** One exercise of a lift session; `exerciseId` is a liftosaur library id (`squat`, `benchPress`). */

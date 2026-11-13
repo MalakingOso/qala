@@ -118,25 +118,27 @@ class RoomWriteTest {
                 "squat",
                 listOf(
                     LiftSetRecord(135.0, WeightUnit.Lb, 5.0, completed = true, warmup = true),
-                    LiftSetRecord(225.0, WeightUnit.Lb, 3.0, rpe = 9.0, targetRpe = 8.0, completed = true),
+                    LiftSetRecord(225.0, WeightUnit.Lb, 3.0, rpe = 9.0, targetRpe = 8.0, completed = true, restTakenSec = 95, restBaseSec = 120, restAdjustSec = 30),
                 ),
             ),
             LiftEntryRecord("benchPress", listOf(LiftSetRecord(155.0, WeightUnit.Lb, 10.0, completed = true))),
         )
-        val bundle = LiftSessionBundle(LiftSessionEntity("s1", t0, -240, 1, false, null, 60.0, 7.0, null, false), entries)
+        val bundle = LiftSessionBundle(LiftSessionEntity("s1", t0, -240, 1, false, null, 60.0, 7.0, null, false, warmupSec = 300, liftSec = 2400, restSec = 900), entries)
         writer.put(RecordType.LIFT_SESSION, "s1", LiftSessionCodec.toFields(bundle))
 
         val stored = db.liftSessionDao().withEntries("s1")!!
         assertEquals(2, stored.entries.size)
         assertEquals(listOf(2, 1), stored.entries.sortedBy { it.entry.position }.map { it.sets.size })
         val record = stored.toRecord()
-        assertEquals(entries, record.entries)
+        assertEquals("the rest numbers on a set survive the typed rows", entries, record.entries)
+        assertEquals(listOf(300, 2400, 900), stored.session.let { listOf(it.warmupSec, it.liftSec, it.restSec) })
         assertEquals("2026-09-21T10:13:20-04:00", record.startedAt)
         assertEquals(1, db.outboxDao().pending(100).count { it.field == "entries" })
 
         // A notes write leaves the children alone; an entries write replaces them as a unit.
         writer.update(RecordType.LIFT_SESSION, "s1", mapOf("notes" to JsonPrimitive("good day")))
         assertEquals(2, db.liftSessionDao().withEntries("s1")!!.entries.size)
+        assertEquals(900, db.liftSessionDao().withEntries("s1")!!.session.restSec)
         val trimmed = LiftSessionCodec.toFields(bundle.copy(entries = entries.take(1))).getValue("entries")
         writer.update(RecordType.LIFT_SESSION, "s1", mapOf("entries" to trimmed))
         assertEquals(1, db.liftSessionDao().withEntries("s1")!!.entries.size)

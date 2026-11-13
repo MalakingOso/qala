@@ -172,6 +172,13 @@ android {
     }
 }
 
+// The migration test opens the exported schemas as assets.
+androidComponents {
+    onVariants { variant ->
+        variant.androidTest?.sources?.assets?.addStaticSourceDirectory("$projectDir/schemas")
+    }
+}
+
 // Room writes its schema JSON here so migrations can be tested against it later. Checked in.
 ksp {
     arg("room.schemaLocation", "$projectDir/schemas")
@@ -197,6 +204,7 @@ dependencies {
     // The Android SDK stubs org.json in unit tests; the real one keeps the FFI tests readable.
     testImplementation("org.json:json:20250517")
 
+    androidTestImplementation("androidx.room:room-testing:2.8.5")
     androidTestImplementation("androidx.test.ext:junit:1.3.0")
     androidTestImplementation("androidx.test:runner:1.7.0")
     androidTestImplementation("androidx.test:core:1.7.0")

@@ -28,6 +28,9 @@ internal fun LiftSetEntity.toRecord() = LiftSetRecord(
     warmup = warmup,
     tested1rm = tested1rm,
     jointPain = jointPain,
+    restTakenSec = restTakenSec,
+    restBaseSec = restBaseSec,
+    restAdjustSec = restAdjustSec,
 )
 
 /** The nested entries of a session, in position order. */
@@ -67,6 +70,9 @@ internal fun childRows(sessionId: String, entries: List<LiftEntryRecord>): Pair<
                 warmup = set.warmup,
                 tested1rm = set.tested1rm,
                 jointPain = set.jointPain,
+                restTakenSec = set.restTakenSec,
+                restBaseSec = set.restBaseSec,
+                restAdjustSec = set.restAdjustSec,
             )
         }
     }
