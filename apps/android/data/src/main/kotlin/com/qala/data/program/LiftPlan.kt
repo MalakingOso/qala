@@ -104,7 +104,8 @@ fun plannedSets(entry: JsonObject, fallbackUnit: WeightUnit = WeightUnit.Lb): Li
         )
     }
 
-private fun number(v: Double): JsonPrimitive = if (v == Math.rint(v) && Math.abs(v) < 1e9) JsonPrimitive(v.toLong()) else JsonPrimitive(v)
+/** A JSON number the way the Rust side writes one: a whole value without its fraction, so entries compare equal after a round trip. */
+fun jsonNumber(v: Double): JsonPrimitive = if (v == Math.rint(v) && Math.abs(v) < 1e9) JsonPrimitive(v.toLong()) else JsonPrimitive(v)
 
 /**
  * The entry with the sets in [logged] marked completed, as the scripts read them: `isCompleted`, `completedReps`,
@@ -119,14 +120,14 @@ fun completeEntry(entry: JsonObject, logged: List<LoggedSet?>, fallbackUnit: Wei
         val unit = weightUnitOf(set["weight"].obj(), fallbackUnit)
         val extra = LinkedHashMap<String, JsonElement>()
         extra["isCompleted"] = JsonPrimitive(true)
-        extra["completedReps"] = number(done.reps)
+        extra["completedReps"] = jsonNumber(done.reps)
         val completedWeight = if (done.weight != null) {
-            JsonObject(mapOf("value" to number(done.weight), "unit" to JsonPrimitive(unit.name.lowercase())))
+            JsonObject(mapOf("value" to jsonNumber(done.weight), "unit" to JsonPrimitive(unit.name.lowercase())))
         } else {
             set["weight"]
         }
         if (completedWeight != null) extra["completedWeight"] = completedWeight
-        if (done.rpe != null) extra["completedRpe"] = number(done.rpe)
+        if (done.rpe != null) extra["completedRpe"] = jsonNumber(done.rpe)
         JsonObject(set + extra)
     }
     return JsonObject(entry + ("sets" to JsonArray(sets)))

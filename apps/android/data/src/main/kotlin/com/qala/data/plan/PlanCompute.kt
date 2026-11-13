@@ -15,6 +15,7 @@ import com.qala.data.program.EvaluatedProgram
 import com.qala.data.program.ExerciseOverview
 import com.qala.data.program.PlannedSet
 import com.qala.data.program.ProgramEngine
+import com.qala.data.program.roundedTo
 import com.qala.data.today.DayKind
 import com.qala.data.today.DayPlan
 import com.qala.data.today.DayStatus
@@ -132,7 +133,7 @@ class PlanCompute(private val programs: ProgramEngine = ProgramEngine()) {
 
         val overviews = HashMap<Int, DayOverview?>()
         fun overview(day: Int, sets: Boolean): DayOverview? =
-            if (evaluated == null) null else overviews.getOrPut(day * 2 + if (sets) 1 else 0) { programs.dayOverview(evaluated, day, input.settings.mainLifts, input.settings.unit, sets) }
+            if (evaluated == null) null else overviews.getOrPut(day * 2 + if (sets) 1 else 0) { programs.dayOverview(evaluated, day, input.settings.mainLifts, input.settings.unit, sets)?.roundedTo(input.gym.plates) }
 
         val days = week.days.map { day ->
             val date = day.date

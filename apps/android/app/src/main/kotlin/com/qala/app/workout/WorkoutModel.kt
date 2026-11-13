@@ -9,12 +9,12 @@ import com.qala.data.program.LoggedSet
 import com.qala.data.program.PlannedDay
 import com.qala.data.program.PlannedSet
 import com.qala.data.program.completeEntry
+import com.qala.data.program.jsonNumber
 import com.qala.data.program.plannedSets
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 
@@ -92,7 +92,7 @@ data class ExerciseState(
             val set = el.jsonObject
             val target = sets.getOrNull(i)?.targetWeight
             val weight = set["weight"] as? JsonObject
-            if (target == null || weight == null) el else JsonObject(set + ("weight" to JsonObject(weight + ("value" to JsonPrimitive(target)))))
+            if (target == null || weight == null) el else JsonObject(set + ("weight" to JsonObject(weight + ("value" to jsonNumber(target)))))
         }
         return JsonObject(entry + ("sets" to JsonArray(planned)))
     }

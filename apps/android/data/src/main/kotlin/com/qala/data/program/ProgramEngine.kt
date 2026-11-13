@@ -7,7 +7,9 @@ import com.qala.data.core.dayName
 import com.qala.data.core.evaluateProgramText
 import com.qala.data.core.liftoscriptSettings
 import com.qala.data.core.nextEntry
+import com.qala.data.core.loadableFor
 import com.qala.data.core.programDay
+import com.qala.data.model.PlateSettings
 import com.qala.data.model.WeightUnit
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonNull
@@ -51,12 +53,28 @@ data class LiftHero(
     val equipment: String? = null,
 )
 
+/** The hero with its top set at what the saved plates can load (D33). Rust: off the main thread. */
+fun LiftHero.roundedTo(setup: PlateSettings): LiftHero {
+    val w = topSet.weight ?: return this
+    return copy(topSet = topSet.copy(weight = QalaCore.loadableFor(w, topSet.unit, equipment, setup)))
+}
+
 /** An exercise of a program day: its name and the sets the program prescribes for it now. */
 data class ExerciseOverview(
     val exerciseId: String,
     val name: String,
     val sets: List<PlannedSet>,
     val warmups: List<PlannedSet>,
+    /** `barbell`, `dumbbell`, `cable`... as the LS++ entry names it; null when it does not say. */
+    val equipment: String? = null,
+)
+
+/** The day with the sets of its barbell lifts at what the saved plates can load (D33). Rust: off the main thread. */
+fun DayOverview.roundedTo(setup: PlateSettings): DayOverview = copy(
+    exercises = exercises.map { ex ->
+        fun round(s: PlannedSet) = s.weight?.let { s.copy(weight = QalaCore.loadableFor(it, s.unit, ex.equipment, setup)) } ?: s
+        ex.copy(sets = ex.sets.map(::round), warmups = ex.warmups.map(::round))
+    },
 )
 
 /**
@@ -154,6 +172,7 @@ class ProgramEngine(private val uidSeed: Long = 0, private val cacheSize: Int = 
                 name = views[i].getValue("exerciseType").jsonObject.getValue("name").jsonPrimitive.content,
                 sets = plannedSets(entry, unit),
                 warmups = plannedSets(JsonObject(mapOf("sets" to (entry["warmupSets"] ?: JsonArray(emptyList())))), unit),
+                equipment = views[i].getValue("exerciseType").jsonObject["equipment"]?.jsonPrimitive?.contentOrNull,
             )
         }
         return DayOverview(

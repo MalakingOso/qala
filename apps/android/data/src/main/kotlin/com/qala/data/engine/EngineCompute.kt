@@ -28,6 +28,7 @@ import com.qala.data.db.LiftSessionWithEntries
 import com.qala.data.db.ProgramEntity
 import com.qala.data.db.RunSessionEntity
 import com.qala.data.model.Availability
+import com.qala.data.model.GymSettings
 import com.qala.data.model.RunPlan
 import com.qala.data.model.SessionRecord
 import com.qala.data.model.SettingsRecord
@@ -37,6 +38,7 @@ import com.qala.data.model.WeightUnit
 import com.qala.data.program.EvaluatedProgram
 import com.qala.data.program.LiftHero
 import com.qala.data.program.ProgramEngine
+import com.qala.data.program.roundedTo
 import com.qala.data.today.DayKind
 import com.qala.data.today.DayRecords
 import com.qala.data.today.DayStatus
@@ -60,6 +62,8 @@ data class EngineInput(
     val skips: List<DaySkipEntity> = emptyList(),
     val availability: Availability = Availability(),
     val settings: SettingsRecord = SettingsRecord(),
+    /** Bars, plates and the other gym settings: what prescriptions are rounded to, and whether the warm-up stage exists. */
+    val gym: GymSettings = GymSettings(),
     val runPlan: RunPlan = RunPlan(),
     /** LS++ `exerciseData`: the 1RMs percentage weights resolve against. */
     val exerciseData: JsonObject = JsonObject(emptyMap()),
@@ -189,7 +193,7 @@ class EngineCompute(private val programs: ProgramEngine = ProgramEngine()) {
             hasRunPlan = input.runPlan.days.isNotEmpty(),
             input = input,
             liftHero = if (evaluated != null && input.program != null && plan.liftDay && plan.programDay != null) {
-                programs.liftHero(evaluated, plan.programDay, input.settings.mainLifts, input.program.name)
+                programs.liftHero(evaluated, plan.programDay, input.settings.mainLifts, input.program.name)?.let { it.roundedTo(input.gym.plates) }
             } else {
                 null
             },

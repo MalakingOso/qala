@@ -1,5 +1,7 @@
 package com.qala.data.core
 
+import com.qala.data.model.PlateSettings
+import com.qala.data.model.WeightUnit
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.nullable
@@ -143,6 +145,13 @@ fun QalaCore.roundWeight(targetWeight: Double, barWeight: Double, plates: List<P
     RoundWeightRequest.serializer(), Double.serializer(),
     RoundWeightRequest(targetWeight, barWeight, collarWeight, plates), ::ffiRoundWeight,
 )
+
+/**
+ * What a program weight is shown and lifted as (D33): on a barbell in pounds, the nearest total the saved plates can load;
+ * any other lift, or a set in kilograms, keeps the program's number. Rust, so call it off the main thread.
+ */
+fun QalaCore.loadableFor(weight: Double, unit: WeightUnit, equipment: String?, setup: PlateSettings): Double =
+    if (unit == WeightUnit.Lb && equipment == "barbell") roundWeight(weight, setup.defaultBar, setup.plates) else weight
 
 fun QalaCore.chooseNextPlates(
     currentPerSide: List<Double>,

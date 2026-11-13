@@ -7,6 +7,7 @@ import com.qala.data.db.LiftSessionWithEntries
 import com.qala.data.db.ProgramEntity
 import com.qala.data.db.RunSessionEntity
 import com.qala.data.model.Availability
+import com.qala.data.model.GymSettings
 import com.qala.data.model.RunPlan
 import com.qala.data.model.SettingsRecord
 import com.qala.data.program.ProgramEngine
@@ -76,6 +77,7 @@ class EngineRepository(
         availability.skips,
         availability.status,
         settings.settings,
+        settings.gym,
         settings.runPlan,
         settings.exerciseData,
         programs.active,
@@ -90,9 +92,10 @@ class EngineRepository(
             skips = v[4] as List<DaySkipEntity>,
             availability = v[5] as Availability,
             settings = v[6] as SettingsRecord,
-            runPlan = v[7] as RunPlan,
-            exerciseData = v[8] as JsonObject,
-            program = v[9] as ProgramEntity?,
+            gym = v[7] as GymSettings,
+            runPlan = v[8] as RunPlan,
+            exerciseData = v[9] as JsonObject,
+            program = v[10] as ProgramEntity?,
         )
     }
 

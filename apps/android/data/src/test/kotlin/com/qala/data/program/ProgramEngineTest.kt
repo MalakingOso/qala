@@ -149,4 +149,19 @@ class ProgramEngineTest {
         val kg = engine.evaluate(GzclpProgram.TEXT, GzclpProgram.NAME, WeightUnit.Kg, JsonObject(emptyMap()))
         assertEquals(4, kg.dayCount)
     }
+
+    @Test
+    fun theHeroAndTheDayShowWhatTheSavedPlatesCanLoadOnABarbellInPoundsOnly() {
+        val setup = com.qala.data.model.PlateSettings()
+        fun hero(unit: WeightUnit, equipment: String) =
+            LiftHero("p", "Day 1", "squat", "Squat", TopSet(207.5, unit, 5.0, false, 3), 1, 3, equipment)
+        // The default inventory has no 1.25 lb pairs, so 207.5 lb is not loadable; ties go below.
+        assertEquals(205.0, hero(WeightUnit.Lb, "barbell").roundedTo(setup).topSet.weight!!, 0.0)
+        assertEquals(207.5, hero(WeightUnit.Lb, "dumbbell").roundedTo(setup).topSet.weight!!, 0.0)
+        assertEquals(207.5, hero(WeightUnit.Kg, "barbell").roundedTo(setup).topSet.weight!!, 0.0)
+        val set = PlannedSet(207.5, WeightUnit.Lb, 5.0, null, false, null, null)
+        val day = DayOverview("Day 1", "squat", "Squat", listOf(ExerciseOverview("squat", "Squat", listOf(set), listOf(set), "barbell"))).roundedTo(setup)
+        assertEquals(listOf(205.0), day.exercises[0].sets.map { it.weight })
+        assertEquals(listOf(205.0), day.exercises[0].warmups.map { it.weight })
+    }
 }
