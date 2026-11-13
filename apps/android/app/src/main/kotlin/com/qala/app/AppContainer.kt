@@ -26,6 +26,8 @@ import com.qala.data.repo.WorkoutDraftStore
 import com.qala.app.coach.CoachClient
 import com.qala.app.coach.CoachStore
 import com.qala.app.coach.HttpCoachClient
+import com.qala.app.workout.AndroidRestAlarm
+import com.qala.app.workout.RestAlarm
 import com.qala.app.workout.WorkoutStore
 import com.qala.data.seed.DebugSeeder
 import com.qala.data.sync.RecordWriter
@@ -33,6 +35,7 @@ import com.qala.data.sync.RoomTransactor
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 /**
@@ -52,6 +55,8 @@ class AppContainer(
     private val seedInDebug: Boolean = BuildConfig.DEBUG,
     /** Where the Coach tab asks. The app makes no request until the athlete sends a question, so building the container touches no network. */
     coachClient: CoachClient = HttpCoachClient(BuildConfig.COACH_BASE_URL),
+    /** The OS alarm behind the rest-end notification; the default does nothing, so tests and previews set none. */
+    restAlarm: RestAlarm = RestAlarm.None,
 ) {
     val writer = RecordWriter(RoomTransactor(database))
 
@@ -76,7 +81,14 @@ class AppContainer(
         settings,
         env,
         scope,
+        restAlarm,
     )
+
+    /**
+     * A screen something outside the app asked for (a tapped notification): MainActivity puts it here and the shell takes
+     * it, shows it and clears it. A state, not an event, so one that arrives before the shell exists is not lost.
+     */
+    val pendingRoute = MutableStateFlow<Route?>(null)
 
     /** The conversation with the coach (A6). Process-wide, so the thread survives a visit to another tab. */
     val coach = CoachStore(coachClient, scope)
@@ -116,7 +128,7 @@ class AppContainer(
         /** The one container of the process, so a recreated activity does not open the database twice. */
         fun obtain(context: Context): AppContainer =
             instance ?: synchronized(this) {
-                instance ?: AppContainer(QalaDatabase.open(context)).also { instance = it }
+                instance ?: AppContainer(QalaDatabase.open(context), restAlarm = AndroidRestAlarm(context)).also { instance = it }
             }
     }
 }

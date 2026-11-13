@@ -128,6 +128,9 @@ data class RestState(
 /** What the rest screen says it is resting from: "Back squat, set 2 logged, 150 lb x 3 at RPE 9". */
 data class RestLogged(val exerciseName: String, val setNumber: Int, val weight: Double?, val reps: Double, val unit: WeightUnit, val rpe: Double?)
 
+/** What the rest-end notification says is next: "Back squat, set 3"; the end of the workout when there is no set after. */
+fun WorkoutState.restAlarmText(): String = restNext()?.let { "Next: ${it.exerciseName}, set ${it.setNumber}" } ?: "That was the last set"
+
 /** The set a rest is for. [newExercise] is true when the next set is the first of another exercise. */
 data class RestNext(
     val exerciseName: String,

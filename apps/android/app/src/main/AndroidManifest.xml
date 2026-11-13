@@ -4,6 +4,10 @@
     <!-- The Coach tab's request to the server. The only network use so far. -->
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <!-- The rest-end notification (D34): the alarm that fires it, granted at install for a timer, and the notification itself, asked when the first rest starts. -->
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
     <application
         android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -21,5 +25,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <receiver
+            android:name=".workout.RestAlarmReceiver"
+            android:exported="false" />
     </application>
 </manifest>

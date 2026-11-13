@@ -19,6 +19,7 @@ import com.qala.data.repo.WorkoutDraftStore
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
@@ -26,6 +27,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -57,6 +59,8 @@ class WorkoutStore(
     settings: SettingsRepository,
     private val env: RepoEnv,
     private val scope: CoroutineScope,
+    /** The OS alarm that tells a lifter in another app the rest is over (D34). */
+    private val restAlarm: RestAlarm = RestAlarm.None,
 ) {
     private val _state = MutableStateFlow<WorkoutState?>(null)
 
@@ -70,6 +74,20 @@ class WorkoutStore(
      * thread as weights appear: a stepper that lands on a new weight shows its plates a moment later.
      */
     val plateHints: StateFlow<Map<Double, PlateHint>> = _plateHints
+
+    private val storedDraft = MutableStateFlow(false)
+
+    /**
+     * Whether a half-logged workout is waiting: the one open in memory, or a stored draft that [open] would take up (the
+     * same program, started within [DraftHours], not saved yet). Today's hero reads it as "Resume workout".
+     */
+    val hasDraft: StateFlow<Boolean> = combine(_state, storedDraft) { s, stored -> s != null || stored }
+        .stateIn(scope, SharingStarted.Eagerly, false)
+
+    private val _saveError = MutableStateFlow<String?>(null)
+
+    /** Set when a finish could not save the workout (the draft is kept), cleared by the next finish that does. Today shows it. */
+    val saveError: StateFlow<String?> = _saveError
 
     private val plateTried = HashSet<Double>()
     private var hintsFor: PlateSettings? = null
@@ -97,6 +115,21 @@ class WorkoutStore(
         scope.launch {
             combine(_state.filterNotNull(), _gym.map { it.plates }.distinctUntilChanged()) { s, plates -> s to plates }
                 .collect { (s, plates) -> fillPlateHints(s, plates) }
+        }
+        // A draft left by a killed process counts as a workout waiting, though nothing has opened it yet.
+        scope.launch {
+            val saved = withContext(env.work) { drafts.load()?.let(WorkoutState::fromJson) } ?: return@launch
+            val programId = withContext(env.work) { service.activeProgramId() }
+            val valid = saved.isFor(programId, saved.day, env.clock.nowMs()) && !withContext(env.work) { service.sessionExists(saved.sessionId) }
+            if (valid && _state.value == null) storedDraft.value = true
+        }
+        // One alarm for the running rest: set when it starts or is lengthened, dropped when it ends or is already over.
+        scope.launch {
+            _state.map { s -> s?.rest?.let { r -> (r.startedAtMs + r.seconds * 1000L) to s.restAlarmText() } }
+                .distinctUntilChanged()
+                .collect { due ->
+                    if (due == null || due.first <= env.clock.nowMs()) restAlarm.cancel() else restAlarm.schedule(due.first, _gym.value.rest.alert, due.second)
+                }
         }
         // One writer for the draft. A write that is no longer the current state is skipped, so a late write never
         // brings back a draft that a finish has just cleared.
@@ -261,6 +294,23 @@ class WorkoutStore(
     fun addRest(seconds: Int) = edit { it.addRest(seconds) }
     fun endRest() = edit { it.endRest() }
 
+    /**
+     * Starts the rest after the done set at [ref] by hand, for a lifter who has Automatic rest off (D34). True when a rest
+     * started, which the caller follows by opening Rest.
+     */
+    fun startRest(ref: SetRef): Boolean {
+        val now = env.clock.nowMs()
+        var started = false
+        _state.update { s ->
+            started = false
+            if (s == null || s.exercises.getOrNull(ref.exercise)?.sets?.getOrNull(ref.set)?.done != true) return@update s
+            started = true
+            s.startRest(ref, s.nextOpen(ref), now)
+        }
+        if (started) _state.value?.rest?.let { restPlates(it.logged, it.next) }
+        return started
+    }
+
     // ---- finishing ----
 
     /**
@@ -274,12 +324,17 @@ class WorkoutStore(
             service.finish(s.toLifted(env.clock.nowMs()))
         } catch (e: Exception) {
             Log.e("WorkoutStore", "saving the workout failed", e)
+            _saveError.value = SaveFailed
             return null
         }
         if (outcome.errors.isNotEmpty()) Log.w("WorkoutStore", "the program was not advanced: ${outcome.errors}")
+        _saveError.value = null
         close()
         return outcome
     }
+
+    /** The user took the message in (Resume was tapped): the banner goes, the workout stays. */
+    fun clearSaveError() { _saveError.value = null }
 
     /** Throws the workout in progress away without saving anything. */
     fun discard() {
@@ -287,6 +342,7 @@ class WorkoutStore(
     }
 
     private suspend fun close() = diskLock.withLock {
+        storedDraft.value = false
         _state.value = null
         drafts.clear()
     }
@@ -338,6 +394,8 @@ class WorkoutStore(
     companion object {
         /** A stored workout older than this is a forgotten one, not a half-finished one. */
         const val DraftHours = 16
+
+        const val SaveFailed = "Couldn't save the workout. It's kept, tap Resume to try again."
     }
 }
 

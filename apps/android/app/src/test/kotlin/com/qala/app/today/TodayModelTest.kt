@@ -88,8 +88,8 @@ class TodayModelTest {
 
     // ---- the hero, per stage ----
 
-    private fun hero(snapshot: EngineSnapshot, viewing: Int, now: Int = viewing) =
-        heroFor(snapshot, snapshot.today!!, viewing, now, use24h = false)
+    private fun hero(snapshot: EngineSnapshot, viewing: Int, now: Int = viewing, resume: Boolean = false) =
+        heroFor(snapshot, snapshot.today!!, viewing, now, use24h = false, resume = resume)
 
     @Test
     fun checkInAsksOnTheDayAndThanksAfter() {
@@ -145,6 +145,20 @@ class TodayModelTest {
         assertEquals("3 exercises · 11 sets", lift.detail)
         assertEquals(listOf("Readiness 72 of 100, a little under your average."), lift.lines)
         assertEquals(Cta("Start workout", Destination.Workout, CtaIcon.Dumbbell), lift.cta)
+    }
+
+    @Test
+    fun aHalfLoggedWorkoutTurnsTheButtonOfTheWarmUpAndOfTheLiftIntoResume() {
+        val resume = Cta("Resume workout", Destination.Workout, CtaIcon.Dumbbell)
+        // The warm-up counts as done only once a session is saved, so with a draft the day can still be on either stage.
+        val atWarmUp = fullSnapshot(liftPlan(done = mapOf(StageId.CHECK_IN to 6)))
+        assertEquals(resume, hero(atWarmUp, 1, resume = true).cta)
+        assertEquals(Cta("Start warm-up", Destination.WarmUp, CtaIcon.Flame), hero(atWarmUp, 1).cta)
+        val atLift = fullSnapshot(liftPlan(done = mapOf(StageId.CHECK_IN to 6, StageId.WARM_UP to 7)))
+        assertEquals(resume, hero(atLift, 2, resume = true).cta)
+        // A stage that is not the one the day is on, and a stage that is not a lifting one, keep their own buttons.
+        assertEquals(Cta("Start workout", Destination.Workout, CtaIcon.Dumbbell), hero(atLift, 2, now = 0, resume = true).cta)
+        assertEquals(Cta("Check in", Destination.CheckIn, CtaIcon.CircleCheck), hero(fullSnapshot(), 0, resume = true).cta)
     }
 
     @Test

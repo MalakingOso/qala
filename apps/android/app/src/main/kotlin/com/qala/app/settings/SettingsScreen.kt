@@ -40,6 +40,8 @@ import com.qala.app.today.TodayUiState
 import com.qala.data.model.GymSettings
 import com.qala.data.model.PlateSettings
 import com.qala.data.model.SettingsRecord
+import com.qala.data.model.ThemeMode
+import com.qala.data.model.TitleFont
 import com.qala.data.model.WeightUnit
 import com.qala.data.repo.SettingsRepository
 import com.qala.design.DayStrip
@@ -76,9 +78,9 @@ private val GroupGap = 14.dp
  * (SettingsRepository: the core's training group for the unit and the days, the lifting groups for the rest) and the
  * lifting flow, the plate calculator and the warm-up read the stored values.
  *
- * Left out on purpose: the web's Learn from taps and Alert (the rest model does not learn and the alert is a buzz, so
- * there is nothing to set), Check-ins (the daily sleep and stress check-in does not exist on Android), Running (run
- * recording is not built), Coach and Appearance (their screens are not built).
+ * Appearance (theme and title font) closes the screen. Left out on purpose: the web's Learn from taps and Alert (they
+ * arrive with the Rust rest planner), Check-ins (the daily sleep and stress check-in does not exist on Android), Running
+ * (run recording is not built) and Coach (its screen shows the status).
  *
  * Each tap shows its result at once and hands over to the stored value when it catches up, so two quick taps on a stepper
  * do not undo each other, and the writes go in tap order. Today's skip sheet opens over this screen from Change, and Set
@@ -413,6 +415,40 @@ fun SettingsScreen(
                 onToggle = { on -> edit(gym.copy(rest = gym.rest.copy(showPlates = on))) { setShowPlates(on) } },
                 last = true,
             )
+        }
+
+        // ---- appearance ----
+        val look = gym.appearance
+        Group("Appearance", Modifier.padding(top = GroupGap)) {
+            GroupRow(vertical = 8.dp) {
+                QalaText("Theme", Modifier.weight(1f), QalaType.body)
+                ScalePicker(
+                    labels = ThemeLabels,
+                    selected = ThemeMode.entries.indexOf(look.theme),
+                    onPick = { i ->
+                        val mode = ThemeMode.entries[i]
+                        edit(gym.copy(appearance = look.copy(theme = mode))) { setTheme(mode) }
+                    },
+                    groupLabel = "Theme",
+                    modifier = Modifier.width(210.dp),
+                    cellHeight = 44.dp,
+                )
+            }
+            GroupRow(vertical = 8.dp) {
+                QalaText("Title font", Modifier.weight(1f), QalaType.body)
+                ScalePicker(
+                    labels = TitleFontLabels,
+                    selected = TitleFont.entries.indexOf(look.titleFont),
+                    onPick = { i ->
+                        val font = TitleFont.entries[i]
+                        edit(gym.copy(appearance = look.copy(titleFont = font))) { setTitleFont(font) }
+                    },
+                    groupLabel = "Title font",
+                    modifier = Modifier.width(210.dp),
+                    cellHeight = 44.dp,
+                )
+            }
+            GroupRow(last = true) { QalaText(TitleSample, style = QalaType.stageTitle) }
         }
     }
 }

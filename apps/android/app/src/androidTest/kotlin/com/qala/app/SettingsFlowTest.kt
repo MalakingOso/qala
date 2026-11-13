@@ -20,7 +20,10 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.qala.data.core.PlatePairs
 import com.qala.data.db.QalaDatabase
+import com.qala.data.model.AppearanceSettings
 import com.qala.data.model.EquipmentItem
+import com.qala.data.model.ThemeMode
+import com.qala.data.model.TitleFont
 import com.qala.data.repo.DeviceClock
 import com.qala.data.repo.RepoEnv
 import com.qala.data.repo.StubStage
@@ -36,6 +39,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import org.junit.After
+import org.junit.Before
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -66,6 +70,9 @@ class SettingsFlowTest {
     private val clock = TestClock(
         ZonedDateTime.now(ZoneId.systemDefault()).with(TemporalAdjusters.nextOrSame(DayOfWeek.FRIDAY)).withHour(12).withMinute(0).withSecond(0).withNano(0),
     )
+
+    @Before
+    fun notifications() = allowNotifications(context)
 
     @After
     fun close() = scope.cancel()
@@ -149,6 +156,19 @@ class SettingsFlowTest {
     }
 
     // ---- rest ----
+
+    @Test
+    fun theAppearancePickersStoreTheThemeAndTheTitleFontAndShowTheSampleLine() = runBlocking {
+        val container = container()
+        openSettings(container)
+        assertEquals(AppearanceSettings(ThemeMode.Light, TitleFont.QalaTest), container.settings.gym.first().appearance)
+        rule.onNodeWithText("Lower A · 245 × 4").performScrollTo().assertExists()
+        rule.onNodeWithContentDescription("Dark").performScrollTo().performClick()
+        waitFor { runBlocking { container.settings.gym.first().appearance.theme } == ThemeMode.Dark }
+        rule.onNodeWithContentDescription("Faustina").performScrollTo().performClick()
+        waitFor { runBlocking { container.settings.gym.first().appearance.titleFont } == TitleFont.Faustina }
+        container.database.close()
+    }
 
     @Test
     fun turningAutomaticRestOffLogsASetWithoutOpeningRest() = runBlocking {

@@ -111,15 +111,15 @@ sealed interface TodayLoad {
     class Ready(val model: TodayModel) : TodayLoad
 }
 
-fun todayLoad(snapshot: EngineSnapshot, use24h: Boolean): TodayLoad = when {
+fun todayLoad(snapshot: EngineSnapshot, use24h: Boolean, resume: Boolean = false): TodayLoad = when {
     snapshot.error != null -> TodayLoad.Failed(snapshot.error!!)
     !snapshot.loaded -> TodayLoad.Loading
     snapshot.today == null -> TodayLoad.Failed("Today has nothing to show yet.")
-    else -> TodayLoad.Ready(TodayModel(snapshot, snapshot.today!!, use24h))
+    else -> TodayLoad.Ready(TodayModel(snapshot, snapshot.today!!, use24h, resume))
 }
 
 /** Today for one snapshot: the head, the rail, the hero for any stage, and the four other cards. */
-class TodayModel(private val snapshot: EngineSnapshot, val plan: TodayPlan, private val use24h: Boolean) {
+class TodayModel(private val snapshot: EngineSnapshot, val plan: TodayPlan, private val use24h: Boolean, private val resume: Boolean = false) {
     val stages: List<RailStage> = railStages(plan, use24h)
     val nowIndex: Int = nowIndex(stages)
     val eyebrow: String = headEyebrow(snapshot, plan)
@@ -144,7 +144,7 @@ class TodayModel(private val snapshot: EngineSnapshot, val plan: TodayPlan, priv
     /** What the skip sheet opens with: a new skip, or a change of the status already on today. */
     val skip: SkipRequest = skipRequest(snapshot.date, snapshot.status)
 
-    fun hero(viewing: Int): Hero = heroFor(snapshot, plan, viewing, nowIndex, use24h)
+    fun hero(viewing: Int): Hero = heroFor(snapshot, plan, viewing, nowIndex, use24h, resume)
 }
 
 // ---- the rail ----
@@ -209,7 +209,7 @@ fun headEyebrow(snapshot: EngineSnapshot, plan: TodayPlan): String {
  * The hero for the stage at [viewing]. [nowIndex] is the stage the day is on: the hero's label says Now when they are
  * the same and Preview when they are not, and only the stage that is now has a live button.
  */
-fun heroFor(snapshot: EngineSnapshot, plan: TodayPlan, viewing: Int, nowIndex: Int, use24h: Boolean): Hero {
+fun heroFor(snapshot: EngineSnapshot, plan: TodayPlan, viewing: Int, nowIndex: Int, use24h: Boolean, resume: Boolean = false): Hero {
     val stage = plan.stages[viewing.coerceIn(0, plan.stages.lastIndex)]
     val isNow = viewing == nowIndex
     val kicker = kicker(stage, isNow)
@@ -284,7 +284,10 @@ fun heroFor(snapshot: EngineSnapshot, plan: TodayPlan, viewing: Int, nowIndex: I
         )
     }
     val open = stage.state == StageState.NOW
-    return hero.copy(
+    // A half-logged workout is waiting (D34): the Warm-up stage counts as done only once a session is saved, so the button
+    // on either stage that is now takes the lifter back into it.
+    val resuming = resume && isNow && open && (stage.id == StageId.WARM_UP || stage.id == StageId.LIFT) && hero.cta != null
+    return (if (resuming) hero.copy(cta = Cta("Resume workout", Destination.Workout, CtaIcon.Dumbbell)) else hero).copy(
         now = isNow && stage.state != StageState.DONE && stage.state != StageState.SKIPPED,
         skip = if (isNow && open && !stage.passive && plan.liftDay && snapshot.status == null) Cta("Skip today", Destination.Skip) else null,
     )

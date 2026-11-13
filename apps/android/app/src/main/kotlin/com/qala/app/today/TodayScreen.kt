@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -175,6 +176,8 @@ fun TodayScreen(
                     } else {
                         val notchBand = { band.value }
                         val hero = model.hero(viewing)
+                        val saveError by LocalAppContainer.current.workout.saveError.collectAsState()
+                        saveError?.let { message -> RailCard(rememberCardNotch(notchBand)) { SaveErrorContent(message) } }
                         model.status?.let { card -> RailCard(rememberCardNotch(notchBand)) { StatusContent(card, model, ui) } }
                         RailCard(rememberCardNotch(notchBand)) { HeroContent(hero, onGo) }
                         RailCard(rememberCardNotch(notchBand)) { InfoContent(model.nextRun, onGo) }
@@ -314,6 +317,14 @@ private fun HeroContent(hero: Hero, onGo: (Destination) -> Unit) {
     }
     hero.note?.let { QalaText(it, Modifier.padding(top = 12.dp), QalaType.body.copy(fontSize = 12.sp, lineHeight = 17.sp), c.fgSecondary) }
     hero.link?.let { LinkButton(it.label, onClick = { onGo(it.to) }) }
+}
+
+/** The workout could not be saved and is kept (D34): Resume, in the hero under this, tries again. A polite live region, so it is spoken when it appears. */
+@Composable
+private fun SaveErrorContent(message: String) {
+    val c = Qala.colors
+    GroupLabel("Not saved", color = c.accent)
+    QalaText(message, Modifier.padding(top = 4.dp).semantics { liveRegion = LiveRegionMode.Polite }, BodyStyle, c.fg)
 }
 
 /**

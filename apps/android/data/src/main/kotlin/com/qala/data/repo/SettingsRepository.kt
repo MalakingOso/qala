@@ -7,9 +7,12 @@ import com.qala.data.db.SettingsEntity
 import com.qala.data.model.EquipmentItem
 import com.qala.data.model.GymSettings
 import com.qala.data.model.PlateSettings
+import com.qala.data.model.RestAlert
 import com.qala.data.model.RunPlan
 import com.qala.data.model.RunPlanDay
 import com.qala.data.model.SettingsRecord
+import com.qala.data.model.ThemeMode
+import com.qala.data.model.TitleFont
 import com.qala.data.model.WarmupSettings
 import com.qala.data.model.WeightUnit
 import com.qala.data.sync.RecordType
@@ -49,8 +52,11 @@ object SettingsGroups {
     /** `enabled`, `softTissue`, `preferPercussion`, `minutes`: how the warm-up is built. */
     const val WARMUP = "warmup"
 
-    /** `auto` (logging a set opens Rest) and `showPlates` (plate hints are shown). */
+    /** `auto` (logging a set opens Rest), `showPlates` (plate hints are shown) and `alert` (vibrate, sound or both). */
     const val REST = "rest"
+
+    /** `theme` (light, dark, system) and `titleFont` (qalaTest, faustina). */
+    const val APPEARANCE = "appearance"
 
     fun id(group: String) = "settings-$group"
 }
@@ -153,6 +159,14 @@ class SettingsRepository(
     suspend fun setAutoRest(on: Boolean) = leaf(SettingsGroups.REST, "auto", JsonPrimitive(on))
 
     suspend fun setShowPlates(on: Boolean) = leaf(SettingsGroups.REST, "showPlates", JsonPrimitive(on))
+
+    suspend fun setRestAlert(alert: RestAlert) = leaf(SettingsGroups.REST, "alert", JsonPrimitive(alert.wire))
+
+    // ---- appearance ----
+
+    suspend fun setTheme(theme: ThemeMode) = leaf(SettingsGroups.APPEARANCE, "theme", JsonPrimitive(theme.wire))
+
+    suspend fun setTitleFont(font: TitleFont) = leaf(SettingsGroups.APPEARANCE, "titleFont", JsonPrimitive(font.wire))
 
     /**
      * Writes one after another, in the order they reach this lock. A caller that launches its writes undispatched from the

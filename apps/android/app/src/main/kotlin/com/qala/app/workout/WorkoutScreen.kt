@@ -95,7 +95,12 @@ fun WorkoutScreen(day: Int?, onBack: () -> Unit, onRest: () -> Unit, onAllExerci
     val store = container.workout
     val all by store.state.collectAsState()
     var opened by remember { mutableStateOf<Opened?>(null) }
-    LaunchedEffect(day) { if (day != null) opened = store.open(day) }
+    LaunchedEffect(day) {
+        if (day != null) {
+            opened = store.open(day)
+            store.clearSaveError()
+        }
+    }
     val state = all?.takeIf { it.day == day }
 
     KeepScreenOn()
@@ -154,7 +159,7 @@ private fun WorkoutBody(state: WorkoutState, store: WorkoutStore, onBack: () -> 
                 modifier = Modifier.weight(1f).fillMaxWidth(),
                 key = { it },
             ) { page ->
-                ExercisePage(state, page, store, plates, gym.rest.showPlates)
+                ExercisePage(state, page, store, plates, gym.rest.showPlates, manualRest = !gym.rest.auto, onRest = onRest)
             }
             FlowBottomBar {
                 val hint = state.restHint(gym.rest.auto)
@@ -298,7 +303,7 @@ private fun NeighbourButton(name: String?, description: String, leading: Boolean
 // ---- one exercise ----
 
 @Composable
-private fun ExercisePage(state: WorkoutState, page: Int, store: WorkoutStore, plates: Map<Double, PlateHint>, showPlates: Boolean) {
+private fun ExercisePage(state: WorkoutState, page: Int, store: WorkoutStore, plates: Map<Double, PlateHint>, showPlates: Boolean, manualRest: Boolean, onRest: () -> Unit) {
     val ex = state.exercises[page]
     val unit = ex.unit
     val scroll = rememberScrollState()
@@ -323,6 +328,8 @@ private fun ExercisePage(state: WorkoutState, page: Int, store: WorkoutStore, pl
                     last = i == ex.sets.lastIndex,
                     plateShorthand = setPlateLine(showPlates, ex.barbell, set.weight, plates),
                     onClick = { store.pickSet(i) },
+                    // With Automatic rest off a done set offers the rest it would have started (D34).
+                    onRest = if (manualRest && set.done) ({ if (store.startRest(SetRef(page, i))) onRest() }) else null,
                 ) {
                     Logger(set, unit, store)
                 }
@@ -349,6 +356,7 @@ private fun SetRow(
     last: Boolean,
     plateShorthand: String?,
     onClick: () -> Unit,
+    onRest: (() -> Unit)?,
     logger: @Composable () -> Unit,
 ) {
     val c = Qala.colors
@@ -396,6 +404,11 @@ private fun SetRow(
             }
             if (set.amrap) {
                 QalaText("AMRAP", Modifier.border(QalaTokens.borderWidth, c.accent, RoundedCornerShape(QalaTokens.radius)).padding(horizontal = 6.dp, vertical = 2.dp), QalaType.groupLabel.copy(fontSize = 10.sp), c.accent, maxLines = 1)
+            }
+        }
+        if (onRest != null) {
+            Row(Modifier.fillMaxWidth().padding(bottom = 10.dp), horizontalArrangement = Arrangement.End) {
+                SecondaryButton("Rest", onRest, Modifier.semantics { contentDescription = "Start rest after set $number" }, small = true, icon = QalaIcons.Hourglass)
             }
         }
         if (selected) Column(Modifier.padding(bottom = 14.dp)) { logger() }

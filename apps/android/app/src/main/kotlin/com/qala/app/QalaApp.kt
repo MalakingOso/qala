@@ -1,6 +1,13 @@
 package com.qala.app
 
+import android.content.ContextWrapper
+import android.graphics.Color as AndroidColor
 import android.text.format.DateFormat
+import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.SideEffect
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
@@ -37,7 +44,14 @@ import com.qala.app.today.TodayLoad
 import com.qala.app.today.TodayMenu
 import com.qala.app.today.TodayUiState
 import com.qala.app.today.todayLoad
+import com.qala.data.model.AppearanceSettings
+import com.qala.data.model.ThemeMode
+import com.qala.data.model.TitleFont
 import com.qala.design.ContentMaxWidth
+import com.qala.design.FaustinaFamily
+import com.qala.design.QalaTestFamily
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import com.qala.design.Qala
 import com.qala.design.QalaIcons
 import com.qala.design.QalaTheme
@@ -64,17 +78,36 @@ private val TabItems = mapOf(
  */
 @Composable
 fun QalaApp() {
-    QalaTheme {
-        val container = LocalAppContainer.current
+    val container = LocalAppContainer.current
+    // Settings' Appearance: Light, Dark or System, and the face of the titles. Light and Qala Test until the stored choice has been read.
+    val look by remember(container) { container.settings.gym.map { it.appearance }.distinctUntilChanged() }.collectAsState(initial = AppearanceSettings())
+    val dark = when (look.theme) {
+        ThemeMode.Dark -> true
+        ThemeMode.Light -> false
+        ThemeMode.System -> isSystemInDarkTheme()
+    }
+    SystemBars(dark)
+    QalaTheme(dark, if (look.titleFont == TitleFont.Faustina) FaustinaFamily else QalaTestFamily) {
         var nav by rememberSaveable(stateSaver = Nav.Saver) { mutableStateOf(Nav()) }
         // The plate calculator's Edit plates lands on Settings scrolled to the inventory.
         var settingsFocus by remember { mutableStateOf<SettingsFocus?>(null) }
         val back = nav.back()
         BackHandler(enabled = back != null) { back?.let { nav = it } }
 
+        // A tapped rest notification opens Rest over the workout it belongs to.
+        val requested by container.pendingRoute.collectAsState()
+        LaunchedEffect(requested) {
+            when (requested) {
+                Route.Rest -> nav = Nav(Route.Workout).push(Route.Rest)
+                else -> {}
+            }
+            if (requested != null) container.pendingRoute.value = null
+        }
+
         val use24h = DateFormat.is24HourFormat(LocalContext.current)
         val snapshot by container.engine.snapshot.collectAsState()
-        val today = remember(snapshot, use24h) { todayLoad(snapshot, use24h) }
+        val resume by container.workout.hasDraft.collectAsState()
+        val today = remember(snapshot, use24h, resume) { todayLoad(snapshot, use24h, resume) }
         val ui = remember { TodayUiState() }
         LaunchedEffect(nav.route) { if (nav.route != Route.Today) ui.reset() }
 
@@ -136,5 +169,17 @@ fun QalaApp() {
             // Change on Settings' Training status opens the same sheet over Settings.
             if (nav.route == Route.Today || nav.route == Route.Settings) SkipSheet(ui.skip, Modifier.zIndex(3f))
         }
+    }
+}
+
+/** The status and navigation bars follow the app's own theme, not the system's: Light on a dark phone still needs dark icons. */
+@Composable
+private fun SystemBars(dark: Boolean) {
+    var context = LocalContext.current
+    while (context is ContextWrapper && context !is ComponentActivity) context = context.baseContext
+    val activity = context as? ComponentActivity ?: return
+    SideEffect {
+        val bars = if (dark) SystemBarStyle.dark(AndroidColor.TRANSPARENT) else SystemBarStyle.light(AndroidColor.TRANSPARENT, AndroidColor.TRANSPARENT)
+        activity.enableEdgeToEdge(statusBarStyle = bars, navigationBarStyle = bars)
     }
 }

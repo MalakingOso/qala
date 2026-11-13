@@ -39,6 +39,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import org.junit.After
+import org.junit.Before
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
@@ -71,6 +72,9 @@ class WorkoutFlowTest {
     private val clock = TestClock(
         ZonedDateTime.now(ZoneId.systemDefault()).with(TemporalAdjusters.nextOrSame(DayOfWeek.FRIDAY)).withHour(12).withMinute(0).withSecond(0).withNano(0),
     )
+
+    @Before
+    fun notifications() = allowNotifications(context)
 
     @After
     fun close() = scope.cancel()
@@ -197,6 +201,68 @@ class WorkoutFlowTest {
     }
 
     @Test
+    fun aHalfLoggedWorkoutTurnsTodaysButtonIntoResume() = runBlocking {
+        val container = container()
+        reachTheLift(container)
+        startWorkout()
+        logSet()
+        rule.onNodeWithContentDescription("Back").performClick()
+        waitForText("Resume workout")
+        rule.onNodeWithText("Start workout").assertDoesNotExist()
+        rule.onNodeWithText("Resume workout").performClick()
+        waitForText("Log set 2")
+        container.database.close()
+    }
+
+    @Test
+    fun withAutomaticRestOffADoneSetOffersARestThatOpensRest() = runBlocking {
+        val container = container()
+        reachTheLift(container)
+        container.settings.setAutoRest(false)
+        withTimeout(30_000) { container.workout.gym.first { !it.rest.auto } }
+        startWorkout()
+        rule.onNodeWithText("Log set 1").performClick()
+        waitForText("Log set 2")
+        assertNull("logging opened no rest", container.workout.state.value!!.rest)
+        rule.onNodeWithContentDescription("Start rest after set 1").performClick()
+        waitForText("Ready early")
+        assertNotNull(container.workout.state.value!!.rest)
+        rule.onNodeWithText("Ready early").performClick()
+        waitForText("Log set 2")
+        assertNull("ending the rest drops it", container.workout.state.value!!.rest)
+        container.database.close()
+    }
+
+    @Test
+    fun aFailedSaveKeepsTheWorkoutSaysSoOnTodayAndResumeSavesIt() = runBlocking {
+        val container = container()
+        reachTheLift(container)
+        startWorkout()
+        logSet()
+        // A disk that refuses the session: the insert aborts, the draft stays.
+        val db = container.database.openHelper.writableDatabase
+        db.execSQL("CREATE TRIGGER no_sessions BEFORE INSERT ON lift_session BEGIN SELECT RAISE(ABORT, 'disk full'); END")
+        rule.onNodeWithContentDescription("Finish workout").performClick()
+        inSheet("Finish workout?", "Finish workout").performClick()
+        waitForText("Couldn't save the workout. It's kept, tap Resume to try again.")
+        waitForText("Resume workout")
+        assertNotNull(container.workout.state.value)
+        assertNotNull(container.database.metaDao().get(MetaKeys.WORKOUT_DRAFT))
+
+        // The disk is back: Resume clears the message, and finishing again saves the one session.
+        db.execSQL("DROP TRIGGER no_sessions")
+        rule.onNodeWithText("Resume workout").performClick()
+        waitForText("Log set 2")
+        assertNull(container.workout.saveError.value)
+        rule.onNodeWithContentDescription("Finish workout").performClick()
+        inSheet("Finish workout?", "Finish workout").performClick()
+        railSays("Day stages: run now, 3 of 6 done")
+        assertNull(container.workout.saveError.value)
+        assertEquals(1, container.sessions.liftSessions.first().count { !it.session.stub && it.session.startedAtMs == clock.nowMs() })
+        container.database.close()
+    }
+
+    @Test
     fun theStepperAndTheRpeStripChangeWhatIsLogged() = runBlocking {
         val container = container()
         reachTheLift(container)
@@ -230,7 +296,7 @@ class WorkoutFlowTest {
         rule.onNodeWithContentDescription("Back").performClick()
         railSays("Day stages: lift now, 2 of 6 done")
         assertEquals(2, container.workout.state.value!!.loggedSets)
-        rule.onNodeWithText("Start workout").performClick()
+        rule.onNodeWithText("Resume workout").performClick()
         waitForText("Log set 3")
         assertEquals(2, container.workout.state.value!!.loggedSets)
         container.database.close()

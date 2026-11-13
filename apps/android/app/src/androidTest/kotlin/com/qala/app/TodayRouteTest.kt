@@ -41,6 +41,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import org.junit.After
+import org.junit.Before
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -66,6 +67,9 @@ class TodayRouteTest {
         private val noon = ZonedDateTime.now(zone).with(TemporalAdjusters.nextOrSame(DayOfWeek.FRIDAY)).withHour(12).withMinute(0).withSecond(0).withNano(0)
         override fun nowMs(): Long = noon.toInstant().toEpochMilli()
     }
+
+    @Before
+    fun notifications() = allowNotifications(context)
 
     @After
     fun close() = scope.cancel()
@@ -108,8 +112,8 @@ class TodayRouteTest {
         rule.runOnUiThread { rule.activity.onBackPressedDispatcher.onBackPressed() }
         railSays("Day stages: lift now, 2 of 6 done")
 
-        // One set logged and the workout finished is a real session: the lift stage is done.
-        rule.onNodeWithText("Start workout").performClick()
+        // The workout was opened and left, so Today offers to resume it. One set logged and the workout finished is a real session: the lift stage is done.
+        rule.onNodeWithText("Resume workout").performClick()
         rule.onNodeWithText("Log set 1").performClick()
         waitForText("Ready early")
         rule.onNodeWithText("Ready early").performClick()

@@ -7,6 +7,7 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontFamily
 
 private val LocalPalette = staticCompositionLocalOf { QalaPalette.Light }
 private val LocalDark = staticCompositionLocalOf { false }
@@ -23,12 +24,13 @@ object Qala {
         @Composable @ReadOnlyComposable get() = LocalDark.current
 }
 
-/** Light or dark from the system for now; a Settings override arrives with the Settings screen. */
+/** Light or dark (the shell resolves Settings' Light, Dark or System), and the face the titles are set in. */
 @Composable
-fun QalaTheme(dark: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) {
+fun QalaTheme(dark: Boolean = isSystemInDarkTheme(), titleFamily: FontFamily = QalaTestFamily, content: @Composable () -> Unit) {
     CompositionLocalProvider(
         LocalPalette provides if (dark) QalaPalette.Dark else QalaPalette.Light,
         LocalDark provides dark,
+        LocalTitleFamily provides titleFamily,
         content = content,
     )
 }

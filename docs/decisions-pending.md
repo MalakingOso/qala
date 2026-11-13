@@ -32,8 +32,6 @@ None. The last items were closed on 2026-11-13. Those with a default took it, ex
 
 Code work owed by decided items, built after the session (protocol step 5). An entry leaves when it's built.
 
-- D34 (2026-11-13): a rest-end notification when the app is in the background; "Resume workout" on Today's hero when a draft exists; a tap-to-start rest on the set row with Automatic rest off; a message when a save fails (the draft stays).
-- D35 (2026-11-13): drop the Warm-up stage from Today's rail when "Build a warm-up" is off; build the Appearance group (theme and title font) in Settings. Collars stay fixed.
 - D37 (2026-11-13): make the generator emitter write `custom()` progress scripts for RPE-gated double progression and Helms percent autoregulation, in place of the `// progress:` comments.
 - D22 (2026-11-13): rewrite `server/ws.ts` as a notify-only channel and build the per-field sync and blob tables, both in A3.
 - D21 (2026-11-13): once the domain is registered, point A/AAAA for `app.<domain>` and the apex at the VPS, add the apex Caddy block that serves `assetlinks.json`, and set the RP ID to the registrable domain.

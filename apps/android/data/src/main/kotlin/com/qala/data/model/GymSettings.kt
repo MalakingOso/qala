@@ -109,13 +109,51 @@ data class WarmupSettings(
     }
 }
 
+/** How the end of a rest tells the lifter: a buzz, a sound or both (the notification channel and Rest's own haptic). */
+enum class RestAlert(val wire: String) {
+    Vibrate("vibrate"),
+    Sound("sound"),
+    Both("both"),
+    ;
+
+    companion object {
+        fun of(wire: String?) = entries.firstOrNull { it.wire == wire } ?: Vibrate
+    }
+}
+
 /** What logging a set does. */
 data class RestSettings(
     /** Logging a set opens Rest. Off, the logger just moves to the next set. */
     val auto: Boolean = true,
     /** The plates for a set show on its row, on Rest and on the warm-up's ramp steps. */
     val showPlates: Boolean = true,
+    val alert: RestAlert = RestAlert.Vibrate,
 )
+
+/** Light, dark, or whatever the system is set to. The default is Light, as on the web. */
+enum class ThemeMode(val wire: String) {
+    Light("light"),
+    Dark("dark"),
+    System("system"),
+    ;
+
+    companion object {
+        fun of(wire: String?) = entries.firstOrNull { it.wire == wire } ?: Light
+    }
+}
+
+/** The face titles are set in. */
+enum class TitleFont(val wire: String) {
+    QalaTest("qalaTest"),
+    Faustina("faustina"),
+    ;
+
+    companion object {
+        fun of(wire: String?) = entries.firstOrNull { it.wire == wire } ?: QalaTest
+    }
+}
+
+data class AppearanceSettings(val theme: ThemeMode = ThemeMode.Light, val titleFont: TitleFont = TitleFont.QalaTest)
 
 /** Everything the lifting flow reads from Settings besides the weight unit. */
 data class GymSettings(
@@ -123,6 +161,7 @@ data class GymSettings(
     val equipment: OwnedEquipment = OwnedEquipment(),
     val warmup: WarmupSettings = WarmupSettings(),
     val rest: RestSettings = RestSettings(),
+    val appearance: AppearanceSettings = AppearanceSettings(),
 ) {
     companion object {
         /** Reads the typed settings from the leaves of each group; a group, leaf or value that is missing or unreadable takes its default. */
@@ -132,6 +171,7 @@ data class GymSettings(
             val equipment = groups[SettingsGroups.EQUIPMENT]
             val warmup = groups[SettingsGroups.WARMUP]
             val rest = groups[SettingsGroups.REST]
+            val look = groups[SettingsGroups.APPEARANCE]
             val owned = OwnedEquipment()
             val build = WarmupSettings()
             val auto = RestSettings()
@@ -157,6 +197,11 @@ data class GymSettings(
                 rest = RestSettings(
                     auto = rest.leaf("auto", Boolean.serializer(), auto.auto),
                     showPlates = rest.leaf("showPlates", Boolean.serializer(), auto.showPlates),
+                    alert = RestAlert.of(rest.leaf("alert", String.serializer(), auto.alert.wire)),
+                ),
+                appearance = AppearanceSettings(
+                    theme = ThemeMode.of(look.leaf("theme", String.serializer(), ThemeMode.Light.wire)),
+                    titleFont = TitleFont.of(look.leaf("titleFont", String.serializer(), TitleFont.QalaTest.wire)),
                 ),
             )
         }

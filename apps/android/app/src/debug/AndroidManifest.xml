@@ -2,6 +2,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!-- Debug builds only, no launcher intent. Start it from adb, see RailDemoActivity. -->
+    <!-- Android 17 blocks LAN traffic for an app that targets 37 unless it holds this permission, and 10.0.2.2 counts as LAN: without it the Coach tab times out
+         on the emulator. Grant it with: adb shell pm grant com.qala.app android.permission.ACCESS_LOCAL_NETWORK. A release build talks to a public HTTPS host, so it does not declare it. -->
+    <uses-permission android:name="android.permission.ACCESS_LOCAL_NETWORK" />
+
     <!-- Cleartext HTTP to the host's loopback only, for the emulator (10.0.2.2); a release build allows HTTPS only. -->
     <application android:networkSecurityConfig="@xml/network_security_config">
         <activity

@@ -67,6 +67,8 @@ class TodayInput(
     val records: DayRecords,
     val rules: DayRules,
     val runPlan: RunPlan = RunPlan(),
+    /** "Build a warm-up" in Settings. Off, a lift day has no Warm-up stage at all (D35). */
+    val warmupEnabled: Boolean = true,
 )
 
 /**
@@ -101,6 +103,7 @@ object StageDeriver {
 
         val ids = if (liftDay) {
             listOf(StageId.CHECK_IN, StageId.WARM_UP, StageId.LIFT, StageId.RUN, StageId.RECOVER, StageId.WIND_DOWN)
+                .filter { it != StageId.WARM_UP || input.warmupEnabled }
         } else {
             listOf(StageId.CHECK_IN, StageId.RECOVER, StageId.WIND_DOWN)
         }

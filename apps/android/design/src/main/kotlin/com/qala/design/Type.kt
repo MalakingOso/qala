@@ -2,6 +2,7 @@ package com.qala.design
 
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.takeOrElse
@@ -24,6 +25,24 @@ val QalaTestFamily = FontFamily(
     Font(R.font.qalatest_medium, FontWeight.Medium),
     Font(R.font.qalatest_bold, FontWeight.Bold),
 )
+
+/**
+ * Faustina, one variable file (wght 300-800, OFL), the other face titles can be set in (D35). Like Recursive its default
+ * instance is the lightest weight, so each face names its weight.
+ */
+val FaustinaFamily = FontFamily(
+    faustina(FontWeight.Medium, 500),
+    faustina(FontWeight.Bold, 700),
+)
+
+private fun faustina(weight: FontWeight, wght: Int) = Font(
+    R.font.faustina_qala,
+    weight,
+    variationSettings = FontVariation.Settings(FontVariation.weight(wght)),
+)
+
+/** The face the title styles are drawn in: Qala Test unless Settings picks another. [QalaText] swaps it in, so a style never names it twice. */
+val LocalTitleFamily = staticCompositionLocalOf<FontFamily> { QalaTestFamily }
 
 /**
  * Recursive, one variable file (wght 300-1000, slnt -15..0, OFL). Its default instance is weight 300, so every
@@ -145,10 +164,12 @@ fun QalaText(
     maxLines: Int = Int.MAX_VALUE,
 ) {
     val resolved = color.takeOrElse { LocalContentColor.current.takeOrElse { Qala.colors.fg } }
+    val title = LocalTitleFamily.current
+    val face = if (style.fontFamily === QalaTestFamily && title !== QalaTestFamily) title else style.fontFamily
     BasicText(
         text = text,
         modifier = modifier,
-        style = style.copy(color = resolved, textAlign = textAlign),
+        style = style.copy(color = resolved, textAlign = textAlign, fontFamily = face),
         overflow = TextOverflow.Ellipsis,
         maxLines = maxLines,
     )

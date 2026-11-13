@@ -35,6 +35,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import org.junit.After
+import org.junit.Before
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -58,6 +59,9 @@ class PlanRouteTest {
         private val noon = ZonedDateTime.now(zone).with(TemporalAdjusters.nextOrSame(DayOfWeek.FRIDAY)).withHour(12).withMinute(0).withSecond(0).withNano(0)
         override fun nowMs(): Long = noon.toInstant().toEpochMilli()
     }
+
+    @Before
+    fun notifications() = allowNotifications(context)
 
     @After
     fun close() = scope.cancel()
@@ -139,7 +143,7 @@ class PlanRouteTest {
         // Back comes home to the Plan tab it was started from.
         rule.runOnUiThread { rule.activity.onBackPressedDispatcher.onBackPressed() }
         waitForText("This week")
-        rule.onNodeWithText("Start workout").assertExists()
+        rule.onNodeWithText("Resume workout").assertExists()          // the workout is open, so Start has become Resume (D34)
     }
 
     @Test
@@ -167,7 +171,7 @@ class PlanRouteTest {
 
         // Warm-up done: now Plan offers the workout itself.
         waitForText("This week")
-        waitForText("Start workout")
+        waitForText("Resume workout")          // the workout was opened and left, so it is waiting
         rule.onNodeWithText("Start warm-up").assertDoesNotExist()
     }
 

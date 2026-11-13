@@ -143,7 +143,7 @@ class EngineCompute(private val programs: ProgramEngine = ProgramEngine()) {
         val weekdays = input.settings.trainingWeekdays.toSet()
         val dayRecords = DayRecords(input.liftSessions.map { it.session }, input.runs, input.checkIns)
 
-        val plan = StageDeriver.derive(TodayInput(today, weekdays, dayCount, dayRecords, rules, input.runPlan))
+        val plan = StageDeriver.derive(TodayInput(today, weekdays, dayCount, dayRecords, rules, input.runPlan, input.gym.warmup.enabled))
         val schedule = Schedule(weekdays, dayCount, dayRecords.liftSessions, rules)
         val week = schedule.week(today, input.runPlan, input.runs)
 

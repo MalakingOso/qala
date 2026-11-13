@@ -32,6 +32,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.qala.app.LocalAppContainer
+import com.qala.app.rememberAskForNotifications
 import com.qala.data.model.WeightUnit
 import com.qala.design.Card
 import com.qala.design.FlowBottomBar
@@ -70,6 +71,9 @@ fun RestScreen(onBack: () -> Unit, onAllExercises: () -> Unit) {
     if (state == null || rest == null) return
 
     KeepScreenOn()
+    // The first rest asks to be allowed to say when it is over while the app is in the background (D34).
+    val askForNotifications = rememberAskForNotifications()
+    LaunchedEffect(Unit) { askForNotifications() }
     val c = Qala.colors
     val now by rememberNow(container.env.clock, rest.startedAtMs)
     val timer = rest.timer
@@ -83,7 +87,7 @@ fun RestScreen(onBack: () -> Unit, onAllExercises: () -> Unit) {
     val from = state.restLogged()
     val next = state.restNext()
     val plates = next?.let { restPlatesView(gym.rest.showPlates, rest, it) }
-    val ready = onBack            // the workout is already on the next set; a rest left behind is replaced by the next one
+    val ready = { store.endRest() }            // the workout is already on the next set; ending the rest drops its alarm, and with no rest left this screen goes back
 
     Column(Modifier.fillMaxSize()) {
         Column(

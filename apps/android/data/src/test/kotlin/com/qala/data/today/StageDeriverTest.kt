@@ -24,7 +24,8 @@ class StageDeriverTest {
         rules: DayRules = FakeRules(),
         dayCount: Int = 4,
         weekdays: Set<Int> = DefaultWeekdays,
-    ) = StageDeriver.derive(TodayInput(today, weekdays, dayCount, records, rules))
+        warmupEnabled: Boolean = true,
+    ) = StageDeriver.derive(TodayInput(today, weekdays, dayCount, records, rules, warmupEnabled = warmupEnabled))
 
     private fun TodayPlan.states() = stages.associate { it.id to it.state }
 
@@ -52,6 +53,13 @@ class StageDeriverTest {
         )
         assertEquals(StageId.CHECK_IN, plan.now)
         assertEquals(1, plan.programDay)
+    }
+
+    @Test
+    fun withTheWarmupOffALiftDayHasNoWarmupStageAndTheLiftFollowsTheCheckIn() {
+        val plan = derive(mon, warmupEnabled = false)
+        assertEquals(listOf(StageId.CHECK_IN, StageId.LIFT, StageId.RUN, StageId.RECOVER, StageId.WIND_DOWN), plan.stages.map { it.id })
+        assertEquals(StageId.CHECK_IN, plan.now)
     }
 
     @Test

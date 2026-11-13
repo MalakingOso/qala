@@ -34,6 +34,19 @@ class GymSettingsTest {
     }
 
     @Test
+    fun appearanceDefaultsToLightAndQalaTestAndReadsItsLeaves() {
+        assertEquals(AppearanceSettings(ThemeMode.Light, TitleFont.QalaTest), read().appearance)
+        val g = read(
+            SettingsGroups.APPEARANCE to buildJsonObject { put("theme", "system"); put("titleFont", "faustina") },
+            SettingsGroups.REST to buildJsonObject { put("alert", "both") },
+        )
+        assertEquals(AppearanceSettings(ThemeMode.System, TitleFont.Faustina), g.appearance)
+        assertEquals(RestAlert.Both, g.rest.alert)
+        // A value this build does not know reads as the default, like every other leaf.
+        assertEquals(ThemeMode.Light, read(SettingsGroups.APPEARANCE to buildJsonObject { put("theme", "sepia") }).appearance.theme)
+    }
+
+    @Test
     fun everyLeafOfEveryGroupIsRead() {
         val inventory = listOf(PlateEntry(55.0, PlatePairs.Count(1.0), "red"), PlateEntry(45.0, PlatePairs.Count(2.0), "blue"), PlateEntry(10.0, PlatePairs.Enough, "white"))
         val g = read(
