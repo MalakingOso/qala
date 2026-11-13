@@ -28,7 +28,7 @@ android {
     defaultConfig {
         applicationId = "com.qala.app"
         minSdk = 34
-        targetSdk = 36
+        targetSdk = 37
         versionCode = 1
         versionName = "0.1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -53,9 +53,8 @@ android {
     }
 
     lint {
-        // Both are decisions, not oversights: one phone on Android 16 (targetSdk 36 until Nothing OS 5.0 is
-        // tested, docs/android-native.md section 2), and arm64-v8a only.
-        disable += setOf("OldTargetApi", "ChromeOsAbiSupport")
+        // A decision, not an oversight: arm64-v8a only.
+        disable += setOf("ChromeOsAbiSupport")
     }
 
     compileOptions {

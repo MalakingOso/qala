@@ -2,6 +2,7 @@ package com.qala.app.workout
 
 import com.qala.data.model.WeightUnit
 import com.qala.data.program.ExerciseClass
+import com.qala.data.program.LiftExercise
 import com.qala.data.program.LiftedExercise
 import com.qala.data.program.LiftedSession
 import com.qala.data.program.LoggedSet
@@ -11,7 +12,11 @@ import com.qala.data.program.completeEntry
 import com.qala.data.program.plannedSets
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
 
 /*
  * The workout in progress as plain data (DESIGN 7.5, DECISIONS U5 and U18): the day's exercises with their sets, which
@@ -77,8 +82,23 @@ data class ExerciseState(
     /** The set to do next: the first one not done, or the last one when all are. */
     val firstOpen: Int get() = sets.indexOfFirst { !it.done }.takeIf { it >= 0 } ?: (sets.size - 1).coerceAtLeast(0)
 
+    /**
+     * The entry with each set's weight at the number the lifter was shown (the program's weight rounded to the plates, D33).
+     * Scripts compare what was lifted with what was planned (`completedWeights > weights` in the Westside autoreg), so the
+     * two have to be the same number when the lifter loaded what the screen said.
+     */
+    fun scriptEntry(): JsonObject {
+        val planned = entry["sets"]?.jsonArray.orEmpty().mapIndexed { i, el ->
+            val set = el.jsonObject
+            val target = sets.getOrNull(i)?.targetWeight
+            val weight = set["weight"] as? JsonObject
+            if (target == null || weight == null) el else JsonObject(set + ("weight" to JsonObject(weight + ("value" to JsonPrimitive(target)))))
+        }
+        return JsonObject(entry + ("sets" to JsonArray(planned)))
+    }
+
     /** The entry with the sets done so far marked completed: what the update and finish-day scripts read. */
-    fun completedEntry(): JsonObject = completeEntry(entry, sets.map { it.asLogged() }, unit)
+    fun completedEntry(): JsonObject = completeEntry(scriptEntry(), sets.map { it.asLogged() }, unit)
 }
 
 /** A set of an exercise, by position. */
@@ -345,11 +365,12 @@ data class WorkoutState(
     /**
      * Takes the entry the update script left for exercise [exercise]: the sets still to do follow it (a rewritten
      * weight, a changed number of sets), while a set already done and a set the script left as it was, with the
-     * numbers the lifter may have changed on it, stay as they are.
+     * numbers the lifter may have changed on it, stay as they are. [planned] is the entry's sets when the caller has
+     * already rounded their weights to the plates (the default reads them as the script wrote them).
      */
-    fun withUpdatedEntry(exercise: Int, entry: JsonObject): WorkoutState {
+    fun withUpdatedEntry(exercise: Int, entry: JsonObject, planned: List<PlannedSet>? = null): WorkoutState {
         val ex = exercises.getOrNull(exercise) ?: return this
-        val planned = plannedSets(entry, ex.unit)
+        val planned = planned ?: plannedSets(entry, ex.unit)
         val sets = planned.mapIndexed { i, p ->
             val old = ex.sets.getOrNull(i)
             when {
@@ -374,7 +395,7 @@ data class WorkoutState(
         startedAtMs = startedAtMs,
         finishedAtMs = finishedAtMs,
         exercises = exercises.map { ex ->
-            LiftedExercise(ex.exerciseId, ex.key, ex.entry, ex.sets.map { PlannedSet(it.targetWeight, ex.unit, it.targetReps, it.minReps, it.amrap, it.targetRpe, it.timerSec) }, ex.sets.map { it.asLogged() })
+            LiftedExercise(ex.exerciseId, ex.key, ex.scriptEntry(), ex.sets.map { PlannedSet(it.targetWeight, ex.unit, it.targetReps, it.minReps, it.amrap, it.targetRpe, it.timerSec) }, ex.sets.map { it.asLogged() })
         },
     )
 
@@ -391,8 +412,17 @@ data class WorkoutState(
                 null
             }
 
-        /** A new workout over [day]'s exercises, every set at its prescription, on the first exercise. */
-        fun open(day: PlannedDay, sessionId: String, startedAtMs: Long, lastTime: (String) -> String? = { null }): WorkoutState = WorkoutState(
+        /**
+         * A new workout over [day]'s exercises, every set at its prescription, on the first exercise. [prescribed] gives an
+         * exercise's sets when they are not the program's own numbers (rounded to the plates the lifter has).
+         */
+        fun open(
+            day: PlannedDay,
+            sessionId: String,
+            startedAtMs: Long,
+            prescribed: (LiftExercise) -> List<PlannedSet> = { it.sets },
+            lastTime: (String) -> String? = { null },
+        ): WorkoutState = WorkoutState(
             sessionId = sessionId,
             programId = day.programId,
             programName = day.plan.programName,
@@ -407,7 +437,7 @@ data class WorkoutState(
                     unit = day.unit,
                     cls = ex.cls,
                     entry = ex.entry,
-                    sets = ex.sets.map { SetState.of(it) },
+                    sets = prescribed(ex).map { SetState.of(it) },
                     lastTime = lastTime(ex.exerciseId),
                     equipment = ex.equipment,
                 )

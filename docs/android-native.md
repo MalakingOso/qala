@@ -1,8 +1,8 @@
 # Native Android app: plan
 
-Status 2026-10-13: in progress. The Kotlin direction (DECISIONS S7) was decided 2026-10-01 and `apps/android` builds. Merged to main: the toolchain (A0, section 11), the design system and shell (A1), the Capacitor removal (A7), the Rust core and FFI, the Room data layer, Today with the day rail, check-in, the skip sheet and status, the weekday picker (the native refresh M1 to M4, `docs/archive/completed.md`), and the plate calculator. In flight and unmerged: History and All exercises (branch `history`), Warm-up, Workout and Rest (`workout`), Plan (`plan`). Built 2026-10-14: the Coach route and screen (A6, release signing not started). Not started: run recording (A2), record sync (A3), charts and map (A5). Everything has run on the emulator only; none of the section 5 gates has run on the phone. `docs/ROADMAP.md` has the order and what each item waits on.
+Status 2026-11-13: in progress; every owner decision is closed (the queue is empty). The Kotlin direction (DECISIONS S7) was decided 2026-10-01 and `apps/android` builds. Merged to main: the toolchain (A0, section 11), the design system and shell (A1), the Capacitor removal (A7), the Rust core and FFI, the Room data layer, Today with the day rail, check-in, the skip sheet and status, the weekday picker (the native refresh M1 to M4, `docs/archive/completed.md`), and the plate calculator. Merged 2026-10-13: History, All exercises, Warm-up, Workout, Rest and Plan. Built 2026-10-14: the Coach route and screen (A6, release signing not started). Not started: run recording (A2), record sync (A3), charts and map (A5). Everything has run on the emulator only; none of the section 5 gates has run on the phone. `docs/ROADMAP.md` has the order and what each item waits on.
 
-Sections 5 to 7 (run recorder, sync, charts and map) are still proposals: DECISIONS S9, S10 and S14 to S16, and queue items D07 and D11 to D13. This replaced the Capacitor wrapper (`apps/phone`, DECISIONS S2), which has been deleted. The shared logic comes from the Rust core in `docs/rust-core.md`; the open questions are in its appendix. Decision rows are DECISIONS S6 to S17, plus S18 to S21 for LS++ and S22 for accounts. Revised 2026-09-30: sync is records over HTTP (no Automerge), and LS++ is the Rust port (no quickjs).
+Sections 5 to 7 (run recorder, sync, charts and map) are decided and not yet built: DECISIONS S9, S10 and S14 to S16, and the decided queue items D07 and D11 to D13. This replaced the Capacitor wrapper (`apps/phone`, DECISIONS S2), which has been deleted. The shared logic comes from the Rust core in `docs/rust-core.md`; the open questions are in its appendix. Decision rows are DECISIONS S6 to S17, plus S18 to S21 for LS++ and S22 for accounts. Revised 2026-09-30: sync is records over HTTP (no Automerge), and LS++ is the Rust port (no quickjs).
 
 ## 1. Where things stand
 
@@ -21,7 +21,7 @@ So the rewrite is mostly new work on both sides. The React pages are a design re
 | Device | Nothing Phone (4a) Pro, Android 16 (API 36), Nothing OS 4.1. Sideloaded. | Shipped March 2026. Nothing OS 5.0 on Android 17 is in open beta for it, stable expected from October. |
 | minSdk | 34 | One device. Android 14 has the foreground-service type rules the recorder depends on. 33 also works; 34 removes a branch. |
 | compileSdk | 37 | Compose 1.12.1 (BOM 2026.09.00) requires it. `compileSdk { version = release(37) }` resolves to the installed `android-37.0` platform. |
-| targetSdk | 36 now, 37 after retesting | Sideloaded apps aren't bound by Play's rules (the August 2026 deadline requires API 36 for Play). Android 17 hardens background audio, so test the foreground service and ducking on the Nothing OS 5.0 beta before moving up. |
+| targetSdk | 37, built 2026-11-13 (D14, S36) | Sideloaded apps aren't bound by Play's rules (the August 2026 deadline requires API 36 for Play). Android 17 hardens background audio (a foreground service needs while-in-use access for audio focus, so a background restart skips its cues) and blocks local-network traffic by default (`ACCESS_LOCAL_NETWORK`). Foreground services, exact alarms, notifications, BLE and location have no listed change. Checks run on the `qala-37` AVD (API 37, default image); `qala-test` (API 36) stays for the suites. The Nothing OS 5.0 foreground-service and ducking retest stays on the phone checklist. |
 | Language and UI | Kotlin, Jetpack Compose on Foundation | No Material 3 defaults. PLAN 3 already says "no component kit"; M3 fights the Beamer look. |
 | ABI | `arm64-v8a` only | One phone. Cuts the Rust and MapLibre `.so` sizes. Compose ships a small native library (`libandroidx.graphics.path.so`), so even the empty app is arm64 only and won't install on an x86_64 emulator. `-Pqala.abi=x86_64` builds one that will. |
 
@@ -42,14 +42,16 @@ KMP and Compose Multiplatform would keep iOS open (PLAN 3 says iOS waits for a f
 
 `app`, `design` and `data` exist (2026-10-13). There is no separate `core/` module: the UniFFI bindings and the Gradle task that builds the Rust library live in `data/` (moved there in M2). `run/` doesn't exist yet. Dependency injection: constructor injection through a hand-written `AppContainer` (built in `MainActivity`, exposed by a CompositionLocal). Navigation: no navigation library. A sealed `Route` held in `rememberSaveable` plus a `BackHandler` covers five tabs and the pushed screens (seven on main on 2026-10-13: History, Settings, Plates, CheckIn, WarmUp, Workout, Run, the last three still stubs). Navigation Compose versus Navigation 3 stays open until A4, where real back stacks and arguments appear. Both are still unverified for September 2026.
 
+Navigation (D20, 2026-11-13): keep the hand-written `Nav` (a route, an origin tab and one parent) until a screen needs a third level or deep links. Revisit Navigation Compose or Navigation 3 then.
+
 ## 4. Design system
 
 The design lives in token values: border width, shadow shape, radii (DECISIONS L8; the visual-refinement pass that softened these was reverted). Port the values exactly and generate them.
 
 - `scripts/tokens_to_kotlin.ts` reads `apps/web/src/theme/tokens.css` and emits `design/.../Tokens.kt`: a light and a dark `QalaPalette` (dark is light with the dark overrides applied), zone, recovery and chart colors, shadows as data, radii, spacing and motion. Plate colors are not in it, because they are sprites and not `tokens.css` values. One source of truth, and the only thing the two UI codebases share (owner, 2026-10-14). The WCAG contrast test (`themeContrast.test.ts`) runs against the same file and a staleness test (`tokensKotlin.test.ts`) fails when the checked-in `Tokens.kt` drifts, so `bun run test` is the gate. `ContrastTest.kt` repeats the 24 pairs on the generated Kotlin.
 - Beamer surface: `Modifier.beamerSurface()` draws the 2px border, 4/6/8 radii and the hard offset shadow with `drawBehind`. No elevation, no blur. Built, along with `Card`, `Group`, buttons, the tab bar and the top bar.
-- Fonts need TTF or OTF, not woff2. Qala Test (700 and 500) and DM Mono (400 and 500) are bundled in `design/src/main/res/font/`. The DM Mono TTFs were converted from the repo woff2 with `scripts/woff2_to_ttf.py` (lossless, no rename needed). Faustina waits for the title-font toggle, which arrives with Settings. Qala Test V2's internal family name is "Qala Test V2", so fonts are resource lookups (`Font(R.font.x, weight)`), never by name. Compose line boxes differ from CSS: DM Mono matches the web exactly, and Qala Test titles come out 3 to 4 dp taller because Compose keeps the font's own ascent above the first line.
-- Icons: Lucide as Compose `ImageVector`s, generated by `scripts/lucide_to_kotlin.ts` from the Lucide SVG paths for only the icons DESIGN 4 lists (41; `table-2` waits for A5). Runs use `sport-shoe`.
+- Fonts need TTF or OTF, not woff2. Local conversion and bundling confirmed 2026-11-13 (D17); no downloadable fonts. Qala Test (700 and 500) and DM Mono (400 and 500) are bundled in `design/src/main/res/font/`. The DM Mono TTFs were converted from the repo woff2 with `scripts/woff2_to_ttf.py` (lossless, no rename needed). Faustina waits for the title-font toggle, which arrives with Settings. Qala Test V2's internal family name is "Qala Test V2", so fonts are resource lookups (`Font(R.font.x, weight)`), never by name. Compose line boxes differ from CSS: DM Mono matches the web exactly, and Qala Test titles come out 3 to 4 dp taller because Compose keeps the font's own ascent above the first line.
+- Icons: Lucide as Compose `ImageVector`s, generated by `scripts/lucide_to_kotlin.ts` from the Lucide SVG paths for only the icons DESIGN 4 lists (49 generated; `table-2` waits for A5). Runs use `sport-shoe`. Generated vectors and `sport-shoe` confirmed 2026-11-13 (D17).
 - Tabs: Today, Plan, Body, Progress, Coach (DECISIONS U2).
 
 ## 5. Run recorder
@@ -77,7 +79,8 @@ Don't put recording in WorkManager or JobScheduler; Android 16 tightened their r
 1. A 2 h run with the screen locked and the phone in a pocket: no gap over 10 s in raw fixes.
 2. Spotify ducks for a cue over the speaker and over Bluetooth headphones. Retest on Nothing OS 5.0.
 3. A killed service resumes and marks the gap.
-4. A 5-minute `GnssStatus.getCarrierFrequencyHz()` check to find out whether the phone tracks L5 (about 1176 MHz). The spec sheets don't say.
+
+The L5 check (does the phone track L5, about 1176 MHz) was dropped on 2026-11-13 (D15). The 25 m accuracy gate stays. The owner runs the gates when they choose; there is no "owner at gates only" rule. The owner already has an HR strap and tests BLE once the run recorder is on the phone; nothing is bought.
 
 ## 6. Data layer
 
@@ -87,11 +90,13 @@ Don't put recording in WorkManager or JobScheduler; Android 16 tightened their r
 - **Sync.** `POST /api/sync` over HTTPS to the Qala server on the owner's VPS (DECISIONS S22, no Tailscale; the base URL is a setting, not hard-coded), one round trip sending local changes and receiving everything past the cursor. Runs in the foreground on app open, run end, workout end, and any in-app change such as a history edit. No background sync in v1 (decided 2026-11-11, D06). The web's `offlineQueue.ts` shape (enqueue, acknowledge, backoff 1 s doubling to 60 s) becomes a Room outbox table plus a WorkManager job for blob uploads. Built so far (M2): the outbox, the clock sidecar and the HLC wrapper. There is no HTTP client, and the server has no `/api/sync` yet.
 - **Workout flow owner.** A `WorkoutPlanner` in `data/` runs PLAN 10 on the phone: read the check-in, call Rust `predict_readiness`, build the engine bindings, call the Rust LS++ evaluator for today's program, then map the result to screen state and call Rust `recommend_next_session` for the numbers. Phase A4 builds it; nothing else owns the sequence.
 - **Hot path.** Rust calls are synchronous and cheap per call. Engine and LS++ calls happen at workout start, set logged, session end and check-in, not per frame, so a JSON boundary is fine. Plates and clock formatting are the only per-render calls and are pure Rust or plain Kotlin.
-- **Coach.** A server route builds the prompt and validates the response (S14); the phone sends context and gets a validated, enveloped suggestion. Needs the network, so offline behavior is "coach offline", as PLAN 14 already says. Built 2026-10-14: `POST /api/coach/ask` (`server/coach.ts`, which holds the wire contract) and `app/.../coach/` on the phone (`CoachClient`, an `HttpURLConnection` implementation, the in-memory `CoachStore` and the screen). The base URL is the `COACH_BASE_URL` BuildConfig field (default `http://10.0.2.2:8500`, `-Pqala.serverUrl=` to change it), not yet a setting. The app asks only when the athlete sends a question. The thread lives in memory for the session. "Use coach" records the choice on the card and the workout does not read it yet. "Remember this?" is not built (no memory record on the phone).
+- **Coach.** A server route builds the prompt and validates the response (S14); the phone sends context and gets a validated, enveloped suggestion. Needs the network, so offline behavior is "coach offline", as PLAN 14 already says. On the VPS the route reaches the model on callisto over an outbound private link (D23, S34). Built 2026-10-14: `POST /api/coach/ask` (`server/coach.ts`, which holds the wire contract) and `app/.../coach/` on the phone (`CoachClient`, an `HttpURLConnection` implementation, the in-memory `CoachStore` and the screen). The base URL is the `COACH_BASE_URL` BuildConfig field (default `http://10.0.2.2:8500`, `-Pqala.serverUrl=` to change it), not yet a setting. The app asks only when the athlete sends a question. The thread lives in memory for the session. "Use coach" records the choice on the card and the workout does not read it yet. "Remember this?" is not built (no memory record on the phone).
+
+Rest and warm-up planning (D32, 2026-11-13): the Kotlin `RestPlan.kt` and `Warmup.kt` are ports of the deleted TS and are replaced by a Rust port in `qala-core` that Kotlin calls, so the two cannot drift. The port adds the learning multiplier, rep drift and low-readiness adjustment the Kotlin rest model lacks.
 
 ## 7. Charts and map
 
-Vico 3.3.x for the ordinary charts; hand-drawn Compose Canvas for the rest. The owner objected to hand-rolled charts on the web, so the split is explicit and written down (S10): where a library can satisfy DESIGN 6 it is used; where none can, the Canvas code is small and shares the tokens.
+Decided 2026-11-12 (D13): Vico 3.3.x for the ordinary charts; hand-drawn Compose Canvas for the rest. The owner objected to hand-rolled charts on the web, so the split is explicit and written down (S10): where a library can satisfy DESIGN 6 it is used; where none can, the Canvas code is small and shares the tokens.
 
 | Chart | Where | Why |
 |---|---|---|
@@ -100,11 +105,11 @@ Vico 3.3.x for the ordinary charts; hand-drawn Compose Canvas for the rest. The 
 | Readiness ring | Canvas | `drawArc`, about 40 lines. Vico has no radial chart. |
 | Run series (pace, HR, elevation, 7,000+ points, zoom, synced crosshair) | Canvas, in a spike first | Min/max decimation to pixel width, `detectTransformGestures`, a shared `StateFlow<Float>` for the crosshair. Vico is unproven at this size with a live crosshair; if a spike shows 60 fps on 7,000 points it can move into Vico. |
 
-Every chart gets TalkBack semantics and a table view built from the same data (DESIGN 6.2). No library supplies this, and Vico's docs say it isn't supported out of the box, so it is hand-built in all cases. Hit areas of 24 dp or more are enforced in our code. Vico's custom fonts go through a `Typeface` conversion, so Qala Test and DM Mono need a small bridge.
+Accessibility (D16, 2026-11-13): the e1RM, readiness line, sets-by-muscle, time-split and run-series charts each get a table view built from the same data (DESIGN 6.2) plus one TalkBack summary sentence; there is no per-point TalkBack stepping. The readiness ring and the week strip get a TalkBack description only (ring: value, the owner's average and the low line; strip: each day's state) and no table, because each is one number or seven labeled days already on screen. That is an Android exception to DESIGN 6.2. No library supplies any of this, and Vico's docs say it isn't supported out of the box, so it is hand-built in all cases. Hit areas of 24 dp or more are enforced in our code. Vico's custom fonts go through a `Typeface` conversion, so Qala Test and DM Mono need a small bridge.
 
 Runner-up for the standard charts: Koala Plot (better-documented zoom, less per-bar styling).
 
-**Map.** MapLibre Native Android with `maplibre-compose` 0.18.0 (Beta, breaking-change policy in minors, so pin it). Two native lines were in flight (13.5.2 stable and a 13.6.x line); pin one deliberately. PMTiles is native: download the region's `.pmtiles` once and read it with `pmtiles://file://`. That also removes the reason PLAN 8a pre-caches z/x/y (a service worker can't cache 206s). The server needs glyph and sprite routes, or the app bundles them in assets; today it serves neither, and a Protomaps style needs both. Run routes are a GeoJSON source plus a `LineLayer`, with mile markers colored by pace. Alternatives were rejected: Google Maps breaks the no-Google rule, osmdroid is raster and stale, Mapbox is proprietary. The `.so` files are large (estimated 10 MB or more); `arm64-v8a` only.
+**Map.** Decided 2026-11-12 (D12): MapLibre Native with `maplibre-compose` 0.18.0 (Beta, breaking-change policy in minors, so pin it) on the 13.6.x native line. PMTiles is native: download the region's `.pmtiles` once and read it with `pmtiles://file://`. That also removes the reason PLAN 8a pre-caches z/x/y (a service worker can't cache 206s). Glyphs and sprites are bundled in app assets; the server serves neither and needs no glyph/sprite routes. Run routes are a GeoJSON source plus a `LineLayer`, with mile markers colored by pace. Alternatives were rejected: Google Maps breaks the no-Google rule, osmdroid is raster and stale, Mapbox is proprietary. The `.so` files are large (estimated 10 MB or more); `arm64-v8a` only.
 
 ## 8. Screens
 
@@ -121,19 +126,21 @@ Sequence by dependency, not by line count. Line counts are the existing React pa
 
 Status 2026-10-13. Built and merged: Today, Check-in and Plate calc (M3, M4 and the plates work), and Settings (Training status, weekdays, Units, bars and the editable plate inventory with the 55 lb row, equipment, warm-up and rest timer; Appearance, Coach, Check-ins and Running are not built). In flight: History and All exercises on `history`, Warm-up, Workout and Rest on `workout`, Plan on `plan`. Not started: the run screens, Session complete, Progress, Body. The Coach screen was built on 2026-10-14.
 
+Phone authoring (D36, 2026-11-13): one-off sessions first; program edits later through a server route backed by a Rust LS++ authoring port; generated workouts arrive as synced records and work offline once pulled.
+
 ## 9. Phases and gates
 
 Sizes are relative (S, M, L), not calendar estimates, except where a research report gave one.
 
 | Phase | Work | Gate | Size |
 |---|---|---|---|
-| A0 | Provision the Android toolchain (below). Run the spike checks (see `docs/archive/completed.md`). Run the Vico and Canvas run-series spike. Run the L5 check. | All five spike checks pass, or the documented exit is taken. | M |
+| A0 | Provision the Android toolchain (below). Run the spike checks (see `docs/archive/completed.md`). Run the Vico and Canvas run-series spike. | All five spike checks pass, or the documented exit is taken. | M |
 | A1 | Design system, tokens generator, fonts, icons, navigation shell on sample data. In parallel with A2. | Contrast test passes on generated tokens; screenshots of Settings and a stub Today against DESIGN. | M |
-| A2 | `qala-core` R0 and R1 (run), recorder service, Room, live and summary screens, HR, cues. | The four gates in section 5. | L |
+| A2 | `qala-core` R0 and R1 (run), recorder service, Room, live and summary screens, HR, cues. | The three gates in section 5. | L |
 | A3 | `schemaVersion` migration (tracks out), Room records with HLC, `POST /api/sync` and blob routes on the server (both with `requireUser`), web and Kotlin clients. | Phone and desktop converge on edits made offline on both; a conflicting field edit resolves to the higher HLC and drops the loser silently; airplane-mode session syncs on reconnect (PLAN 14). | L |
 | R5 (parallel with A2 and A3) | The Rust LS++ port, oracle first (rust-core.md section 8). Not an Android phase; it must land before A4. | 60 built-ins and the GZCLP progression match the oracle. Landed 2026-10-01, merged; A4 consumes it through `qala-lspp-ffi` (now `qala-ffi`, which also exports `qala-core`). | L |
 | A4 | R2 and R3 (math, engine), lifting screens wired to the Rust evaluator. | Golden vectors pass on-device; check-in to workout end to end with no network. | L |
-| A5 | Charts, map, stats screens. | Charts have table views and TalkBack labels; map works with the radio off. | M |
+| A5 | Charts, map, stats screens. | The five numeric charts have table views and TalkBack summaries, the ring and week strip have TalkBack descriptions (D16); map works with the radio off. | M |
 | A6 | Coach route and screen, release signing, sideload build. | Coach offline state; signed APK installs. | S |
 | A7 | Retire `apps/phone` and the Capacitor dependencies. Freeze the React phone shell as a PWA (S13). | Done 2026-10-01, ahead of the native run gate, at the owner's request. | S |
 
@@ -141,10 +148,10 @@ Status by phase, 2026-10-13:
 
 | Phase | State |
 |---|---|
-| A0 | Toolchain installed (section 11). Spike check 1 (arm64 `.so`, size and alignment) and check 5 (LS++ against the oracle) pass. Checks 2 to 4, the Vico and Canvas run-series spike and the L5 check have not been run; nothing in the repo does them. |
+| A0 | Toolchain installed (section 11). Spike check 1 (arm64 `.so`, size and alignment) and check 5 (LS++ against the oracle) pass. Checks 2 to 4, and the Vico and Canvas run-series spike have not been run (the L5 check was dropped, D15); nothing in the repo does them. |
 | A1 | Built: tokens generator, fonts, icons, design components, navigation shell. The stub Today was compared against the web at 390 dp on an x86_64 emulator and matches in fonts, spacing, shadows and colors (2026-10-01). Settings has every group a native screen can honour (2026-10-13); the Appearance group waits for its screen. The Coach group (status and limits, both read-only) is left out: the Coach screen shows the status, and the limits come from the server's answer. |
-| A2 | Not started. Waits on D11. |
-| A3 | Not started. The outbox, clock sidecar and HLC wrapper exist; there is no sync endpoint or client. Waits on D06, D07 and D22. |
+| A2 | Not started. D11 is decided (2026-11-12). |
+| A3 | Not started. The outbox, clock sidecar and HLC wrapper exist; there is no sync endpoint or client. No open decisions: D06, D07 and D22 are decided (POST for data, a notify-only websocket, per-field rows). |
 | R5 | Done 2026-10-01. |
 | A4 | Screens built and merged 2026-10-13: Today, Check-in, Warm-up, Workout, Rest, Plate calc, Plan, plus History and All exercises. Check-in to workout end to end with no network is covered by `WorkoutFlowTest` on the emulator; nothing has run on a real phone. Rest and warm-up planning shipped in Kotlin (ports of `rest.ts` and `warmup.ts`), where section 6 and `docs/rust-core.md` 7 (R3) put them in Rust. |
 | A5 | Not started. |
@@ -157,7 +164,7 @@ Nothing has run on the owner's phone. Every check so far used the `qala-test` em
 
 The existing server needs additions, not rewrites. Auth is the Tailscale identity header today (`server/auth.ts`); S22 replaces it with session cookies, which `docs/plan-accounts-logins.md` plans and nothing builds yet. New routes call `requireUser` either way.
 
-- `POST /api/sync` (records, cursor, idempotent on record, field and HLC) with per-user SQLite storage, replacing `server/sync.ts` and `server/ws.ts`. The server rejects writes more than a day ahead of its own clock.
+- `POST /api/sync` (records, cursor, idempotent on record, field and HLC) with per-user SQLite storage, replacing `server/sync.ts`; `server/ws.ts` is rewritten as a notify-only channel, authenticated by cookie at upgrade, so open clients learn a newer cursor exists and then POST (D22, 2026-11-13). The server rejects writes more than a day ahead of its own clock.
 - Content-addressed blob upload and download for tracks: resumable, immutable, keyed by hash under the user. Both new routes must call `requireUser`; today only the old `/sync` socket does, and `/api/llm/chat`, `/api/elevation` and `/tiles` rely on the tailnet.
 - Glyph and sprite routes for the map style (or bundle them in the app).
 - A Coach route that builds the prompt and validates the response. Built 2026-10-14 as `POST /api/coach/ask` (`server/coach.ts`), which calls `requireUser`; the JSON bodies of it and of `/api/import/text` are read with a byte cap (`server/body.ts`).
@@ -189,8 +196,8 @@ Decisions: the Gradle wrapper jar is checked in (the old "no Gradle binaries in 
 - Rust: `cargo test` over the frozen golden vectors.
 - Kotlin unit tests for ViewModels and repositories.
 - Instrumented tests on the phone for golden vectors through the FFI, and for a 2 h track replay through the recorder.
-- Compose UI tests for the logging flow. The screenshot tool is still open after the A1 start: Roborazzi needs Robolectric and Paparazzi needs layoutlib, both tend to trail the newest SDK, and this project is on `compileSdk 37`. A1 used one-off emulator screenshots (`adb exec-out screencap -p`) instead.
-- Device gates are manual and listed in section 5 and PLAN 14.
+- Compose UI tests for the logging flow. Screenshot tool, decided 2026-11-13 (D20): none yet; one-off emulator screenshots until a tool proves itself on `compileSdk 37`. Why: Roborazzi needs Robolectric and Paparazzi needs layoutlib, both tend to trail the newest SDK, and this project is on `compileSdk 37`. A1 used one-off emulator screenshots (`adb exec-out screencap -p`) instead.
+- Device gates are manual and listed in section 5 and PLAN 14; the owner runs them when they choose.
 
 ## 13. Risks
 
@@ -201,7 +208,7 @@ Decisions: the Gradle wrapper jar is checked in (the old "no Gradle binaries in 
 | Spotify ignores or inconsistently honors ducking, especially over Bluetooth | Test early; tones plus the same focus request as fallback. |
 | Android 17 changes background audio and foreground-service behavior | Test on Nothing OS 5.0 beta now and again after the October stable release. |
 | Nothing OS kills the service around 2 h | Battery exemption, wake lock, `START_STICKY`, Room replay, the 2 h gate. |
-| No L5 band, so poorer urban accuracy | Verify with `GnssStatus`; keep the 25 m accuracy gate. |
+| No L5 band, so poorer urban accuracy | Not checked (D15); keep the 25 m accuracy gate. |
 | Vico can't meet DESIGN 6 or the run series | Canvas fallbacks cost about 100 lines per bar chart and about 300 for the run series. |
 | `maplibre-compose` is Beta; two MapLibre native lines | Pin versions. |
 | Native `.so` sizes (Rust, MapLibre) add up | `arm64-v8a` only; measure at A0 and A5. |

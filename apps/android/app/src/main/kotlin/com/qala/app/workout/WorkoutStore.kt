@@ -8,7 +8,10 @@ import com.qala.data.model.PlateSettings
 import com.qala.data.model.WeightUnit
 import com.qala.data.program.FinishOutcome
 import com.qala.data.program.LiftService
+import com.qala.data.program.PlannedDay
+import com.qala.data.program.PlannedSet
 import com.qala.data.program.oneRepMax
+import com.qala.data.program.plannedSets
 import com.qala.data.repo.CheckInRepository
 import com.qala.data.repo.RepoEnv
 import com.qala.data.repo.SettingsRepository
@@ -138,7 +141,8 @@ class WorkoutStore(
             }
         }
         val planned = service.plan(day) ?: return Opened.NoDay
-        _state.value = WorkoutState.open(planned, env.ids.next(), now) { id -> planned.lastTime[id]?.let(::lastTimeLine) }
+        val rounded = roundedPrescriptions(planned)
+        _state.value = WorkoutState.open(planned, env.ids.next(), now, { rounded[it.key] ?: it.sets }) { id -> planned.lastTime[id]?.let(::lastTimeLine) }
         Opened.Ready
     }
 
@@ -146,9 +150,30 @@ class WorkoutStore(
      * The program's [day] as a workout not yet started, every set at its prescription: what the All exercises grid shows
      * before the workout is opened (during the warm-up). It is not kept and starts nothing. Null when the day has no exercise.
      */
-    suspend fun preview(day: Int): WorkoutState? = withContext(env.work) {
-        service.plan(day)?.let { WorkoutState.open(it, sessionId = "preview", startedAtMs = env.clock.nowMs()) }
+    suspend fun preview(day: Int): WorkoutState? {
+        gymLoaded.await()
+        val planned = service.plan(day) ?: return null
+        val rounded = roundedPrescriptions(planned)
+        return WorkoutState.open(planned, sessionId = "preview", startedAtMs = env.clock.nowMs(), prescribed = { rounded[it.key] ?: it.sets })
     }
+
+    /**
+     * The sets of each barbell lift in [day] with their weights rounded to what the saved plates can load, by exercise key
+     * (D33; pounds on a barbell only, other lifts keep the program's numbers). Rust, so off the main thread.
+     */
+    private suspend fun roundedPrescriptions(day: PlannedDay): Map<String, List<PlannedSet>> {
+        val setup = _gym.value.plates
+        return withContext(env.work) {
+            day.plan.exercises.filter { PlateMath.applies(day.unit, it.equipment == "barbell") }.associate { it.key to roundSets(it.sets, setup) }
+        }
+    }
+
+    /** Only a set whose own unit is pounds is rounded: a kilogram set in a pound program has no inventory to round to. */
+    private fun roundSets(sets: List<PlannedSet>, setup: PlateSettings): List<PlannedSet> =
+        sets.map { s ->
+            val w = s.weight
+            if (w != null && PlateMath.applies(s.unit, true)) s.copy(weight = roundLoadable(w, s.unit, setup.defaultBar, setup.plates)) else s
+        }
 
     private fun edit(change: (WorkoutState) -> WorkoutState) = _state.update { it?.let(change) }
 
@@ -195,7 +220,10 @@ class WorkoutStore(
                 val ex = s.exercises.getOrNull(ref.exercise) ?: return@withLock
                 val entry = ex.completedEntry()
                 val updated = withContext(env.work) { service.afterSet(s.day, ex.key, entry, ref.set) }
-                if (updated != entry) _state.update { it?.withUpdatedEntry(ref.exercise, updated) }
+                if (updated != entry) {
+                    val planned = if (ex.barbell) withContext(env.work) { roundSets(plannedSets(updated, ex.unit), _gym.value.plates) } else null
+                    _state.update { it?.withUpdatedEntry(ref.exercise, updated, planned) }
+                }
             }
         }
     }

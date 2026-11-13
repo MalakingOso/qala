@@ -20,6 +20,27 @@ class WorkoutModelTest {
     // ---- opening ----
 
     @Test
+    fun roundedPrescriptionsBecomeBothTheShownWeightAndTheTarget() {
+        val day = WorkoutFixtures.day()
+        val rounded = WorkoutState.open(day, "s", 0L, prescribed = { ex -> ex.sets.map { it.copy(weight = it.weight?.minus(2.5)) } })
+        assertEquals(147.5, rounded.exercises[0].sets[0].weight!!, 0.0)
+        assertEquals(147.5, rounded.exercises[0].sets[0].targetWeight!!, 0.0)
+        // An update script that rewrites the sets keeps the rounded numbers when the caller passes them.
+        val entry = WorkoutFixtures.entry(sets(5, 160.0, 3.0))
+        val updated = rounded.withUpdatedEntry(0, entry, sets(5, 157.5, 3.0))
+        assertEquals(157.5, updated.exercises[0].sets[1].weight!!, 0.0)
+    }
+
+    @Test
+    fun theScriptsSeeThePlannedWeightAsTheRoundedOneSoCompletedAndPlannedMatch() {
+        val rounded = WorkoutState.open(WorkoutFixtures.day(), "s", 0L, prescribed = { ex -> ex.sets.map { it.copy(weight = it.weight?.plus(2.5)) } })
+        val logged = rounded.exercises[0].scriptEntry()
+        val planned = plannedSets(logged, WeightUnit.Lb)
+        assertEquals(rounded.exercises[0].sets.map { it.targetWeight }, planned.map { it.weight })
+        assertEquals(planned.map { it.weight }, plannedSets(rounded.exercises[0].completedEntry(), WeightUnit.Lb).map { it.weight })
+    }
+
+    @Test
     fun aNewWorkoutStartsOnTheFirstSetOfTheFirstExerciseAtItsPrescription() {
         assertEquals(listOf("Squat", "Bench Press", "Lat Pulldown"), open.exercises.map { it.name })
         assertEquals(0, open.current)
