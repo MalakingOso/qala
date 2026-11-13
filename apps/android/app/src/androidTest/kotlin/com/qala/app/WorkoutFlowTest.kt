@@ -211,7 +211,6 @@ class WorkoutFlowTest {
         rule.onNodeWithText("Start workout").assertDoesNotExist()
         rule.onNodeWithText("Resume workout").performClick()
         waitForText("Log set 2")
-        container.database.close()
     }
 
     @Test
@@ -230,7 +229,6 @@ class WorkoutFlowTest {
         rule.onNodeWithText("Ready early").performClick()
         waitForText("Log set 2")
         assertNull("ending the rest drops it", container.workout.state.value!!.rest)
-        container.database.close()
     }
 
     @Test
@@ -259,7 +257,6 @@ class WorkoutFlowTest {
         railSays("Day stages: run now, 3 of 6 done")
         assertNull(container.workout.saveError.value)
         assertEquals(1, container.sessions.liftSessions.first().count { !it.session.stub && it.session.startedAtMs == clock.nowMs() })
-        container.database.close()
     }
 
     @Test

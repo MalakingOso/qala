@@ -39,6 +39,7 @@ import com.qala.app.today.TodayLoad
 import com.qala.app.today.TodayUiState
 import com.qala.data.model.GymSettings
 import com.qala.data.model.PlateSettings
+import com.qala.data.model.RestAlert
 import com.qala.data.model.SettingsRecord
 import com.qala.data.model.ThemeMode
 import com.qala.data.model.TitleFont
@@ -78,8 +79,7 @@ private val GroupGap = 14.dp
  * (SettingsRepository: the core's training group for the unit and the days, the lifting groups for the rest) and the
  * lifting flow, the plate calculator and the warm-up read the stored values.
  *
- * Appearance (theme and title font) closes the screen. Left out on purpose: the web's Learn from taps and Alert (they
- * arrive with the Rust rest planner), Check-ins (the daily sleep and stress check-in does not exist on Android), Running
+ * Appearance (theme and title font) closes the screen. Left out on purpose: Check-ins (the daily sleep and stress check-in does not exist on Android), Running
  * (run recording is not built) and Coach (its screen shows the status).
  *
  * Each tap shows its result at once and hands over to the stored value when it catches up, so two quick taps on a stepper
@@ -409,12 +409,31 @@ fun SettingsScreen(
                 onToggle = { on -> edit(gym.copy(rest = gym.rest.copy(auto = on))) { setAutoRest(on) } },
             )
             ToggleRow(
+                label = "Learn from taps",
+                hint = "Ready early and a full rest teach it your pace",
+                on = gym.rest.learn,
+                onToggle = { on -> edit(gym.copy(rest = gym.rest.copy(learn = on))) { setLearnFromTaps(on) } },
+            )
+            ToggleRow(
                 label = "Show plates",
                 hint = "On set rows, Rest and the warm-up",
                 on = gym.rest.showPlates,
                 onToggle = { on -> edit(gym.copy(rest = gym.rest.copy(showPlates = on))) { setShowPlates(on) } },
-                last = true,
             )
+            GroupRow(vertical = 8.dp, last = true) {
+                QalaText("Alert", Modifier.weight(1f), QalaType.body)
+                ScalePicker(
+                    labels = AlertLabels,
+                    selected = RestAlert.entries.indexOf(gym.rest.alert),
+                    onPick = { i ->
+                        val alert = RestAlert.entries[i]
+                        edit(gym.copy(rest = gym.rest.copy(alert = alert))) { setRestAlert(alert) }
+                    },
+                    groupLabel = "Alert when a rest ends",
+                    modifier = Modifier.width(220.dp),
+                    cellHeight = 44.dp,
+                )
+            }
         }
 
         // ---- appearance ----

@@ -128,6 +128,8 @@ data class RestSettings(
     /** The plates for a set show on its row, on Rest and on the warm-up's ramp steps. */
     val showPlates: Boolean = true,
     val alert: RestAlert = RestAlert.Vibrate,
+    /** The rest plan learns the lifter's pace from the rests taken (D32). Off, every rest is planned at the base. */
+    val learn: Boolean = true,
 )
 
 /** Light, dark, or whatever the system is set to. The default is Light, as on the web. */
@@ -198,6 +200,7 @@ data class GymSettings(
                     auto = rest.leaf("auto", Boolean.serializer(), auto.auto),
                     showPlates = rest.leaf("showPlates", Boolean.serializer(), auto.showPlates),
                     alert = RestAlert.of(rest.leaf("alert", String.serializer(), auto.alert.wire)),
+                    learn = rest.leaf("learn", Boolean.serializer(), auto.learn),
                 ),
                 appearance = AppearanceSettings(
                     theme = ThemeMode.of(look.leaf("theme", String.serializer(), ThemeMode.Light.wire)),

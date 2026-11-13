@@ -3,10 +3,14 @@ package com.qala.app.workout
 import android.util.Log
 import com.qala.data.IsoTime
 import com.qala.data.QalaJson
+import com.qala.data.core.QalaCore
+import com.qala.data.core.exerciseMuscles
+import com.qala.data.core.roundWeight
 import com.qala.data.model.GymSettings
 import com.qala.data.model.PlateSettings
 import com.qala.data.model.WeightUnit
 import com.qala.data.program.FinishOutcome
+import com.qala.data.program.exerciseClassOf
 import com.qala.data.program.LiftService
 import com.qala.data.program.PlannedDay
 import com.qala.data.program.PlannedSet
@@ -16,6 +20,7 @@ import com.qala.data.repo.CheckInRepository
 import com.qala.data.repo.RepoEnv
 import com.qala.data.repo.SettingsRepository
 import com.qala.data.repo.WorkoutDraftStore
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -56,11 +61,13 @@ class WorkoutStore(
     private val service: LiftService,
     private val drafts: WorkoutDraftStore,
     private val checkIns: CheckInRepository,
-    settings: SettingsRepository,
+    private val settings: SettingsRepository,
     private val env: RepoEnv,
     private val scope: CoroutineScope,
     /** The OS alarm that tells a lifter in another app the rest is over (D34). */
     private val restAlarm: RestAlarm = RestAlarm.None,
+    /** The engine's G_m per muscle, as of the last build: where the rest planner's local fatigue comes from (D32). */
+    private val fatigueByMuscle: () -> Map<String, Double> = { emptyMap() },
 ) {
     private val _state = MutableStateFlow<WorkoutState?>(null)
 
@@ -74,6 +81,10 @@ class WorkoutStore(
      * thread as weights appear: a stepper that lands on a new weight shows its plates a moment later.
      */
     val plateHints: StateFlow<Map<Double, PlateHint>> = _plateHints
+
+    /** What the rest planner reads for each exercise of the open workout (by exercise key); filled in the background when a workout opens. */
+    @Volatile
+    private var restContexts: Map<String, RestContext> = emptyMap()
 
     private val storedDraft = MutableStateFlow(false)
 
@@ -118,10 +129,16 @@ class WorkoutStore(
         }
         // A draft left by a killed process counts as a workout waiting, though nothing has opened it yet.
         scope.launch {
-            val saved = withContext(env.work) { drafts.load()?.let(WorkoutState::fromJson) } ?: return@launch
-            val programId = withContext(env.work) { service.activeProgramId() }
-            val valid = saved.isFor(programId, saved.day, env.clock.nowMs()) && !withContext(env.work) { service.sessionExists(saved.sessionId) }
-            if (valid && _state.value == null) storedDraft.value = true
+            try {
+                val saved = withContext(env.work) { drafts.load()?.let(WorkoutState::fromJson) } ?: return@launch
+                val programId = withContext(env.work) { service.activeProgramId() }
+                val valid = saved.isFor(programId, saved.day, env.clock.nowMs()) && !withContext(env.work) { service.sessionExists(saved.sessionId) }
+                if (valid && _state.value == null) storedDraft.value = true
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.w("WorkoutStore", "the stored workout could not be read", e)
+            }
         }
         // One alarm for the running rest: set when it starts or is lengthened, dropped when it ends or is already over.
         scope.launch {
@@ -170,13 +187,54 @@ class WorkoutStore(
         drafts.load()?.let(WorkoutState::fromJson)?.let { saved ->
             if (saved.isFor(programId, day, now) && !service.sessionExists(saved.sessionId)) {
                 _state.value = saved
+                loadRestContexts(saved)
                 return Opened.Ready
             }
         }
         val planned = service.plan(day) ?: return Opened.NoDay
         val rounded = roundedPrescriptions(planned)
-        _state.value = WorkoutState.open(planned, env.ids.next(), now, { rounded[it.key] ?: it.sets }) { id -> planned.lastTime[id]?.let(::lastTimeLine) }
+        val opened = WorkoutState.open(planned, env.ids.next(), now, { rounded[it.key] ?: it.sets }) { id -> planned.lastTime[id]?.let(::lastTimeLine) }
+        _state.value = opened
+        loadRestContexts(opened)
         Opened.Ready
+    }
+
+    /** Reads, in the background, what the rest planner needs for each exercise of [s]: today's check-in, the engine's fatigue and the past rests (D32). */
+    private fun loadRestContexts(s: WorkoutState) {
+        scope.launch {
+            // A read that fails leaves the rests planned without readiness or a learned pace, which is a fine rest.
+            restContexts = try {
+                withContext(env.work) { buildRestContexts(s) }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.w("WorkoutStore", "the rest context could not be read", e)
+                emptyMap()
+            }
+        }
+    }
+
+    private suspend fun buildRestContexts(s: WorkoutState): Map<String, RestContext> {
+        val learn = _gym.value.rest.learn
+        val samples = if (learn) restSamples(service.history()) else emptyList()
+        val muscles = QalaCore.exerciseMuscles((s.exercises.map { it.exerciseId } + samples.map { it.first }).distinct())
+        val mainLifts = settings.settings.first().mainLifts
+        val nowMs = env.clock.nowMs()
+        val today = IsoTime.localDateKey(nowMs, IsoTime.offsetMinAt(env.clock.zone, nowMs))
+        val checkIn = checkIns.checkIns.first().lastOrNull { IsoTime.localDateKey(it.atMs, it.offsetMin) == today }
+        val soreness = checkIn?.let { QalaJson.decodeFromString(MapSerializer(String.serializer(), Int.serializer()), it.sorenessJson) }.orEmpty()
+        val fatigue = fatigueByMuscle()
+        return s.exercises.associate { ex ->
+            val targets = muscles[ex.exerciseId]?.targets.orEmpty()
+            ex.key to RestContext(
+                exercise = samples.filter { it.first == ex.exerciseId }.map { it.second }.takeLast(RestMemory),
+                cls = samples.filter { exerciseClassOf(it.first, mainLifts, muscles[it.first]) == ex.cls }.map { it.second }.takeLast(RestMemory),
+                soreness = targets.maxOfOrNull { soreness[it] ?: 0 }?.takeIf { it > 0 },
+                prs = checkIn?.recovery,
+                // G_m over 8 hard set-equivalents is 1, as the engine reads it (readiness.rs fatigue_local); G_m is as of the last build.
+                fatigueLocal = targets.mapNotNull { fatigue[it] }.maxOrNull()?.let { (it / 8.0).coerceIn(0.0, 1.0) },
+            )
+        }
     }
 
     /**
@@ -205,7 +263,7 @@ class WorkoutStore(
     private fun roundSets(sets: List<PlannedSet>, setup: PlateSettings): List<PlannedSet> =
         sets.map { s ->
             val w = s.weight
-            if (w != null && PlateMath.applies(s.unit, true)) s.copy(weight = roundLoadable(w, s.unit, setup.defaultBar, setup.plates)) else s
+            if (w != null && PlateMath.applies(s.unit, true)) s.copy(weight = QalaCore.roundWeight(w, setup.defaultBar, setup.plates)) else s
         }
 
     private fun edit(change: (WorkoutState) -> WorkoutState) = _state.update { it?.let(change) }
@@ -237,7 +295,7 @@ class WorkoutStore(
             if (s == null) return@update s
             val l = s.log(now) ?: return@update s
             logged = l.ref
-            val settled = l.settle(now, autoRest)
+            val settled = l.settle(now, autoRest, restContexts)
             result = settled.after
             settled.state
         }
@@ -292,7 +350,7 @@ class WorkoutStore(
     // ---- rest ----
 
     fun addRest(seconds: Int) = edit { it.addRest(seconds) }
-    fun endRest() = edit { it.endRest() }
+    fun endRest() = edit { it.endRest(env.clock.nowMs()) }
 
     /**
      * Starts the rest after the done set at [ref] by hand, for a lifter who has Automatic rest off (D34). True when a rest
@@ -305,7 +363,7 @@ class WorkoutStore(
             started = false
             if (s == null || s.exercises.getOrNull(ref.exercise)?.sets?.getOrNull(ref.set)?.done != true) return@update s
             started = true
-            s.startRest(ref, s.nextOpen(ref), now)
+            s.startRest(ref, s.nextOpen(ref), now, restContexts[s.exercises[ref.exercise].key] ?: RestContext())
         }
         if (started) _state.value?.rest?.let { restPlates(it.logged, it.next) }
         return started
@@ -394,6 +452,9 @@ class WorkoutStore(
     companion object {
         /** A stored workout older than this is a forgotten one, not a half-finished one. */
         const val DraftHours = 16
+
+        /** How many past rests the learned pace looks back over, about ten rests of memory at a rate of 0.1 (PLAN 6.6), with room to spare. */
+        const val RestMemory = 40
 
         const val SaveFailed = "Couldn't save the workout. It's kept, tap Resume to try again."
     }

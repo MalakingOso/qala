@@ -329,6 +329,20 @@ pub fn round_weight(request: &str) -> ApiResult {
     ))
 }
 
+/// `{v, class, targetReps, loggedReps, loggedRpe?, targetRpe?, setNumber?, amrap?, explicitBase?, weight?, first?, soreness?,
+/// prs?, fatigueLocal?, exerciseHistory?, classHistory?}` -> the rest plan (`seconds`, `base`, `adjust`, `multiplier`, `rows`).
+pub fn plan_rest(request: &str) -> ApiResult {
+    let r: crate::rest::RestInput = parse_request(request)?;
+    respond(&crate::rest::plan_rest(&r))
+}
+
+/// `{v, exercises, unit, soreness?, recovery?, equipment, preferPercussion, budgetMin, plates, barWeight, softTissue, enabled}`
+/// -> the warm-up plan (`blocks`, `ramps`, `minutes`, `heavy`).
+pub fn plan_warmup(request: &str) -> ApiResult {
+    let r: crate::warmup::WarmupInput = parse_request(request)?;
+    respond(&crate::warmup::plan_warmup(&r))
+}
+
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct ChooseNextReq {

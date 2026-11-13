@@ -1,5 +1,6 @@
 package com.qala.app.workout
 
+import android.media.RingtoneManager
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -23,6 +24,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.progressBarRangeInfo
@@ -33,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.qala.app.LocalAppContainer
 import com.qala.app.rememberAskForNotifications
+import com.qala.data.model.RestAlert
 import com.qala.data.model.WeightUnit
 import com.qala.design.Card
 import com.qala.design.FlowBottomBar
@@ -80,7 +83,13 @@ fun RestScreen(onBack: () -> Unit, onAllExercises: () -> Unit) {
     val remaining = timer.remainingSec(now)
     val up = timer.isUp(now)
     val haptic = LocalHapticFeedback.current
-    val buzz = rememberUpdatedState { haptic.performHapticFeedback(HapticFeedbackType.LongPress) }
+    val context = LocalContext.current
+    val alert = store.gym.collectAsState().value.rest.alert
+    // The alert setting (D32): a buzz, the notification sound, or both, the same as the notification uses in the background.
+    val buzz = rememberUpdatedState {
+        if (alert != RestAlert.Sound) haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+        if (alert != RestAlert.Vibrate) RingtoneManager.getRingtone(context, RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))?.play()
+    }
     LaunchedEffect(up, rest.startedAtMs) { if (up && timer.budgetSec > 0 && now - rest.startedAtMs < (timer.budgetSec + 5) * 1000L) buzz.value() }
 
     val gym by store.gym.collectAsState()

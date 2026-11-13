@@ -118,7 +118,7 @@ class RoomWriteTest {
                 "squat",
                 listOf(
                     LiftSetRecord(135.0, WeightUnit.Lb, 5.0, completed = true, warmup = true),
-                    LiftSetRecord(225.0, WeightUnit.Lb, 3.0, rpe = 9.0, targetRpe = 8.0, completed = true, restTakenSec = 95, restBaseSec = 120, restAdjustSec = 30),
+                    LiftSetRecord(225.0, WeightUnit.Lb, 3.0, rpe = 9.0, targetRpe = 8.0, completed = true, restTakenSec = 95, restBaseSec = 120, restAdjustSec = 30, restPlannedSec = 150),
                 ),
             ),
             LiftEntryRecord("benchPress", listOf(LiftSetRecord(155.0, WeightUnit.Lb, 10.0, completed = true))),

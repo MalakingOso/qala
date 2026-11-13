@@ -2,9 +2,11 @@ package com.qala.app.workout
 
 import com.qala.data.model.WeightUnit
 import com.qala.data.program.ExerciseClass
+import com.qala.data.core.RestFirstSet
 import com.qala.data.program.LiftExercise
 import com.qala.data.program.LiftedExercise
 import com.qala.data.program.LiftedSession
+import com.qala.data.program.LoggedRest
 import com.qala.data.program.LoggedSet
 import com.qala.data.program.PlannedDay
 import com.qala.data.program.PlannedSet
@@ -44,13 +46,21 @@ data class SetState(
     val done: Boolean = false,
     val jointPain: Boolean = false,
     val loggedAtMs: Long? = null,
+    /** The rest that followed this set, filled in when it ends (D32): seconds taken, the plan's base, its adjustments, the rest asked for. */
+    val restTakenSec: Int? = null,
+    val restBaseSec: Int? = null,
+    val restAdjustSec: Int? = null,
+    val restPlannedSec: Int? = null,
 ) {
     /** The prescription this set came from, for telling an edit of the numbers from a rewrite by the program. */
     fun sameTarget(other: PlannedSet): Boolean =
         targetWeight == other.weight && targetReps == other.reps && minReps == other.minReps && amrap == other.amrap &&
             targetRpe == other.rpe && timerSec == other.timerSec
 
-    fun asLogged(): LoggedSet? = if (done) LoggedSet(weight, reps, rpe, jointPain) else null
+    fun asLogged(): LoggedSet? = if (done) LoggedSet(weight, reps, rpe, jointPain, rest()) else null
+
+    private fun rest(): LoggedRest? =
+        if (restTakenSec != null && restBaseSec != null && restPlannedSec != null) LoggedRest(restTakenSec, restBaseSec, restAdjustSec ?: 0, restPlannedSec) else null
 
     companion object {
         fun of(p: PlannedSet) = SetState(p.weight, p.reps, p.weight, p.reps, p.minReps, p.amrap, p.rpe, p.timerSec)
@@ -114,6 +124,9 @@ data class RestState(
     val seconds: Int,
     /** The "Why" ledger: base first, then each adjustment, in signed seconds. */
     val rows: List<RestRow>,
+    /** The plan's base and the sum of its adjustments, kept for the learned pace once the rest has ended (D32). */
+    val base: Int = 0,
+    val adjust: Int = 0,
     /** The plates for each side of the next set, heaviest first, once the plate math has answered; null for a lift with no plates. */
     val perSide: List<Double>? = null,
     /** What to take off and put on to get there from the set just done ("take off 5, add 25 each side"), when both are plate-loaded. */
@@ -170,10 +183,10 @@ data class Settled(val state: WorkoutState, val after: AfterLog)
  * the ledger from [restPlan], counted from [nowMs]) when [autoRest] is on, and leaves Rest unopened when it is off; the
  * last set offers to finish either way, and a set edited after the fact stays where it is.
  */
-fun Logged.settle(nowMs: Long, autoRest: Boolean): Settled = when {
+fun Logged.settle(nowMs: Long, autoRest: Boolean, contexts: Map<String, RestContext> = emptyMap()): Settled = when {
     !first -> Settled(state, AfterLog.Stay)
     next == null -> Settled(state, AfterLog.Finish)
-    autoRest -> Settled(state.startRest(ref, next, nowMs), AfterLog.Rest)
+    autoRest -> Settled(state.startRest(ref, next, nowMs, contexts[state.exercises[ref.exercise].key] ?: RestContext()), AfterLog.Rest)
     else -> Settled(state, AfterLog.Next)
 }
 
@@ -254,7 +267,9 @@ data class WorkoutState(
         val set = ex.sets.getOrNull(i) ?: return null
         val first = !set.done
         val ref = SetRef(current, i)
-        val done = copy(exercises = exercises.replace(current, ex.copy(sets = ex.sets.replace(i, set.copy(done = true, loggedAtMs = set.loggedAtMs ?: nowMs)))))
+        // Logging the next set is the end of a rest that is still running: its numbers are kept before the new set is marked done.
+        val rested = if (first) endRest(nowMs) else this
+        val done = rested.copy(exercises = rested.exercises.replace(current, ex.copy(sets = rested.exercises[current].sets.replace(i, set.copy(done = true, loggedAtMs = set.loggedAtMs ?: nowMs)))))
         if (!first) return Logged(done, ref, first = false, next = null)
         val next = done.nextOpen(ref)
         return Logged(if (next != null) done.show(next.exercise, next.set) else done, ref, first = true, next = next)
@@ -282,14 +297,27 @@ data class WorkoutState(
      * Starts the rest after the set at [ref]: its length and ledger from [restPlan], counted from [nowMs]. [next] is
      * the set it rests for.
      */
-    fun startRest(ref: SetRef, next: SetRef?, nowMs: Long): WorkoutState {
+    fun startRest(ref: SetRef, next: SetRef?, nowMs: Long, context: RestContext = RestContext()): WorkoutState {
         val ex = exercises[ref.exercise]
         val set = ex.sets[ref.set]
-        val plan = restPlan(RestInput(ex.cls, set.targetReps, set.reps, set.rpe, set.targetRpe, ref.set + 1, set.amrap, set.timerSec))
-        return copy(rest = RestState(ref, next, nowMs, plan.seconds, plan.rows))
+        val first = ex.sets.firstOrNull()?.takeIf { ref.set > 0 && it.done }?.let { RestFirstSet(it.reps, it.rpe, it.weight) }
+        val plan = restPlan(RestInput(ex.cls, set.targetReps, set.reps, set.rpe, set.targetRpe, ref.set + 1, set.amrap, set.timerSec, set.weight, first, context))
+        return copy(rest = RestState(ref, next, nowMs, plan.seconds, plan.rows, plan.base, plan.adjust))
     }
 
-    fun endRest(): WorkoutState = copy(rest = null)
+    /**
+     * Ends the rest. With [nowMs] the numbers of the rest (what was taken against what was asked) are kept on the set it
+     * followed, which is what the learned pace reads later (D32).
+     */
+    fun endRest(nowMs: Long? = null): WorkoutState {
+        val r = rest ?: return this
+        if (nowMs == null) return copy(rest = null)
+        val ex = exercises.getOrNull(r.logged.exercise) ?: return copy(rest = null)
+        val set = ex.sets.getOrNull(r.logged.set) ?: return copy(rest = null)
+        val taken = ((nowMs - r.startedAtMs) / 1000).toInt().coerceAtLeast(0)
+        val noted = set.copy(restTakenSec = taken, restBaseSec = r.base, restAdjustSec = r.adjust, restPlannedSec = r.seconds)
+        return copy(exercises = exercises.replace(r.logged.exercise, ex.copy(sets = ex.sets.replace(r.logged.set, noted))), rest = null)
+    }
 
     /** The rest budget with [seconds] added. */
     fun addRest(seconds: Int): WorkoutState = copy(rest = rest?.plus(seconds))

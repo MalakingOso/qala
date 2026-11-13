@@ -153,6 +153,16 @@ pub fn round_weight(request: String) -> Result<String, QalaError> {
 }
 
 #[uniffi::export]
+pub fn plan_rest(request: String) -> Result<String, QalaError> {
+    Ok(core_api::plan_rest(&request)?)
+}
+
+#[uniffi::export]
+pub fn plan_warmup(request: String) -> Result<String, QalaError> {
+    Ok(core_api::plan_warmup(&request)?)
+}
+
+#[uniffi::export]
 pub fn choose_next_plates(request: String) -> Result<String, QalaError> {
     Ok(core_api::choose_next_plates(&request)?)
 }

@@ -5,6 +5,7 @@ import com.qala.data.core.dayName
 import com.qala.data.core.finishDay
 import com.qala.data.core.FinishDayResult
 import com.qala.data.core.runUpdateScript
+import com.qala.data.core.ExerciseMuscles
 import com.qala.data.model.LiftEntryRecord
 import com.qala.data.model.LiftSetRecord
 import com.qala.data.model.WeightUnit
@@ -28,6 +29,13 @@ import kotlinx.serialization.json.jsonPrimitive
 
 /** How a lift counts for rest and warm-up (PLAN 6.6, 6.7): a main lift, another compound, or a single-muscle isolation. */
 enum class ExerciseClass { Main, Secondary, Isolation }
+
+/** An exercise's class: a main lift is Main, one muscle and no synergists is Isolation, anything else Secondary. */
+fun exerciseClassOf(exerciseId: String, mainLifts: List<String>, muscles: ExerciseMuscles?): ExerciseClass = when {
+    exerciseId in mainLifts -> ExerciseClass.Main
+    muscles != null && muscles.targets.size <= 1 && muscles.synergists.isEmpty() -> ExerciseClass.Isolation
+    else -> ExerciseClass.Secondary
+}
 
 /** One set the program prescribes. [weight] is null for bodyweight work; [reps] is the target, [minReps] the floor of a range. */
 data class PlannedSet(
@@ -71,12 +79,16 @@ data class LiftPlan(
     val exercises: List<LiftExercise>,
 )
 
+/** The rest that followed a set (D32): seconds taken, the plan's base, the sum of its adjustments, and the rest it asked for. */
+data class LoggedRest(val takenSec: Int, val baseSec: Int, val adjustSec: Int, val plannedSec: Int)
+
 /** One set as the lifter did it. [weight] is null for bodyweight work. */
 data class LoggedSet(
     val weight: Double?,
     val reps: Double,
     val rpe: Double? = null,
     val jointPain: Boolean = false,
+    val rest: LoggedRest? = null,
 )
 
 private fun JsonElement?.double(): Double? = (this as? JsonPrimitive)?.takeIf { it !is JsonNull }?.doubleOrNull
@@ -147,6 +159,10 @@ fun liftEntryRecord(exerciseId: String, planned: List<PlannedSet>, logged: List<
                 targetRpe = planned.getOrNull(i)?.rpe,
                 completed = true,
                 jointPain = set.jointPain,
+                restTakenSec = set.rest?.takenSec,
+                restBaseSec = set.rest?.baseSec,
+                restAdjustSec = set.rest?.adjustSec,
+                restPlannedSec = set.rest?.plannedSec,
             )
         },
     )

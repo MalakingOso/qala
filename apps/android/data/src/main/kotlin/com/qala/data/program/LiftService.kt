@@ -108,6 +108,9 @@ class LiftService(
         return Loaded(program, engine.evaluate(program.text, program.name, s.unit, data), s.unit, s.mainLifts, data)
     }
 
+    /** Every stored lift session, for what the rest planner learns from past rests (D32). */
+    suspend fun history(): List<LiftSessionWithEntries> = sessions.liftSessions.first()
+
     /** Whether a session with this id is stored, so a draft whose workout was already saved can be dropped. */
     suspend fun sessionExists(id: String): Boolean = sessions.exists(id)
 
@@ -119,14 +122,8 @@ class LiftService(
         val l = load() ?: return@withContext null
         val ids = engine.usedExercises(l.evaluated, day).map { it.exerciseId }
         val muscles = QalaCore.exerciseMuscles(ids)
-        val plan = engine.liftPlan(l.evaluated, day, l.program.name, l.unit) { id ->
-            val m = muscles[id]
-            when {
-                id in l.mainLifts -> ExerciseClass.Main
-                m != null && m.targets.size <= 1 && m.synergists.isEmpty() -> ExerciseClass.Isolation
-                else -> ExerciseClass.Secondary
-            }
-        } ?: return@withContext null
+        val plan = engine.liftPlan(l.evaluated, day, l.program.name, l.unit) { id -> exerciseClassOf(id, l.mainLifts, muscles[id]) }
+            ?: return@withContext null
         val history = sessions.liftSessions.first()
         PlannedDay(
             programId = l.program.id,

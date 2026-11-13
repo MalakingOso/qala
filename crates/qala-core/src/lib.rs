@@ -12,6 +12,8 @@ pub mod js;
 pub mod muscles;
 pub mod plates;
 pub mod records;
+pub mod rest;
 pub mod run;
 pub mod run_api;
 pub mod time;
+pub mod warmup;

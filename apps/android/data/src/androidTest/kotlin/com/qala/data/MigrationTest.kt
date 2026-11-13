@@ -33,11 +33,11 @@ class MigrationTest {
             assertEquals("n", it.getString(1))
             for (c in 2..4) assertEquals(true, it.isNull(c))
         }
-        db.query("SELECT weight, reps, restTakenSec, restBaseSec, restAdjustSec FROM lift_set WHERE id = 's1/0/0'").use {
+        db.query("SELECT weight, reps, restTakenSec, restBaseSec, restAdjustSec, restPlannedSec FROM lift_set WHERE id = 's1/0/0'").use {
             it.moveToFirst()
             assertEquals(225.0, it.getDouble(0), 0.0)
             assertEquals(5.0, it.getDouble(1), 0.0)
-            for (c in 2..4) assertEquals(true, it.isNull(c))
+            for (c in 2..5) assertEquals(true, it.isNull(c))
         }
         db.query("SELECT distanceM FROM run_session WHERE id = 'r1'").use { it.moveToFirst(); assertEquals(5000.0, it.getDouble(0), 0.0) }
         // The new table takes a fix, and a fix delivered twice is one row.

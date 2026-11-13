@@ -65,6 +65,7 @@ val UnitLabels = listOf("lb", "kg")
 /** The Appearance pickers, in [com.qala.data.model.ThemeMode] and [com.qala.data.model.TitleFont] order, and the line that shows the title face. */
 val ThemeLabels = listOf("Light", "Dark", "System")
 val TitleFontLabels = listOf("Qala Test", "Faustina")
+val AlertLabels = listOf("Vibrate", "Sound", "Both")
 const val TitleSample = "Lower A · 245 × 4"
 
 /** The distance and pace units that go with the weight unit, as the rest of the app pairs them (miles with pounds). */

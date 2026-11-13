@@ -1,6 +1,5 @@
 package com.qala.app.workout
 
-import com.qala.data.core.PlateEntry
 import com.qala.data.core.PlatePairs
 import com.qala.data.model.GymSettings
 import com.qala.data.model.OwnedEquipment
@@ -16,118 +15,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class WarmupTest {
-    private fun ramp(weight: Double, reference: Double?, reps: Double = 5.0, unit: WeightUnit = WeightUnit.Lb, isolation: Boolean = false, first: Boolean = true, trained: Boolean = false, extra: Boolean = false) =
-        rampSets(RampInput(weight, intensityOf(weight, reference, reps), isolation, first, trained, extra), unit)
-
-    private fun loads(steps: List<RampStep>) = steps.map { it.load }
-
-    // ---- rounding ----
-
-    @Test
-    fun poundsOnABarRoundThroughTheRustPlateMathWithTiesGoingBelow() {
-        assertEquals(100.0, roundLoadable(101.25, WeightUnit.Lb), 0.0)
-        assertEquals("a tie goes to the lighter load", 120.0, roundLoadable(122.5, WeightUnit.Lb), 0.0)
-        assertEquals(65.0, roundLoadable(67.5, WeightUnit.Lb), 0.0)
-        assertEquals(70.0, roundLoadable(68.0, WeightUnit.Lb), 0.0)
-        assertEquals("never under the bar", 45.0, roundLoadable(30.0, WeightUnit.Lb), 0.0)
-        assertEquals("a different bar is a parameter, not a constant", 35.0, roundLoadable(20.0, WeightUnit.Lb, barWeight = 35.0), 0.0)
-        assertEquals(215.0, roundLoadable(213.0, WeightUnit.Lb), 0.0)
-    }
-
-    @Test
-    fun kilogramsAndLiftsWithNoBarStayOnThePlaceholder() {
-        assertEquals(42.5, roundLoadable(42.4, WeightUnit.Kg), 0.0)
-        assertEquals(20.0, roundLoadable(8.0, WeightUnit.Kg), 0.0)
-        assertEquals("the placeholder rounds halves up", 70.0, roundLoadable(67.5, WeightUnit.Lb, barWeight = 0.0), 0.0)
-        assertEquals(40.0, roundLoadable(40.0, WeightUnit.Lb, barWeight = 0.0), 0.0)
-        assertEquals(45.0, defaultBarWeight(WeightUnit.Lb), 0.0)
-        assertEquals(20.0, defaultBarWeight(WeightUnit.Kg), 0.0)
-    }
-
-    // ---- ramp sets: the worked examples of the research file ----
-
-    @Test
-    fun aStrengthSquatOf225At265RampsToOneHundredOneFortyFiveAndOneNinety() {
-        val steps = ramp(225.0, 265.0)
-        assertEquals(listOf(100.0, 145.0, 190.0), loads(steps))
-        assertEquals(listOf(6, 4, 2), steps.map { it.reps })
-        assertEquals(listOf(45, 60, 90), steps.map { it.restSec })
-    }
-
-    @Test
-    fun aBenchOf240At250GetsTheFullFiveStepRamp() {
-        val steps = ramp(240.0, 250.0, reps = 1.0)
-        assertEquals(listOf(95.0, 130.0, 170.0, 195.0, 220.0), loads(steps))
-        assertEquals(listOf(5, 3, 2, 1, 1), steps.map { it.reps })
-        assertEquals(listOf(45, 60, 90, 120, 120), steps.map { it.restSec })
-    }
-
-    @Test
-    fun anOverheadPressOf95At125StartsWithTheBar() {
-        val steps = ramp(95.0, 125.0, reps = 8.0)
-        assertEquals(listOf(45.0, 60.0, 80.0), loads(steps))
-        assertTrue(steps[0].bar)
-        assertEquals(8, steps[0].reps)
-        assertEquals(listOf(8, 4, 2), steps.map { it.reps })
-        assertFalse(steps[1].bar)
-    }
-
-    @Test
-    fun aLightLiftNeedsNoRampUnlessItIsTheFirstForItsMuscle() {
-        assertEquals(emptyList<RampStep>(), ramp(80.0, 200.0, first = false))
-        val one = ramp(80.0, 200.0, first = true).single()
-        assertEquals("half of 80 is under the bar, so it is the bar", RampStep(45.0, 10, 45, bar = true), one)
-        assertEquals(listOf(RampStep(80.0, 10, 45)), ramp(160.0, 400.0, first = true))
-    }
-
-    @Test
-    fun anIsolationLiftIsNeverRampedHeavy() {
-        val one = ramp(150.0, 160.0, isolation = true)
-        assertEquals(1, one.size)
-        assertEquals(10, one.single().reps)
-    }
-
-    @Test
-    fun aSecondLiftOnMusclesAlreadyWarmGetsOneSetAtEightyPercent() {
-        val one = ramp(150.0, 200.0, trained = true)
-        assertEquals(listOf(120.0), loads(one))
-        assertEquals(4, one.single().reps)
-    }
-
-    @Test
-    fun soreMusclesOrALowRecoveryInsertAnExtraStepBetweenTheFirstTwo() {
-        val plain = ramp(225.0, 265.0)
-        val extra = ramp(225.0, 265.0, extra = true)
-        assertEquals("the mean of 100 and 145 is 122.5, a tie, so the lighter 120", listOf(100.0, 120.0, 145.0, 190.0), loads(extra))
-        assertEquals(5, extra[1].reps)
-        assertTrue(extra[1].extra)
-        assertEquals(plain.size + 1, extra.size)
-    }
-
-    @Test
-    fun withNoOneRepMaxTheIntensityComesFromTheReps() {
-        assertEquals(1.0 / (1 + 5 / 30.0), intensityOf(225.0, null, 5.0), 1e-9)
-        assertEquals(225.0 / 265.0, intensityOf(225.0, 265.0, 5.0), 1e-9)
-        assertEquals("a zero 1RM is no 1RM", 1.0 / (1 + 5 / 30.0), intensityOf(225.0, 0.0, 5.0), 1e-9)
-    }
-
-    @Test
-    fun aStepEqualToTheOneBeforeItOrToTheWorkingWeightIsDropped() {
-        // 50 lb at T4: 40% = 20 (bar), 55% = 27.5 (bar, merged), 70% = 35 (bar, merged), 82% = 41 (bar), 91% = 45.5 -> 45 = work weight 50? no, 45 < 50.
-        val steps = ramp(50.0, 52.0, reps = 1.0)
-        assertEquals(listOf(45.0), loads(steps))
-        assertTrue(steps.single().bar)
-    }
-
-    @Test
-    fun kilogramRampsRoundToTheKilogramPlatesAndStartFromTwentyKilos() {
-        val steps = ramp(100.0, 120.0, unit = WeightUnit.Kg)
-        assertEquals(listOf(45.0, 65.0, 85.0), loads(steps))
-        val light = ramp(40.0, 50.0, unit = WeightUnit.Kg)
-        assertTrue(light.first().bar)
-        assertEquals(20.0, light.first().load, 0.0)
-    }
-
     // ---- the plan ----
 
     private fun exercise(id: String, name: String, cls: ExerciseClass, muscles: List<String>, weight: Double?, reference: Double?, reps: Double = 3.0, barbell: Boolean = true) =
@@ -356,16 +243,5 @@ class WarmupTest {
         val custom = planFrom(GymSettings(plates = no2_5), heavy).ramps[0].steps.map { it.load }
         assertEquals(70.0, default[0], 0.0)
         assertEquals("without 2.5s the loads step by 10, so 72 goes to 75", 75.0, custom[0], 0.0)
-    }
-
-    @Test
-    fun roundLoadableReadsTheInventoryItIsGiven() {
-        val no2_5 = PlateSettings().withPairs(2.5, PlatePairs.Count(0.0)).plates
-        assertEquals("a tie on the default plates goes below", 110.0, roundLoadable(112.5, WeightUnit.Lb), 0.0)
-        assertEquals(115.0, roundLoadable(112.5, WeightUnit.Lb, plates = no2_5), 0.0)
-        val scarce = listOf(PlateEntry(45.0, PlatePairs.Count(1.0), "blue"), PlateEntry(10.0, PlatePairs.Count(1.0), "white"), PlateEntry(5.0, PlatePairs.Count(1.0), "charcoal"))
-        assertEquals("one pair each of 45, 10 and 5 cannot make 100", 75.0, roundLoadable(100.0, WeightUnit.Lb, plates = scarce), 0.0)
-        assertEquals(100.0, roundLoadable(100.0, WeightUnit.Lb), 0.0)
-        assertEquals("the saved bar", 35.0, roundLoadable(20.0, WeightUnit.Lb, barWeight = defaultBarWeight(WeightUnit.Lb, PlateSettings(defaultBar = 35.0))), 0.0)
     }
 }

@@ -37,7 +37,6 @@ Code work owed by decided items, built after the session (protocol step 5). An e
 - D21 (2026-11-13): once the domain is registered, point A/AAAA for `app.<domain>` and the apex at the VPS, add the apex Caddy block that serves `assetlinks.json`, and set the RP ID to the registrable domain.
 - D23 (2026-11-13): add the callisto reverse tunnel (a systemd unit on callisto running `ssh -N -R` to the VPS), point `LLM_GATEWAY_URL` and the transcribe and PDF settings at its VPS-local ports, and cap each user's LLM routes (one in flight, a per-minute limit).
 - D24 (2026-11-13): render the straight barbell and the trap bar in Blender (`assets/3d/build_gear.py`), add a per-exercise bar to the catalog and plan, and offer both bars in the plate calculator picker.
-- D32 (2026-11-13): port `RestPlan.kt` and `Warmup.kt` to `qala-core` (rest also gets the learning multiplier, rep drift and low-readiness adjustment), switch Kotlin to call it, delete the Kotlin copies.
 - D38 (2026-11-13): import carries equipment from aliases and source words to a `, Barbell`-style suffix, and the import check notes any evaluated weight that differs from the stated one.
 - D39 (2026-11-13): stop `packages/llm/importEmit.ts` writing `?+ @8`; write `?+` alone and carry the RPE in a note.
 

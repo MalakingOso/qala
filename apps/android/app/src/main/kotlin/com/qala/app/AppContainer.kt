@@ -82,6 +82,7 @@ class AppContainer(
         env,
         scope,
         restAlarm,
+        fatigueByMuscle = { engine.snapshot.value.stateView?.fatigueMuscle.orEmpty() },
     )
 
     /**

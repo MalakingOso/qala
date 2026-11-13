@@ -20,6 +20,23 @@ class WorkoutModelTest {
     // ---- opening ----
 
     @Test
+    fun endingARestKeepsWhatWasTakenOnTheSetItFollowedAndLoggingTheNextSetEndsTheRest() {
+        val rested = open.log(1_000L)!!.state.startRest(SetRef(0, 0), SetRef(0, 1), 1_000L)
+        val plan = rested.rest!!
+        val ended = rested.endRest(1_000L + 95_000)
+        val set = ended.exercises[0].sets[0]
+        assertNull(ended.rest)
+        assertEquals(listOf(95, plan.base, plan.adjust, plan.seconds), listOf(set.restTakenSec, set.restBaseSec, set.restAdjustSec, set.restPlannedSec))
+        assertEquals("it reaches the stored record", 95, set.asLogged()!!.rest!!.takenSec)
+        // Logging the next set with the rest still running ends it the same way.
+        val next = rested.log(1_000L + 40_000)!!.state
+        assertNull(next.rest)
+        assertEquals(40, next.exercises[0].sets[0].restTakenSec)
+        // Ending without a clock (a plain close) keeps nothing.
+        assertNull(rested.endRest().exercises[0].sets[0].restTakenSec)
+    }
+
+    @Test
     fun roundedPrescriptionsBecomeBothTheShownWeightAndTheTarget() {
         val day = WorkoutFixtures.day()
         val rounded = WorkoutState.open(day, "s", 0L, prescribed = { ex -> ex.sets.map { it.copy(weight = it.weight?.minus(2.5)) } })

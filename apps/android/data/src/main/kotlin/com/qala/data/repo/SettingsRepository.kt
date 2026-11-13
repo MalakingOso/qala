@@ -52,7 +52,7 @@ object SettingsGroups {
     /** `enabled`, `softTissue`, `preferPercussion`, `minutes`: how the warm-up is built. */
     const val WARMUP = "warmup"
 
-    /** `auto` (logging a set opens Rest), `showPlates` (plate hints are shown) and `alert` (vibrate, sound or both). */
+    /** `auto` (logging a set opens Rest), `showPlates` (plate hints are shown), `alert` (vibrate, sound or both) and `learn` (the rest plan learns the lifter's pace). */
     const val REST = "rest"
 
     /** `theme` (light, dark, system) and `titleFont` (qalaTest, faustina). */
@@ -159,6 +159,8 @@ class SettingsRepository(
     suspend fun setAutoRest(on: Boolean) = leaf(SettingsGroups.REST, "auto", JsonPrimitive(on))
 
     suspend fun setShowPlates(on: Boolean) = leaf(SettingsGroups.REST, "showPlates", JsonPrimitive(on))
+
+    suspend fun setLearnFromTaps(on: Boolean) = leaf(SettingsGroups.REST, "learn", JsonPrimitive(on))
 
     suspend fun setRestAlert(alert: RestAlert) = leaf(SettingsGroups.REST, "alert", JsonPrimitive(alert.wire))
 

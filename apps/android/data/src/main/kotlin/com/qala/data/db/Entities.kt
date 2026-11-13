@@ -100,11 +100,13 @@ data class LiftSetEntity(
     val jointPain: Boolean,
     /**
      * The rest that followed this set, for the rest planner's learning multiplier (D32): the seconds actually taken, the
-     * plan's base for the exercise, and the sum of the plan's adjustments. Null when no rest ran after the set.
+     * plan's base for the exercise, the sum of the plan's adjustments, and the rest the plan asked for (a rest taken in
+     * less was started early). Null when no rest ran after the set.
      */
     val restTakenSec: Int? = null,
     val restBaseSec: Int? = null,
     val restAdjustSec: Int? = null,
+    val restPlannedSec: Int? = null,
 )
 
 /** An entry with its sets, as Room reads it. */

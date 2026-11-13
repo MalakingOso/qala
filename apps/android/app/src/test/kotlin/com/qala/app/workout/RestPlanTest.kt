@@ -92,14 +92,6 @@ class RestPlanTest {
         }
     }
 
-    @Test
-    fun roundingGoesToTheNearestFifteenHalvesUp() {
-        assertEquals(15, round15(7.5))
-        assertEquals(0, round15(7.4))
-        assertEquals(195, round15(188.0))
-        assertEquals(180, round15(187.0))
-    }
-
     // ---- the clock ----
 
     @Test

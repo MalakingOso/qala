@@ -31,6 +31,7 @@ internal fun LiftSetEntity.toRecord() = LiftSetRecord(
     restTakenSec = restTakenSec,
     restBaseSec = restBaseSec,
     restAdjustSec = restAdjustSec,
+    restPlannedSec = restPlannedSec,
 )
 
 /** The nested entries of a session, in position order. */
@@ -73,6 +74,7 @@ internal fun childRows(sessionId: String, entries: List<LiftEntryRecord>): Pair<
                 restTakenSec = set.restTakenSec,
                 restBaseSec = set.restBaseSec,
                 restAdjustSec = set.restAdjustSec,
+                restPlannedSec = set.restPlannedSec,
             )
         }
     }

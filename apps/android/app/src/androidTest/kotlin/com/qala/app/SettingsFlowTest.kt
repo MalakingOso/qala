@@ -22,6 +22,8 @@ import com.qala.data.core.PlatePairs
 import com.qala.data.db.QalaDatabase
 import com.qala.data.model.AppearanceSettings
 import com.qala.data.model.EquipmentItem
+import com.qala.data.model.RestAlert
+import com.qala.data.model.RestSettings
 import com.qala.data.model.ThemeMode
 import com.qala.data.model.TitleFont
 import com.qala.data.repo.DeviceClock
@@ -167,7 +169,17 @@ class SettingsFlowTest {
         waitFor { runBlocking { container.settings.gym.first().appearance.theme } == ThemeMode.Dark }
         rule.onNodeWithContentDescription("Faustina").performScrollTo().performClick()
         waitFor { runBlocking { container.settings.gym.first().appearance.titleFont } == TitleFont.Faustina }
-        container.database.close()
+    }
+
+    @Test
+    fun learnFromTapsAndTheAlertAreStoredFromTheRestTimerGroup() = runBlocking {
+        val container = container()
+        openSettings(container)
+        assertEquals(RestSettings(auto = true, showPlates = true, alert = RestAlert.Vibrate, learn = true), container.settings.gym.first().rest)
+        rule.onNodeWithText("Learn from taps").performScrollTo().performClick()
+        waitFor { !runBlocking { container.settings.gym.first().rest.learn } }
+        rule.onNodeWithContentDescription("Both").performScrollTo().performClick()
+        waitFor { runBlocking { container.settings.gym.first().rest.alert } == RestAlert.Both }
     }
 
     @Test
