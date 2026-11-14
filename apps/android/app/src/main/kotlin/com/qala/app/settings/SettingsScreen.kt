@@ -38,6 +38,7 @@ import com.qala.app.skip.undoWrites
 import com.qala.app.today.TodayLoad
 import com.qala.app.today.TodayUiState
 import com.qala.data.model.GymSettings
+import com.qala.data.model.CueEvery
 import com.qala.data.model.PlateSettings
 import com.qala.data.model.RestAlert
 import com.qala.data.model.SettingsRecord
@@ -434,6 +435,38 @@ fun SettingsScreen(
                     cellHeight = 44.dp,
                 )
             }
+        }
+
+        // ---- running ----
+        val running = gym.running
+        Group("Running", Modifier.padding(top = GroupGap)) {
+            ToggleRow(
+                label = "Audio cues",
+                hint = "Speaks distance, time and pace",
+                on = running.cues,
+                onToggle = { on -> edit(gym.copy(running = running.copy(cues = on))) { setRunCues(on) } },
+            )
+            GroupRow(vertical = 8.dp) {
+                QalaText("Cue every", Modifier.weight(1f), QalaType.body)
+                ScalePicker(
+                    labels = cueLabels(unit),
+                    selected = CueEvery.entries.indexOf(running.cueEvery),
+                    onPick = { i ->
+                        val every = CueEvery.entries[i]
+                        edit(gym.copy(running = running.copy(cueEvery = every))) { setCueEvery(every) }
+                    },
+                    groupLabel = "Cue every",
+                    modifier = Modifier.width(210.dp),
+                    cellHeight = 44.dp,
+                )
+            }
+            ToggleRow(
+                label = "Auto-pause",
+                hint = "Pauses the clock when you stop",
+                on = running.autopause,
+                onToggle = { on -> edit(gym.copy(running = running.copy(autopause = on))) { setAutopause(on) } },
+            )
+            StrapRow(container)
         }
 
         // ---- appearance ----

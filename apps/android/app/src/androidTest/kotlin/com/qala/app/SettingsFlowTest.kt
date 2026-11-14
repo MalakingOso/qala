@@ -21,9 +21,11 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.qala.data.core.PlatePairs
 import com.qala.data.db.QalaDatabase
 import com.qala.data.model.AppearanceSettings
+import com.qala.data.model.CueEvery
 import com.qala.data.model.EquipmentItem
 import com.qala.data.model.RestAlert
 import com.qala.data.model.RestSettings
+import com.qala.data.model.RunningSettings
 import com.qala.data.model.ThemeMode
 import com.qala.data.model.TitleFont
 import com.qala.data.repo.DeviceClock
@@ -180,6 +182,21 @@ class SettingsFlowTest {
         waitFor { !runBlocking { container.settings.gym.first().rest.learn } }
         rule.onNodeWithContentDescription("Both").performScrollTo().performClick()
         waitFor { runBlocking { container.settings.gym.first().rest.alert } == RestAlert.Both }
+    }
+
+    @Test
+    fun theRunningGroupStoresTheCuesTheirIntervalAndAutoPause() = runBlocking {
+        val container = container()
+        openSettings(container)
+        assertEquals(RunningSettings(cues = true, cueEvery = CueEvery.Half, autopause = true), container.settings.gym.first().running)
+        rule.onNodeWithContentDescription("1 mi").performScrollTo().performClick()
+        waitFor { runBlocking { container.settings.gym.first().running.cueEvery } == CueEvery.One }
+        rule.onNodeWithText("Auto-pause").performScrollTo().performClick()
+        waitFor { !runBlocking { container.settings.gym.first().running.autopause } }
+        rule.onNodeWithText("Audio cues").performScrollTo().performClick()
+        waitFor { !runBlocking { container.settings.gym.first().running.cues } }
+        rule.onNodeWithText("Heart-rate strap").performScrollTo().assertExists()
+        Unit
     }
 
     @Test

@@ -5,7 +5,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
+import com.qala.data.QalaJson
 import com.qala.data.core.QalaCore
+import com.qala.data.db.MetaKeys
 import com.qala.data.core.shiftsPlan
 import com.qala.data.model.SkipReason
 import com.qala.data.db.QalaDatabase
@@ -26,6 +28,7 @@ import com.qala.data.repo.WorkoutDraftStore
 import com.qala.app.coach.CoachClient
 import com.qala.app.coach.CoachStore
 import com.qala.app.coach.HttpCoachClient
+import com.qala.app.run.RunRecording
 import com.qala.app.workout.AndroidRestAlarm
 import com.qala.app.workout.RestAlarm
 import com.qala.app.workout.WorkoutStore
@@ -36,6 +39,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.coroutines.launch
 
 /**
@@ -90,6 +96,13 @@ class AppContainer(
      * it, shows it and clears it. A state, not an event, so one that arrives before the shell exists is not lost.
      */
     val pendingRoute = MutableStateFlow<Route?>(null)
+
+    /** The run in progress: the recorder, the stored fixes and the live numbers. Process-wide, like the workout, and the service is only glue to it. */
+    val runRecording = RunRecording(database, runs, scope, now = { env.clock.nowMs() })
+
+    /** The heart-rate strap the lifter picked, or null; this install's, in the meta table. */
+    suspend fun strapAddress(): String? =
+        database.metaDao().get(MetaKeys.RUN_STRAP)?.let { (QalaJson.parseToJsonElement(it) as? JsonObject)?.get("address")?.jsonPrimitive?.contentOrNull }
 
     /** The conversation with the coach (A6). Process-wide, so the thread survives a visit to another tab. */
     val coach = CoachStore(coachClient, scope)

@@ -155,6 +155,21 @@ enum class TitleFont(val wire: String) {
     }
 }
 
+/** How often a run speaks a cue: every half mile or kilometre, every mile or kilometre (the unit of the lifter), or every 5 minutes. */
+enum class CueEvery(val wire: String) {
+    Half("half"),
+    One("one"),
+    Time("time"),
+    ;
+
+    companion object {
+        fun of(wire: String?) = entries.firstOrNull { it.wire == wire } ?: Half
+    }
+}
+
+/** What a run does: speak cues and how often, pause itself when you stop. */
+data class RunningSettings(val cues: Boolean = true, val cueEvery: CueEvery = CueEvery.Half, val autopause: Boolean = true)
+
 data class AppearanceSettings(val theme: ThemeMode = ThemeMode.Light, val titleFont: TitleFont = TitleFont.QalaTest)
 
 /** Everything the lifting flow reads from Settings besides the weight unit. */
@@ -164,6 +179,7 @@ data class GymSettings(
     val warmup: WarmupSettings = WarmupSettings(),
     val rest: RestSettings = RestSettings(),
     val appearance: AppearanceSettings = AppearanceSettings(),
+    val running: RunningSettings = RunningSettings(),
 ) {
     companion object {
         /** Reads the typed settings from the leaves of each group; a group, leaf or value that is missing or unreadable takes its default. */
@@ -174,6 +190,7 @@ data class GymSettings(
             val warmup = groups[SettingsGroups.WARMUP]
             val rest = groups[SettingsGroups.REST]
             val look = groups[SettingsGroups.APPEARANCE]
+            val running = groups[SettingsGroups.RUNNING]
             val owned = OwnedEquipment()
             val build = WarmupSettings()
             val auto = RestSettings()
@@ -201,6 +218,11 @@ data class GymSettings(
                     showPlates = rest.leaf("showPlates", Boolean.serializer(), auto.showPlates),
                     alert = RestAlert.of(rest.leaf("alert", String.serializer(), auto.alert.wire)),
                     learn = rest.leaf("learn", Boolean.serializer(), auto.learn),
+                ),
+                running = RunningSettings(
+                    cues = running.leaf("cues", Boolean.serializer(), true),
+                    cueEvery = CueEvery.of(running.leaf("cueEvery", String.serializer(), CueEvery.Half.wire)),
+                    autopause = running.leaf("autopause", Boolean.serializer(), true),
                 ),
                 appearance = AppearanceSettings(
                     theme = ThemeMode.of(look.leaf("theme", String.serializer(), ThemeMode.Light.wire)),

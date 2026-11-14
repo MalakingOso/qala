@@ -99,21 +99,41 @@ struct Track {
     fy: AxisFilter,
 }
 
+/// A longitude difference taken the short way round: over 180 degrees the two points are really on either
+/// side of the antimeridian. Only a difference that leaves [-180, 180] is touched, so every other run keeps
+/// its exact arithmetic (the frozen vectors depend on it).
+fn wrap_lon_diff(d: f64) -> f64 {
+    if d > 180.0 {
+        d - 360.0
+    } else if d < -180.0 {
+        d + 360.0
+    } else {
+        d
+    }
+}
+
 impl Track {
     /// `(lon - o.lon) * DEG_M * cos(o.lat * PI / 180)`, and the same for y; the TS writes the
-    /// radian conversion as `lat * Math.PI / 180` here, not `lat * (Math.PI / 180)`.
+    /// radian conversion as `lat * Math.PI / 180` here, not `lat * (Math.PI / 180)`. The longitude difference
+    /// wraps at the antimeridian (the TS did not, a bug the port fixed on 2026-11-13).
     fn geo_to_local(&self, lat: f64, lon: f64) -> (f64, f64) {
         (
-            (lon - self.origin_lon) * DEG_M * cos((self.origin_lat * PI) / 180.0),
+            wrap_lon_diff(lon - self.origin_lon) * DEG_M * cos((self.origin_lat * PI) / 180.0),
             (lat - self.origin_lat) * DEG_M,
         )
     }
 
+    /// The inverse, with a longitude brought back into [-180, 180] when the offset carried it across.
     fn local_to_geo(&self, x: f64, y: f64) -> (f64, f64) {
-        (
-            self.origin_lat + y / DEG_M,
-            self.origin_lon + x / (DEG_M * cos((self.origin_lat * PI) / 180.0)),
-        )
+        let lon = self.origin_lon + x / (DEG_M * cos((self.origin_lat * PI) / 180.0));
+        let lon = if lon > 180.0 {
+            lon - 360.0
+        } else if lon < -180.0 {
+            lon + 360.0
+        } else {
+            lon
+        };
+        (self.origin_lat + y / DEG_M, lon)
     }
 }
 

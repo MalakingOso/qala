@@ -38,6 +38,7 @@ import androidx.compose.ui.semantics.hideFromAccessibility
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.zIndex
 import com.qala.app.settings.SettingsFocus
+import com.qala.app.run.RunState
 import com.qala.app.skip.SkipSheet
 import com.qala.app.today.Destination
 import com.qala.app.today.TodayLoad
@@ -94,11 +95,22 @@ fun QalaApp() {
         val back = nav.back()
         BackHandler(enabled = back != null) { back?.let { nav = it } }
 
+        // A run that is recording or waiting on its Summary opens its screen once, when the app comes up with it.
+        val runState by container.runRecording.state.collectAsState()
+        var runOpened by rememberSaveable { mutableStateOf(false) }
+        LaunchedEffect(runState !is RunState.Idle) {
+            if (runState !is RunState.Idle && !runOpened) {
+                runOpened = true
+                if (nav.route != Route.Run) nav = nav.push(Route.Run)
+            }
+        }
+
         // A tapped rest notification opens Rest over the workout it belongs to.
         val requested by container.pendingRoute.collectAsState()
         LaunchedEffect(requested) {
             when (requested) {
                 Route.Rest -> nav = Nav(Route.Workout).push(Route.Rest)
+                Route.Run -> nav = Nav().push(Route.Run)
                 else -> {}
             }
             if (requested != null) container.pendingRoute.value = null

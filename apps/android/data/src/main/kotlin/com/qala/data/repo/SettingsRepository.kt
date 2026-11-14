@@ -4,6 +4,7 @@ import com.qala.data.QalaJson
 import com.qala.data.core.PlateEntry
 import com.qala.data.db.QalaDatabase
 import com.qala.data.db.SettingsEntity
+import com.qala.data.model.CueEvery
 import com.qala.data.model.EquipmentItem
 import com.qala.data.model.GymSettings
 import com.qala.data.model.PlateSettings
@@ -54,6 +55,9 @@ object SettingsGroups {
 
     /** `auto` (logging a set opens Rest), `showPlates` (plate hints are shown), `alert` (vibrate, sound or both) and `learn` (the rest plan learns the lifter's pace). */
     const val REST = "rest"
+
+    /** `cues` (speak cues), `cueEvery` (half, one or time) and `autopause`: what a run does. */
+    const val RUNNING = "running"
 
     /** `theme` (light, dark, system) and `titleFont` (qalaTest, faustina). */
     const val APPEARANCE = "appearance"
@@ -163,6 +167,14 @@ class SettingsRepository(
     suspend fun setLearnFromTaps(on: Boolean) = leaf(SettingsGroups.REST, "learn", JsonPrimitive(on))
 
     suspend fun setRestAlert(alert: RestAlert) = leaf(SettingsGroups.REST, "alert", JsonPrimitive(alert.wire))
+
+    // ---- running ----
+
+    suspend fun setRunCues(on: Boolean) = leaf(SettingsGroups.RUNNING, "cues", JsonPrimitive(on))
+
+    suspend fun setCueEvery(every: CueEvery) = leaf(SettingsGroups.RUNNING, "cueEvery", JsonPrimitive(every.wire))
+
+    suspend fun setAutopause(on: Boolean) = leaf(SettingsGroups.RUNNING, "autopause", JsonPrimitive(on))
 
     // ---- appearance ----
 

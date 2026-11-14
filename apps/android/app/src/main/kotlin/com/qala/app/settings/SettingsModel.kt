@@ -66,6 +66,9 @@ val UnitLabels = listOf("lb", "kg")
 val ThemeLabels = listOf("Light", "Dark", "System")
 val TitleFontLabels = listOf("Qala Test", "Faustina")
 val AlertLabels = listOf("Vibrate", "Sound", "Both")
+
+/** The cue choices in [com.qala.data.model.CueEvery] order, in the lifter's distance unit. */
+fun cueLabels(unit: WeightUnit): List<String> = if (unit == WeightUnit.Kg) listOf("0.5 km", "1 km", "5 min") else listOf("0.5 mi", "1 mi", "5 min")
 const val TitleSample = "Lower A · 245 × 4"
 
 /** The distance and pace units that go with the weight unit, as the rest of the app pairs them (miles with pounds). */

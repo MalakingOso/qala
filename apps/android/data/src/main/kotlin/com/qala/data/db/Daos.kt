@@ -58,9 +58,9 @@ interface RunSessionDao {
 
 @Dao
 interface RunFixDao {
-    /** A fix delivered twice stays one row. */
+    /** A fix delivered twice stays one row; -1 when the row was already there and nothing was written. */
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun insert(fix: RunFixEntity)
+    suspend fun insert(fix: RunFixEntity): Long
 
     @Query("SELECT * FROM run_fix WHERE runId = :runId ORDER BY tMs")
     suspend fun fixes(runId: String): List<RunFixEntity>

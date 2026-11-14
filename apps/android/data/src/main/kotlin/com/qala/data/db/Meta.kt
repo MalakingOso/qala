@@ -32,6 +32,9 @@ object MetaKeys {
 
     /** The run in progress, as JSON `{id, startedAtMs, title, opts, paused}`: local, never synced, cleared when the run is saved or discarded. It is not a run_session row, so the engine never counts an open run. */
     const val RUN_ACTIVE = "runActive"
+
+    /** The heart-rate strap the lifter picked, as JSON `{address, name}`: this install's, never synced. */
+    const val RUN_STRAP = "runStrap"
 }
 
 @Dao

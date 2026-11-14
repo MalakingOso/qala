@@ -36,6 +36,9 @@ class RunRepository(
     /** Non-deleted runs, oldest first. */
     val runs: Flow<List<RunSessionEntity>> = db.runSessionDao().observeAll()
 
+    /** Whether a run with this id is saved, so a run that was saved just before the process died is not resumed. */
+    suspend fun exists(id: String): Boolean = withContext(env.work) { db.runSessionDao().row(id) != null }
+
     suspend fun saveRun(new: NewRun): String = withContext(env.work) {
         write(new, stub = false)
     }

@@ -28,6 +28,7 @@ import com.qala.app.workout.RestScreen
 import com.qala.app.workout.WarmupScreen
 import com.qala.app.workout.WorkoutScreen
 import com.qala.app.today.Destination
+import com.qala.app.run.RunRoute
 import com.qala.app.today.TodayLoad
 import com.qala.app.today.TodayScreen
 import com.qala.app.today.TodayUiState
@@ -79,7 +80,7 @@ fun Screen(
         )
         Route.Workout -> WorkoutScreen(programDay(today), onBack, onRest = { onPush(Route.Rest) }, onAllExercises = { onPush(Route.AllExercises) })
         Route.Rest -> RestScreen(onBack, onAllExercises = { onPush(Route.AllExercises) })
-        Route.Run -> Plain(scroll, topBar) { RunStub(onBack) }
+        Route.Run -> Plain(scroll, topBar) { RunRoute(snapshot, onBack) }
         Route.AllExercises -> AllExercisesScreen(programDay(today), onBack, onWorkout = { onPush(Route.Workout) })
     }
 }
