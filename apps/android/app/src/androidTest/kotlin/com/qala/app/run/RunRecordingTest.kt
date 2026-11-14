@@ -125,6 +125,22 @@ class RunRecordingTest {
     }
 
     @Test
+    fun aHeartRateSampleThatArrivesAfterTheFixWasTakenStillRidesOnIt() = runBlocking {
+        val c = container()
+        var clock = start
+        val r = RunRecording(c.database, c.runs, scope, now = { clock })
+        r.start("Test run", null)
+        clock = start + 10_000                    // the phone is now ten seconds in: the strap reports, then the fix of second 8 is delivered
+        r.heartRate(150)
+        r.fix(fix(8))
+        r.fix(fix(60))                            // a minute on, the old sample no longer counts
+        r.waitForPoints(2)
+        val rows = c.database.runFixDao().fixes((r.state.value as RunState.Active).run.id)
+        assertEquals(listOf(150.0, null), rows.map { it.hr })
+        c.database.close()
+    }
+
+    @Test
     fun aPausedRunDropsFixesAndTheFirstFixAfterResumeIsAGap() = runBlocking {
         val c = container()
         val r = recording(c)

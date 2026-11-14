@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
@@ -66,7 +68,11 @@ fun ChartCard(title: String, summary: String, table: List<Pair<String, String>>,
     Card(modifier, contentPadding = 16.dp) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
             GroupLabel(title, Modifier.weight(1f))
-            LinkButton(if (asTable) "Chart" else "Table", { asTable = !asTable }, Modifier.semantics { contentDescription = if (asTable) "Show $title as a chart" else "Show $title as a table" })
+            LinkButton(
+                if (asTable) "Chart" else "Table",
+                { asTable = !asTable },
+                Modifier.widthIn(min = 44.dp).heightIn(min = 44.dp).semantics { contentDescription = if (asTable) "Show $title as a chart" else "Show $title as a table" },
+            )
         }
         Box(Modifier.padding(top = 8.dp)) {
             if (asTable) {

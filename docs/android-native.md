@@ -144,21 +144,21 @@ Sizes are relative (S, M, L), not calendar estimates, except where a research re
 | A6 | Coach route and screen, release signing, sideload build. | Coach offline state; signed APK installs. | S |
 | A7 | Retire `apps/phone` and the Capacitor dependencies. Freeze the React phone shell as a PWA (S13). | Done 2026-10-01, ahead of the native run gate, at the owner's request. | S |
 
-Status by phase, 2026-10-13:
+Status by phase, 2026-11-13:
 
 | Phase | State |
 |---|---|
 | A0 | Toolchain installed (section 11). Spike check 1 (arm64 `.so`, size and alignment) and check 5 (LS++ against the oracle) pass. Checks 2 to 4, and the Vico and Canvas run-series spike have not been run (the L5 check was dropped, D15); nothing in the repo does them. |
 | A1 | Built: tokens generator, fonts, icons, design components, navigation shell. The stub Today was compared against the web at 390 dp on an x86_64 emulator and matches in fonts, spacing, shadows and colors (2026-10-01). Settings has every group a native screen can honour (2026-10-13); the Appearance group waits for its screen. The Coach group (status and limits, both read-only) is left out: the Coach screen shows the status, and the limits come from the server's answer. |
 | A2 | Built 2026-11-13, on the emulator: Room schema v2 (S37), `RunRecording` and the service, the fused or GPS fix source, speech cues, the heart-rate strap, Start, Live and Summary, the Running settings, recovery after a kill, and the antimeridian fix (S40). Run on `qala-37` with injected GPS: a full run saved with its effort, and a `kill -9` recovered to the same numbers with the gap marked. The three gates in section 5 are the phone's. Not built: the guided run and the maps (A5). |
-| A3 | Not started. The outbox, clock sidecar and HLC wrapper exist; there is no sync endpoint or client. No open decisions: D06, D07 and D22 are decided (POST for data, a notify-only websocket, per-field rows). |
+| A3 | Not started, and out of the Android finish push (owner, 2026-11-13): the phone stays offline-first on Room. The outbox, clock sidecar and HLC wrapper exist; there is no sync endpoint or client, and the old Automerge server was deleted (`f1a4553`). No open decisions: D06, D07 and D22 are decided (POST for data, a notify-only websocket, per-field rows). |
 | R5 | Done 2026-10-01. |
 | A4 | Screens built and merged 2026-10-13: Today, Check-in, Warm-up, Workout, Rest, Plate calc, Plan, plus History and All exercises. Check-in to workout end to end with no network is covered by `WorkoutFlowTest` on the emulator; nothing has run on a real phone. Rest and warm-up planning moved to Rust on 2026-11-13 (D32, section 6). | Polish built 2026-11-13 (D34, D35): the rest-end notification with an exact alarm, Resume workout on Today and Plan, tap-to-start rest with Automatic rest off, a save-failure card on Today, Warm-up off removes the stage, and the Appearance group (theme and title font).
 | A5 | Charts and the three screens are built (2026-11-13, S42): Vico lines and columns, the Canvas ring and run series, Progress, Body and Session complete, each numeric chart with a table view and a TalkBack sentence. The MapLibre map is not built. |
 | A6 | The Coach screen and the server route are built (2026-10-14). The offline gate is tested on the emulator: a connection refused, a 401, the degraded body and Try again, with Today, Plan and the check-in still opening. The wire contract is checked on both sides against `testdata/golden/coach`. The server route was run against the real model on 2026-10-30 (`docs/ROADMAP.md` Coach row); the phone was not pointed at it, since nothing in front of the emulator adds the identity header. Release signing is built (2026-11-13, S41): a signed arm64 APK verifies with `apksigner`, and a signed x86_64 build installed on the emulator. |
 | A7 | Done 2026-10-01. |
 
-Nothing has run on the owner's phone. Every check so far used the `qala-test` emulator.
+Nothing has run on the owner's phone. Every check so far used the `qala-test` (API 36) and `qala-37` (API 37) emulators.
 
 ## 10. Server changes
 

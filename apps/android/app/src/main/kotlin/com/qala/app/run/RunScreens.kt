@@ -99,7 +99,8 @@ private fun StartRun(snapshot: EngineSnapshot, gym: GymSettings, onBack: () -> U
     val gps = rememberGpsStatus()
 
     fun begin() {
-        scope.launch {
+        // The container's scope, not the screen's: starting the run swaps this screen for Live, and that must not cancel the service start.
+        container.scope.launch {
             container.runRecording.start(title, runOpts(gym.running, unit))
             RunRecordingService.start(context)
         }
@@ -327,7 +328,8 @@ private fun RunSummary(state: RunState.Finished, unit: WeightUnit, onBack: () ->
                     "Save run",
                     {
                         busy = true
-                        scope.launch {
+                        // The container's scope: saving swaps this screen out, which would cancel a coroutine of the screen's own before it went back.
+                        container.scope.launch {
                             container.runRecording.save(effort?.toDouble())
                             onBack()
                         }
@@ -338,7 +340,7 @@ private fun RunSummary(state: RunState.Finished, unit: WeightUnit, onBack: () ->
                 )
             }
         }
-        LinkButton("Discard run", { scope.launch { container.runRecording.discard(); onBack() } }, Modifier.padding(top = 8.dp))
+        LinkButton("Discard run", { container.scope.launch { container.runRecording.discard(); onBack() } }, Modifier.padding(top = 8.dp))
     }
 }
 

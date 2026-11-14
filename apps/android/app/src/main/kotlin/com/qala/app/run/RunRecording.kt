@@ -293,12 +293,13 @@ class RunRecording(
     private suspend fun load(): ActiveRun? =
         db.metaDao().get(MetaKeys.RUN_ACTIVE)?.let { QalaJson.decodeFromString(ActiveRun.serializer(), it) }
 
-    private fun freshHr(atMs: Long = now()): Int? = hr?.takeIf { atMs - it.second in 0..HrFreshMs }?.first
+    /** The newest heart rate within [HrFreshMs] of [atMs], either side: a sample that arrived after the fix was taken still belongs to it. */
+    private fun freshHr(atMs: Long = now()): Int? = hr?.takeIf { kotlin.math.abs(atMs - it.second) <= HrFreshMs }?.first
 
     companion object {
         private const val TAG = "RunRecording"
 
-        /** A heart-rate sample older than this is not put on a fix. */
+        /** A heart-rate sample further than this from a fix's time is not put on it. */
         const val HrFreshMs = 5_000L
     }
 }
