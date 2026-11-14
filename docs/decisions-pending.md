@@ -33,7 +33,8 @@ None. The last items were closed on 2026-11-13. Those with a default took it, ex
 Code work owed by decided items, built after the session (protocol step 5). An entry leaves when it's built.
 
 - D37 (2026-11-13): make the generator emitter write `custom()` progress scripts for RPE-gated double progression and Helms percent autoregulation, in place of the `// progress:` comments.
-- D22 (2026-11-13): rewrite `server/ws.ts` as a notify-only channel and build the per-field sync and blob tables, both in A3.
+- D22 (2026-11-13): build `server/ws.ts` as a notify-only channel (the Automerge one was deleted in `f1a4553`) and the per-field sync and blob tables, both in A3.
+- D12 (2026-11-12): the MapLibre route map on Summary and the Running settings' Offline map area row. Not built in the finish push: see DECISIONS S43 for what was found.
 - D21 (2026-11-13): once the domain is registered, point A/AAAA for `app.<domain>` and the apex at the VPS, add the apex Caddy block that serves `assetlinks.json`, and set the RP ID to the registrable domain.
 - D23 (2026-11-13): add the callisto reverse tunnel (a systemd unit on callisto running `ssh -N -R` to the VPS), point `LLM_GATEWAY_URL` and the transcribe and PDF settings at its VPS-local ports, and cap each user's LLM routes (one in flight, a per-minute limit).
 - D24 (2026-11-13): render the straight barbell and the trap bar in Blender (`assets/3d/build_gear.py`), add a per-exercise bar to the catalog and plan, and offer both bars in the plate calculator picker.

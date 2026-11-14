@@ -203,10 +203,12 @@ fun RunSeries(points: List<RunPoint>, unit: WeightUnit, modifier: Modifier = Mod
                 val span = (max - min).coerceAtLeast(1e-3f)
                 val faster = row.label == "Pace"                         // less time per mile is higher
                 fun y(v: Float): Float = top + h * (if (faster) (v - min) / span else 1f - (v - min) / span)
+                // A column with no point is skipped, so a run shorter than the screen is still one connected line; a column with
+                // several goes down to its minimum and up to its maximum, so a spike survives.
                 val path = Path()
                 var started = false
                 for (x in 0 until w) {
-                    if (lo[x] > hi[x]) { started = false; continue }
+                    if (lo[x] > hi[x]) continue
                     if (!started) { path.moveTo(x.toFloat(), y(lo[x])); started = true } else path.lineTo(x.toFloat(), y(lo[x]))
                     if (hi[x] != lo[x]) path.lineTo(x.toFloat(), y(hi[x]))
                 }

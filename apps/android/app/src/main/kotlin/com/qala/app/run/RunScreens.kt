@@ -37,6 +37,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.qala.app.LocalAppContainer
+import com.qala.app.charts.ChartCard
+import com.qala.app.charts.RunSeries
 import com.qala.app.today.distanceUnit
 import com.qala.app.today.effortText
 import com.qala.data.core.ProcessedRun
@@ -300,6 +302,15 @@ private fun RunSummary(state: RunState.Finished, unit: WeightUnit, onBack: () ->
                 }
             }
         }
+        if (run.points.size >= 2) {
+            ChartCard(
+                title = "Pace, heart rate and elevation",
+                summary = "Pace, heart rate and elevation along the run. Average pace ${paceText(run.avgSpeedMps.takeIf { it > 0 }?.let { 1.0 / it }, unit)} per ${distanceUnit(unit)}" +
+                    (hr?.let { ", average heart rate ${it.toInt()}" } ?: "") + ".",
+                table = seriesTable(run.points, unit),
+                modifier = Modifier.padding(top = 12.dp),
+            ) { RunSeries(run.points, unit) }
+        }
         Splits(run, unit)
         Card(Modifier.padding(top = 12.dp), contentPadding = 16.dp) {
             QalaText("How hard was it?", style = QalaType.cardTitle, color = c.fg)
@@ -328,6 +339,19 @@ private fun RunSummary(state: RunState.Finished, unit: WeightUnit, onBack: () ->
             }
         }
         LinkButton("Discard run", { scope.launch { container.runRecording.discard(); onBack() } }, Modifier.padding(top = 8.dp))
+    }
+}
+
+/** The run series as rows for the Table view: ten points along the run, each with its time, pace, heart rate and elevation. */
+private fun seriesTable(points: List<com.qala.data.core.RunPoint>, unit: WeightUnit): List<Pair<String, String>> {
+    val start = points.first().t
+    return (0..9).map { k ->
+        val p = points[(k * (points.size - 1)) / 9]
+        elapsedText(p.t - start) to listOfNotNull(
+            paceText(p.speedMps.takeIf { it > 0.3 }?.let { 1.0 / it }, unit),
+            p.hr?.let { "${it.toInt()} bpm" },
+            p.ele?.let { "${it.toInt()} m" },
+        ).joinToString(" · ")
     }
 }
 
