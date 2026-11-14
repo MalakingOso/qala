@@ -26,6 +26,10 @@ data class NewLiftSession(
     val srpe: Double? = null,
     val notes: String? = null,
     val id: String? = null,
+    /** The time split in seconds, null where it was not measured. */
+    val warmupSec: Int? = null,
+    val liftSec: Int? = null,
+    val restSec: Int? = null,
 )
 
 /**
@@ -64,7 +68,7 @@ class SessionRepository(
     suspend fun saveLiftSession(new: NewLiftSession, advance: ProgramAdvance? = null): String = withContext(env.work) {
         val id = new.id ?: env.ids.next()
         val writes = buildList {
-            add(sessionWrite(id, new.startedAtMs, new.programDayIndex, stub = false, stage = null, new.entries, new.minutes, new.srpe, new.notes))
+            add(sessionWrite(id, new.startedAtMs, new.programDayIndex, stub = false, stage = null, new.entries, new.minutes, new.srpe, new.notes, new.warmupSec, new.liftSec, new.restSec))
             if (advance != null) {
                 add(RecordWrite(RecordType.PROGRAM, advance.programId, mapOf("text" to JsonPrimitive(advance.text))))
                 if (advance.exerciseData != null) {
@@ -108,9 +112,12 @@ class SessionRepository(
         minutes: Double?,
         srpe: Double?,
         notes: String?,
+        warmupSec: Int? = null,
+        liftSec: Int? = null,
+        restSec: Int? = null,
     ): RecordWrite {
         val offset = IsoTime.offsetMinAt(env.clock.zone, startedAtMs)
-        val row = LiftSessionEntity(id, startedAtMs, offset, programDayIndex, stub, stage, minutes, srpe, notes, deleted = false)
+        val row = LiftSessionEntity(id, startedAtMs, offset, programDayIndex, stub, stage, minutes, srpe, notes, deleted = false, warmupSec = warmupSec, liftSec = liftSec, restSec = restSec)
         return RecordWrite(RecordType.LIFT_SESSION, id, LiftSessionCodec.toFields(LiftSessionBundle(row, entries)))
     }
 }

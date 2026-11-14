@@ -90,6 +90,8 @@ dependencies {
     implementation("androidx.compose.foundation:foundation")
     implementation("androidx.compose.runtime:runtime")
     implementation("androidx.compose.ui:ui")
+    // Charts (DECISIONS S10, D13): Vico for the ordinary charts; the ring and the run series are Canvas.
+    implementation("com.patrykandpatrick.vico:compose:3.3.1")
 
     testImplementation("junit:junit:4.13.2")
     testImplementation("net.java.dev.jna:jna:5.17.0")

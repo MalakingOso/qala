@@ -107,6 +107,9 @@ class PlanRouteTest {
         rule.onNodeWithContentDescription("Finish workout").performClick()
         val sheet = SemanticsMatcher.expectValue(SemanticsProperties.PaneTitle, "Finish workout?")
         rule.onNode(hasText("Finish workout") and hasClickAction() and hasAnyAncestor(sheet)).performClick()
+        // Finishing opens Session complete; Done goes back to where the workout was started from.
+        waitForText("Session complete")
+        rule.onNodeWithText("Done").performClick()
     }
 
     @Test

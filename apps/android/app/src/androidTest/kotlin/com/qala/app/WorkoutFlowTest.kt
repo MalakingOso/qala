@@ -168,6 +168,13 @@ class WorkoutFlowTest {
         rule.onNodeWithText("All $total sets are logged. The program moves on to its next day.").assertExists()
         inSheet("Finish workout?", "Finish workout").performClick()
 
+        // Session complete shows what the workout was: the time split, the sets by muscle and the e1RM. Done goes back to Today.
+        waitForText("Session complete")
+        waitForText("TIME SPLIT")
+        waitForText("SETS BY MUSCLE")
+        waitForText("ESTIMATED 1RM")
+        rule.onNodeWithText("Done").performClick()
+
         // Back on Today, with the lift done on the rail.
         railSays("Day stages: run now, 3 of 6 done")
 
@@ -177,6 +184,8 @@ class WorkoutFlowTest {
         assertFalse(saved.session.stub)
         assertNull("a real session is not a stage stub", saved.session.stage)
         assertEquals(day, saved.session.programDayIndex)
+        assertNotNull("the time split is kept on the session", saved.session.liftSec)
+        assertNotNull(saved.session.restSec)
         assertEquals(3, saved.entries.size)
         assertEquals(total, saved.entries.sumOf { it.sets.size })
         assertTrue(saved.entries.flatMap { it.sets }.all { it.completed && !it.warmup })
@@ -242,7 +251,9 @@ class WorkoutFlowTest {
         db.execSQL("CREATE TRIGGER no_sessions BEFORE INSERT ON lift_session BEGIN SELECT RAISE(ABORT, 'disk full'); END")
         rule.onNodeWithContentDescription("Finish workout").performClick()
         inSheet("Finish workout?", "Finish workout").performClick()
+        // Session complete says so instead of congratulating; Back to Today keeps the message and offers Resume.
         waitForText("Couldn't save the workout. It's kept, tap Resume to try again.")
+        rule.onNodeWithText("Back to Today").performClick()
         waitForText("Resume workout")
         assertNotNull(container.workout.state.value)
         assertNotNull(container.database.metaDao().get(MetaKeys.WORKOUT_DRAFT))
@@ -254,6 +265,8 @@ class WorkoutFlowTest {
         assertNull(container.workout.saveError.value)
         rule.onNodeWithContentDescription("Finish workout").performClick()
         inSheet("Finish workout?", "Finish workout").performClick()
+        waitForText("Session complete")
+        rule.onNodeWithText("Done").performClick()
         railSays("Day stages: run now, 3 of 6 done")
         assertNull(container.workout.saveError.value)
         assertEquals(1, container.sessions.liftSessions.first().count { !it.session.stub && it.session.startedAtMs == clock.nowMs() })

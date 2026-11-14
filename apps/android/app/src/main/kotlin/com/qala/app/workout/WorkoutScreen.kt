@@ -90,7 +90,7 @@ private fun rpeMeaning(rpe: Double): String = when (rpe) {
  * Today, whether the workout was finished or only left.
  */
 @Composable
-fun WorkoutScreen(day: Int?, onBack: () -> Unit, onRest: () -> Unit, onAllExercises: () -> Unit) {
+fun WorkoutScreen(day: Int?, onBack: () -> Unit, onRest: () -> Unit, onAllExercises: () -> Unit, onFinished: () -> Unit = onBack) {
     val container = LocalAppContainer.current
     val store = container.workout
     val all by store.state.collectAsState()
@@ -106,7 +106,7 @@ fun WorkoutScreen(day: Int?, onBack: () -> Unit, onRest: () -> Unit, onAllExerci
     KeepScreenOn()
     Column(Modifier.fillMaxSize()) {
         when {
-            state != null -> WorkoutBody(state, store, onBack, onRest, onAllExercises)
+            state != null -> WorkoutBody(state, store, onBack, onRest, onAllExercises, onFinished)
             opened == Opened.NoDay -> Notice("Nothing to lift today", "The program has no exercise for this day.", onBack)
             else -> Notice("Getting your workout ready", null, onBack)
         }
@@ -124,7 +124,7 @@ private fun Notice(title: String, detail: String?, onBack: () -> Unit) {
 }
 
 @Composable
-private fun WorkoutBody(state: WorkoutState, store: WorkoutStore, onBack: () -> Unit, onRest: () -> Unit, onAllExercises: () -> Unit) {
+private fun WorkoutBody(state: WorkoutState, store: WorkoutStore, onBack: () -> Unit, onRest: () -> Unit, onAllExercises: () -> Unit, onFinished: () -> Unit) {
     val container = LocalAppContainer.current
     val c = Qala.colors
     var finishOpen by rememberSaveable { mutableStateOf(false) }
@@ -196,7 +196,7 @@ private fun WorkoutBody(state: WorkoutState, store: WorkoutStore, onBack: () -> 
                 finishOpen = false
                 // The container's scope, not the screen's: going back leaves this screen, and a save must not be cancelled half way.
                 container.scope.launch { store.finish() }
-                onBack()
+                onFinished()
             },
             onLeave = {
                 finishOpen = false

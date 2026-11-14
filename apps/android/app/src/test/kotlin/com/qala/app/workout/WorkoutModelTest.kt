@@ -37,6 +37,36 @@ class WorkoutModelTest {
     }
 
     @Test
+    fun theSummaryHasTheTimeSplitTheSetsByMuscleAndTheBestE1rmOfEachLift() {
+        // Two sets of the first lift with a rest between: 60 s taken. Ten minutes in all.
+        val t0 = open.startedAtMs
+        val one = open.log(t0)!!.state.startRest(SetRef(0, 0), SetRef(0, 1), t0).endRest(t0 + 60_000L)
+        val two = one.log(t0 + 70_000L)!!.state
+        val muscles = mapOf(two.exercises[0].exerciseId to com.qala.data.core.ExerciseMuscles(listOf("quads", "glutes")))
+        val summary = two.summary(t0 + 600_000L, warmupSec = 420, muscles = muscles)
+        assertEquals(600, summary.elapsedSec)
+        assertEquals(60, summary.restSec)
+        assertEquals("what is left once the rest is taken out", 540, summary.liftSec)
+        assertEquals(420, summary.warmupSec)
+        assertEquals(2, summary.sets)
+        assertEquals(listOf("glutes" to 2, "quads" to 2), summary.setsByMuscle)
+        // Epley on the best set: 150 lb for 5 reps is 175.
+        val first = two.exercises[0].sets[0]
+        assertEquals(first.weight!! * (1 + first.reps / 30), summary.e1rms.single().e1rm, 1e-9)
+        // The same split goes into the saved session.
+        val lifted = two.toLifted(t0 + 600_000L, 420)
+        assertEquals(listOf(420, 540, 60), listOf(lifted.warmupSec, lifted.liftSec, lifted.restSec))
+    }
+
+    @Test
+    fun anE1rmNeedsAWeightAndBetweenOneAndTwelveReps() {
+        assertEquals(100.0, e1rmOf(100.0, 1.0)!!, 0.0)
+        assertEquals(110.0, e1rmOf(100.0, 3.0)!!, 1e-9)
+        assertNull(e1rmOf(100.0, 13.0))
+        assertNull(e1rmOf(0.0, 5.0))
+    }
+
+    @Test
     fun roundedPrescriptionsBecomeBothTheShownWeightAndTheTarget() {
         val day = WorkoutFixtures.day()
         val rounded = WorkoutState.open(day, "s", 0L, prescribed = { ex -> ex.sets.map { it.copy(weight = it.weight?.minus(2.5)) } })

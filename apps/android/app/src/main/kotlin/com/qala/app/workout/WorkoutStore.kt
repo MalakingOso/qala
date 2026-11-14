@@ -86,6 +86,16 @@ class WorkoutStore(
     @Volatile
     private var restContexts: Map<String, RestContext> = emptyMap()
 
+    private val _summary = MutableStateFlow<SessionSummary?>(null)
+
+    /** The workout just finished, for Session complete: set when the finish starts, so it shows while the save runs. */
+    val summary: StateFlow<SessionSummary?> = _summary
+
+    /** When the warm-up of [warmupDay] was opened, and how long it took once the workout opened: this process only, so a killed one leaves it unmeasured. */
+    private var warmupDay: Int? = null
+    private var warmupStartedAtMs: Long = 0
+    private var workoutWarmupSec: Int? = null
+
     private val storedDraft = MutableStateFlow(false)
 
     /**
@@ -194,6 +204,8 @@ class WorkoutStore(
         val planned = service.plan(day) ?: return Opened.NoDay
         val rounded = roundedPrescriptions(planned)
         val opened = WorkoutState.open(planned, env.ids.next(), now, { rounded[it.key] ?: it.sets }) { id -> planned.lastTime[id]?.let(::lastTimeLine) }
+        _summary.value = null
+        workoutWarmupSec = if (warmupDay == day) ((now - warmupStartedAtMs) / 1000).toInt().takeIf { it in 1..WarmupLongestSec } else null
         _state.value = opened
         loadRestContexts(opened)
         Opened.Ready
@@ -378,8 +390,15 @@ class WorkoutStore(
      */
     suspend fun finish(): FinishOutcome? {
         val s = _state.value ?: return null
+        val now = env.clock.nowMs()
+        val muscles = try {
+            QalaCore.exerciseMuscles(s.exercises.map { it.exerciseId })
+        } catch (e: Exception) {
+            emptyMap()
+        }
+        _summary.value = s.summary(now, workoutWarmupSec, muscles)
         val outcome = try {
-            service.finish(s.toLifted(env.clock.nowMs()))
+            service.finish(s.toLifted(now, workoutWarmupSec))
         } catch (e: Exception) {
             Log.e("WorkoutStore", "saving the workout failed", e)
             _saveError.value = SaveFailed
@@ -413,6 +432,10 @@ class WorkoutStore(
      */
     suspend fun warmup(day: Int): WarmupView? = withContext(env.work) {
         gymLoaded.await()
+        if (warmupDay != day) {
+            warmupDay = day
+            warmupStartedAtMs = env.clock.nowMs()
+        }
         val gym = _gym.value
         val planned = service.plan(day) ?: return@withContext null
         val nowMs = env.clock.nowMs()
@@ -455,6 +478,9 @@ class WorkoutStore(
 
         /** How many past rests the learned pace looks back over, about ten rests of memory at a rate of 0.1 (PLAN 6.6), with room to spare. */
         const val RestMemory = 40
+
+        /** A warm-up measured at more than this was a break, not a warm-up. */
+        const val WarmupLongestSec = 90 * 60
 
         const val SaveFailed = "Couldn't save the workout. It's kept, tap Resume to try again."
     }

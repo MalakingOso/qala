@@ -419,12 +419,15 @@ data class WorkoutState(
     // ---- finishing ----
 
     /** The workout as the finish saves it. */
-    fun toLifted(finishedAtMs: Long): LiftedSession = LiftedSession(
+    fun toLifted(finishedAtMs: Long, warmupSec: Int? = null): LiftedSession = LiftedSession(
         sessionId = sessionId,
         programId = programId,
         day = day,
         startedAtMs = startedAtMs,
         finishedAtMs = finishedAtMs,
+        warmupSec = warmupSec,
+        restSec = restSeconds(),
+        liftSec = (((finishedAtMs - startedAtMs).coerceAtLeast(0) / 1000).toInt() - restSeconds()).coerceAtLeast(0),
         exercises = exercises.map { ex ->
             LiftedExercise(ex.exerciseId, ex.key, ex.scriptEntry(), ex.sets.map { PlannedSet(it.targetWeight, ex.unit, it.targetReps, it.minReps, it.amrap, it.targetRpe, it.timerSec) }, ex.sets.map { it.asLogged() })
         },

@@ -52,6 +52,10 @@ class LiftedSession(
     val startedAtMs: Long,
     val finishedAtMs: Long,
     val exercises: List<LiftedExercise>,
+    /** The time split in seconds (warm-up, lifting, resting), null for a part that was not measured. */
+    val warmupSec: Int? = null,
+    val liftSec: Int? = null,
+    val restSec: Int? = null,
 )
 
 /**
@@ -67,6 +71,9 @@ fun LiftedSession.toNewLiftSession(unit: WeightUnit): NewLiftSession = NewLiftSe
         .map { liftEntryRecord(it.exerciseId, it.planned, it.sets, unit) },
     minutes = Math.round((finishedAtMs - startedAtMs).coerceAtLeast(0) / 60_000.0).toDouble(),
     id = sessionId,
+    warmupSec = warmupSec,
+    liftSec = liftSec,
+    restSec = restSec,
 )
 
 /** What a finish did. [errors] is what the finish-day scripts said went wrong; the program is then left as it was. */

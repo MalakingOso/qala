@@ -51,7 +51,13 @@ data class EngineStateView(
     val fatigueSystemic: Double = 0.0,
     /** F_run, tau 42 days. */
     val fitnessRun: Double = 0.0,
+    /** The e1RM each session's best set gave, per lift, oldest first, in the lifter's unit: what the strength chart draws. */
+    val e1rmObs: Map<String, List<DatedValue>> = emptyMap(),
 )
+
+/** A number on a day: an e1RM observation, a weigh-in, a day's readiness. */
+@Serializable
+data class DatedValue(val date: String, val value: Double)
 
 @Serializable
 data class ReadinessSummaryRequest(

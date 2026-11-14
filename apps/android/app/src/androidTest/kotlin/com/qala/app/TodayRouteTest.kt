@@ -120,6 +120,8 @@ class TodayRouteTest {
         rule.onNodeWithContentDescription("Finish workout").performClick()
         val sheet = SemanticsMatcher.expectValue(SemanticsProperties.PaneTitle, "Finish workout?")
         rule.onNode(hasText("Finish workout") and hasClickAction() and hasAnyAncestor(sheet)).performClick()
+        waitForText("Session complete")
+        rule.onNodeWithText("Done").performClick()
         railSays("Day stages: run now, 3 of 6 done")
     }
 

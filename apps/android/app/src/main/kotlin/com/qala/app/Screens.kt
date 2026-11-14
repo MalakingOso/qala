@@ -29,6 +29,9 @@ import com.qala.app.workout.WarmupScreen
 import com.qala.app.workout.WorkoutScreen
 import com.qala.app.today.Destination
 import com.qala.app.run.RunRoute
+import com.qala.app.stats.BodyScreen
+import com.qala.app.stats.ProgressScreen
+import com.qala.app.stats.SessionCompleteScreen
 import com.qala.app.today.TodayLoad
 import com.qala.app.today.TodayScreen
 import com.qala.app.today.TodayUiState
@@ -67,8 +70,9 @@ fun Screen(
     when (route) {
         Route.Today -> TodayScreen(today, ui, scroll, topBar, onGo)
         Route.Plan -> PlanScreen(snapshot, today, scroll, topBar, onGo)
-        Route.Body -> Plain(scroll, topBar) { StubScreen("Body", "Measurements and recovery. Arrives with the stats screens (A5).") }
-        Route.Progress -> Plain(scroll, topBar) { StubScreen("Progress", "Charts and records. Arrives with the stats screens (A5).") }
+        Route.Body -> Plain(scroll, topBar) { BodyScreen(snapshot) }
+        Route.Progress -> Plain(scroll, topBar) { ProgressScreen(snapshot) }
+        Route.SessionComplete -> Plain(scroll, topBar) { SessionCompleteScreen(onBack) }
         Route.Coach -> CoachTab(snapshot, scroll, topBar)
         Route.History -> HistoryScreen(scroll, onBack)
         Route.Settings -> SettingsScreen(scroll, today, ui, settingsFocus, onSettingsFocused, onBack, onPlates)
@@ -78,7 +82,7 @@ fun Screen(
             programDay(today), onBack,
             onStart = { onPush(Route.Workout) }, onSkip = { onPush(Route.Workout) }, onAllExercises = { onPush(Route.AllExercises) },
         )
-        Route.Workout -> WorkoutScreen(programDay(today), onBack, onRest = { onPush(Route.Rest) }, onAllExercises = { onPush(Route.AllExercises) })
+        Route.Workout -> WorkoutScreen(programDay(today), onBack, onRest = { onPush(Route.Rest) }, onAllExercises = { onPush(Route.AllExercises) }, onFinished = { onPush(Route.SessionComplete) })
         Route.Rest -> RestScreen(onBack, onAllExercises = { onPush(Route.AllExercises) })
         Route.Run -> Plain(scroll, topBar) { RunRoute(snapshot, onBack) }
         Route.AllExercises -> AllExercisesScreen(programDay(today), onBack, onWorkout = { onPush(Route.Workout) })
