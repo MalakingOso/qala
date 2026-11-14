@@ -46,6 +46,25 @@ android {
         }
     }
 
+    // The release key lives outside the repo: ~/.config/qala/release.jks, with its passwords in ~/.gradle/gradle.properties
+    // (qala.release.storeFile, keyAlias, storePassword, keyPassword). Back both up: a lost key cannot sign an update the phone accepts.
+    signingConfigs {
+        create("release") {
+            providers.gradleProperty("qala.release.storeFile").orNull?.let { storeFile = file(it) }
+            storePassword = providers.gradleProperty("qala.release.storePassword").orNull
+            keyAlias = providers.gradleProperty("qala.release.keyAlias").orNull
+            keyPassword = providers.gradleProperty("qala.release.keyPassword").orNull
+        }
+    }
+
+    buildTypes {
+        release {
+            // Off on purpose: nothing here is large enough to need R8, and the Rust library and JNA are reflection-heavy.
+            isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("release")
+        }
+    }
+
     buildFeatures {
         compose = true
         // AppContainer decides on BuildConfig.DEBUG whether the debug seed runs.
@@ -81,4 +100,17 @@ dependencies {
     androidTestImplementation("androidx.test.ext:junit:1.3.0")
     androidTestImplementation("androidx.test:runner:1.7.0")
     androidTestImplementation("androidx.test:core:1.7.0")
+}
+
+// A release build talks to the real server over HTTPS (cleartext is a debug-only network config), so it must be told where
+// that is: ./gradlew assembleRelease -Pqala.serverUrl=https://... -Pqala.abi=arm64-v8a
+gradle.taskGraph.whenReady {
+    val release = allTasks.any { it.project == project && it.name.contains("Release") && (it.name.startsWith("assemble") || it.name.startsWith("bundle") || it.name.startsWith("package")) }
+    val url = providers.gradleProperty("qala.serverUrl").orNull
+    if (release && (url == null || !url.startsWith("https://"))) {
+        throw GradleException("A release build needs -Pqala.serverUrl=https://... (the server the Coach tab asks; cleartext is debug-only).")
+    }
+    if (release && providers.gradleProperty("qala.release.storeFile").orNull == null) {
+        throw GradleException("A release build needs the signing properties in ~/.gradle/gradle.properties (qala.release.storeFile, keyAlias, storePassword, keyPassword).")
+    }
 }
