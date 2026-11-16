@@ -258,7 +258,7 @@ Superseded. The Automerge document and WebSocket sync that were specified here a
 
 ## 8. Milestone M4: phone shell (logger)
 
-Superseded. The React phone shell is frozen as a PWA (DECISIONS S13) and the phone app is native Kotlin: `docs/android-native.md`. The screens this section specified are the design reference in `docs/DESIGN.md` section 7.
+Superseded. The React phone shell was deleted (DECISIONS S13) and the phone app is native Kotlin: `docs/android-native.md`. The screens this section specified are the design reference in `docs/DESIGN.md` section 7.
 
 ## 8a. Milestone M4a: run recorder (`packages/run` + Android phone app)
 

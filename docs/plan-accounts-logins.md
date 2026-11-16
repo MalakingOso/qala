@@ -1,6 +1,6 @@
 # Plan: friends-and-family accounts + logins (explore/accounts-logins)
 
-Status 2026-10-13: planned, not started. No branch named `explore/accounts-logins` exists and nothing here is built: `server/auth.ts` still reads only the Tailscale header and `deploy/` still holds the Tailscale notes. DECISIONS S22 records the settled points. Blocked on D21 (the public domain and a DNS date). The server runtime is now Bun (2026-11-12, DECISIONS S28). The library probes below ran on the pre-Bun runtime, so re-run them on Bun before building; Bun has `bun:sqlite` and `Bun.password`, which may replace `node:sqlite` and the argon2 package.
+Status 2026-11-16: planned, not started. No branch named `explore/accounts-logins` exists and nothing here is built: `server/auth.ts` still reads only the Tailscale header and `deploy/` still holds the Tailscale notes. DECISIONS S22 records the settled points. No decision blocks it: D21 was decided 2026-11-13 (S33, intended domain `qala.fit`, the app at `app.qala.fit`), and phase 0 starts the day the owner registers the domain. The owner took accounts and sync out of the Android finish push the same day. The web phone PWA and the Capacitor shell no longer exist (S13, A7), so the clients are the desktop shell and the native Android app. The server runtime is now Bun (2026-11-12, DECISIONS S28). The library probes below ran on the pre-Bun runtime, so re-run them on Bun before building; Bun has `bun:sqlite` and `Bun.password`, which may replace `node:sqlite` and the argon2 package.
 
 Target branch (never created): `explore/accounts-logins`. Audience: Claude Code implementing
 the work. Status when written: plan, not decided, except section 1 settled points which
@@ -96,10 +96,12 @@ browser/PWA  --HTTPS-->  Caddy (:443, PUBLIC_DOMAIN)  --HTTP-->
 - Storage on VPS disk: one `auth.sqlite` (users, invites, sessions,
   credentials) plus S11 per-user sync stores. Backed up to callisto
   (section 8).
-- No tailnet, no identity header, no Funnel. The phone PWA and desktop PWA
-  are the same origin (`https://PUBLIC_DOMAIN`), so one session cookie and
-  one WebAuthn RP cover both. Capacitor/native shells are out of scope for
-  this plan except the device gates in section 11.
+- No tailnet, no identity header, no Funnel. The desktop PWA is on
+  `https://PUBLIC_DOMAIN`, so one session cookie and one WebAuthn RP cover
+  it. The web phone PWA and the Capacitor shell are gone (S13, A7); the
+  native Android app is a client of the same server (S33 binds its
+  passkeys through Credential Manager), and how it carries a session is
+  not settled in this plan.
 
 ## 3. Auth design
 
@@ -135,10 +137,10 @@ foreground. UNCLOSED: the exact upgrade-cookie plumbing, built in A3.
   `crypto.getRandomValues`. Stored only as a hash server-side.
 - Flags: `HttpOnly; Secure; SameSite=None; Path=/; Max-Age=SESSION_DAYS`.
   Host-only (no Domain attribute) on `https://PUBLIC_DOMAIN`. `None` (not
-  Lax) because the Capacitor phone shell's origin is `https://localhost`
-  (server/auth.ts `CAPACITOR_ORIGIN`) calling `https://PUBLIC_DOMAIN`
-  cross-site; Lax cookies would not be sent. The browser PWA uses the
-  same cookie, one code path.
+  Lax) because the Capacitor phone shell's origin was `https://localhost`
+  calling `https://PUBLIC_DOMAIN` cross-site, where Lax cookies are not
+  sent. That shell and `CAPACITOR_ORIGIN` are gone (A7), so the reason is
+  moot; revisit the flag when the native sign-in is designed.
 - Server record: `sessions(token_hash, user_id, created_at, expires_at,
   last_seen_at, ip, user_agent)`. Lookup hashes the presented token with
   SHA-256 and compares; expiry enforced server-side, not just Max-Age.

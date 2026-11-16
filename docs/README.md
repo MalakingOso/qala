@@ -12,7 +12,7 @@ When files disagree, `DECISIONS.md` wins. Every living file opens with a status 
 | `DECISIONS.md` | The owner's decision log. Rows are added, never renumbered. |
 | `decisions-pending.md` | The queue of open choices (empty since 2026-11-13), the protocol for deciding them, the list of code owed by decided items, and the real-data validations. |
 | `CONTEXT.md` | The glossary. |
-| `DESIGN.md` | The design system and screen spec, for the web. The native app departs from it; see `android-native.md` and `archive/completed.md`. |
+| `DESIGN.md` | The design system and screen spec, written for the web (now the landing page and desktop shell). The native app departs from it; see `android-native.md` and `archive/completed.md`. |
 | `PLAN.md` | The 2026-09-13 build plan, trimmed. Sections 6 (engine), 12 (generator), 14 (gates) and 16a to 16f are still the reference; superseded sections are pointers that keep their numbers so citations still land. |
 | `android-native.md` | The native Android app: platform, modules, run recorder, data layer, phases A0 to A7. |
 | `rust-core.md` | The Rust core: architecture, sync, porting order, golden vectors, and in section 12 the LS++ language, its import pipeline and engine bindings. |

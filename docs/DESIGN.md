@@ -2,7 +2,7 @@
 
 The single reference for how Qala looks and behaves on screen. The owner's choices behind it are in `docs/DECISIONS.md` (codes like L4 or U3 below point there). Engine rules the screens display are in `docs/PLAN.md` section 6. The review canvas that shows all of this is `mockups/qala-app-mockups.html` (section 8 below).
 
-Status 2026-10-13: this describes the web app (desktop and the frozen phone PWA). The native Android app takes its tokens, plates and icons from here but departs on type (Recursive for UI text, DECISIONS L19), on Today's fixed day rail with notched cards and glass (S23), and on the Today cards. Those are specified in `docs/archive/completed.md` (Type and rail, as built) and the code, and this file has not been brought in line.
+Status 2026-11-16: this describes the web app, which is now the landing page and the desktop shell (the phone PWA was deleted, S13). The phone screens in section 7 are the design reference the native app started from. The native Android app takes its tokens, plates and icons from here but departs on type (Recursive for UI text, DECISIONS L19), on Today's fixed day rail with notched cards and glass (S23), and on the Today cards. Those are specified in `docs/archive/completed.md` (Type and rail, as built) and the code, and this file has not been brought in line.
 
 Visual refinement, 2026-09-13: a smoothing pass gave the app responsive
 charts, consistent controls, a full-height desktop workspace and a
@@ -470,7 +470,7 @@ names one muscle and trains around it. A skipped day is never a miss: the
 copy says what happens (rests, shifts, guards) and nothing counts against
 the user.
 
-The skip sheet (`#/phone/skip`) opens from Today ("Skip today" under the
+The skip sheet opens from Today ("Skip today" under the
 lift and run heroes) and from any unlogged Plan day ("Skip this day"). It
 shows the day, the four reason rows (2px bordered, the picked radio filled
 with ink), a muscle picker for injuries, an optional one-line note, and a

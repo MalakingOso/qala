@@ -14,7 +14,7 @@ explains the numbers. Runs feed the same fatigue model as lifting.
 [![Web](https://img.shields.io/badge/Web-React%2019%20%2B%20Vite-485cc7?style=flat-square)](#)
 [![Android](https://img.shields.io/badge/Android-Kotlin%20%2B%20Compose-c2410c?style=flat-square)](#)
 [![Server](https://img.shields.io/badge/Server-Bun-0f152a?style=flat-square)](#)
-[![Engine](https://img.shields.io/badge/Engine-TypeScript%20%2B%20Rust-0a8078?style=flat-square)](#)
+[![Engine](https://img.shields.io/badge/Engine-Rust-0a8078?style=flat-square)](#)
 
 [Quick Start](#quick-start) • [Features](#features) • [Architecture](#architecture) • [Docs](#docs) • [License](#license)
 
@@ -31,18 +31,23 @@ explains the numbers. Runs feed the same fatigue model as lifting.
 | **Shared fatigue** | Lifting and running count toward the same model. One readiness score at session start. |
 | **Coach** | A local model answers questions about the plan; the reply is validated, and the server returns a degraded state when the model is down. |
 | **Import** | Paste text, upload a PDF, or dictate. The import screen proposes LS++ with a diff and a confirm step. |
-| **Web and Android** | Desktop author shell and phone logger on the web; a native Kotlin and Jetpack Compose app with a Rust core via UniFFI. |
+| **Web and Android** | A desktop author shell on the web; a native Kotlin and Jetpack Compose phone app with a Rust core via UniFFI. |
 
 ## Status
 
-Web is v1 on sample data: the desktop author shell and the frozen phone PWA.
-The native Android app is the active work, with the Rust core, the Room data
-layer, Today with the day rail, check-in, the lifting loop, and the Coach screen.
-Run recording, sync, and charts have not started. Everything on Android has run
-on the emulator only.
+Web is v1 on sample data: a landing page and the desktop author shell. The web
+phone shell was deleted on 2026-11-12 (DECISIONS S13); the phone is the native
+Android app.
+
+The Android app is the active work. It has the Rust core, the Room data layer,
+Today with the day rail, check-in, the lifting loop, the Coach screen, run
+recording, the stats screens and a signed release build. Record sync, accounts,
+the route map and the guided run are not built, and the phone stays offline-first
+on Room. Everything on Android has run on the emulator only.
 
 The device gates (a 2 h locked-screen run, Spotify ducking, a killed service
-resuming) have not run on the phone. See `docs/android-native.md` section 5.
+resuming) have not run on the phone. See `docs/android-native.md` section 5 and
+the real-phone row in `docs/ROADMAP.md`.
 
 `docs/ROADMAP.md` says where each track stands. The plan is `docs/PLAN.md`, the
 design system `docs/DESIGN.md`, the decision log `docs/DECISIONS.md`.
@@ -84,11 +89,11 @@ scripts/cargo-test-safe.sh -p <crate>
 ```
 qala/
 ├── apps/
-│   ├── web/            # React PWA: desktop author shell + phone logger shell, one theme
+│   ├── web/            # React PWA: landing page and desktop author shell
 │   └── android/        # Native Kotlin + Jetpack Compose: app, design, data (Room + Rust build)
 ├── packages/
 │   ├── core/           # Data model, document schema, exercise seed and overlay, units and rounding
-│   ├── engine/         # Availability (skipped days and training status) for the Android app
+│   ├── engine/         # Availability (skipped days and training status) in TypeScript; only its tests use it, the app runs the Rust copy in qala-core
 │   ├── generator/      # Rules engine that emits LS++ programs
 │   ├── llm/            # Prompt builders and response validation for the coach
 │   └── lspp/           # Typed client over the LS++ wasm build (`bun run build:wasm` makes it)
@@ -98,15 +103,15 @@ qala/
 │   ├── qala-lspp/      # Rust LS++ port
 │   ├── qala-lspp-json/ # LS++ JSON layer
 │   └── qala-lspp-wasm/ # LS++ wasm (web editor, server import check)
-├── server/             # Bun server on 127.0.0.1:8500: Tailscale-header auth, tiles and elevation, LLM proxy, text import
+├── server/             # Bun server on 127.0.0.1:8500: Tailscale-header auth, tiles and elevation, LLM proxy, coach route, text and PDF import, transcription
 ├── assets/             # Source fonts and the 3D icon renders (assets/3d/)
 ├── deploy/             # systemd unit and Tailscale notes
 ├── docs/               # Start at ROADMAP.md; README.md there indexes the rest
 ├── mockups/            # Hand-drawn review canvas. Not app code.
-└── scripts/            # Wasm build, vendor, fuzz, tile and token generators
+└── scripts/            # Wasm build, safe cargo runner, tile and elevation fetchers, Android token, icon and gear generators
 ```
 
-**Flow.** `packages/server` and the web app load the LS++ wasm client from
+**Flow.** `server/` and the web app load the LS++ wasm client from
 `packages/lspp`. The desktop editor runs checks, Format, and dry run through it;
 the server runs the import check through it. Android calls the same language
 through `crates/qala-ffi` and UniFFI, and runs `qala-core` for engine math.
@@ -122,12 +127,11 @@ reason in one line. See `docs/DESIGN.md`.
 |-----|------------|
 | `docs/ROADMAP.md` | Where each track stands and what it waits on |
 | `docs/PLAN.md` | The build plan |
-| `docs/DESIGN.md` | The design system and screen spec (web; native departs, see its status line) |
+| `docs/DESIGN.md` | The design system and screen spec (written for the web; native departs, see its status line) |
 | `docs/DECISIONS.md` | The decision log (rows are added, never renumbered) |
 | `docs/decisions-pending.md` | The queue of open choices and the protocol for deciding them |
 | `docs/android-native.md` | The native Android app: platform, modules, run recorder, data layer, phases A0 to A7 |
-| `docs/rust-core.md` | The Rust core: architecture, sync, porting order, spike report |
-| `docs/ls-plus-plus.md` | The LS++ language, its extensions, the import pipeline |
+| `docs/rust-core.md` | The Rust core: architecture, sync, porting order, and in section 12 the LS++ language, its import pipeline and engine bindings |
 | `docs/CONTEXT.md` | The glossary |
 
 ## License
