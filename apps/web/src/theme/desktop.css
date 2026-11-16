@@ -1,6 +1,6 @@
 /* Desktop, refined (DESIGN 7.15, DECISIONS L16, U20-U23). Everything here is
- * scoped to `.page-desktop`, so the phone shell cannot be reached from this
- * file, and every color is an existing token, so dark mode comes with it.
+ * scoped to `.page-desktop`, and every color is an existing token, so dark
+ * mode comes with it.
  * tokens.css is untouched: the Beamer surface values (2px borders, hard
  * offset shadows, 4/6/8px radii) stay; what changes is hierarchy. UI text is
  * a proportional sans, titles and big figures stay Qala Test, and DM Mono is
@@ -248,6 +248,7 @@
   font-size: 11px;
 }
 .dx-week {
+  margin-left: auto;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -267,23 +268,6 @@
 .dx-week button:hover:not(:disabled) {
   background: var(--bg-hover);
   color: var(--fg);
-}
-.dx-bar-link {
-  margin-left: auto;
-  display: inline-flex;
-  align-items: center;
-  min-height: 40px;
-  padding: 0 14px;
-  border: var(--border-width) solid var(--line);
-  border-radius: var(--radius-md);
-  background: var(--bg-surface);
-  color: var(--fg);
-  font-size: 12px;
-  font-weight: 600;
-  text-decoration: none;
-}
-.dx-bar-link:hover {
-  background: var(--bg-hover);
 }
 
 /* ---------- Cards and headers ---------- */
@@ -1115,13 +1099,6 @@
 .e1rm-rows .num {
   text-align: right;
 }
-.coach-note {
-  margin: 14px 0 0;
-  padding-top: 14px;
-  border-top: 2px solid var(--line);
-  color: var(--fg-secondary);
-  font-size: 13px;
-}
 
 /* ---------- Lifts ---------- */
 .gain-rows {
@@ -1897,9 +1874,6 @@ li.today .preview-day {
 .page-desktop .chart-headline .figure {
   font-size: 32px;
 }
-.page-desktop .week-caption {
-  font-size: 12px;
-}
 
 /* ---------- Settings ---------- */
 .settings-flow > div {
@@ -1991,9 +1965,6 @@ li.today .preview-day {
     order: 3;
     flex-basis: 100%;
     max-width: none;
-  }
-  .dx-bar-link {
-    margin-left: 0;
   }
   .settings-flow > div {
     column-count: 1;

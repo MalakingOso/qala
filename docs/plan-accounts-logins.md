@@ -17,7 +17,9 @@ files (ADR 0002, server/auth.ts, server/mod.ts, server/sync.ts, server/llm.ts,
 the old server config, deploy/qala.service, deploy/tailscale-serve.md,
 docs/DECISIONS.md S3/S9/S11, docs/rust-core.md sections 4-5, apps/web shells).
 No library API is asserted from memory. Section 13 lists what is closed and
-the three items still genuinely open (U6/U7/U9).
+nothing still open: U6, U7 and U9 were decided 2026-11-13 (D21, D22, D23).
+
+STALE since 2026-10-01 (S7, S13): every Capacitor reference below (the SameSite=None rationale, the WebView cookie jar, the Capacitor passkey scope in 6.2 and the phone-shell lines in sections 8 and 12) describes the deleted shell. The native app's auth path (cookie or token, passkeys through Credential Manager) is not designed here, and the cookie policy needs a rewrite before phase 1.
 
 ## 0. Operator inputs
 
@@ -27,7 +29,7 @@ Collect these before phase 0. Placeholders are used everywhere below.
 |---|---|---|
 | VPS hostname / IP | `VPS_HOST` | SSH target, Caddy reverse-proxy host, systemd unit host. Example: `qala.example.com` or raw IP for first boot. |
 | VPS SSH access | `VPS_SSH` (user + key) | `ssh VPS_SSH` for deploy, invite CLI, backups. Example: `root@VPS_HOST`. |
-| Public domain | `PUBLIC_DOMAIN` | The one public name. Caddy automatic HTTPS certificate, WebAuthn RP ID, session cookie Domain (or host-only), PWA origin, backup docs. Must be a real DNS name for Caddy automatic HTTPS (ADR 0002 open question). |
+| Public domain | `PUBLIC_DOMAIN` | The one public name. Caddy automatic HTTPS certificate, WebAuthn RP ID, session cookie Domain (or host-only), PWA origin, backup docs. Must be a real DNS name for Caddy automatic HTTPS (ADR 0002 open question). Decided 2026-11-13 (D21, S33): a dedicated domain the owner registers, intended `qala.fit` (verify availability); `PUBLIC_DOMAIN` is the host `app.qala.fit` and the RP ID is the registrable domain `qala.fit`. |
 | DNS | A/AAAA `PUBLIC_DOMAIN -> VPS_HOST` | Required before Caddy first run, else TLS issuance fails. |
 | Owner login name | `OWNER_LOGIN` | First user row; first invite redeems to owner (ADR 0002). Lowercase, reuse `normalizeLogin` semantics. |
 | Session lifetime (policy) | `SESSION_DAYS` | Cookie Max-Age + server-side expiry. Default 30, sliding (section 3.2). |
@@ -35,7 +37,7 @@ Collect these before phase 0. Placeholders are used everywhere below.
 
 How each flows: `VPS_SSH` only for operations (sections 5, 7, 8).
 `PUBLIC_DOMAIN` is baked into Caddyfile, RP ID/origin, and cookie flags;
-changing it later invalidates passkeys (RP ID bound) so pick it once.
+the RP ID is the registrable domain (D21), so moving the host inside it keeps passkeys, and changing the registrable domain invalidates them.
 `VPS_HOST` pre-DNS may be an IP; Caddyfile uses `PUBLIC_DOMAIN` only after
 DNS resolves.
 
@@ -120,10 +122,11 @@ server has no /api/auth/*). Status codes follow the existing
 | DELETE /api/auth/webauthn/:id | yes | - | 204 | 401, 404 not yours |
 | GET /sync, POST /api/sync, PUT/GET /api/blobs/*, POST /api/llm/chat, GET /api/elevation, /tiles/* | yes (change) | as today + S11 | as today | 401 without valid session cookie (new; today only /sync checks identity, docs/rust-core.md section 5) |
 
-WebSocket `/sync` (if it survives S11; S11 proposes replacing ws.ts with
-POST /api/sync): authenticate by cookie at upgrade time via the same
-session lookup. UNCLOSED: exact upgrade-cookie plumbing; S11 replacement
-may delete this row entirely.
+WebSocket `/sync` survives as a notify-only channel (D22, 2026-11-13): data and
+idempotency stay on POST /api/sync, and the socket only tells an open client
+that a newer cursor exists. It authenticates by cookie at upgrade time via
+the same session lookup, and is open only while the app or tab is in the
+foreground. UNCLOSED: the exact upgrade-cookie plumbing, built in A3.
 
 ### 3.2 Session cookie spec (proposed, follows ADR 0002 line 28-30)
 
@@ -189,8 +192,9 @@ may delete this row entirely.
   installed v13.x source at implement time; the storage mapping below
   follows the v13 shape (id base64url, publicKey COSE bytes, counter,
   transports).
-- RP ID: `PUBLIC_DOMAIN` exactly (no port, eTLD+1 registrable domain).
-  Origin: `https://PUBLIC_DOMAIN` exactly. One-way door (section 0).
+- RP ID: the registrable domain (`qala.fit`, no port). Origin: `https://PUBLIC_DOMAIN`
+  exactly (`https://app.qala.fit`). The apex also resolves to the VPS and serves
+  `/.well-known/assetlinks.json`. One-way door (section 0), decided 2026-11-13 (D21, S33).
 - Registration (authed, in Settings): client calls register/options ->
   `navigator.credentials.create()` -> register/verify; persist
   `{ credentialId, publicKeyCOSE_b64u, counter, transports, name }`.
@@ -310,9 +314,10 @@ CREATE INDEX idx_webauthn_user ON webauthn_credentials(user_id);
   files never hold hashes or tokens. `requireUser` maps session -> userId
   -> `<userId>.sqlite` path; path traversal impossible since userId comes
   from the session row, never the URL.
-- UNCLOSED: exact sync/blob table DDL (owned by the S11 track, not this
-  plan); this plan only constrains auth mapping + file-per-user + no
-  cross-user reads (test: session A cannot read user B file, 403/404).
+- Decided 2026-11-13 (D22): the per-field row shape above is the DDL shape; column
+  types and indexes are settled in A3. This plan constrains auth mapping +
+  file-per-user + no cross-user reads (test: session A cannot read user B
+  file, 403/404).
 
 ### 4.4 Secrets handling
 
@@ -379,7 +384,7 @@ over `--code` for redeem-by-CLI if that verb ever exists.
 
 ## 6. PWA/UX screen inventory
 
-Hash routes today: `#/` landing, `#/desktop/*`, `#/phone/*` (app.tsx).
+Hash routes today: `#/` landing and `#/desktop/*` (app.tsx). The phone is the native app.
 Auth adds the smallest set that covers the flows; existing shells unchanged
 except a session gate + Settings additions.
 
@@ -387,7 +392,7 @@ except a session gate + Settings additions.
 |---|---|---|---|
 | A1 | `#/login` | shared, unauthed | password login + passkey login button + link to signup |
 | A2 | `#/signup?code=` | shared, unauthed | invite redeem: login + password + code -> creates user, logs in |
-| A3 | auth gate wrapper | both shells | unauthed visit to any `#/desktop/*` or `#/phone/*` redirects to `#/login?next=`; authed visit to `#/login` redirects to last shell |
+| A3 | auth gate wrapper | both shells | unauthed visit to any `#/desktop/*` redirects to `#/login?next=`; authed visit to `#/login` redirects to last shell |
 | S1 | Settings -> Passkeys section | `SettingsPage.tsx` (shared by both shells today) | list credentials (name, created, last used), enroll new (name prompt + platform picker), delete per key |
 | S2 | Settings -> Password section | same file | change password (current + new), shows fallback note |
 | S3 | Settings -> Sessions section | same file | list sessions (device UA, last seen), revoke one / revoke others |
@@ -420,6 +425,8 @@ login first, passkey where the OS supports it (device gates, section 11).
 ```
 
 ### 7.2 Caddyfile (proposed; replace PUBLIC_DOMAIN before use)
+
+Add an apex block for the registrable domain (`qala.fit`) that serves `/.well-known/assetlinks.json` and redirects everything else to `PUBLIC_DOMAIN` (D21, 2026-11-13).
 
 ```caddy
 PUBLIC_DOMAIN {
@@ -572,8 +579,11 @@ callisto systemd user unit, not portable by config).
 Options from ADR 0002: (a) CPU inference of a small model on the VPS, or
 (b) coach goes quiet until a hosted path exists.
 
-RECOMMENDATION: (b) coach goes quiet, and do it by keeping the existing
-degrade-gracefully contract, not by deleting the coach.
+DECIDED 2026-11-13 (D23, S34, owner: the AI is hosted on the home computer to start
+and scales up as needed): neither (a) nor (b) as the v1 stance. The models stay
+on callisto and the VPS reaches them over an outbound private link from callisto
+(a reverse SSH tunnel run by a systemd unit there). The degrade-gracefully
+contract below stays, as the behavior when callisto or the link is down:
 
 - `/api/llm/chat` on the VPS returns the same 502 `{degraded:true}`
   shape it returns today when llama-server is down. No client rewrite:
@@ -586,8 +596,12 @@ degrade-gracefully contract, not by deleting the coach.
   second prompt/behavior contract to maintain. Revisit only with a named
   VPS SKU + a measured latency gate (proposal: p50 first token < 5 s on
   CPU or stay quiet).
-- UNCLOSED (carried to section 13): hosted-LLM path (provider, key
-  handling, per-user cost cap) if quiet turns out unacceptable.
+- Rate limit (D23, 2026-11-13): the VPS caps each user's LLM routes at one request in
+  flight plus a per-minute limit; numbers are set at build.
+- Scale-up (D23): the Elixir model gateway (docs/ROADMAP.md Tooling), built
+  when queue waits pass a couple of seconds, a second model host appears, or
+  several people stream chat at once. A hosted API behind it is the last step;
+  its provider, key handling and cost cap are chosen then.
 
 ## 10. Migration/retirement (remove Tailscale auth, docs, loopback rule)
 
@@ -696,7 +710,7 @@ Device gates (all on `https://PUBLIC_DOMAIN`, installed PWA where noted):
   own device. GATE: two users, two devices each, sessions isolated,
   owner reset drilled once (OTP + in-person handoff).
 - Phase 6, docs + retirement: section 10 steps 5-6 + 8 (delete
-  tailscale-serve.md, rewrite qala.service, docs sweep), coach-quiet copy
+  tailscale-serve.md, rewrite qala.service, docs sweep), degraded-state copy
   (section 9). GATE: repo grep for `tailscale` returns only ADR history
   + this plan; PLAN/DECISIONS/rust-core/android-native auth sentences
   updated; final `bun run test` green.
@@ -723,12 +737,12 @@ callisto + doc verification; no library API asserted from memory):
   (7.2); invite codes stored as sha256 + prefix (4.2/4.4); Caddy
   roll_size/roll_keep + journald, 90-day auth-line retention (7.4).
 
-Still open (genuinely need owner input or the S11 track):
+Decided 2026-11-13 (these were the open items):
 
-- U6 PUBLIC_DOMAIN pick (one-way door for RP ID) + DNS cutover date.
-  Blocks phase 0; everything else can proceed against a stub.
-- U7 Sync/blob DDL (S11 track owns it) + ws-upgrade-vs-POST decision.
+- U6 PUBLIC_DOMAIN pick + DNS cutover: decided 2026-11-13 (D21, S33): `qala.fit` (verify availability), host `app.qala.fit`, RP ID `qala.fit`, cutover the day the domain is registered.
+  Phase 0 starts when the domain is registered; everything else can proceed against a stub.
+- U7 Sync/blob DDL + transport: decided 2026-11-13 (D22): per-field rows, POST /api/sync for data, and a notify-only websocket.
   This plan only constrains the auth mapping (4.3).
-- U9 Hosted-LLM path if coach-quiet (section 9) is unacceptable.
-  Deferrable past v1.
+- U9 LLM hosting: decided 2026-11-13 (D23, S34): the AI runs on the home computer first, reached from the VPS over a reverse tunnel, scaling later through the Elixir gateway; coach-quiet is the degraded state, not the plan.
+  Build owed: the tunnel and the per-user caps (decisions-pending.md, To implement).
 

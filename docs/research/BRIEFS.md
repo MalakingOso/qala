@@ -149,7 +149,7 @@ Sketch of the record shape, for `docs/PLAN.md` section 7 to accept or reject:
 bodyScans: [ { id, date, method: 'dexa' | 'skinfold' | 'bia' | 'airDisplacement' | 'hydrostatic' | 'estimate',
                fatMassKg?, fatFreeMassKg?, boneMineralContentG?, fatPercent?, notes,
                machineOrOperator?, protocol?: 'fasted'|'standard'|'unknown', source: 'user'|'import' } ],
-bodyMeasures: [ { id, date, weightKg?, waistCm?, chestCm?, hipsCm?, thighCm?, armCm?, photoIds?, note } ],
+bodyMeasures: [ { id, date, weightKg?, waistCm?, chestCm?, hipsCm?, thighCm?, armCm?, note } ],
 weightTrend: derived, never stored   // rolling mean of the last 7 daily entries, plus the SD, shown as a band
 ```
 
@@ -159,7 +159,9 @@ Questions this raises, all for the brief rather than the build:
 - Where does `weightTrend` get computed, and what window? Seven daily entries is [derived]; a 14-day window reacts more slowly and suits a cut.
 - What does the engine do with a trend? Nothing, probably: `packages/engine` is a fatigue and performance model, and body composition is not fatigue. Say so explicitly so nobody later adds a calorie burn from it.
 - The Body tab (U22) currently shows the recovery map and per-muscle fatigue. A body composition section needs to not fight that for the same screen.
-- Photos are blobs like GPS tracks (S9), with the same content-addressing argument and a different privacy answer: a body photo is the most sensitive thing this app will ever hold. Decide the retention story before the field exists.
+- Photos are blobs like GPS tracks (S9), with the same content-addressing argument and a different privacy answer: a body photo is the most sensitive thing this app will ever hold. Resolved 2026-11-13 (D30): no photos for now, so there is no retention story to write yet.
+
+Decided 2026-11-13 (D30): no photos in `bodyMeasures` for now.
 
 ### 6. Sources located on 2026-10-02 (skimmed, not read in full)
 
@@ -177,7 +179,7 @@ Questions this raises, all for the brief rather than the build:
 1. The ranked list of measurement methods the app accepts, each with a sourced precision and the conditions under which it is comparable.
 2. The hydration and "lean mass is not muscle" caveats in plain language, reusable in the app and in the podcast script.
 3. A sourced position on daily weighing, and the weekly-trend default that follows from it.
-4. The record shapes in section 5, with the photo-retention answer.
+4. The record shapes in section 5, with no photo field (D30).
 5. The copy for the gap between scans: what the app can honestly say after eight weeks with no measurement.
 6. The "what a kilo of fat and a kilo of muscle actually are" numbers, sourced, which both the app and the script need.
 
@@ -208,6 +210,8 @@ That recommendation still needs to be *right*, which is what the rest of this br
 - Dose: almost all of the intervention literature is daily practice over 4 to 8 weeks, not a 3-minute sit before one session. The thing Qala is proposing sits at the edge of the evidence, and the honest framing is that it is a low-stakes habit borrowed from a well-studied practice, not a dosed intervention. Both meditation apps are built around the daily version, which is also the version that has evidence.
 - Breath work is a separate literature from mindfulness practice (physiological sighs, slow-paced breathing, respiratory sinus arrhythmia, vagal tone) and it is the part most likely to have an acute, in-session effect. It is also the part Qala could plausibly do in-app without becoming a meditation app. Read it on its own terms rather than borrowing mindfulness conclusions for it.
 
+Decided 2026-11-13 (D26): links only in v1; the in-app breathing routine waits on this section's breath-work read.
+
 ### 3. Where in the session
 
 The Today rail already has stages (`docs/CONTEXT.md`): check-in, warm-up, lift, recover, run, wind down. Two placements are candidates, and they are not the same decision:
@@ -232,6 +236,8 @@ Constraints that come from the decisions already made:
 - What is the fallback when the user does not want or cannot install an app? A 60-second breathing routine in-app is the minimum that keeps the promise without pretending to be the curriculum. Decide whether Qala ships it; it is a small, self-contained feature that needs no research beyond section 2's breath-work read.
 - Does the reminder respect the same rules as the rest of the app? `settings.dailyWellness` is off by default and the app has no push service to speak of; a mindfulness nudge that needs notification infrastructure is a bigger build than it looks.
 - Nothing here should touch `readiness`, `prs` or any engine input. Say that in the plan so a future agent does not wire it in.
+
+Resolved 2026-11-13 (D26, Claude's pick at the owner's request): the app ships the two links and no in-app routine. Reopen after the breath-work read.
 
 ### 6. Sources located on 2026-10-02 (skimmed, not read in full)
 
@@ -289,6 +295,8 @@ Three candidate bases, none of which is pace:
 2. **Talk test or RPE.** "Conversational" is the wording in every beginner plan and needs a numeric definition so the engine can check it. Qala has sRPE and an HR option; a beginner has neither reliably.
 3. **Effort against a walk-run baseline.** Once the interval ratios are known, a session's difficulty is the ratio of running to walking time, which is a number the plan can progress without any pace at all. This is the cleanest fit for the existing schema and it is [derived].
 
+Decided 2026-11-13 (D25): track 1 ships first and the walk-run plan is generated per person, not a single fixed program; the fixed NHS-shaped program is the fallback if generation buys nothing at interval level.
+
 ### 4. Encoding "repeat a week until it passes"
 
 C25K's own rule is to repeat any week you could not finish before moving on, and the published plan ends with two repetitions of week 9 day 1. Today `runPlans` is a fixed list of weeks and nothing in it can say "stay here until". This is the single biggest schema change in this brief:
@@ -296,6 +304,8 @@ C25K's own rule is to repeat any week you could not finish before moving on, and
 - Add an advance rule to the week (`advance: { when: 'completed' | 'repeatUntilContinuous', continuousSeconds? }`) rather than duplicating weeks, so the plan stays readable and the Today screen can say why it is still on week 3.
 - Decide whether the repetition is manual (the user says "I got through it") or automatic (a completed session whose last interval ran unbroken). Automatic is better for the user and worse for correctness, because the recorder's auto-pause can split a clean interval into pieces. Check the auto-pause thresholds in `docs/PLAN.md` 8a (0.6 m/s held 5 s, resume above 1.0 m/s held 3 s) against walk pace before relying on it.
 - Interaction with skips (U24): a beginner plan is where skipping matters most, and a shifted week should never re-run a week already passed.
+
+The `walk` step kind and the repeat-a-week advance rule are shared by both tracks and do not wait on which plan ships first (D25, 2026-11-13).
 
 ### 5. 10K
 

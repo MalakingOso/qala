@@ -2,7 +2,7 @@
 
 The owner writes it. The agent researches and edits. Drafts live here in the repo for now; publication is decided later and nothing goes out before that.
 
-Plan section: `docs/PLAN.md` 16f. Decision: `docs/DECISIONS.md` P8. Open question: `docs/decisions-pending.md` D29.
+Plan section: `docs/PLAN.md` 16f. Decision: `docs/DECISIONS.md` P8. Home decided 2026-11-13 (D29): a /blog section on the Qala public site once the domain is live (DECISIONS S33).
 
 ## What it is
 

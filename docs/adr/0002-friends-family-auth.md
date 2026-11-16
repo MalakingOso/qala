@@ -46,10 +46,13 @@ plugs in. No data on this machine needs migration (S11).
 ## Open questions
 
 - Coach model: `/api/llm` currently proxies to llama-server on callisto.
-  With no tailnet, the VPS cannot reach it. Options are CPU inference of
-  a small model on the VPS, or the coach going quiet until a hosted path
-  exists.
+  With no tailnet, the VPS cannot reach it. Resolved 2026-11-13 (D23, S34): the AI
+  runs on the owner's home computer to start, and the VPS reaches it over
+  an outbound private link from callisto. The coach goes quiet only when
+  callisto or the link is down. Scale-up is the Elixir model gateway.
 - Public address story: domain name and who terminates TLS (Caddy
-  automatic HTTPS needs a real domain).
+  automatic HTTPS needs a real domain). Resolved 2026-11-13 (D21, S33): a dedicated
+  domain the owner registers, intended `qala.fit` (verify availability), host
+  `app.qala.fit`, RP ID `qala.fit`, Caddy terminates TLS.
 - Session lifetime and whether a second device needs re-auth (record sync
   in S11 is already multi-device, so this is policy, not mechanism).

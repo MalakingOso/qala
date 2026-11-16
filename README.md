@@ -88,7 +88,7 @@ qala/
 │   └── android/        # Native Kotlin + Jetpack Compose: app, design, data (Room + Rust build)
 ├── packages/
 │   ├── core/           # Data model, document schema, exercise seed and overlay, units and rounding
-│   ├── engine/         # Availability (skipped days and training status) for the phone shell
+│   ├── engine/         # Availability (skipped days and training status) for the Android app
 │   ├── generator/      # Rules engine that emits LS++ programs
 │   ├── llm/            # Prompt builders and response validation for the coach
 │   └── lspp/           # Typed client over the LS++ wasm build (`bun run build:wasm` makes it)

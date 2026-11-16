@@ -16,7 +16,7 @@
  *           slide into the week's column and crossfade into the week's two
  *           pieces: its lift added up under its run added up. */
 
-import type { StageState, WeekLoad, WeekLoadDay } from "../store/types.ts";
+import type { WeekLoad, WeekLoadDay } from "../store/types.ts";
 import { type DayTime, dayTime, weekSummary } from "./weekRibbon.ts";
 import { weekTotals } from "./weeklyLoad.ts";
 
@@ -137,14 +137,6 @@ export function captionNums(v: { done: number; planned: number }) {
   if (v.done === 0) return `${n(v.planned)} planned`;
   if (v.done >= v.planned) return `${n(v.done)} done`;
   return `${n(v.done)} of ${n(v.planned)} done`;
-}
-
-export function dayLabel(v: DayView) {
-  const when = v.today ? ", today" : "";
-  if (v.state === "rest") return `${v.name}${when}: rest`;
-  return `${v.name}${when}, ${v.session}: ${n(v.done)} done of ${
-    n(v.planned)
-  } planned`;
 }
 
 /* ---------- The block ---------- */
@@ -308,37 +300,6 @@ export function blockModel(weeks: WeekLoad[]): BlockModel {
     maxDay: Math.max(1, ...days.map((d) => d.size)),
     maxWeek: Math.max(1, ...out.map((w) => w.size)),
   };
-}
-
-/** Today's done state comes from the timeline rail, not the series (phone).
- * A stage that is done means its session's planned load is done; a stage the
- * day does not have means no such session today, so a rest day (no lift and
- * no run stage) has no load at all. */
-export function withRail(weeks: WeekLoad[], stages: StageState[]): WeekLoad[] {
-  const lift = stages.find((s) => s.id === "lift");
-  const run = stages.find((s) => s.id === "run");
-  return weeks.map((week) => {
-    if (!week.days.some((d) => d.today)) return week;
-    return {
-      ...week,
-      days: week.days.map((d) => {
-        if (!d.today) return d;
-        const liftPlanned = lift ? d.liftPlanned : 0;
-        const runPlanned = run ? d.runPlanned : 0;
-        const rest = liftPlanned + runPlanned === 0;
-        return {
-          day: d.day,
-          today: true,
-          liftPlanned,
-          runPlanned,
-          liftDone: lift && lift.status === "done" ? liftPlanned : 0,
-          runDone: run && run.status === "done" ? runPlanned : 0,
-          label: rest ? undefined : d.label,
-          runLabel: rest ? undefined : d.runLabel,
-        };
-      }),
-    };
-  });
 }
 
 /* ---------- Camera ---------- */

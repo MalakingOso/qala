@@ -7,34 +7,6 @@
  * sync layer is built (see the report). */
 
 import type { PlateEntry } from "../../../../packages/core/plates.ts";
-import type {
-  Availability,
-  DaySkip,
-  SkipReason,
-} from "../../../../packages/core/schema.ts";
-
-export type { Availability, DaySkip, SkipReason };
-
-export type DayStageId =
-  | "checkin"
-  | "warmup"
-  | "lift"
-  | "recover"
-  | "run"
-  | "winddown";
-
-export interface StageState {
-  id: DayStageId;
-  label: string;
-  time: string;
-  status: "done" | "now" | "later";
-}
-
-/** A rest day has no lift or run stage (DECISIONS U10): check-in, recover, wind down only. */
-export function isRestDay(stages: StageState[]): boolean {
-  return !stages.some((s) => s.id === "lift" || s.id === "run");
-}
-
 export interface WeekLoadDay {
   day: string;
   liftDone: number;
@@ -62,51 +34,6 @@ export interface WeekLoad {
   /** The block's deload week. */
   deload?: boolean;
   days: WeekLoadDay[];
-}
-
-export interface WorkoutSet {
-  w: number;
-  r: number;
-  rpe?: number;
-  done: boolean;
-  warmup?: boolean;
-}
-
-export interface ExerciseNoteModel {
-  id: string;
-  date: string;
-  text: string;
-  pinned: boolean;
-}
-
-export interface WorkoutExercise {
-  id: string;
-  name: string;
-  sets: WorkoutSet[];
-  lastTime?: string;
-  targetRpe?: number;
-  note?: ExerciseNoteModel | null;
-}
-
-export interface RestPrescription {
-  seconds: number;
-  base: number;
-  adjustments: { label: string; seconds: number }[];
-  nextLoad: number;
-  platesNow: number[];
-  platesNext: number[];
-}
-
-export interface EnvelopeCardModel {
-  id: string;
-  /** The exercise this envelope's proposal applies to, e.g. for WorkoutPage. */
-  exerciseId: string;
-  title: string;
-  engine: string;
-  coach: string;
-  reason: string;
-  platesPerSide?: string;
-  accepted: boolean | null;
 }
 
 export interface MemoryProposal {

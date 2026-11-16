@@ -1,7 +1,7 @@
-/* Desktop Settings: the phone's settings groups under the refined lede card,
+/* Desktop Settings: the settings groups under the refined lede card,
  * flowed into two columns by CSS (`.settings-flow`). Same rows, same state. */
 
-import { SettingsPage } from "../shell-phone/pages/SettingsPage.tsx";
+import { SettingsPage } from "./SettingsPage.tsx";
 import { PageHeader } from "./parts.tsx";
 
 export function DesktopSettingsPage() {
@@ -13,7 +13,7 @@ export function DesktopSettingsPage() {
         ruleless
       />
       <div className="settings-flow">
-        <SettingsPage embedded />
+        <SettingsPage />
       </div>
     </div>
   );

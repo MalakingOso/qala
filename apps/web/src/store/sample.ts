@@ -2,43 +2,16 @@
  * squat 3x4 at 245 lb, reference 1RM 280, quads rated 4, readiness 72. */
 
 import type {
-  EnvelopeCardModel,
   LiftStat,
   MemoryProposal,
   MuscleStat,
-  RestPrescription,
   RunSplit,
   SessionSummary,
   SettingsModel,
-  StageState,
   WeekLoad,
   WeekLoadDay,
-  WorkoutExercise,
 } from "./types.ts";
 import { bumperColorFor } from "../../../../packages/core/plates.ts";
-
-/** Sample-world today (Sunday, September 13 2026): the day the Today strip,
- * the Plan week and the desktop Overview all call today. Skips and the
- * training status resolve against this key until the samples go away. */
-export const SAMPLE_TODAY = "2026-09-13";
-
-/* Today stands just after the lift: Lower A is logged (the Sep 13 session,
- * 20,400 lb and one PR) and the easy run is still to come, the same moment
- * the desktop week shows. */
-export const sampleStages: StageState[] = [
-  { id: "checkin", label: "Check-in", time: "4:30p", status: "done" },
-  { id: "warmup", label: "Warm-up", time: "4:40p", status: "done" },
-  { id: "lift", label: "Lift", time: "5:00p", status: "done" },
-  { id: "recover", label: "Recover", time: "6:00p", status: "now" },
-  { id: "run", label: "Run", time: "6:00p", status: "later" },
-  { id: "winddown", label: "Wind down", time: "9:30p", status: "later" },
-];
-
-export const restDayStages: StageState[] = [
-  { id: "checkin", label: "Check-in", time: "8:00a", status: "now" },
-  { id: "recover", label: "Recover", time: "—", status: "later" },
-  { id: "winddown", label: "Wind down", time: "9:30p", status: "later" },
-];
 
 /** A week of the sample block from compact rows: [day, label, lift planned,
  * run planned, lift done, run done]. */
@@ -58,12 +31,10 @@ function weekDays(rows: DayRow[]): WeekLoadDay[] {
 }
 
 /* The training block's six weeks, Monday to Sunday (DESIGN 6.3, DECISIONS U24).
- * One series feeds both shells: the desktop Overview's load zoom reads all
- * six, the phone's seven-day strip reads week 3 (`sampleWeekLoad`). Week 3 is
- * the sample week with Lower A done and the easy run still planned, which is
- * where the session list (Lower A logged on Sep 13) and the phone's Today
- * stages (`sampleStages`) stand too. Weeks 1 to 4 are sample data until the
- * engine supplies them. Week 6 is the deload, half of week 5's planned load. */
+ * The desktop Overview's load zoom reads all six. Week 3 is the sample week
+ * with Lower A done and the easy run still planned, which is where the session
+ * list (Lower A logged on Sep 13) stands too. Weeks 1 to 4 are sample data
+ * until the engine supplies them. Week 6 is the deload, half of week 5's planned load. */
 const week5Days = weekDays([
   ["M", "Upper A", 440, 0],
   ["T", "Easy run", 0, 330],
@@ -308,10 +279,6 @@ export const sampleBlockWeeks: WeekLoad[] = [
 /* The desktop ribbon's three weeks around week 3, the week in focus (U20). */
 export const sampleWeeks: WeekLoad[] = sampleBlockWeeks.slice(1, 4);
 
-/* The phone's seven-day strip (U13): week 3 of the block, so the phone and the
- * desktop can't drift apart on this week. */
-export const sampleWeekLoad: WeekLoadDay[] = sampleBlockWeeks[2].days;
-
 /** Where the training block stands, for Overview's lede and the program page.
  * The deload is the last week of the block (Body's "Next planned: week 6"). */
 export const sampleBlock = {
@@ -326,83 +293,10 @@ export const sampleBlock = {
   profile: "4-day upper/lower + 3 runs",
 };
 
-export const sampleExercises: WorkoutExercise[] = [
-  {
-    id: "squat",
-    name: "Back Squat",
-    targetRpe: 8,
-    lastTime: "245 x 4, 4, 4 @ 8.5",
-    sets: [
-      { w: 245, r: 4, rpe: 8, done: true },
-      { w: 245, r: 4, rpe: 9, done: true },
-      { w: 245, r: 4, done: false },
-    ],
-    note: {
-      id: "n1",
-      date: "Sep 6",
-      text: "Knees caved on last rep. Cue: spread the floor.",
-      pinned: true,
-    },
-  },
-  {
-    id: "rdl",
-    name: "Romanian Deadlift",
-    targetRpe: 8,
-    lastTime: "205 x 8, 8 @ 8",
-    sets: [
-      { w: 205, r: 8, done: false },
-      { w: 205, r: 8, done: false },
-    ],
-  },
-  {
-    id: "lunge",
-    name: "Walking Lunge",
-    targetRpe: 8,
-    lastTime: "40 x 10 ea @ 7",
-    sets: [{ w: 40, r: 10, done: false }],
-  },
-  {
-    id: "calf",
-    name: "Standing Calf Raise",
-    targetRpe: 9,
-    lastTime: "180 x 12, 12 @ 8",
-    sets: [
-      { w: 180, r: 12, done: false },
-      { w: 180, r: 12, done: false },
-    ],
-  },
-];
-
-export const sampleRest: RestPrescription = {
-  seconds: 225,
-  base: 180,
-  adjustments: [
-    { label: "your pace", seconds: -15 },
-    { label: "last set RPE 9 vs 8", seconds: 30 },
-    { label: "last set of squat", seconds: 30 },
-  ],
-  nextLoad: 245,
-  platesNow: [45, 45, 10],
-  platesNext: [45, 45, 10],
-};
-
 export const sampleSplits: RunSplit[] = [
   { mile: 1, sec: 542 },
   { mile: 2, sec: 538 },
   { mile: 3, sec: 551 },
-];
-
-export const sampleEnvelopes: EnvelopeCardModel[] = [
-  {
-    id: "e1",
-    exerciseId: "squat",
-    title: "Squat top set",
-    engine: "245 x 4 @ 8",
-    coach: "240 x 4 @ 8",
-    reason: "Quads still sore (4). Small pullback, same reps.",
-    platesPerSide: "45 · 45 · 5 · 2.5",
-    accepted: null,
-  },
 ];
 
 export const sampleMemory: MemoryProposal[] = [
@@ -570,9 +464,8 @@ export const sampleMuscles: MuscleStat[] = [
   },
 ];
 
-/** Shared with the phone Body/Progress pages' inline copies of the same
- * sample week (DESIGN 7.9/7.10); desktop reads it from here so Overview,
- * Body and the muscle drill-down agree with each other. */
+/** One sample week of readiness, so Overview, Body and the muscle drill-down
+ * agree with each other. */
 export const sampleReadiness = {
   values: [78, 74, 80, 76, 71, 69, 72],
   avg: 76,

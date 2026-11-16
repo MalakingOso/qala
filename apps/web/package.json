@@ -3,10 +3,9 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "Qala web shells: desktop author PWA + phone logger PWA (React 19 + Vite).",
+  "description": "Qala web: landing page and desktop author PWA (React 19 + Vite).",
   "scripts": {
     "dev": "vite",
-    "dev:phone": "vite --mode phone",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",

@@ -1,13 +1,11 @@
-/* One codebase, two shells (PLAN 3). Hash routes: #/ landing,
- * #/phone/* logger + run recorder, #/desktop/* author. The phone shell is
- * frozen as a PWA; the Android app is native Kotlin (apps/android). */
+/* Hash routes: #/ landing, #/desktop/* author. The phone is the native
+ * Kotlin app (apps/android); the web has no phone shell. */
 
 import { useEffect, useState } from "react";
 import { QalaProvider, useQala } from "./store/qalaStore.tsx";
 import { applyTheme, applyTitleFont, watchSystemTheme } from "./theme/theme.ts";
-import { PhoneShell } from "./shell-phone/PhoneShell.tsx";
 import { DesktopShell } from "./shell-desktop/DesktopShell.tsx";
-import { LandingPage } from "./shell-phone/pages/LandingPage.tsx";
+import { LandingPage } from "./shared/landing/LandingPage.tsx";
 
 export function useHashRoute(): string {
   const [hash, setHash] = useState(() =>
@@ -37,9 +35,8 @@ function Shell() {
     applyTitleFont(settings.titleFont);
   }, [settings.titleFont]);
 
-  if (route === "/" || route === "") return <LandingPage />;
   if (route.startsWith("/desktop")) return <DesktopShell route={route} />;
-  return <PhoneShell route={route} />;
+  return <LandingPage />;
 }
 
 export function App() {

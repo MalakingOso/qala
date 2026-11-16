@@ -32,23 +32,31 @@ import {
   tipFor,
   totalLine,
   tweenMs,
-  withRail,
   zFromPinch,
   zoomTitle,
 } from "./loadZoom.ts";
 import { weekTotals } from "./weeklyLoad.ts";
-import {
-  restDayStages,
-  sampleBlockWeeks,
-  sampleStages,
-  sampleWeekLoad,
-  sampleWeeks,
-} from "../store/sample.ts";
-import type { StageState, WeekLoad } from "../store/types.ts";
+import { sampleBlockWeeks, sampleWeeks } from "../store/sample.ts";
+import type { WeekLoad } from "../store/types.ts";
 
 const box: Box = { width: 300, height: 88 };
-const rail = withRail(sampleBlockWeeks, sampleStages);
-const model = blockModel(rail);
+/** The sample block with today turned into a rest day: nothing planned. */
+const restWeeks: WeekLoad[] = sampleBlockWeeks.map((w) => ({
+  ...w,
+  days: w.days.map((d) =>
+    d.today
+      ? {
+        day: d.day,
+        today: true,
+        liftPlanned: 0,
+        runPlanned: 0,
+        liftDone: 0,
+        runDone: 0,
+      }
+      : d
+  ),
+}));
+const model = blockModel(sampleBlockWeeks);
 const TODAY = 20; // Sunday of week 3
 const ppl = (yMax: number) => box.height / yMax;
 
@@ -57,10 +65,6 @@ function pieces(f: ReturnType<typeof frame>, day: number) {
   return f.bars.filter((b) =>
     b.layer === "day" && b.slot === day && b.kind !== "rest"
   );
-}
-
-function stage(id: StageState["id"], status: StageState["status"]) {
-  return { id, label: id, time: "", status } as StageState;
 }
 
 test("the block has six weeks, 42 days and a deload at half of week 5", () => {
@@ -85,7 +89,7 @@ test("the block has six weeks, 42 days and a deload at half of week 5", () => {
 test("Week level stacks each day: lift under run, fill shares match describe()", () => {
   const f = frame(model, { z: 1, anchor: TODAY }, box);
   const k = ppl(model.maxDay);
-  const views = describe(rail[2].days);
+  const views = describe(sampleBlockWeeks[2].days);
   views.forEach((v, i) => {
     const day = model.days[14 + i];
     const ps = pieces(f, 14 + i);
@@ -119,7 +123,7 @@ test("Month draws the U25 ribbon over four whole weeks: hatched future, quiet fl
   for (let abs = 7; abs < 35; abs++) {
     const week = Math.floor(abs / 7);
     for (const p of pieces(f, abs)) {
-      assert.deepStrictEqual(p.future, rail[week].relation === "future", `${p.key}`);
+      assert.deepStrictEqual(p.future, sampleBlockWeeks[week].relation === "future", `${p.key}`);
       assert.ok(Math.abs(p.opacity - (week === 2 ? 1 : QUIET)) <= 1e-9);
       assert(p.w <= LEVEL_BAR_MAX[2], `${p.key} is ${p.w}px`);
       if (p.future) assert.deepStrictEqual(p.fillH, 0);
@@ -333,8 +337,8 @@ test("limits: bars stay within their level's cap and nothing is NaN, at any zoom
   };
   const models = [
     model,
-    blockModel(withRail(sampleBlockWeeks, restDayStages)),
-    blockModel([...rail, empty]),
+    blockModel(restWeeks),
+    blockModel([...sampleBlockWeeks, empty]),
     blockModel([empty]),
   ];
   const wide: Box[] = [box, { width: 600, height: 112 }, {
@@ -367,7 +371,7 @@ test("limits: bars stay within their level's cap and nothing is NaN, at any zoom
 });
 
 test("a rest day is one dash labeled Rest, caption Today · rest", () => {
-  const m = blockModel(withRail(sampleBlockWeeks, restDayStages));
+  const m = blockModel(restWeeks);
   const day = m.days[TODAY];
   assert.deepStrictEqual(day.state, "rest");
   assert.deepStrictEqual(day.today, true);
@@ -388,53 +392,6 @@ test("a rest day is one dash labeled Rest, caption Today · rest", () => {
   )!;
   assert.deepStrictEqual(week.kind, "rest");
   assert.deepStrictEqual(week.h, REST_H);
-});
-
-test("the rail decides today's done state: lift and run stages", () => {
-  const today = (weeks: WeekLoad[]) => weeks[2].days[6];
-  const base = today(rail);
-  assert.deepStrictEqual([base.liftDone, base.runDone], [510, 0]);
-  assert.deepStrictEqual([base.liftPlanned, base.runPlanned], [510, 240]);
-
-  const liftNow = withRail(sampleBlockWeeks, [
-    stage("lift", "now"),
-    stage("run", "later"),
-  ]);
-  assert.deepStrictEqual([today(liftNow).liftDone, today(liftNow).runDone], [0, 0]);
-
-  const liftDone = withRail(sampleBlockWeeks, [
-    stage("lift", "done"),
-    stage("run", "later"),
-  ]);
-  assert.deepStrictEqual([today(liftDone).liftDone, today(liftDone).runDone], [510, 0]);
-
-  const runDone = withRail(sampleBlockWeeks, [
-    stage("lift", "done"),
-    stage("run", "done"),
-  ]);
-  assert.deepStrictEqual([today(runDone).liftDone, today(runDone).runDone], [510, 240]);
-  assert.deepStrictEqual(today(runDone).label, "Lower A");
-
-  // Other days and the series itself are left alone.
-  assert.deepStrictEqual(rail[2].days.slice(0, 6), sampleBlockWeeks[2].days.slice(0, 6));
-  assert.deepStrictEqual(sampleBlockWeeks[2].days[6].liftDone, 510);
-
-  // A day with no lift or run stage has no load.
-  const rest = today(withRail(sampleBlockWeeks, restDayStages));
-  assert.deepStrictEqual(
-    [rest.liftPlanned, rest.runPlanned, rest.liftDone, rest.runDone],
-    [0, 0, 0, 0],
-  );
-  assert.deepStrictEqual(rest.label, undefined);
-});
-
-test("week totals of the rail's week 3 match the phone's strip", () => {
-  const t = weekTotals(rail[2].days);
-  assert.deepStrictEqual(t, weekTotals(sampleWeekLoad));
-  assert.deepStrictEqual(t.liftDone, 1760);
-  assert.deepStrictEqual(t.runDone, 480);
-  assert.deepStrictEqual(t.planned, 1760 + 1020);
-  assert.deepStrictEqual(t.done, 2240);
 });
 
 test("captions at each level", () => {
@@ -640,7 +597,7 @@ test("tooltips name the session and label the numbers", () => {
     title: "Week 6 · deload",
     numbers: "lift + run · 1,470 planned load",
   });
-  const rest = blockModel(withRail(sampleBlockWeeks, restDayStages));
+  const rest = blockModel(restWeeks);
   assert.deepStrictEqual(tipFor(rest, 1, TODAY, TODAY).numbers, "rest");
   assert.deepStrictEqual(tipAlign(10, 300), "start");
   assert.deepStrictEqual(tipAlign(150, 300), "center");

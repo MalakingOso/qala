@@ -39,8 +39,8 @@ DMMono-OFL.txt).
 
 ## Icons
 
-- Lucide (lucide-react, ISC license). The Android app embeds 41 of its icons
-  as generated Compose vectors (scripts/lucide_to_kotlin.ts). Eleven of them
+- Lucide (lucide-react, ISC license). The Android app embeds 49 of its icons
+  as generated Compose vectors (scripts/lucide_to_kotlin.ts). Twelve of them
   come from Feather and are MIT licensed. Both texts ship in the APK under
   apps/android/app/src/main/assets/licenses/ (Lucide-ISC.txt, Feather-MIT.txt).
   The web build still needs its own copy under apps/web/public/licenses/.

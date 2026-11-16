@@ -2,8 +2,8 @@
  * A numbered sidebar under the Qala mark (Training, Workspace, Settings), a
  * toolbar with search and a week switcher, and pages that open on a lede card.
  * Routes take an optional id segment (`#/desktop/lifts/squat`) for drill-down
- * detail pages. Shares theme, charts and data with the phone shell; every
- * desktop-only rule lives in theme/desktop.css under `.page-desktop`. */
+ * detail pages. Every desktop-only rule lives in theme/desktop.css
+ * under `.page-desktop`. */
 
 import { useEffect, useState } from "react";
 import { useQala } from "../store/qalaStore.tsx";
@@ -179,7 +179,6 @@ function Shell({ route }: { route: string }) {
             </button>
             <ToolbarSearch />
             <WeekSwitcher />
-            <a className="dx-bar-link" href="#/phone/today">Workout view</a>
           </header>
           <main id="desktop-content" className="dx-body" tabIndex={-1}>
             {body}

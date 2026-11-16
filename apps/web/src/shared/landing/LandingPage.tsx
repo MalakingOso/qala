@@ -5,10 +5,10 @@
  * scrolling back up never brings it back. */
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowRight, TrendingUp } from "../../shared/icons.ts";
-import { DeviceMorph } from "../../shared/DeviceMorph.tsx";
-import { IntroHero } from "../../shared/intro/IntroHero.tsx";
-import { LandingEvidence } from "../../shared/landing/LandingEvidence.tsx";
+import { ArrowRight } from "../icons.ts";
+import { DeviceMorph } from "../DeviceMorph.tsx";
+import { IntroHero } from "../intro/IntroHero.tsx";
+import { LandingEvidence } from "./LandingEvidence.tsx";
 
 const TRANSITION_MS = 900;
 /* The plate's centre and width as a fraction of the clip (shared/intro/
@@ -169,14 +169,8 @@ export function LandingPage() {
             </p>
             <div className="landing-actions">
               <a
-                className="btn-primary landing-desktop-entry"
+                className="btn-primary"
                 href="#/desktop/overview"
-              >
-                Open Qala <ArrowRight size={18} />
-              </a>
-              <a
-                className="btn-primary landing-phone-entry"
-                href="#/phone/today"
               >
                 Open Qala <ArrowRight size={18} />
               </a>
@@ -211,9 +205,6 @@ export function LandingPage() {
           Qala is AGPL-3.0. Program language and exercise data build on
           liftosaur.
         </p>
-        <a className="toolbar-link" href="#/phone/today">
-          <TrendingUp size={16} /> Open workout view
-        </a>
       </footer>
       {phase !== "content" && (
         <div className="landing-intro-wrap" ref={introRef}>

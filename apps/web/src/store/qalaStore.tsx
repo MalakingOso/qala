@@ -1,9 +1,8 @@
-/* Local-first store for the web shells. React context over useState for the
- * document, plus a useSyncExternalStore live-run ticker (PLAN 3: the live
- * run store goes through useSyncExternalStore). Every mutation lands in the
- * offline outbox so airplane-mode sessions replay on reconnect, but nothing
- * yet drains that outbox against the server's real automerge-repo protocol
- * (PLAN 7) — that client-side document layer isn't built. See the report. */
+/* Local-first store for the desktop shell. React context over useState for the
+ * document. Every mutation lands in the offline outbox so airplane-mode
+ * sessions replay on reconnect, but nothing yet drains that outbox against
+ * the server's real automerge-repo protocol (PLAN 7); that client-side
+ * document layer isn't built. */
 
 import {
   createContext,
@@ -14,147 +13,24 @@ import {
   useMemo,
   useState,
 } from "react";
-import type {
-  Availability,
-  DaySkip,
-  SettingsModel,
-  StageState,
-  WorkoutExercise,
-} from "./types.ts";
-import {
-  defaultSettings,
-  SAMPLE_TODAY,
-  sampleEnvelopes,
-  sampleExercises,
-  sampleMemory,
-  sampleSessions,
-  sampleStages,
-} from "./sample.ts";
+import type { MemoryProposal, SessionSummary, SettingsModel } from "./types.ts";
+import { defaultSettings, sampleMemory, sampleSessions } from "./sample.ts";
 import {
   loadOutbox,
   type QueuedOp,
   saveOutbox,
 } from "../logic/offlineQueue.ts";
-import type {
-  EnvelopeCardModel,
-  MemoryProposal,
-  SessionSummary,
-} from "./types.ts";
-
-export interface LiveRunSnapshot {
-  running: boolean;
-  paused: boolean;
-  elapsedSec: number;
-  miles: number;
-  paceSecPerMi: number;
-  avgSecPerMi: number;
-}
-
-function makeLiveRunStore() {
-  let snap: LiveRunSnapshot = {
-    running: false,
-    paused: false,
-    elapsedSec: 0,
-    miles: 0,
-    paceSecPerMi: 0,
-    avgSecPerMi: 0,
-  };
-  /** The snapshot at the moment `stop()` was called, for the summary screen. */
-  let last: LiveRunSnapshot | null = null;
-  const listeners = new Set<() => void>();
-  let timer: ReturnType<typeof setInterval> | null = null;
-  const emit = () => {
-    for (const l of listeners) l();
-  };
-  const tick = () => {
-    if (!snap.running || snap.paused) return;
-    const elapsedSec = snap.elapsedSec + 1;
-    // Sample guided pace ~9:00/mi with small drift; recomputable demo feed.
-    const paceSecPerMi = 540 + Math.round(8 * Math.sin(elapsedSec / 47));
-    const miles = snap.miles + 1 / Math.max(paceSecPerMi, 1);
-    snap = {
-      ...snap,
-      elapsedSec,
-      miles,
-      paceSecPerMi,
-      avgSecPerMi: elapsedSec / Math.max(miles, 1e-6),
-    };
-    emit();
-  };
-  return {
-    subscribe: (l: () => void) => {
-      listeners.add(l);
-      return () => {
-        listeners.delete(l);
-      };
-    },
-    getSnapshot: () => snap,
-    getLast: () => last,
-    start: () => {
-      snap = {
-        running: true,
-        paused: false,
-        elapsedSec: 0,
-        miles: 0,
-        paceSecPerMi: 540,
-        avgSecPerMi: 540,
-      };
-      if (!timer) timer = setInterval(tick, 1000);
-      emit();
-    },
-    pause: () => {
-      snap = { ...snap, paused: true };
-      emit();
-    },
-    resume: () => {
-      snap = { ...snap, paused: false };
-      emit();
-    },
-    stop: () => {
-      snap = { ...snap, running: false };
-      last = snap;
-      if (timer) {
-        clearInterval(timer);
-        timer = null;
-      }
-      emit();
-    },
-  };
-}
-
-export const liveRunStore = makeLiveRunStore();
 
 interface QalaStore {
   settings: SettingsModel;
   updateSettings: (fn: (s: SettingsModel) => SettingsModel) => void;
-  stages: StageState[];
-  setStageStatus: (id: StageState["id"], status: StageState["status"]) => void;
-  exercises: WorkoutExercise[];
-  logSet: (
-    exerciseId: string,
-    setIndex: number,
-    patch?: { w?: number; r?: number; rpe?: number },
-  ) => void;
-  envelopes: EnvelopeCardModel[];
-  decideEnvelope: (id: string, accept: boolean) => void;
   memory: MemoryProposal[];
   decideMemory: (id: string, accept: boolean) => void;
   sessions: SessionSummary[];
   setSessionNotes: (id: string, notes: string) => void;
   dismissSessionFlag: (id: string) => void;
-  /** Skipped days and the persistent training status (DESIGN 7.18).
-   * `todayKey` is the sample-world today until the samples go away. */
-  todayKey: string;
-  skips: DaySkip[];
-  availability: Availability;
-  skipDay: (skip: DaySkip) => void;
-  clearSkip: (date: string) => void;
-  setAvailability: (a: Availability) => void;
-  clearAvailability: () => void;
   outbox: QueuedOp[];
-  queueOp: (kind: string, payload: unknown) => void;
   online: boolean;
-  setOnline: (v: boolean) => void;
 }
 
 const Ctx = createContext<QalaStore | null>(null);
@@ -163,20 +39,8 @@ let opCounter = 0;
 
 export function QalaProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<SettingsModel>(defaultSettings);
-  const [stages, setStages] = useState<StageState[]>(sampleStages);
-  const [exercises, setExercises] = useState<WorkoutExercise[]>(
-    sampleExercises,
-  );
-  const [envelopes, setEnvelopes] = useState<EnvelopeCardModel[]>(
-    sampleEnvelopes,
-  );
   const [memory, setMemory] = useState<MemoryProposal[]>(sampleMemory);
   const [sessions, setSessions] = useState<SessionSummary[]>(sampleSessions);
-  const [skips, setSkips] = useState<DaySkip[]>([]);
-  const [availability, setAvailabilityState] = useState<Availability>({
-    status: "active",
-  });
-  const [todayKey] = useState<string>(SAMPLE_TODAY);
   const [outbox, setOutbox] = useState<QueuedOp[]>(() => loadOutbox());
   const [online, setOnline] = useState<boolean>(() =>
     typeof navigator === "undefined" ? true : navigator.onLine
@@ -197,16 +61,6 @@ export function QalaProvider({ children }: { children: ReactNode }) {
     (fn: (s: SettingsModel) => SettingsModel) => setSettings((s) => fn(s)),
     [],
   );
-  const setStageStatus = useCallback(
-    (id: StageState["id"], status: StageState["status"]) =>
-      setStages((st) => st.map((s) => (s.id === id ? { ...s, status } : s))),
-    [],
-  );
-  const decideEnvelope = useCallback((id: string, accept: boolean) => {
-    setEnvelopes((es) =>
-      es.map((e) => (e.id === id ? { ...e, accepted: accept } : e))
-    );
-  }, []);
   const decideMemory = useCallback((id: string, accept: boolean) => {
     setMemory((ms) =>
       ms.map((m) => (m.id === id ? { ...m, accepted: accept } : m))
@@ -224,22 +78,6 @@ export function QalaProvider({ children }: { children: ReactNode }) {
       },
     ]);
   }, []);
-  const skipDay = useCallback((skip: DaySkip) => {
-    setSkips((ss) => [...ss.filter((s) => s.date !== skip.date), skip]);
-    queueOp("skip-day", skip);
-  }, [queueOp]);
-  const clearSkip = useCallback((date: string) => {
-    setSkips((ss) => ss.filter((s) => s.date !== date));
-    queueOp("skip-clear", { date });
-  }, [queueOp]);
-  const setAvailability = useCallback((a: Availability) => {
-    setAvailabilityState(a);
-    queueOp("status-set", a);
-  }, [queueOp]);
-  const clearAvailability = useCallback(() => {
-    setAvailabilityState({ status: "active" });
-    queueOp("status-clear", {});
-  }, [queueOp]);
   const setSessionNotes = useCallback((id: string, notes: string) => {
     setSessions((ss) => ss.map((s) => (s.id === id ? { ...s, notes } : s)));
     queueOp("session-notes", { id, notes });
@@ -250,78 +88,28 @@ export function QalaProvider({ children }: { children: ReactNode }) {
     );
     queueOp("session-flag-dismiss", { id });
   }, [queueOp]);
-  const logSet = useCallback(
-    (
-      exerciseId: string,
-      setIndex: number,
-      patch?: { w?: number; r?: number; rpe?: number },
-    ) => {
-      setExercises((exs) =>
-        exs.map((e) =>
-          e.id !== exerciseId ? e : {
-            ...e,
-            sets: e.sets.map((
-              s,
-              i,
-            ) => (i === setIndex ? { ...s, ...patch, done: true } : s)),
-          }
-        )
-      );
-      queueOp("log-set", { exerciseId, setIndex, ...patch });
-    },
-    [queueOp],
-  );
 
   const value = useMemo<QalaStore>(
     () => ({
       settings,
       updateSettings,
-      stages,
-      setStageStatus,
-      exercises,
-      logSet,
-      envelopes,
-      decideEnvelope,
       memory,
       decideMemory,
       sessions,
       setSessionNotes,
       dismissSessionFlag,
-      todayKey,
-      skips,
-      availability,
-      skipDay,
-      clearSkip,
-      setAvailability,
-      clearAvailability,
       outbox,
-      queueOp,
       online,
-      setOnline,
     }),
     [
       settings,
       updateSettings,
-      stages,
-      setStageStatus,
+      memory,
+      decideMemory,
       sessions,
       setSessionNotes,
       dismissSessionFlag,
-      todayKey,
-      skips,
-      availability,
-      skipDay,
-      clearSkip,
-      setAvailability,
-      clearAvailability,
-      exercises,
-      logSet,
-      envelopes,
-      decideEnvelope,
-      memory,
-      decideMemory,
       outbox,
-      queueOp,
       online,
     ],
   );

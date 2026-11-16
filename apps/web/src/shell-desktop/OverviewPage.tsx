@@ -3,7 +3,7 @@
  * row and the title names the view (Today, This week, the month, the
  * block). The day and date lead the kicker and where the block stands sits
  * quietly at its right. The estimated 1RMs sit beside the card (readiness
- * lives on the phone and the body page), the sessions below. Replaces the stat-tile dashboard. */
+ * lives on the body page), the sessions below. Replaces the stat-tile dashboard. */
 
 import { useMemo, useState } from "react";
 import {

@@ -1,8 +1,7 @@
 /* Desktop building blocks for the refined look (DESIGN 7.15, DECISIONS U21):
  * the lede card every page opens with (kicker, title, ink rule), section
  * heads, type tags, pills, filter chips and the block-position bar. All of
- * their styling lives in theme/desktop.css under `.page-desktop`, so nothing
- * here can reach the phone shell. */
+ * their styling lives in theme/desktop.css under `.page-desktop`. */
 
 import type { ReactNode } from "react";
 

@@ -55,28 +55,3 @@ export function ChartShell({
   );
 }
 
-/** Focusable hit area (24px+) showing a native tooltip, same on hover. */
-export function Hit({
-  x,
-  y,
-  label,
-  children,
-}: {
-  x: number;
-  y: number;
-  label: string;
-  children: ReactNode;
-}) {
-  return (
-    <g
-      tabIndex={0}
-      role="img"
-      aria-label={label}
-      transform={`translate(${x} ${y})`}
-    >
-      <title>{label}</title>
-      <circle r={13} fill="transparent" />
-      {children}
-    </g>
-  );
-}
