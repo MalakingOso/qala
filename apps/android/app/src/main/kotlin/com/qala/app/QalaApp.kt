@@ -137,7 +137,7 @@ fun QalaApp() {
                 Modifier
                     .widthIn(max = ContentMaxWidth)
                     .fillMaxSize()
-                    .then(if (nav.route == Route.CheckIn || nav.route == Route.Coach) Modifier.imePadding() else Modifier)      // the note and the coach's composer stay above the keyboard
+                    .then(if (nav.route == Route.CheckIn || nav.route == Route.Coach || nav.route == Route.PlanPicker) Modifier.imePadding() else Modifier)      // the note, the coach's composer and the starting weights stay above the keyboard
                     .semantics { if (ui.skip.open) hideFromAccessibility() },                        // the skip sheet is modal: the screen behind it is not reachable
             ) {
                 key(nav.route) {       // each screen keeps its own scroll position

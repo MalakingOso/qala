@@ -19,6 +19,7 @@ import com.qala.data.model.SettingsRecord
 import com.qala.data.model.SkipReason
 import com.qala.data.model.WeightUnit
 import com.qala.data.model.wire
+import com.qala.data.program.Builtins
 import com.qala.data.program.DayExercise
 import com.qala.data.program.EvaluatedProgram
 import com.qala.data.program.ProgramEngine
@@ -139,7 +140,7 @@ class SeedGenerator(private val programs: ProgramEngine = ProgramEngine()) {
         return SeedData(
             today = today.toString(),
             zone = zone,
-            programId = seedId("program", "gzclp"),
+            programId = Builtins.Gzclp.id,
             programName = GzclpProgram.NAME,
             programText = text,
             exerciseData = exerciseData,

@@ -6,22 +6,26 @@ import com.qala.data.sync.ProgramCodec
 import com.qala.data.sync.RecordType
 import com.qala.data.sync.RecordWriter
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonPrimitive
 
 /**
  * Programs: a name and the LS++ text. The progression state lives inside the text, so advancing the program
- * after a session is a write of the text field. There is one program in use for now: [active] is the first by id.
+ * after a session is a write of the text field. One program is in use: [active] is the one the lifter picked
+ * ([SettingsRepository.activeProgram]), or the first by id when none was picked or the picked one is gone.
  */
 class ProgramRepository(
     private val db: QalaDatabase,
     private val writer: RecordWriter,
+    settings: SettingsRepository,
     private val env: RepoEnv = RepoEnv(),
 ) {
     val programs: Flow<List<ProgramEntity>> = db.programDao().observeAll()
 
-    val active: Flow<ProgramEntity?> = programs.map { it.firstOrNull() }
+    val active: Flow<ProgramEntity?> = combine(programs, settings.activeProgram) { all, picked ->
+        all.firstOrNull { it.id == picked.id } ?: all.firstOrNull()
+    }
 
     /** Creates the program or rewrites its name and text. */
     suspend fun save(id: String, name: String, text: String) = withContext(env.work) {

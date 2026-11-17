@@ -29,8 +29,8 @@ class EmptyStateTest {
         assertEquals("How are you walking in?", hero.title)
         assertEquals(listOf("Two quick questions set your readiness for the day. It takes about a minute."), hero.lines)
         assertEquals("Check in", hero.cta!!.label)
-        assertEquals("No program yet. Add one in Plan and Today shows your lift.", hero.note)
-        assertEquals("Add a program", hero.link!!.label)
+        assertEquals("No program yet. Choose one in Plan and Today shows your lift.", hero.note)
+        assertEquals("Choose a plan", hero.link!!.label)
         assertEquals(Destination.Plan, hero.link!!.to)
         assertNull("nothing to skip with no program", hero.skip)
     }
@@ -40,7 +40,7 @@ class EmptyStateTest {
         val plan = restPlan("2026-10-07", done = mapOf(StageId.CHECK_IN to 8), noProgram = true)
         val hero = TodayModel(emptySnapshot(plan), plan, false).hero(0)
         assertEquals("Checked in", hero.title)
-        assertEquals("Add a program", hero.link!!.label)
+        assertEquals("Choose a plan", hero.link!!.label)
     }
 
     @Test

@@ -162,6 +162,25 @@ class ScheduleTest {
         assertNull("the planned-week input takes one kind per day", both.days[1].run)
     }
 
+    // ---- a program picked part way through the week ----
+
+    @Test
+    fun aProgramPickedOnATuesdayStartsOnTheNextTrainingDayAndIgnoresEarlierLifts() {
+        val tue = "2026-10-06"
+        // Monday's lift is the old program's day 2. The new six-day program is picked on Tuesday, training Mon, Wed, Fri.
+        val s = Schedule(setOf(0, 2, 4), 6, listOf(lift(mon, day = 2)), FakeRules(), ProgramStart(at(tue, 12), tue))
+        val thisWeek = s.week(tue, RunPlan(), emptyList())
+        assertTrue("Monday stays a logged day", thisWeek.days[0].logged)
+        assertFalse("but it is not the program's", thisWeek.days[0].inProgram)
+        assertEquals("Wednesday is the second day, Friday the third", listOf(2, 3), listOf(thisWeek.days[2].programDay, thisWeek.days[4].programDay))
+        assertEquals("the old day 2 on Monday would have made Wednesday day 3", 2, s.pointerAt(wed))
+        assertEquals("next Monday starts the second week", 4, s.weekOn("2026-10-12", tue, RunPlan(), emptyList()).days[0].programDay)
+
+        // A lift after the pick moves the rotation as usual.
+        val after = Schedule(setOf(0, 2, 4), 6, listOf(lift(mon, day = 2), lift(wed, day = 2)), FakeRules(), ProgramStart(at(tue, 12), tue))
+        assertEquals(3, after.pointerAt(fri))
+    }
+
     // ---- any week (the Plan screen) ----
 
     private val nextMon = "2026-10-12"

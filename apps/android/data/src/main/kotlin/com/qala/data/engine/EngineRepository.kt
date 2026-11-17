@@ -11,6 +11,7 @@ import com.qala.data.model.GymSettings
 import com.qala.data.model.RunPlan
 import com.qala.data.model.SettingsRecord
 import com.qala.data.program.ProgramEngine
+import com.qala.data.repo.ActiveProgram
 import com.qala.data.repo.AvailabilityRepository
 import com.qala.data.repo.BodyWeightRepository
 import com.qala.data.repo.CheckInRepository
@@ -81,6 +82,7 @@ class EngineRepository(
         settings.runPlan,
         settings.exerciseData,
         programs.active,
+        settings.activeProgram,
         refreshTick,
     ) { v ->
         @Suppress("UNCHECKED_CAST")
@@ -96,6 +98,7 @@ class EngineRepository(
             runPlan = v[8] as RunPlan,
             exerciseData = v[9] as JsonObject,
             program = v[10] as ProgramEntity?,
+            programSince = (v[11] as ActiveProgram).sinceMs,
         )
     }
 

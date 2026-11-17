@@ -69,6 +69,8 @@ class TodayInput(
     val runPlan: RunPlan = RunPlan(),
     /** "Build a warm-up" in Settings. Off, a lift day has no Warm-up stage at all (D35). */
     val warmupEnabled: Boolean = true,
+    /** When the program in use was picked, null when it never was (or no program). See [Schedule]. */
+    val programStart: ProgramStart? = null,
 )
 
 /**
@@ -92,7 +94,7 @@ class TodayInput(
  */
 object StageDeriver {
     fun derive(input: TodayInput): TodayPlan {
-        val schedule = Schedule(input.trainingWeekdays, input.dayCount, input.records.liftSessions, input.rules)
+        val schedule = Schedule(input.trainingWeekdays, input.dayCount, input.records.liftSessions, input.rules, input.programStart)
         val date = input.today
         val reason = input.rules.offReasonOn(date)
         val liftedToday = lifts(input, date)
@@ -141,7 +143,7 @@ object StageDeriver {
 
         val programDay = if (liftDay) {
             // A lift logged today names its own day; otherwise the rotation says which one is next.
-            schedule.liftedOn(date)?.programDayIndex ?: schedule.pointerAt(date).takeIf { input.dayCount > 0 }
+            schedule.liftedOn(date)?.takeIf { schedule.inProgram(it) }?.programDayIndex ?: schedule.pointerAt(date).takeIf { input.dayCount > 0 }
         } else {
             null
         }

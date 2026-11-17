@@ -78,7 +78,7 @@ class SeedRoomTest {
         weights = BodyWeightRepository(db, writer, env)
         availability = AvailabilityRepository(db, writer, env)
         settings = SettingsRepository(db, writer, env)
-        programs = ProgramRepository(db, writer, env)
+        programs = ProgramRepository(db, writer, settings, env)
         seeder = DebugSeeder(db, sessions, runs, checkIns, weights, availability, settings, programs, env)
     }
 

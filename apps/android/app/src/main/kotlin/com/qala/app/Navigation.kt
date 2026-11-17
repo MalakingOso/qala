@@ -4,7 +4,7 @@ import androidx.compose.runtime.saveable.Saver
 import com.qala.app.today.Destination
 
 /**
- * The places the shell can show. Five are tabs; History, Settings, check-in, the lifting flow (warm-up, workout, rest,
+ * The places the shell can show. Five are tabs; History, Settings, the plan picker, check-in, the lifting flow (warm-up, workout, rest,
  * all exercises) and the run stub are pushed over a tab. Two screens have a parent of their own: Rest, which sits over
  * Workout, and All exercises, which sits over whichever flow screen opened it. A hand-written two-level model still
  * covers both, and Navigation Compose versus Navigation 3 stays open.
@@ -20,6 +20,7 @@ sealed interface Route {
     data object History : Route { override val id = "history" }
     data object Settings : Route { override val id = "settings" }
     data object Plates : Route { override val id = "plates" }
+    data object PlanPicker : Route { override val id = "plan-picker" }
     data object AllExercises : Route { override val id = "allex" }
     data object CheckIn : Route { override val id = "check-in" }
     data object WarmUp : Route { override val id = "warm-up" }
@@ -30,7 +31,7 @@ sealed interface Route {
 
     companion object {
         val tabs: List<Route> = listOf(Today, Plan, Body, Progress, Coach)
-        private val all: List<Route> = tabs + History + Settings + Plates + CheckIn + WarmUp + Workout + Rest + Run + SessionComplete + AllExercises
+        private val all: List<Route> = tabs + History + Settings + Plates + PlanPicker + CheckIn + WarmUp + Workout + Rest + Run + SessionComplete + AllExercises
 
         fun fromId(id: String): Route = all.firstOrNull { it.id == id } ?: Today
     }
@@ -38,7 +39,7 @@ sealed interface Route {
 
 val Route.isPushed: Boolean
     get() = when (this) {
-        Route.History, Route.Settings, Route.Plates, Route.CheckIn, Route.WarmUp, Route.Workout, Route.Rest, Route.Run, Route.SessionComplete, Route.AllExercises -> true
+        Route.History, Route.Settings, Route.Plates, Route.PlanPicker, Route.CheckIn, Route.WarmUp, Route.Workout, Route.Rest, Route.Run, Route.SessionComplete, Route.AllExercises -> true
         else -> false
     }
 

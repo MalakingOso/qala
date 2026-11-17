@@ -21,6 +21,7 @@ import com.qala.app.coach.CoachScreen
 import com.qala.app.coach.coachDay
 import com.qala.app.history.HistoryScreen
 import com.qala.app.plates.PlatesScreen
+import com.qala.app.plan.PlanPickerScreen
 import com.qala.app.plan.PlanScreen
 import com.qala.app.settings.SettingsFocus
 import com.qala.app.settings.SettingsScreen
@@ -69,7 +70,7 @@ fun Screen(
 ) {
     when (route) {
         Route.Today -> TodayScreen(today, ui, scroll, topBar, onGo)
-        Route.Plan -> PlanScreen(snapshot, today, scroll, topBar, onGo)
+        Route.Plan -> PlanScreen(snapshot, today, scroll, topBar, onGo, onChangePlan = { onPush(Route.PlanPicker) })
         Route.Body -> Plain(scroll, topBar) { BodyScreen(snapshot) }
         Route.Progress -> Plain(scroll, topBar) { ProgressScreen(snapshot) }
         Route.SessionComplete -> Plain(scroll, topBar) { SessionCompleteScreen(onBack) }
@@ -77,6 +78,7 @@ fun Screen(
         Route.History -> HistoryScreen(scroll, onBack)
         Route.Settings -> SettingsScreen(scroll, today, ui, settingsFocus, onSettingsFocused, onBack, onPlates)
         Route.Plates -> PlatesScreen(scroll, onBack, onEditPlates)
+        Route.PlanPicker -> PlanPickerScreen(scroll, onBack)
         Route.CheckIn -> CheckInRoute(today, scroll, topBar, onBack)
         Route.WarmUp -> WarmupScreen(
             programDay(today), onBack,

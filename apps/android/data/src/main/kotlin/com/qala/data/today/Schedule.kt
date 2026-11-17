@@ -13,6 +13,7 @@ import com.qala.data.model.DaySkip
 import com.qala.data.model.RunPlan
 import com.qala.data.model.RunPlanDay
 import com.qala.data.model.SkipReason
+import java.time.ZoneId
 
 /** Why a day is off and whether the plan moves for it: the two availability rules the schedule reads. */
 interface DayRules {
@@ -43,6 +44,16 @@ class DayRecords(
     val checkIns: List<CheckInEntity> = emptyList(),
 )
 
+/**
+ * When the program in use was picked: the instant, and the local day it falls on. A lift logged before it belongs to an
+ * earlier program: it still shows as a logged day, but it does not move the rotation.
+ */
+class ProgramStart(val ms: Long, val date: String) {
+    companion object {
+        fun at(ms: Long, zone: ZoneId) = ProgramStart(ms, IsoTime.localDateKey(ms, IsoTime.offsetMinAt(zone, ms)))
+    }
+}
+
 /** What a calendar day holds in the plan. */
 enum class DayKind { LIFT, RUN, REST }
 
@@ -57,6 +68,8 @@ data class DayPlan(
     val reason: SkipReason?,
     /** True when the day's lift or run is already logged. */
     val logged: Boolean,
+    /** False for a lift logged before the program in use was picked: its day index belongs to the earlier program. */
+    val inProgram: Boolean = true,
 )
 
 class WeekPlan(val weekStart: String, val days: List<DayPlan>) {
@@ -74,22 +87,47 @@ class WeekPlan(val weekStart: String, val days: List<DayPlan>) {
  * muscle and the rotation moves on as usual. A lift logged on a day wins over any skip that covers it.
  *
  * Stub records count like real ones for sequencing, except a warm-up stub: the warm-up is not the lift.
+ *
+ * With a [start] (the program was picked on that day), only lifts at or after it count for the rotation, and days before
+ * it plan no lift. The first lift is anchored to the week: the program's first day goes on the first training weekday on
+ * or after [start], and the following days on the training weekdays after it, as if the week had begun on its Monday. Picking
+ * a three-day plan on a Tuesday, with Monday, Wednesday and Friday as the training days, makes Wednesday its second day.
+ * With no start nothing changes: day 1 until a lift is logged.
  */
 class Schedule(
     private val trainingWeekdays: Set<Int>,
     private val dayCount: Int,
     private val lifts: List<LiftSessionEntity>,
     private val rules: DayRules,
+    private val start: ProgramStart? = null,
 ) {
     /** A lift that advances the rotation, with its local date. */
     private class Lifted(val date: String, val day: Int?, val startedAtMs: Long, val id: String)
 
     private val sequencing: List<Lifted> = lifts
-        .filter { it.stage != LiftStage.WARMUP }
+        .filter { it.stage != LiftStage.WARMUP && inProgram(it) }
         .map { Lifted(IsoTime.localDateKey(it.startedAtMs, it.offsetMin), it.programDayIndex, it.startedAtMs, it.id) }
         .sortedWith(compareBy({ it.startedAtMs }, { it.id }))
 
     fun isTrainingWeekday(date: String) = IsoTime.weekdayIndex(date) in trainingWeekdays
+
+    /** False for a lift logged before the program in use was picked. */
+    fun inProgram(lift: LiftSessionEntity) = start == null || lift.startedAtMs >= start.ms
+
+    /** The day the program's first lift is planned on and the program day it takes, once a [start] is known. */
+    private class Anchor(val date: String, val day: Int)
+
+    private val anchor: Anchor? = start?.let { s ->
+        val weekdays = trainingWeekdays.sorted()
+        if (weekdays.isEmpty()) {
+            Anchor(s.date, 1)
+        } else {
+            val weekday = IsoTime.weekdayIndex(s.date)
+            val next = weekdays.indexOfFirst { it >= weekday }
+            val ahead = if (next >= 0) weekdays[next] - weekday else 7 - weekday + weekdays.first()
+            Anchor(IsoTime.addDays(s.date, ahead.toLong()), advance(1, next.coerceAtLeast(0)))
+        }
+    }
 
     /** The day after [day] in the rotation. */
     fun after(day: Int): Int = if (dayCount <= 0) 1 else day % dayCount + 1
@@ -118,11 +156,14 @@ class Schedule(
 
     /**
      * The program day a lift on [date] would be, from what was logged before that date: the day after the
-     * last logged lift, moved on by the slots skipped since. Day 1 before anything is logged.
+     * last logged lift, moved on by the slots skipped since. Day 1 before anything is logged, or the anchor's day when the
+     * program has a start.
      */
     fun pointerAt(date: String): Int {
-        val last = sequencing.lastOrNull { it.date < date && it.day != null } ?: return 1
-        return advance(after(last.day!!), spentSlots(last.date, date))
+        val last = sequencing.lastOrNull { it.date < date && it.day != null }
+        if (last != null) return advance(after(last.day!!), spentSlots(last.date, date))
+        val first = anchor ?: return 1
+        return advance(first.day, spentSlots(IsoTime.addDays(first.date, -1), date))
     }
 
     /** The seven days of the week that contains [today], Monday first. */
@@ -162,19 +203,22 @@ class Schedule(
             val reason = rules.offReasonOn(date)
             val ranOn = runs.any { IsoTime.localDateKey(it.startedAtMs, it.offsetMin) == date }
             val runDay = runPlan.on(i)
+            // A day before the program was picked plans no lift.
+            val trains = isTrainingWeekday(date) && (start == null || date >= start.date)
             when {
                 lifted != null -> {
                     val day = lifted.programDayIndex ?: pointer
-                    pointer = after(day)
-                    DayPlan(date, i, DayKind.LIFT, day, null, null, logged = true)
+                    val ours = inProgram(lifted)
+                    if (ours) pointer = after(day)
+                    DayPlan(date, i, DayKind.LIFT, day, null, null, logged = true, inProgram = ours)
                 }
-                isTrainingWeekday(date) && reason == null -> {
+                trains && reason == null -> {
                     val day = pointer
                     // A past training day with nothing logged was missed: the lift repeats. Today and later advance.
                     if (date >= today) pointer = after(day)
                     DayPlan(date, i, DayKind.LIFT, day, null, null, logged = false)
                 }
-                isTrainingWeekday(date) -> {
+                trains -> {
                     // Skipped: a shifting reason moves the lift out, a non-shifting one spends the slot.
                     if (!rules.shiftsPlan(reason!!)) pointer = after(pointer)
                     DayPlan(date, i, DayKind.REST, null, null, reason, logged = false)

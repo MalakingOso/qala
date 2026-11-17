@@ -32,6 +32,8 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.longOrNull
 
 /** The settings groups in use. A group is one record; each leaf is a clocked field of it. */
 object SettingsGroups {
@@ -62,8 +64,14 @@ object SettingsGroups {
     /** `theme` (light, dark, system) and `titleFont` (qalaTest, faustina). */
     const val APPEARANCE = "appearance"
 
+    /** `activeId` (the program in use) and `since` (when it was picked, in epoch ms). Not in [TRAINING], which decodes into the Rust `SettingsRecord`. */
+    const val PROGRAM = "program"
+
     fun id(group: String) = "settings-$group"
 }
+
+/** The program the lifter picked and when. Both are null until a plan is picked; the first program by id is then the one in use. */
+data class ActiveProgram(val id: String? = null, val sinceMs: Long? = null)
 
 /** Settings as live reads of the groups and suspend writes of single leaves. */
 class SettingsRepository(
@@ -101,6 +109,14 @@ class SettingsRepository(
         .distinctUntilChanged()
         .flowOn(Dispatchers.Default)
 
+    val activeProgram: Flow<ActiveProgram> = groups
+        .map { g ->
+            val leaves = g[SettingsGroups.PROGRAM]
+            ActiveProgram((leaves?.get("activeId") as? JsonPrimitive)?.contentOrNull, (leaves?.get("since") as? JsonPrimitive)?.longOrNull)
+        }
+        .distinctUntilChanged()
+        .flowOn(Dispatchers.Default)
+
     suspend fun setUnit(unit: WeightUnit) =
         leaf(SettingsGroups.TRAINING, "unit", QalaJson.encodeToJsonElement(WeightUnit.serializer(), unit))
 
@@ -119,6 +135,13 @@ class SettingsRepository(
     }
 
     suspend fun setExerciseData(exerciseData: JsonObject) = leaf(SettingsGroups.LSPP, "exerciseData", exerciseData)
+
+    /** The program in use and when it was picked, in one write so a reader never sees one without the other. */
+    suspend fun setActiveProgram(id: String, sinceMs: Long) = writes.withLock {
+        withContext(env.work) {
+            writer.put(RecordType.SETTINGS, SettingsGroups.id(SettingsGroups.PROGRAM), mapOf("activeId" to JsonPrimitive(id), "since" to JsonPrimitive(sinceMs)))
+        }
+    }
 
     // ---- bars and plates ----
 

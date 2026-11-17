@@ -128,7 +128,7 @@ class PlanCompute(private val programs: ProgramEngine = ProgramEngine()) {
         val rules = RustDayRules(input.availability, skips)
         val evaluated: EvaluatedProgram? = input.program?.let { programs.evaluate(it.text, it.name, input.settings.unit, input.exerciseData) }
         val dayCount = evaluated?.dayCount ?: 0
-        val schedule = Schedule(input.settings.trainingWeekdays.toSet(), dayCount, input.liftSessions.map { it.session }, rules)
+        val schedule = Schedule(input.settings.trainingWeekdays.toSet(), dayCount, input.liftSessions.map { it.session }, rules, input.programStart(zone))
         val week = schedule.weekOn(weekStart, today, input.runPlan, input.runs)
 
         val overviews = HashMap<Int, DayOverview?>()
@@ -142,7 +142,8 @@ class PlanCompute(private val programs: ProgramEngine = ProgramEngine()) {
             val lift = if (day.kind == DayKind.LIFT && programDay != null) {
                 val logged = if (day.logged) schedule.liftedOn(date)?.let { entity -> input.liftSessions.firstOrNull { it.session.id == entity.id } } else null
                 if (logged != null) {
-                    loggedLift(logged, programDay, evaluated, overview(programDay, sets = false))
+                    // A lift from before this program was picked keeps its sets but not a day name: that index is an earlier program's.
+                    loggedLift(logged, programDay, evaluated.takeIf { day.inProgram }, overview(programDay, sets = false).takeIf { day.inProgram })
                 } else {
                     overview(programDay, sets = true)?.let { o -> PlanLift(programDay, o.dayName, o.mainExerciseName, LiftSource.PLANNED, o.exercises) }
                 }

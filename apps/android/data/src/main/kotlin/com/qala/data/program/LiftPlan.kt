@@ -168,7 +168,7 @@ fun liftEntryRecord(exerciseId: String, planned: List<PlannedSet>, logged: List<
     )
 
 /** The weight a JSON `{value, unit}` holds, in [unit]. */
-private fun weightIn(weight: JsonObject, unit: WeightUnit): Double? {
+internal fun weightIn(weight: JsonObject, unit: WeightUnit): Double? {
     val v = weight["value"].double() ?: return null
     val from = weightUnitOf(weight, unit)
     return when {

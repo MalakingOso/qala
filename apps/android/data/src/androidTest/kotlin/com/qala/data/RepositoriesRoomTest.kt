@@ -198,7 +198,7 @@ class RepositoriesRoomTest {
 
     @Test
     fun programTextIsAFieldWrite() = runBlocking {
-        val repo = ProgramRepository(db, writer, env)
+        val repo = ProgramRepository(db, writer, SettingsRepository(db, writer, env), env)
         repo.save("p1", "gzclp.md", "# Week 1\n")
         repo.setText("p1", "# Week 1\n## Day 1\n")
         val active = repo.active.first()!!

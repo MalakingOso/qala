@@ -44,6 +44,7 @@ import com.qala.data.today.DayRecords
 import com.qala.data.today.DayStatus
 import com.qala.data.today.DayStatuses
 import com.qala.data.today.NextRun
+import com.qala.data.today.ProgramStart
 import com.qala.data.today.RustDayRules
 import com.qala.data.today.Schedule
 import com.qala.data.today.StageDeriver
@@ -69,7 +70,11 @@ data class EngineInput(
     val exerciseData: JsonObject = JsonObject(emptyMap()),
     /** The program in use, null before one is saved. */
     val program: ProgramEntity? = null,
-)
+    /** When the program in use was picked (epoch ms), null when it never was: the first by id is then in use from the start. */
+    val programSince: Long? = null,
+) {
+    fun programStart(zone: ZoneId): ProgramStart? = programSince?.let { ProgramStart.at(it, zone) }
+}
 
 /** The newest weigh-in: its local day and the weight in kilograms. */
 data class LatestWeight(val date: String, val kg: Double)
@@ -143,8 +148,9 @@ class EngineCompute(private val programs: ProgramEngine = ProgramEngine()) {
         val weekdays = input.settings.trainingWeekdays.toSet()
         val dayRecords = DayRecords(input.liftSessions.map { it.session }, input.runs, input.checkIns)
 
-        val plan = StageDeriver.derive(TodayInput(today, weekdays, dayCount, dayRecords, rules, input.runPlan, input.gym.warmup.enabled))
-        val schedule = Schedule(weekdays, dayCount, dayRecords.liftSessions, rules)
+        val start = input.programStart(zone)
+        val plan = StageDeriver.derive(TodayInput(today, weekdays, dayCount, dayRecords, rules, input.runPlan, input.gym.warmup.enabled, start))
+        val schedule = Schedule(weekdays, dayCount, dayRecords.liftSessions, rules, start)
         val week = schedule.week(today, input.runPlan, input.runs)
 
         val todaysExercises = if (evaluated != null && plan.programDay != null) programs.usedExercises(evaluated, plan.programDay) else emptyList()
@@ -156,7 +162,7 @@ class EngineCompute(private val programs: ProgramEngine = ProgramEngine()) {
         val planned = week.days.map { day ->
             when (day.kind) {
                 DayKind.LIFT -> {
-                    val exercises = if (evaluated != null && day.programDay != null) programs.planned(evaluated, day.programDay) else emptyList()
+                    val exercises = if (evaluated != null && day.programDay != null && day.inProgram) programs.planned(evaluated, day.programDay) else emptyList()
                     if (exercises.isEmpty()) PlannedDay.Rest else PlannedDay.Lift(exercises)
                 }
                 DayKind.RUN -> PlannedDay.Run(day.run!!.distanceM, day.run.zone)

@@ -14,6 +14,7 @@ import com.qala.data.db.QalaDatabase
 import com.qala.data.engine.EngineCompute
 import com.qala.data.engine.EngineRepository
 import com.qala.data.program.LiftService
+import com.qala.data.program.PlanStarter
 import com.qala.data.plan.PlanCompute
 import com.qala.data.program.ProgramEngine
 import com.qala.data.repo.AvailabilityRepository
@@ -72,9 +73,12 @@ class AppContainer(
     val weights = BodyWeightRepository(database, writer, env)
     val availability = AvailabilityRepository(database, writer, env)
     val settings = SettingsRepository(database, writer, env)
-    val programs = ProgramRepository(database, writer, env)
+    val programs = ProgramRepository(database, writer, settings, env)
 
     val programEngine = ProgramEngine()
+
+    /** Picks a plan from the built-ins (Plan's picker). Its writes run on [scope], so leaving the screen cannot cut them short. */
+    val planStarter = PlanStarter(programs, settings, WorkoutDraftStore(database, env), env)
 
     /**
      * The workout in progress and everything around it: the program's day, the update script, the finish. Process-wide, so

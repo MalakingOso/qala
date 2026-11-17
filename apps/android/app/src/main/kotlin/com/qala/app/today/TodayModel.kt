@@ -314,7 +314,7 @@ fun injuredLine(muscle: String): String = "Adjusted around your ${muscleName(mus
 
 private fun noProgram(id: StageId, layout: HeroLayout, kicker: String, title: String, live: Boolean) = Hero(
     id, layout, kicker, title,
-    lines = listOf("No program yet. Add one in Plan and Today shows your warm-up and lift."),
+    lines = listOf("No program yet. Choose one in Plan and Today shows your warm-up and lift."),
     cta = Cta("Open Plan", Destination.Plan),
     ctaEnabled = live,
 )
@@ -325,8 +325,8 @@ private fun noProgram(id: StageId, layout: HeroLayout, kicker: String, title: St
  */
 private fun noProgramPointer(plan: TodayPlan, hero: Hero): Hero =
     if (!plan.noProgram) hero else hero.copy(
-        note = "No program yet. Add one in Plan and Today shows your lift.",
-        link = Cta("Add a program", Destination.Plan),
+        note = "No program yet. Choose one in Plan and Today shows your lift.",
+        link = Cta("Choose a plan", Destination.Plan),
     )
 
 private fun checkInLine(plan: TodayPlan): String = when {

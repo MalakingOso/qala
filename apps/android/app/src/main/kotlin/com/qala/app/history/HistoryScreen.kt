@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import com.qala.app.LocalAppContainer
 import com.qala.data.core.QalaCore
 import com.qala.data.core.dayName
+import com.qala.data.repo.ActiveProgram
 import com.qala.design.Card
 import com.qala.design.FlowHead
 import com.qala.design.Group
@@ -44,6 +45,7 @@ fun HistoryScreen(scroll: ScrollState, onBack: () -> Unit) {
     val runs by container.runs.runs.collectAsState(initial = emptyList())
     val snapshot by container.engine.snapshot.collectAsState()
     val active by container.programs.active.collectAsState(initial = null)
+    val picked by container.settings.activeProgram.collectAsState(initial = ActiveProgram())
     val exerciseData by container.settings.exerciseData.collectAsState(initial = JsonObject(emptyMap()))
     val dayIndexes = lifts.mapNotNull { it.session.programDayIndex }.distinct()
     val dayNames by produceState<Map<Int, String>>(emptyMap(), active, dayIndexes, snapshot.unit, exerciseData) {
@@ -53,7 +55,7 @@ fun HistoryScreen(scroll: ScrollState, onBack: () -> Unit) {
             dayIndexes.mapNotNull { day -> QalaCore.dayName(evaluated.program, day)?.let { day to it } }.toMap()
         }
     }
-    val weeks = historyWeeks(lifts, runs, dayNames, snapshot.unit)
+    val weeks = historyWeeks(lifts, runs, dayNames, snapshot.unit, picked.sinceMs)
 
     Column(
         Modifier

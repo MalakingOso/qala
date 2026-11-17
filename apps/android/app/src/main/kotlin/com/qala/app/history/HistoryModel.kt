@@ -119,14 +119,22 @@ private fun weekStartOf(startedAtMs: Long, offsetMin: Int): LocalDate {
     return date.minusDays((date.dayOfWeek.value - 1).toLong())
 }
 
-/** Every session as week groups, newest first. Weeks start on Monday, in each session's own offset. */
+/**
+ * Every session as week groups, newest first. Weeks start on Monday, in each session's own offset. [dayNames] come from the
+ * program in use, so only sessions at or after [programSince] (when it was picked) get one: an earlier session's day index
+ * belongs to the program before.
+ */
 fun historyWeeks(
     lifts: List<LiftSessionWithEntries>,
     runs: List<RunSessionEntity>,
     dayNames: Map<Int, String> = emptyMap(),
     unit: WeightUnit = WeightUnit.Lb,
+    programSince: Long? = null,
 ): List<HistoryWeek> {
-    val rows = lifts.map { liftRow(it, dayNames, unit) to weekStartOf(it.session.startedAtMs, it.session.offsetMin) } +
+    val rows = lifts.map { s ->
+        val names = if (programSince == null || s.session.startedAtMs >= programSince) dayNames else emptyMap()
+        liftRow(s, names, unit) to weekStartOf(s.session.startedAtMs, s.session.offsetMin)
+    } +
         runs.map { runRow(it) to weekStartOf(it.startedAtMs, it.offsetMin) }
     return rows
         .groupBy({ it.second }, { it.first })

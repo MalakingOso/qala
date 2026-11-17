@@ -359,7 +359,6 @@ class PlanModel(
             ),
             hero = isToday,
             run = run?.let { runRow(it.plan, it.logged) },
-            // TODO: a link to add a program, when programs can be added on the phone.
         )
     }
 

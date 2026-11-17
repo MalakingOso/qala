@@ -78,6 +78,7 @@ fun PlanScreen(
     scroll: ScrollState,
     topBar: @Composable (Modifier) -> Unit,
     onGo: (Destination) -> Unit,
+    onChangePlan: () -> Unit,
 ) {
     Column(Modifier.fillMaxSize().verticalScroll(scroll)) {
         Column(Modifier.statusBarsPadding().padding(horizontal = 20.dp).padding(bottom = 32.dp)) {
@@ -86,25 +87,26 @@ fun PlanScreen(
             when {
                 snapshot.error != null -> PlanHead("Plan could not be worked out.", snapshot.error)
                 !snapshot.loaded || input == null -> PlanHead("Getting your plan ready.", null)
-                else -> PlanContent(snapshot, today, onGo)
+                else -> PlanContent(snapshot, today, onGo, onChangePlan)
             }
         }
     }
 }
 
 @Composable
-private fun PlanHead(eyebrow: String, note: String?) {
-    Column(Modifier.padding(top = 16.dp, bottom = 16.dp)) {
+private fun PlanHead(eyebrow: String, note: String?, onChangePlan: (() -> Unit)? = null) {
+    Column(Modifier.padding(top = 16.dp, bottom = if (onChangePlan == null) 16.dp else 4.dp)) {
         GroupLabel(eyebrow, Modifier.padding(bottom = 2.dp))
         QalaText("Plan", Modifier.semantics { heading() }, QalaType.pageTitle, Qala.colors.fg)
         note?.let { QalaText(it, Modifier.padding(top = 8.dp), BodyStyle, Qala.colors.fgSecondary) }
+        onChangePlan?.let { LinkButton("Change plan", it) }
     }
 }
 
 private val BodyStyle = QalaType.body.copy(fontSize = 13.sp, lineHeight = 19.sp)
 
 @Composable
-private fun PlanContent(snapshot: EngineSnapshot, today: TodayLoad, onGo: (Destination) -> Unit) {
+private fun PlanContent(snapshot: EngineSnapshot, today: TodayLoad, onGo: (Destination) -> Unit, onChangePlan: () -> Unit) {
     val container = LocalAppContainer.current
     val input = snapshot.input!!
     val use24h = DateFormat.is24HourFormat(LocalContext.current)
@@ -126,7 +128,18 @@ private fun PlanContent(snapshot: EngineSnapshot, today: TodayLoad, onGo: (Desti
     val model = remember(data, shown, bounds, use24h, next) { PlanModel(data, shown, bounds, use24h, next) }
     val c = Qala.colors
 
-    PlanHead(model.eyebrow, null)
+    val hasProgram = data.programName != null
+    PlanHead(model.eyebrow, null, onChangePlan.takeIf { hasProgram })
+    if (!hasProgram) {
+        // No program: the empty week gives way to the way out of it. A run plan still has days worth showing under it.
+        Card {
+            QalaText("No plan yet. Choose one and each training day lists its lifts here.", style = QalaType.hint, color = c.fgMuted)
+            Spacer(Modifier.height(16.dp))
+            PrimaryButton("Choose a plan", onClick = onChangePlan, large = true)
+        }
+        if (!snapshot.hasRunPlan) return
+        Spacer(Modifier.height(16.dp))
+    }
     Card(contentPadding = 14.dp) {
         WeekSwitcher(
             label = model.week.label,

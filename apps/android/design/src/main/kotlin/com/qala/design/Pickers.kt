@@ -42,6 +42,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.Dp
@@ -265,6 +266,7 @@ fun QalaTextField(
     label: String,
     modifier: Modifier = Modifier,
     onDone: (() -> Unit)? = null,
+    keyboardType: KeyboardType = KeyboardType.Text,
 ) {
     val c = Qala.colors
     var focused by remember { mutableStateOf(false) }
@@ -290,7 +292,7 @@ fun QalaTextField(
         textStyle = QalaType.body.copy(fontSize = 14.sp, lineHeight = 20.sp, color = c.fg),
         singleLine = true,
         cursorBrush = SolidColor(c.accent),
-        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+        keyboardOptions = KeyboardOptions(keyboardType = keyboardType, imeAction = ImeAction.Done),
         keyboardActions = KeyboardActions(onDone = { onDone?.invoke() }),
         decorationBox = { inner ->
             Box(contentAlignment = Alignment.CenterStart) {
