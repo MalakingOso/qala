@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Workout, Stage</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:"Qala Test";src:url(/_blob/29f013c9e8755778ddaf10412a38fc20) format("woff2");font-weight:700}
+@font-face{font-family:"Qala Test";src:url(/_blob/8ec8bee2617a9043128a56f1a4c97e63) format("woff2");font-weight:500}
+@font-face{font-family:"DM Mono";src:url(/_blob/690955f58d9971252e7921604aa1eb76) format("woff2");font-weight:400}
+@font-face{font-family:"DM Mono";src:url(/_blob/94e465ef7a6130a9ed3ec763d233c5fa) format("woff2");font-weight:500}
+body{margin:0;font-family:"DM Mono",ui-monospace,monospace;color:#0F152A;-webkit-font-smoothing:antialiased}
+*{box-sizing:border-box}
+.ic{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.board{width:1400px;height:1060px;background:#E8E1D4;padding:44px 67px 0}
+.hd{display:flex;gap:18px;align-items:flex-end;height:96px}
+.num{font:700 64px/56px "Qala Test",serif;color:#C2410C}
+.t{font:700 34px/38px "Qala Test",serif;color:#1E1710}
+.c{font:400 13px/19px "DM Mono",monospace;color:#4A4036;max-width:960px;margin-top:2px}
+.row{display:flex;gap:48px;margin-top:22px}
+.col{width:390px}
+.lab{font:500 11px/16px "DM Mono",monospace;letter-spacing:.09em;text-transform:uppercase;color:#6B5F50;height:22px}
+.ph{position:relative;width:390px;height:844px;border-radius:38px;overflow:hidden;background:#140A04;box-shadow:0 26px 60px rgba(60,35,10,.30),0 0 0 1px rgba(20,10,4,.10)}
+.film{position:absolute;inset:-20px;background-size:cover;background-position:center;transform:scale(1.04)}
+.f16{background-image:url(/_blob/bfc2ca993d5d073e82933fd7c44accb0)}
+.f14{background-image:url(/_blob/0a5bff743742730b0ff0f5f77fba56fe)}
+.f4{background-image:url(/_blob/af05765eec76f76cc1b4a0700855762a)}
+.scrim{position:absolute;inset:0;background:linear-gradient(180deg,rgba(20,10,4,.72) 0%,rgba(20,10,4,.52) 30%,rgba(20,10,4,.58) 56%,rgba(20,10,4,.8) 100%)}
+.vig{position:absolute;inset:0;background:radial-gradient(120% 90% at 50% 38%,transparent 52%,rgba(10,5,0,.42) 100%)}
+.ab{position:absolute}
+.ts{text-shadow:0 2px 10px rgba(0,0,0,.45)}
+.k{font:500 11px/14px "DM Mono",monospace;letter-spacing:.09em;text-transform:uppercase;color:rgba(255,255,255,.92)}
+.k.em{color:#FB923C}
+.h1{font:700 30px/34px "Qala Test",serif;color:#fff}
+.gb{height:44px;min-width:44px;border-radius:8px;background:rgba(24,14,8,.42);border:1px solid rgba(255,255,255,.24);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);color:#fff;display:flex;align-items:center;justify-content:center;gap:6px;font:500 13px "DM Mono",monospace;padding:0 12px}
+.gb.sq{padding:0;width:44px}
+.head{left:16px;right:16px;top:30px;display:flex;align-items:flex-start;gap:8px}
+.head .mid{flex:1;padding-top:2px;min-width:0}
+.pill{height:44px;border-radius:4px;border:2px solid #FB923C;background:rgba(24,14,8,.5);color:#FB923C;display:flex;align-items:center;gap:6px;padding:0 12px;font:500 14px "DM Mono",monospace}
+.seg{display:flex;gap:6px}
+.seg>div{flex:1;height:30px;border-radius:6px;background:rgba(24,14,8,.4);border:1px solid rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;gap:5px}
+.seg>div.cur{border:2px solid #fff;background:rgba(255,255,255,.16)}
+.dt{width:7px;height:7px;border-radius:50%;border:1.5px solid rgba(255,255,255,.7)}
+.dt.d{background:#2DD4BF;border-color:#2DD4BF}
+.dt.o{border-color:#fff;background:#fff}
+.fig{display:flex;align-items:baseline;justify-content:center;gap:8px;color:#fff}
+.fig b{font:700 84px/76px "Qala Test",serif;letter-spacing:-.02em}
+.fig span{font:500 16px "DM Mono",monospace;color:rgba(255,255,255,.9)}
+.clock{font:700 124px/120px "Qala Test",serif;color:#fff;font-variant-numeric:lining-nums tabular-nums;text-align:center}
+.sheet{left:0;right:0;bottom:0;border-radius:20px 20px 0 0;background:rgba(247,240,229,.96);box-shadow:inset 0 2px 0 rgba(255,255,255,.75),0 -12px 36px rgba(20,10,4,.38)}
+.grab{position:absolute;left:177px;top:8px;width:36px;height:4px;border-radius:2px;background:rgba(15,21,42,.28)}
+.bar{left:0;right:0;bottom:0;padding:8px 16px 20px;background:#F7F0E5;border-top:2px solid rgba(15,21,42,.10)}
+.hint{display:flex;align-items:center;justify-content:center;gap:6px;font:400 12px/16px "DM Mono",monospace;color:#5B6683;margin-bottom:6px}
+.hint .ic{width:14px;height:14px}
+.btn{height:56px;border-radius:6px;background:#C2410C;color:#fff;box-shadow:2px 4px 0 #4a4a4a,0 0 0 1px #C2410C;display:flex;align-items:center;justify-content:center;gap:10px;font:500 16px "DM Mono",monospace;flex:1}
+.btn2{height:56px;border-radius:6px;background:#fff;color:#0F152A;border:2px solid rgba(15,21,42,.22);box-shadow:2px 4px 0 rgba(15,21,42,.10);display:flex;align-items:center;justify-content:center;font:500 14px "DM Mono",monospace;width:116px}
+.card{background:#fff;border:2px solid rgba(15,21,42,.10);border-radius:8px;box-shadow:2px 4px 0 rgba(15,21,42,.10);padding:14px}
+.gl{font:500 11px/14px "DM Mono",monospace;letter-spacing:.09em;text-transform:uppercase;color:#5B6683}
+.ct{font:700 17px/22px "Qala Test",serif;color:#0F152A}
+.body{font:400 13px/19px "DM Mono",monospace;color:#4A5578}
+.hintx{font:400 11.5px/15px "DM Mono",monospace;color:#5B6683}
+.chk{width:24px;height:24px;border-radius:4px;border:2px solid rgba(15,21,42,.22);display:grid;place-items:center;flex:none;color:#fff}
+.chk.on{background:#08A49C;border-color:#08A49C}
+.chk .ic{width:16px;height:16px;stroke-width:3}
+.stepn{width:28px;height:28px;border-radius:50%;background:#0F152A;color:#fff;display:grid;place-items:center;font:500 13px "DM Mono",monospace;flex:none}
+.crow{display:flex;align-items:center;gap:12px;min-height:56px;padding:8px 0}
+.crow+.crow{border-top:1px solid rgba(15,21,42,.10)}
+.crow .tx{flex:1}
+.crow .tl{font:500 14px/19px "DM Mono",monospace;color:#0F152A}
+.crow .dt2{font:400 12px/17px "DM Mono",monospace;color:#5B6683}
+.crow img,.gear{width:44px;height:44px;background-size:contain;background-repeat:no-repeat;background-position:center;flex:none}
+.g1{background-image:url(/_blob/36233f9e021344ef0f67b8d27710b226)}
+.g2{background-image:url(/_blob/d3ff1c98b335b0d00190db572cc2a044)}
+.fc{display:inline-block;width:16px;height:16px;background-size:100% 100%}
+.f45{background-image:url(/_blob/30bff1569b3b82dfc63f8c53d6eb6df3)}
+.f25{background-image:url(/_blob/bb305d035cc0b52895836c4edea47018)}
+.f10{background-image:url(/_blob/1521ecb7c3550d75908b38be123eb63e)}
+.chip{flex:1;height:46px;border-radius:6px;background:#fff;border:2px solid rgba(15,21,42,.10);padding:4px 7px;display:flex;flex-direction:column;justify-content:center;gap:2px;position:relative}
+.chip b{display:flex;align-items:center;gap:4px;font:500 12px/16px "DM Mono",monospace;color:#4A5578;white-space:nowrap}
+.chip div{display:flex;align-items:center;gap:3px;font:400 11px/14px "DM Mono",monospace;color:#5B6683;white-space:nowrap}
+.tk2{width:14px;height:14px;border-radius:50%;background:#08A49C;display:grid;place-items:center;color:#fff;flex:none}
+.tk2 .ic{width:9px;height:9px;stroke-width:3.5}
+.cell{flex:1;height:50px;border-radius:6px;background:#fff;border:2px solid rgba(15,21,42,.10);padding:5px 8px;position:relative}
+.cell .a{font:500 10.5px/13px "DM Mono",monospace;letter-spacing:.08em;text-transform:uppercase;color:#5B6683}
+.cell .b{font:500 14px/20px "DM Mono",monospace;color:#0F152A}
+.cell .tk{position:absolute;right:6px;top:6px;width:16px;height:16px;border-radius:50%;background:#08A49C;display:grid;place-items:center;color:#fff}
+.cell .tk .ic{width:11px;height:11px;stroke-width:3.5}
+.cell.op{border-color:#C2410C}
+.cell.op .a{color:#C2410C}
+.sb{width:48px;height:48px;border-radius:6px;background:#fff;border:2px solid rgba(15,21,42,.22);box-shadow:2px 4px 0 rgba(15,21,42,.10);display:grid;place-items:center;color:#0F152A;flex:none}
+.sb .ic{width:24px;height:24px}
+.stp{display:flex;align-items:center;gap:10px}
+.stp .v{flex:1;text-align:center;font:700 34px/36px "Qala Test",serif;color:#0F152A}
+.stp .v small{display:block;font:500 10.5px/12px "DM Mono",monospace;letter-spacing:.09em;text-transform:uppercase;color:#5B6683}
+.rpe{display:flex;border:2px solid rgba(15,21,42,.22);border-radius:6px;overflow:hidden;background:#fff}
+.rpe b{flex:1;height:44px;display:grid;place-items:center;font:500 13px "DM Mono",monospace;color:#0F152A}
+.rpe b+b{border-left:1px solid rgba(15,21,42,.10)}
+.slw{display:flex;justify-content:center;overflow:hidden;height:84px}
+.slw.big{height:122px}
+.slw.big .sl{transform:scale(1.18)}
+.sl{position:relative;width:101.5px;height:96px;flex:none;transform:scale(.8);transform-origin:50% 0}
+.sl i{position:absolute;display:block;background-size:100% 100%;background-repeat:no-repeat}
+.sl .bar2{left:-440px;top:46.57px;width:452.77px;height:7.08px;background:url(/_blob/6b695650f6a8e3ee005b05695b46f51c) repeat-x right top;background-size:7.92px 7.08px;transform-origin:right top;transform:skewY(9.23deg)}
+.sl .cl{left:4.73px;top:45.67px;width:29.38px;height:16.04px;background-image:url(/_blob/5699fd072af9e879fde8b2f3d46b6b08);z-index:2}
+.sl .tl2{width:8.12px;height:11.46px;background-image:url(/_blob/edef7c6db9ce789095720db134219e94);z-index:3}
+.sl .t1{left:32.34px;top:48.91px}.sl .t2{left:40.22px;top:50.19px}.sl .t3{left:48.1px;top:51.47px}.sl .t4{left:55.98px;top:52.75px}
+.sl .p1{left:5.56px;top:9.83px;width:65.21px;height:90px;background-image:url(/_blob/d27c27c0329106311b21241ef6499932);z-index:10}
+.sl .p2{left:16.99px;top:11.69px;width:65.21px;height:90px;background-image:url(/_blob/d27c27c0329106311b21241ef6499932);z-index:11}
+.sl .p3{left:28.41px;top:13.55px;width:57.5px;height:88.75px;background-image:url(/_blob/f846642a08a842931aa0f481580ad21e);z-index:12}
+.sl .en{left:47.97px;top:51.43px;width:53.54px;height:14.58px;background-image:url(/_blob/161c28757d6430d56d02588ecc818cba);z-index:40}
+.lg{display:flex;justify-content:space-between;align-items:baseline;padding:7px 0;border-bottom:1px solid rgba(15,21,42,.10)}
+.lg span{font:400 13px/19px "DM Mono",monospace;color:#4A5578}
+.lg b{font:400 14px/20px "DM Mono",monospace;color:#0F152A}
+.lg b.up{color:#C2410C}
+</style>
+</helmet>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="i-back" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+<symbol id="i-next" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+<symbol id="i-grid" viewBox="0 0 24 24"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+<symbol id="i-hg" viewBox="0 0 24 24"><path d="M5 22h14"/><path d="M5 2h14"/><path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22"/><path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"/></symbol>
+<symbol id="i-bike" viewBox="0 0 24 24"><circle cx="18.5" cy="17.5" r="3.5"/><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="15" cy="5" r="1"/><path d="M12 17.5V14l-3-3 4-3 2 3h2"/></symbol>
+<symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5v14"/></symbol>
+<symbol id="i-db" viewBox="0 0 24 24"><path d="M14.4 14.4 9.6 9.6"/><path d="M18.657 21.485a2 2 0 1 1-2.829-2.828l-1.767 1.768a2 2 0 1 1-2.829-2.829l6.364-6.364a2 2 0 1 1 2.829 2.829l-1.768 1.767a2 2 0 1 1 2.828 2.829z"/><path d="m21.5 21.5-1.4-1.4"/><path d="M3.9 3.9 2.5 2.5"/><path d="M6.404 12.768a2 2 0 1 1-2.829-2.829l1.768-1.767a2 2 0 1 1-2.828-2.829l2.828-2.828a2 2 0 1 1 2.829 2.828l1.767-1.768a2 2 0 1 1 2.829 2.829z"/></symbol>
+</defs></svg>
+<div class="board">
+<div class="hd"><div class="num">1</div><div><div class="t">Stage</div><div class="c">Full film, as on Today. White hero over the graded film, cream sheet underneath. The weight stepper and loaded sleeve move up into the hero; reps, RPE and Log set stay in the sheet. Prev/Next shrinks to a "Next" link.</div></div></div>
+<div class="row">
+
+<div class="col"><div class="lab">Warm-up</div>
+<div class="ph">
+<div class="film f14"></div><div class="scrim"></div><div class="vig"></div>
+<div class="ab head">
+<div class="gb sq"><svg class="ic"><use href="#i-back"/></svg></div>
+<div class="mid"><div class="k ts">Before Lower A · 12 min</div><div class="h1 ts">Warm-up</div></div>
+<div class="gb sq"><svg class="ic"><use href="#i-grid"/></svg></div>
+<div class="gb">Skip</div>
+</div>
+<div class="ab" style="left:20px;right:20px;top:106px">
+<div class="k em ts" style="text-align:center">Step 1 of 3 · Easy cardio · 8 min</div>
+<div class="clock ts" style="margin-top:4px">5:42</div>
+<div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px">
+<div class="gb">&minus;1 min</div>
+<div class="k ts">of 8:00 · running</div>
+<div class="gb">+1 min</div>
+</div>
+<div style="display:flex;gap:10px;align-items:flex-start;margin-top:14px;color:rgba(255,255,255,.92)">
+<svg class="ic" style="margin-top:2px"><use href="#i-bike"/></svg>
+<div class="ts" style="font:400 13px/19px 'DM Mono',monospace">Bike, RPE 3, nose-breathing pace. 8 minutes because squats come first today.</div>
+</div>
+</div>
+<div class="ab sheet" style="top:396px">
+<i class="grab"></i>
+<div style="padding:24px 16px 0">
+<div class="card" style="padding:12px 14px;margin-bottom:12px">
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:2px"><div class="stepn">2</div><div class="ct" style="flex:1">Soft tissue</div><div class="hintx">3 min</div></div>
+<div class="crow"><div class="chk on"><svg class="ic"><use href="#i-check"/></svg></div><div class="tx"><div class="tl" style="color:#5B6683">Quads</div><div class="dt2">Foam roller, 2 min. Sore (4), so no Theragun.</div></div><i class="gear g1"></i></div>
+<div class="crow"><div class="chk"></div><div class="tx"><div class="tl">Glutes</div><div class="dt2">Theragun, 1 min each side.</div></div><i class="gear g2"></i></div>
+</div>
+<div class="card" style="padding:12px 14px">
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:2px"><div class="stepn">3</div><div class="ct" style="flex:1">Mobility</div><div class="hintx">2 min</div></div>
+<div class="crow"><div class="chk"></div><div class="tx"><div class="tl">Hip 90/90</div><div class="dt2">5 each side, slow.</div></div></div>
+<div class="crow"><div class="chk"></div><div class="tx"><div class="tl">Ankle rocks</div><div class="dt2">10 each side, knee over toe.</div></div></div>
+</div>
+</div>
+<div class="ab bar"><div class="btn"><svg class="ic"><use href="#i-db"/></svg>Start workout</div></div>
+</div>
+</div>
+</div>
+
+<div class="col"><div class="lab">Workout, set 3 open</div>
+<div class="ph">
+<div class="film f16"></div><div class="scrim"></div><div class="vig"></div>
+<div class="ab head">
+<div class="gb sq"><svg class="ic"><use href="#i-back"/></svg></div>
+<div class="mid"><div class="k ts">Lower A · 31:42 in</div><div class="h1 ts">Workout</div></div>
+<div class="gb sq"><svg class="ic"><use href="#i-grid"/></svg></div>
+<div class="gb sq"><svg class="ic"><use href="#i-check"/></svg></div>
+</div>
+<div class="ab" style="left:16px;right:16px;top:78px;display:flex;justify-content:space-between">
+<div class="gb"><svg class="ic" style="width:18px;height:18px"><use href="#i-bike"/></svg>Warm-up</div>
+<div class="pill"><svg class="ic" style="width:16px;height:16px"><use href="#i-hg"/></svg>Rest 1:42</div>
+</div>
+<div class="ab seg" style="left:16px;right:16px;top:126px">
+<div class="cur"><i class="dt d"></i><i class="dt d"></i><i class="dt o"></i></div>
+<div><i class="dt"></i><i class="dt"></i><i class="dt"></i></div>
+<div><i class="dt"></i><i class="dt"></i><i class="dt"></i></div>
+<div><i class="dt"></i><i class="dt"></i><i class="dt"></i></div>
+<div><i class="dt"></i><i class="dt"></i><i class="dt"></i></div>
+</div>
+<div class="ab" style="left:20px;right:20px;top:166px;display:flex;justify-content:space-between;align-items:center">
+<div class="k em ts">Exercise 1 of 5 · Set 3 of 3</div>
+<div class="k ts" style="display:flex;align-items:center;gap:2px">Next: RDL<svg class="ic" style="width:14px;height:14px"><use href="#i-next"/></svg></div>
+</div>
+<div class="ab h1 ts" style="left:20px;right:20px;top:184px;font-size:30px;line-height:34px">Back Squat</div>
+<div class="ab ts" style="left:20px;right:20px;top:220px;font:400 12px/16px 'DM Mono',monospace;color:rgba(255,255,255,.9)">Last time 240 × 4 · 240 × 4 · 240 × 5</div>
+<div class="ab" style="left:16px;right:16px;top:242px;display:flex;align-items:center;gap:8px">
+<div class="gb sq" style="width:48px;height:48px"><svg class="ic" style="width:26px;height:26px"><use href="#i-minus"/></svg></div>
+<div class="fig ts" style="flex:1"><b>245</b><span>lb</span></div>
+<div class="gb sq" style="width:48px;height:48px"><svg class="ic" style="width:26px;height:26px"><use href="#i-plus"/></svg></div>
+</div>
+<div class="ab" style="left:0;right:0;top:322px"><div class="slw"><div class="sl"><i class="bar2"></i><i class="cl"></i><i class="tl2 t1"></i><i class="tl2 t2"></i><i class="tl2 t3"></i><i class="tl2 t4"></i><i class="p1"></i><i class="p2"></i><i class="p3"></i><i class="en"></i></div></div></div>
+<div class="ab k ts" style="left:0;right:0;top:406px;text-align:center">Per side · 45 · 45 · 10</div>
+<div class="ab sheet" style="top:434px">
+<i class="grab"></i>
+<div style="padding:22px 16px 0">
+<div class="gl" style="margin-bottom:6px">Warm-up sets</div>
+<div style="display:flex;gap:6px;margin-bottom:8px">
+<div class="chip"><b><i class="tk2"><svg class="ic"><use href="#i-check"/></svg></i>W1 Bar × 8</b><div>rest 0:30</div></div>
+<div class="chip"><b><i class="tk2"><svg class="ic"><use href="#i-check"/></svg></i>W2 135 × 5</b><div><i class="fc f45"></i>rest 0:45</div></div>
+<div class="chip"><b><i class="tk2"><svg class="ic"><use href="#i-check"/></svg></i>W3 185 × 3</b><div><i class="fc f45"></i><i class="fc f25"></i>rest 1:00</div></div>
+</div>
+<div style="display:flex;gap:6px;margin-bottom:8px">
+<div class="cell"><div class="a">Set 1</div><div class="b">245 × 4 @ 8</div><i class="tk"><svg class="ic"><use href="#i-check"/></svg></i></div>
+<div class="cell"><div class="a">Set 2</div><div class="b">245 × 4 @ 9</div><i class="tk"><svg class="ic"><use href="#i-check"/></svg></i></div>
+<div class="cell op"><div class="a">Set 3 · open</div><div class="b">245 × 4</div></div>
+</div>
+<div class="stp" style="margin-bottom:8px"><div class="sb"><svg class="ic"><use href="#i-minus"/></svg></div><div class="v"><small>Reps</small>4</div><div class="sb"><svg class="ic"><use href="#i-plus"/></svg></div></div>
+<div style="display:flex;justify-content:space-between;margin-bottom:4px"><div class="gl">RPE</div><div class="hintx">target 8.5</div></div>
+<div class="rpe"><b>7</b><b>7.5</b><b>8</b><b>8.5</b><b>9</b><b>9.5</b><b>10</b></div>
+<div style="display:flex;justify-content:space-between;margin-top:4px" class="hintx"><span>3 in the tank</span><span>max</span></div>
+</div>
+<div class="ab bar"><div class="hint"><svg class="ic"><use href="#i-hg"/></svg>Rest 3:45 after this set</div><div class="btn"><svg class="ic"><use href="#i-check"/></svg>Log set 3</div></div>
+</div>
+</div>
+</div>
+
+<div class="col"><div class="lab">Rest, 1:42 left</div>
+<div class="ph">
+<div class="film f4"></div><div class="scrim"></div><div class="vig"></div>
+<div class="ab head">
+<div class="gb sq"><svg class="ic"><use href="#i-back"/></svg></div>
+<div class="mid"><div class="k ts">Back Squat · set 2 logged</div><div class="h1 ts">Rest</div></div>
+<div class="gb sq"><svg class="ic"><use href="#i-grid"/></svg></div>
+</div>
+<div class="ab ts" style="left:20px;right:20px;top:104px;text-align:center;font:400 14px/20px 'DM Mono',monospace;color:rgba(255,255,255,.92)">245 lb × 4 @ 9</div>
+<div class="ab clock ts" style="left:0;right:0;top:124px">1:42</div>
+<div class="ab k ts" style="left:0;right:0;top:248px;text-align:center">of 3:45</div>
+<div class="ab" style="left:20px;right:20px;top:276px;height:12px;border-radius:6px;background:rgba(255,255,255,.28)"><div style="width:45%;height:100%;border-radius:6px;background:#FB923C"></div></div>
+<div class="ab sheet" style="top:316px">
+<i class="grab"></i>
+<div style="padding:24px 16px 0">
+<div class="card" style="margin-bottom:12px;padding:12px 14px">
+<div style="display:flex;justify-content:space-between;align-items:flex-end"><div class="gl">Next · set 3</div><div style="font:700 24px/28px 'Qala Test',serif;color:#0F152A">245 lb × 4</div></div>
+<div class="slw big" style="margin-top:6px"><div class="sl"><i class="bar2"></i><i class="cl"></i><i class="tl2 t1"></i><i class="tl2 t2"></i><i class="tl2 t3"></i><i class="tl2 t4"></i><i class="p1"></i><i class="p2"></i><i class="p3"></i><i class="en"></i></div></div>
+<div style="text-align:center;margin-top:2px"><div class="gl">Per side</div><div style="font:400 14px/20px 'DM Mono',monospace;color:#4A5578">45 · 45 · 10</div></div>
+</div>
+<div class="card" style="padding:12px 14px">
+<div class="gl" style="margin-bottom:2px">Why 3:45</div>
+<div class="lg"><span>Base, heavy compound</span><b>3:00</b></div>
+<div class="lg"><span>Set 2 was RPE 9</span><b class="up">+0:30</b></div>
+<div class="lg"><span>Readiness 72, a little low</span><b class="up">+0:15</b></div>
+<div class="lg" style="border:0;padding-bottom:0"><span style="font-weight:500;color:#0F152A">Rest</span><b style="font-weight:500">3:45</b></div>
+</div>
+</div>
+<div class="ab bar" style="display:flex;gap:10px"><div class="btn2">+30 s</div><div class="btn">Ready early</div></div>
+</div>
+</div>
+</div>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1400,"height":1060}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

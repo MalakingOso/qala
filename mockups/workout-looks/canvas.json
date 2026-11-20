@@ -1,0 +1,20 @@
+{
+  "v": 3,
+  "createdOnFiles": { "v": 1, "at": "2026-11-20T21:30:00Z" },
+  "title": "Qala workout screens, five looks",
+  "launch": { "view": "canvas" },
+  "pages": [],
+  "boards": {
+    "Main.dc.html": { "x": 0, "y": 0, "w": 1400, "h": 1060, "title": "1 Stage: full film" },
+    "Glass.dc.html": { "x": 0, "y": 1180, "w": 1400, "h": 1060, "title": "2 Glass: blurred film, light glass" },
+    "Band.dc.html": { "x": 0, "y": 2360, "w": 1400, "h": 1060, "title": "3 Band: film in the head only" },
+    "Cream.dc.html": { "x": 0, "y": 3540, "w": 1400, "h": 1060, "title": "4 Cream: no film" },
+    "Rail.dc.html": { "x": 0, "y": 4720, "w": 1400, "h": 1060, "title": "5 Rail: exercises on the timeline" },
+    "Flow.dc.html": { "x": 0, "y": 5900, "w": 1400, "h": 1060, "title": "6 Rail: Today hands over to the frosted still" }
+  },
+  "order": ["Main.dc.html", "Glass.dc.html", "Band.dc.html", "Cream.dc.html", "Rail.dc.html", "Flow.dc.html"],
+  "notes": {
+    "t1": { "x": 0, "y": -290, "text": "Workout screens, five looks", "kind": "title1", "maxW": 1400 }
+  },
+  "designSystems": []
+}

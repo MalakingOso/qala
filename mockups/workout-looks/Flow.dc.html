@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Today to warm-up transition</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:"Qala Test";src:url(/_blob/29f013c9e8755778ddaf10412a38fc20) format("woff2");font-weight:700}
+@font-face{font-family:"Qala Test";src:url(/_blob/8ec8bee2617a9043128a56f1a4c97e63) format("woff2");font-weight:500}
+@font-face{font-family:"DM Mono";src:url(/_blob/690955f58d9971252e7921604aa1eb76) format("woff2");font-weight:400}
+@font-face{font-family:"DM Mono";src:url(/_blob/94e465ef7a6130a9ed3ec763d233c5fa) format("woff2");font-weight:500}
+body{margin:0;font-family:"DM Mono",ui-monospace,monospace;color:#0F152A;-webkit-font-smoothing:antialiased}
+*{box-sizing:border-box}
+.ic{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.board{width:1400px;height:1060px;background:#E8E1D4;padding:44px 67px 0}
+.hd{display:flex;gap:18px;align-items:flex-end;height:96px}
+.num{font:700 64px/56px "Qala Test",serif;color:#C2410C}
+.t{font:700 34px/38px "Qala Test",serif;color:#1E1710}
+.c{font:400 13px/19px "DM Mono",monospace;color:#4A4036;max-width:960px;margin-top:2px}
+.row{display:flex;gap:48px;margin-top:22px}
+.col{width:390px}
+.lab{font:500 11px/16px "DM Mono",monospace;letter-spacing:.09em;text-transform:uppercase;color:#6B5F50;height:22px}
+.ph{position:relative;width:390px;height:844px;border-radius:38px;overflow:hidden;background:#140A04;box-shadow:0 26px 60px rgba(60,35,10,.30),0 0 0 1px rgba(20,10,4,.10)}
+.bg{position:absolute;inset:0;background-size:cover;background-position:center}
+.b1{background-image:url(/_blob/a180b90bd7785e62ea33d2597bba9ff9)}
+.b2{background-image:url(/_blob/aa28c27e0c9aa899a86f96dfa41ab66d)}
+.b3{background-image:url(/_blob/5eb4b79dc9eda4d7052b8797da62dcdf)}
+.sc1{position:absolute;inset:0;background:linear-gradient(180deg,rgba(20,10,4,.6) 0%,rgba(20,10,4,.3) 30%,rgba(20,10,4,.4) 60%,rgba(20,10,4,.66) 100%)}
+.sc2{position:absolute;inset:0;background:linear-gradient(180deg,rgba(20,10,4,.4) 0%,rgba(20,10,4,.24) 40%,rgba(20,10,4,.2) 100%)}
+.sc3{position:absolute;inset:0;background:linear-gradient(180deg,rgba(20,10,4,.3) 0%,rgba(20,10,4,.18) 40%,rgba(20,10,4,.08) 75%,rgba(20,10,4,0) 100%)}
+.ab{position:absolute}
+.lay{position:absolute;inset:0}
+.ts{text-shadow:0 2px 10px rgba(0,0,0,.5)}
+.k{font:500 11px/14px "DM Mono",monospace;letter-spacing:.09em;text-transform:uppercase;color:rgba(255,255,255,.92)}
+.k.em{color:#FB923C}
+.h1{font:700 30px/34px "Qala Test",serif;color:#fff}
+.gb{height:44px;min-width:44px;border-radius:8px;background:rgba(24,14,8,.5);border:1px solid rgba(255,255,255,.24);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);color:#fff;display:flex;align-items:center;justify-content:center;gap:6px;font:500 13px "DM Mono",monospace;padding:0 12px}
+.gb.sq{padding:0;width:44px}
+.ib{width:44px;height:44px;display:grid;place-items:center;color:#fff;filter:drop-shadow(0 2px 6px rgba(0,0,0,.5))}
+.head{left:16px;right:16px;top:30px;display:flex;align-items:flex-start;gap:8px}
+.head .mid{flex:1;padding-top:2px;min-width:0}
+.ln{position:absolute;left:41px;width:2px;border-radius:1px;background:rgba(255,255,255,.34)}
+.ln.d{background:#2DD4BF}
+.nd{position:absolute;display:grid;place-items:center;border-radius:50%;color:#fff;background:rgba(24,14,8,.6);border:2px solid rgba(255,255,255,.7);font:500 12px "DM Mono",monospace}
+.nd.d{background:#2DD4BF;border-color:#2DD4BF;color:#0B1B19}
+.nd.cur{background:#FB923C;border-color:#FB923C;color:#1B0E05;box-shadow:2px 4px 0 rgba(0,0,0,.45);font-size:15px}
+.nd .ic{width:16px;height:16px;stroke-width:3}
+.nd.cur .ic{width:20px;height:20px;stroke-width:2.5}
+.nl{position:absolute;left:8px;width:68px;text-align:center;font:500 10px/12px "DM Mono",monospace;color:rgba(255,255,255,.92);text-shadow:0 1px 6px rgba(0,0,0,.6)}
+.nl.cur{color:#FB923C}
+.clock{font:700 100px/92px "Qala Test",serif;color:#fff;font-variant-numeric:lining-nums tabular-nums}
+.fig{font:700 96px/88px "Qala Test",serif;letter-spacing:-.02em;color:#fff}
+.bot{left:16px;right:16px;bottom:20px}
+.btn{height:56px;border-radius:6px;background:#C2410C;color:#fff;box-shadow:2px 4px 0 #4a4a4a,0 0 0 1px #C2410C;display:flex;align-items:center;justify-content:center;gap:10px;font:500 16px "DM Mono",monospace;flex:1}
+.card{background:rgba(255,255,255,.95);border:2px solid rgba(15,21,42,.10);border-radius:8px;box-shadow:2px 4px 0 rgba(0,0,0,.28);padding:12px;left:80px;right:16px}
+.ct{font:700 17px/22px "Qala Test",serif;color:#0F152A}
+.hintx{font:400 11.5px/15px "DM Mono",monospace;color:#5B6683}
+.gl{font:500 11px/14px "DM Mono",monospace;letter-spacing:.09em;text-transform:uppercase;color:#5B6683}
+.chk{width:24px;height:24px;border-radius:4px;border:2px solid rgba(15,21,42,.22);display:grid;place-items:center;flex:none;color:#fff}
+.chk.on{background:#08A49C;border-color:#08A49C}
+.chk .ic{width:16px;height:16px;stroke-width:3}
+.crow{display:flex;align-items:center;gap:10px;min-height:52px;padding:6px 0}
+.crow+.crow{border-top:1px solid rgba(15,21,42,.10)}
+.crow .tx{flex:1}
+.crow .tl{font:500 14px/19px "DM Mono",monospace;color:#0F152A}
+.crow .dt2{font:400 12px/16px "DM Mono",monospace;color:#5B6683}
+.gear{width:40px;height:40px;background-size:contain;background-repeat:no-repeat;background-position:center;flex:none}
+.g1{background-image:url(/_blob/36233f9e021344ef0f67b8d27710b226)}
+.g2{background-image:url(/_blob/d3ff1c98b335b0d00190db572cc2a044)}
+.fc{display:inline-block;width:44px;height:44px;background-size:100% 100%;margin-right:-6px;filter:drop-shadow(0 3px 6px rgba(0,0,0,.45))}
+.f45{background-image:url(/_blob/30bff1569b3b82dfc63f8c53d6eb6df3)}
+.f10{background-image:url(/_blob/1521ecb7c3550d75908b38be123eb63e)}
+.cr{position:absolute;left:0;right:0;background:rgba(247,240,229,.95);border-radius:20px 20px 0 0;box-shadow:inset 0 2px 0 rgba(255,255,255,.75),0 -10px 30px rgba(20,10,4,.35)}
+.grab{position:absolute;left:177px;top:8px;width:36px;height:4px;border-radius:2px;background:rgba(15,21,42,.28)}
+.pk{flex:1;height:120px;background:#fff;border:2px solid rgba(15,21,42,.10);border-radius:8px;box-shadow:2px 4px 0 rgba(15,21,42,.10);padding:12px}
+.pk .tt{font:700 17px/22px "Qala Test",serif;color:#0F152A;margin-top:2px}
+.pk .bd{font:400 12px/16px "DM Mono",monospace;color:#4A5578;margin-top:4px}
+.tab{left:0;right:0;bottom:0;height:78px;background:rgba(20,12,6,.62);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid rgba(255,255,255,.14);display:flex;padding:10px 6px 0}
+.tab div{flex:1;text-align:center;font:500 11px/14px "DM Mono",monospace;color:rgba(255,255,255,.78);padding-top:8px;position:relative}
+.tab div.on{color:#FB923C}
+.tab div.on::before{content:"";position:absolute;left:50%;top:0;width:18px;height:3px;margin-left:-9px;border-radius:2px;background:#FB923C}
+.arr{position:absolute;top:410px;width:48px;text-align:center;font:500 11px "DM Mono",monospace;color:#6B5F50}
+</style>
+</helmet>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="i-back" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+<symbol id="i-grid" viewBox="0 0 24 24"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+<symbol id="i-bike" viewBox="0 0 24 24"><circle cx="18.5" cy="17.5" r="3.5"/><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="15" cy="5" r="1"/><path d="M12 17.5V14l-3-3 4-3 2 3h2"/></symbol>
+<symbol id="i-db" viewBox="0 0 24 24"><path d="M14.4 14.4 9.6 9.6"/><path d="M18.657 21.485a2 2 0 1 1-2.829-2.828l-1.767 1.768a2 2 0 1 1-2.829-2.829l6.364-6.364a2 2 0 1 1 2.829 2.829l-1.768 1.767a2 2 0 1 1 2.828 2.829z"/><path d="m21.5 21.5-1.4-1.4"/><path d="M3.9 3.9 2.5 2.5"/><path d="M6.404 12.768a2 2 0 1 1-2.829-2.829l1.768-1.767a2 2 0 1 1-2.828-2.829l2.828-2.828a2 2 0 1 1 2.829 2.828l1.767-1.768a2 2 0 1 1 2.829 2.829z"/></symbol>
+<symbol id="i-flame" viewBox="0 0 24 24"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></symbol>
+<symbol id="i-hist" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></symbol>
+<symbol id="i-gear" viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></symbol>
+</defs></svg>
+<div class="board">
+<div class="hd"><div class="num">6</div><div><div class="t">Rail, handing over from Today</div><div class="c">Today keeps the live film. Start warm-up softens it into the stationary wash over about half a second, the way Nothing's Atmosphere eases from the sharp lock screen to the frosted home screen. Today's content fades out as the warm-up's fades in. Three moments of one transition; Today here is a sketch from the code, not a screenshot.</div></div></div>
+<div class="row">
+
+<div class="col"><div class="lab">Today, film playing</div>
+<div class="ph">
+<div class="bg b1"></div><div class="sc1"></div>
+<div class="lay">
+<div class="ab" style="left:20px;top:34px"><div class="k ts">Friday · lift day</div><div class="h1 ts" style="font-size:36px;line-height:42px">Today</div></div>
+<div class="ab" style="right:8px;top:30px;display:flex"><div class="ib"><svg class="ic"><use href="#i-hist"/></svg></div><div class="ib"><svg class="ic"><use href="#i-gear"/></svg></div></div>
+<i class="ln d" style="top:176px;height:58px"></i><i class="ln" style="top:276px;height:60px"></i><i class="ln" style="top:364px;height:60px"></i><i class="ln" style="top:452px;height:60px"></i><i class="ln" style="top:540px;height:44px"></i>
+<div class="nd d" style="left:30px;top:150px;width:24px;height:24px"><svg class="ic" style="width:13px;height:13px"><use href="#i-check"/></svg></div>
+<div class="nd cur" style="left:22px;top:234px;width:40px;height:40px"><svg class="ic"><use href="#i-bike"/></svg></div>
+<div class="nd" style="left:28px;top:336px;width:28px;height:28px"><svg class="ic" style="width:14px;height:14px"><use href="#i-db"/></svg></div>
+<div class="nd" style="left:28px;top:424px;width:28px;height:28px"></div>
+<div class="nd" style="left:28px;top:512px;width:28px;height:28px"></div>
+<div class="nd" style="left:28px;top:584px;width:28px;height:28px"></div>
+<div class="ab" style="left:80px;right:16px;top:126px">
+<div class="k em ts">Now · warm-up, then lift</div>
+<div class="h1 ts" style="margin-top:4px">Lower A · Squat day</div>
+<div class="ts" style="font:400 12px/16px 'DM Mono',monospace;color:rgba(255,255,255,.9)">12 min warm-up · 52 min lift</div>
+<div style="display:flex;align-items:baseline;gap:8px;margin-top:6px"><div class="fig ts">245</div><div class="ts" style="font:500 14px 'DM Mono',monospace;color:rgba(255,255,255,.9)">lb × 4</div></div>
+<div style="display:flex;align-items:center;margin-top:6px;padding-left:2px"><i class="fc f45"></i><i class="fc f45"></i><i class="fc f10"></i></div>
+<div class="k ts" style="margin-top:2px">45 · 45 · 10</div>
+<div class="ts" style="font:400 13px/18px 'DM Mono',monospace;color:rgba(255,255,255,.92);margin-top:14px">A little under your average, so squat holds.</div>
+<div class="btn" style="margin-top:12px"><svg class="ic"><use href="#i-flame"/></svg>Start warm-up</div>
+</div>
+</div>
+<div class="cr" style="top:648px;height:200px"><i class="grab"></i>
+<div style="display:flex;gap:8px;padding:28px 12px 0"><div class="pk"><div class="gl">Next run</div><div class="tt">Easy run</div><div class="bd">3.0 mi, 6 pm</div></div><div class="pk"><div class="gl">Readiness</div><div class="tt">72 of 100</div><div class="bd">A little under your average.</div></div></div>
+</div>
+<div class="ab tab"><div class="on">Today</div><div>Plan</div><div>Body</div><div>Progress</div><div>Coach</div></div>
+</div>
+</div>
+
+<div class="col"><div class="lab">Start warm-up tapped, about 0.3 s</div>
+<div class="ph">
+<div class="bg b2"></div><div class="sc2"></div>
+<div class="lay" style="opacity:.35">
+<div class="lay">
+<div class="ab" style="left:20px;top:34px"><div class="k ts">Friday · lift day</div><div class="h1 ts" style="font-size:36px;line-height:42px">Today</div></div>
+<div class="ab" style="right:8px;top:30px;display:flex"><div class="ib"><svg class="ic"><use href="#i-hist"/></svg></div><div class="ib"><svg class="ic"><use href="#i-gear"/></svg></div></div>
+<i class="ln d" style="top:176px;height:58px"></i><i class="ln" style="top:276px;height:60px"></i><i class="ln" style="top:364px;height:60px"></i><i class="ln" style="top:452px;height:60px"></i><i class="ln" style="top:540px;height:44px"></i>
+<div class="nd d" style="left:30px;top:150px;width:24px;height:24px"><svg class="ic" style="width:13px;height:13px"><use href="#i-check"/></svg></div>
+<div class="nd cur" style="left:22px;top:234px;width:40px;height:40px"><svg class="ic"><use href="#i-bike"/></svg></div>
+<div class="nd" style="left:28px;top:336px;width:28px;height:28px"><svg class="ic" style="width:14px;height:14px"><use href="#i-db"/></svg></div>
+<div class="nd" style="left:28px;top:424px;width:28px;height:28px"></div>
+<div class="nd" style="left:28px;top:512px;width:28px;height:28px"></div>
+<div class="nd" style="left:28px;top:584px;width:28px;height:28px"></div>
+<div class="ab" style="left:80px;right:16px;top:126px">
+<div class="k em ts">Now · warm-up, then lift</div>
+<div class="h1 ts" style="margin-top:4px">Lower A · Squat day</div>
+<div class="ts" style="font:400 12px/16px 'DM Mono',monospace;color:rgba(255,255,255,.9)">12 min warm-up · 52 min lift</div>
+<div style="display:flex;align-items:baseline;gap:8px;margin-top:6px"><div class="fig ts">245</div><div class="ts" style="font:500 14px 'DM Mono',monospace;color:rgba(255,255,255,.9)">lb × 4</div></div>
+<div style="display:flex;align-items:center;margin-top:6px;padding-left:2px"><i class="fc f45"></i><i class="fc f45"></i><i class="fc f10"></i></div>
+<div class="k ts" style="margin-top:2px">45 · 45 · 10</div>
+<div class="ts" style="font:400 13px/18px 'DM Mono',monospace;color:rgba(255,255,255,.92);margin-top:14px">A little under your average, so squat holds.</div>
+<div class="btn" style="margin-top:12px"><svg class="ic"><use href="#i-flame"/></svg>Start warm-up</div>
+</div>
+</div>
+<div class="cr" style="top:648px;height:200px"><i class="grab"></i>
+<div style="display:flex;gap:8px;padding:28px 12px 0"><div class="pk"><div class="gl">Next run</div><div class="tt">Easy run</div><div class="bd">3.0 mi, 6 pm</div></div><div class="pk"><div class="gl">Readiness</div><div class="tt">72 of 100</div><div class="bd">A little under your average.</div></div></div>
+</div>
+<div class="ab tab"><div class="on">Today</div><div>Plan</div><div>Body</div><div>Progress</div><div>Coach</div></div>
+</div>
+</div>
+</div>
+
+<div class="col"><div class="lab">Warm-up, frosted still</div>
+<div class="ph">
+<div class="bg b3"></div><div class="sc3"></div>
+<div class="ab head">
+<div class="gb sq"><svg class="ic"><use href="#i-back"/></svg></div>
+<div class="mid"><div class="k ts">Before Lower A · 12 min</div><div class="h1 ts">Warm-up</div></div>
+<div class="gb sq"><svg class="ic"><use href="#i-grid"/></svg></div>
+<div class="gb">Skip</div>
+</div>
+<i class="ln" style="top:170px;height:180px"></i><i class="ln" style="top:380px;height:172px"></i><i class="ln" style="top:582px;height:76px"></i>
+<div class="nd cur" style="left:22px;top:130px;width:40px;height:40px"><svg class="ic"><use href="#i-bike"/></svg></div>
+<div class="nl cur" style="top:174px">Cardio</div>
+<div class="nd" style="left:28px;top:350px;width:28px;height:28px">2</div>
+<div class="nd" style="left:28px;top:552px;width:28px;height:28px">3</div>
+<div class="nd" style="left:28px;top:658px;width:28px;height:28px"><svg class="ic" style="width:14px;height:14px"><use href="#i-db"/></svg></div>
+<div class="nl" style="top:690px">Lift</div>
+<div class="ab" style="left:80px;right:16px;top:96px">
+<div class="k em ts">Step 1 of 3 · Easy cardio</div>
+<div class="clock ts" style="margin-top:6px">8:00</div>
+<div style="display:flex;align-items:center;gap:8px;margin-top:8px"><div class="gb">&minus;1 min</div><div class="gb">+1 min</div><div class="k ts" style="margin-left:2px">of 8:00</div></div>
+<div class="btn" style="margin-top:12px"><svg class="ic"><use href="#i-bike"/></svg>Start cardio</div>
+</div>
+<div class="ab card" style="top:340px">
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:2px"><div class="ct" style="flex:1">Soft tissue</div><div class="hintx">3 min</div></div>
+<div class="crow"><div class="chk"></div><div class="tx"><div class="tl">Quads</div><div class="dt2">Roller, 2 min. Sore (4), so no Theragun.</div></div><i class="gear g1"></i></div>
+<div class="crow"><div class="chk"></div><div class="tx"><div class="tl">Glutes</div><div class="dt2">Theragun, 1 min each side.</div></div><i class="gear g2"></i></div>
+</div>
+<div class="ab card" style="top:542px">
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:2px"><div class="ct" style="flex:1">Mobility</div><div class="hintx">2 min</div></div>
+<div class="crow"><div class="chk"></div><div class="tx"><div class="tl">Hip 90/90</div><div class="dt2">5 each side, slow.</div></div></div>
+<div class="crow"><div class="chk"></div><div class="tx"><div class="tl">Ankle rocks</div><div class="dt2">10 each side.</div></div></div>
+</div>
+<div class="ab bot"><div class="btn"><svg class="ic"><use href="#i-db"/></svg>Start workout</div></div>
+</div>
+</div>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1400,"height":1060}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
