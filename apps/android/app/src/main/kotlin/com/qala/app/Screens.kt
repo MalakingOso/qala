@@ -84,7 +84,7 @@ fun Screen(
             programDay(today), onBack,
             onStart = { onPush(Route.Workout) }, onSkip = { onPush(Route.Workout) }, onAllExercises = { onPush(Route.AllExercises) },
         )
-        Route.Workout -> WorkoutScreen(programDay(today), onBack, onRest = { onPush(Route.Rest) }, onAllExercises = { onPush(Route.AllExercises) }, onFinished = { onPush(Route.SessionComplete) })
+        Route.Workout -> WorkoutScreen(programDay(today), onBack, onRest = { onPush(Route.Rest) }, onAllExercises = { onPush(Route.AllExercises) }, onWarmup = { onPush(Route.WarmUp) }, onFinished = { onPush(Route.SessionComplete) })
         Route.Rest -> RestScreen(onBack, onAllExercises = { onPush(Route.AllExercises) })
         Route.Run -> Plain(scroll, topBar) { RunRoute(snapshot, onBack) }
         Route.AllExercises -> AllExercisesScreen(programDay(today), onBack, onWorkout = { onPush(Route.Workout) })

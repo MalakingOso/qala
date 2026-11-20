@@ -95,7 +95,7 @@ internal val EaseIn = CubicBezierEasing(0.42f, 0f, 1f, 1f)
  * animations started from composition, so a scale above 1 needs nothing here. This check is the explicit snap: the
  * rail's motion is frozen, not merely fast, when animations are off, whatever the Compose version does.
  */
-internal fun animationsEnabled(context: Context): Boolean =
+fun animationsEnabled(context: Context): Boolean =
     ValueAnimator.areAnimatorsEnabled() &&
         Settings.Global.getFloat(context.contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) != 0f
 

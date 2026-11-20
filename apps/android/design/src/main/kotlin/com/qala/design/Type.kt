@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorProducer
 import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
@@ -172,6 +173,31 @@ fun QalaText(
         style = style.copy(color = resolved, textAlign = textAlign, fontFamily = face),
         overflow = TextOverflow.Ellipsis,
         maxLines = maxLines,
+    )
+}
+
+/**
+ * Text whose colour is read when it is drawn, not when it is composed: a colour that follows a drag (Today's labels turn from white
+ * to ink as the sheet comes up) changes without recomposing the text.
+ */
+@Composable
+fun QalaText(
+    text: String,
+    color: ColorProducer,
+    modifier: Modifier = Modifier,
+    style: TextStyle = QalaType.body,
+    textAlign: TextAlign = TextAlign.Unspecified,
+    maxLines: Int = Int.MAX_VALUE,
+) {
+    val title = LocalTitleFamily.current
+    val face = if (style.fontFamily === QalaTestFamily && title !== QalaTestFamily) title else style.fontFamily
+    BasicText(
+        text = text,
+        modifier = modifier,
+        style = style.copy(textAlign = textAlign, fontFamily = face),
+        overflow = TextOverflow.Ellipsis,
+        maxLines = maxLines,
+        color = color,
     )
 }
 

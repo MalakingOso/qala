@@ -29,15 +29,20 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.hideFromAccessibility
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.zIndex
 import com.qala.app.settings.SettingsFocus
+import com.qala.app.workout.Alerts
+import com.qala.app.workout.AppVisibility
+import com.qala.app.workout.WorkoutEvent
 import com.qala.app.run.RunState
 import com.qala.app.skip.SkipSheet
 import com.qala.app.today.Destination
@@ -87,9 +92,9 @@ fun QalaApp() {
         ThemeMode.Light -> false
         ThemeMode.System -> isSystemInDarkTheme()
     }
-    SystemBars(dark)
     QalaTheme(dark, if (look.titleFont == TitleFont.Faustina) FaustinaFamily else QalaTestFamily) {
         var nav by rememberSaveable(stateSaver = Nav.Saver) { mutableStateOf(Nav()) }
+        SystemBars(dark, overFilm = nav.route == Route.Today)
         // The plate calculator's Edit plates lands on Settings scrolled to the inventory.
         var settingsFocus by remember { mutableStateOf<SettingsFocus?>(null) }
         val back = nav.back()
@@ -105,76 +110,127 @@ fun QalaApp() {
             }
         }
 
-        // A tapped rest notification opens Rest over the workout it belongs to.
+        // A tapped workout notification opens Rest while one is running, else the workout (or its warm-up, before the lifting began).
+        // It waits for the stored draft to be taken up, so after a killed process it still knows where to go.
         val requested by container.pendingRoute.collectAsState()
         LaunchedEffect(requested) {
             when (requested) {
-                Route.Rest -> nav = Nav(Route.Workout).push(Route.Rest)
+                Route.Workout -> {
+                    container.workout.awaitLoaded()
+                    val open = container.workout.state.value
+                    nav = when {
+                        open == null -> Nav()
+                        open.rest != null -> Nav(Route.Workout).push(Route.Rest)
+                        !open.liftStarted -> Nav().push(Route.WarmUp)
+                        else -> Nav(Route.Workout)
+                    }
+                }
                 Route.Run -> nav = Nav().push(Route.Run)
                 else -> {}
             }
             if (requested != null) container.pendingRoute.value = null
         }
 
+        // The timers answer to the whole app, not to Rest: the warning buzzes and ticks, the end buzzes and, from any screen but a
+        // run or the summary, jumps to the workout with the next set open. The rest itself stays open until that set is logged.
+        val context = LocalContext.current
+        val haptic = LocalHapticFeedback.current
+        val alerts = remember(context, haptic) { Alerts(context, haptic) }
+        val latest by rememberUpdatedState(nav)
+        val alertSetting by container.workout.gym.collectAsState()
+        val alertNow by rememberUpdatedState(alertSetting.rest.alert)
+        LaunchedEffect(container) {
+            container.workout.events.collect { event ->
+                if (!AppVisibility.visible) return@collect
+                when (event) {
+                    is WorkoutEvent.RestWarning -> alerts.warn()
+                    is WorkoutEvent.CardioOver -> alerts.over(alertNow)
+                    is WorkoutEvent.RestOver -> {
+                        alerts.over(alertNow)
+                        event.next?.let { container.workout.show(it.exercise, it.set) }
+                        if (latest.route != Route.Workout && latest.route != Route.Run && latest.route != Route.SessionComplete) nav = Nav(Route.Workout)
+                    }
+                }
+            }
+        }
+
         val use24h = DateFormat.is24HourFormat(LocalContext.current)
         val snapshot by container.engine.snapshot.collectAsState()
         val resume by container.workout.hasDraft.collectAsState()
-        val today = remember(snapshot, use24h, resume) { todayLoad(snapshot, use24h, resume) }
+        val resumeWarmup by container.workout.resumeAtWarmup.collectAsState()
+        val today = remember(snapshot, use24h, resume, resumeWarmup) { todayLoad(snapshot, use24h, resume, resumeWarmup) }
         val ui = remember { TodayUiState() }
         LaunchedEffect(nav.route) { if (nav.route != Route.Today) ui.reset() }
 
-        Box(Modifier.fillMaxSize().background(Qala.colors.bg), contentAlignment = Alignment.TopCenter) {
-            // Content scrolls under the status bar; this keeps the clock and icons readable over it.
-            Spacer(
-                Modifier
-                    .align(Alignment.TopStart)
-                    .fillMaxWidth()
-                    .windowInsetsTopHeight(WindowInsets.statusBars)
-                    .background(Qala.colors.bg)
-                    .zIndex(1f),
+        // The shell's one call for the route's screen; each route gets a Box to fill, and the scroll state it owns.
+        val screen: @Composable (ScrollState) -> Unit = { scroll ->
+            Screen(
+                route = nav.route,
+                scroll = scroll,
+                today = today,
+                snapshot = snapshot,
+                ui = ui,
+                topBar = { modifier ->
+                    TopBar(
+                        onHistory = { nav = nav.push(Route.History) },
+                        onSettings = { nav = nav.push(Route.Settings) },
+                        modifier = modifier,
+                    )
+                },
+                onGo = { to ->
+                    if (to == Destination.Skip) (today as? TodayLoad.Ready)?.let { ui.skip.show(it.model.skip) } else nav = nav.go(to)
+                },
+                onBack = { nav.back()?.let { nav = it } },
+                onPlates = { nav = nav.push(Route.Plates) },
+                onEditPlates = { settingsFocus = SettingsFocus.Plates; nav = nav.push(Route.Settings) },
+                onPush = { nav = nav.push(it) },
+                settingsFocus = settingsFocus,
+                onSettingsFocused = { settingsFocus = null },
             )
-            Column(
-                Modifier
-                    .widthIn(max = ContentMaxWidth)
-                    .fillMaxSize()
-                    .then(if (nav.route == Route.CheckIn || nav.route == Route.Coach || nav.route == Route.PlanPicker) Modifier.imePadding() else Modifier)      // the note, the coach's composer and the starting weights stay above the keyboard
-                    .semantics { if (ui.skip.open) hideFromAccessibility() },                        // the skip sheet is modal: the screen behind it is not reachable
-            ) {
-                key(nav.route) {       // each screen keeps its own scroll position
+        }
+        val tabBar: @Composable (Boolean, Modifier) -> Unit = { glass, modifier ->
+            TabBar(
+                items = Route.tabs.map { TabItems.getValue(it) },
+                selectedIndex = Route.tabs.indexOf(nav.route.tab),
+                onSelect = { nav = nav.selectTab(Route.tabs[it]) },
+                modifier = modifier,
+                glass = glass,
+            )
+        }
+
+        Box(Modifier.fillMaxSize().background(Qala.colors.bg), contentAlignment = Alignment.TopCenter) {
+            if (nav.route == Route.Today) {
+                // Today is full window: the film runs under the status bar and the tab bar, and the tab bar is dark glass over it.
+                key(nav.route) {
                     val scroll = rememberScrollState()
-                    Box(Modifier.weight(1f).fillMaxWidth()) {
-                        Screen(
-                            route = nav.route,
-                            scroll = scroll,
-                            today = today,
-                            snapshot = snapshot,
-                            ui = ui,
-                            topBar = { modifier ->
-                                TopBar(
-                                    onHistory = { nav = nav.push(Route.History) },
-                                    onSettings = { nav = nav.push(Route.Settings) },
-                                    modifier = modifier,
-                                )
-                            },
-                            onGo = { to ->
-                                if (to == Destination.Skip) (today as? TodayLoad.Ready)?.let { ui.skip.show(it.model.skip) } else nav = nav.go(to)
-                            },
-                            onBack = { nav.back()?.let { nav = it } },
-                            onPlates = { nav = nav.push(Route.Plates) },
-                            onEditPlates = { settingsFocus = SettingsFocus.Plates; nav = nav.push(Route.Settings) },
-                            onPush = { nav = nav.push(it) },
-                            settingsFocus = settingsFocus,
-                            onSettingsFocused = { settingsFocus = null },
-                        )
+                    Box(Modifier.fillMaxSize().semantics { if (ui.skip.open) hideFromAccessibility() }) {       // the skip sheet is modal: the screen behind it is not reachable
+                        screen(scroll)
+                        tabBar(true, Modifier.align(Alignment.BottomCenter))
                     }
                 }
-                // The lifting flow has no tab bar: a thumb mid-set should not land on Plan, and the screens want the height.
-                if (!nav.route.isFocus) {
-                    TabBar(
-                        items = Route.tabs.map { TabItems.getValue(it) },
-                        selectedIndex = Route.tabs.indexOf(nav.route.tab),
-                        onSelect = { nav = nav.selectTab(Route.tabs[it]) },
-                    )
+            } else {
+                // Content scrolls under the status bar; this keeps the clock and icons readable over it.
+                Spacer(
+                    Modifier
+                        .align(Alignment.TopStart)
+                        .fillMaxWidth()
+                        .windowInsetsTopHeight(WindowInsets.statusBars)
+                        .background(Qala.colors.bg)
+                        .zIndex(1f),
+                )
+                Column(
+                    Modifier
+                        .widthIn(max = ContentMaxWidth)
+                        .fillMaxSize()
+                        .then(if (nav.route == Route.CheckIn || nav.route == Route.Coach || nav.route == Route.PlanPicker) Modifier.imePadding() else Modifier)      // the note, the coach's composer and the starting weights stay above the keyboard
+                        .semantics { if (ui.skip.open) hideFromAccessibility() },                        // the skip sheet is modal: the screen behind it is not reachable
+                ) {
+                    key(nav.route) {       // each screen keeps its own scroll position
+                        val scroll = rememberScrollState()
+                        Box(Modifier.weight(1f).fillMaxWidth()) { screen(scroll) }
+                    }
+                    // The lifting flow has no tab bar: a thumb mid-set should not land on Plan, and the screens want the height.
+                    if (!nav.route.isFocus) tabBar(false, Modifier)
                 }
             }
             if (nav.route == Route.Today) TodayMenu(today, ui, Modifier.zIndex(2f))
@@ -184,14 +240,17 @@ fun QalaApp() {
     }
 }
 
-/** The status and navigation bars follow the app's own theme, not the system's: Light on a dark phone still needs dark icons. */
+/**
+ * The status and navigation bars follow the app's own theme, not the system's: Light on a dark phone still needs dark icons.
+ * Today ([overFilm]) draws its film under both bars, so its icons are light in either theme.
+ */
 @Composable
-private fun SystemBars(dark: Boolean) {
+private fun SystemBars(dark: Boolean, overFilm: Boolean) {
     var context = LocalContext.current
     while (context is ContextWrapper && context !is ComponentActivity) context = context.baseContext
     val activity = context as? ComponentActivity ?: return
     SideEffect {
-        val bars = if (dark) SystemBarStyle.dark(AndroidColor.TRANSPARENT) else SystemBarStyle.light(AndroidColor.TRANSPARENT, AndroidColor.TRANSPARENT)
+        val bars = if (dark || overFilm) SystemBarStyle.dark(AndroidColor.TRANSPARENT) else SystemBarStyle.light(AndroidColor.TRANSPARENT, AndroidColor.TRANSPARENT)
         activity.enableEdgeToEdge(statusBarStyle = bars, navigationBarStyle = bars)
     }
 }

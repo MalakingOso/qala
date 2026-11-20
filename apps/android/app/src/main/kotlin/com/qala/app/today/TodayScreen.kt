@@ -1,18 +1,25 @@
 package com.qala.app.today
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -20,8 +27,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -32,38 +39,51 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.layout.layout
-import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.isTraversalGroup
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.unit.Constraints
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.zIndex
 import com.qala.app.LocalAppContainer
+import com.qala.app.plates.PlateFaces
+import com.qala.app.plates.rememberPlateHint
 import com.qala.app.skip.SkipSheetState
 import com.qala.app.skip.apply
 import com.qala.app.skip.skipIcon
 import com.qala.app.skip.undoWrites
+import com.qala.data.model.GymSettings
+import com.qala.data.today.DayKind
 import com.qala.design.Card
-import com.qala.design.CardNotch
 import com.qala.design.DayMenu
-import com.qala.design.DayRail
-import com.qala.design.DmMonoFamily
+import com.qala.design.DayTimelineRow
+import com.qala.design.DayTimelineRowHeight
+import com.qala.design.DayTimelineVertical
 import com.qala.design.GroupLabel
+import com.qala.design.IconButton
 import com.qala.design.IconTile
 import com.qala.design.LinkButton
 import com.qala.design.PreviewBar
@@ -75,12 +95,10 @@ import com.qala.design.QalaText
 import com.qala.design.QalaTokens
 import com.qala.design.QalaType
 import com.qala.design.SecondaryButton
+import com.qala.design.TabBarHeight
 import com.qala.design.beamerSurface
 import com.qala.design.nextStage
 import kotlinx.coroutines.launch
-import com.qala.design.rememberCardNotch
-import com.qala.design.trackNotch
-import com.qala.data.today.DayKind
 
 /**
  * Today's own state: which stage is being previewed and whether the menu is open. It lives in the shell, above the
@@ -108,17 +126,13 @@ class TodayUiState {
     }
 }
 
-/** The pinned head's lower edge fades in over this much scroll once content slides under it. */
-private val HeadBorderRamp = 12.dp
-
 /**
- * Today (DESIGN 7.1, mockups/today-rail-full.html): the pinned head, five cards that give way around the fixed day
- * rail, and the rail itself. It fills the content area above the tab bar and scrolls on [scroll], which the shell owns.
+ * Today (DECISIONS S48, DESIGN 7.1): the day's film behind the whole screen, the head and the day timeline over it, the hero for the
+ * stage being looked at, and a three-stop drawer under it holding everything else. [TodayLayout] places the layers and the
+ * [DrawerState] moves them; this composes what goes in each.
  *
- * The brand bar [topBar] scrolls away with the content. The head sits in the scrolling column too, so it rides up
- * with the content under the bar and then sticks at the status bar: one `offset` that adds back whatever the scroll
- * has moved past the bar's height. The rail is a sibling of the column, centred in the band between the stuck head
- * and the tab bar; it never scrolls, and each card cuts its own bite around it.
+ * Nothing here reads the drawer while composing except the booleans that decide which version of the timeline is the one on show,
+ * so a drag recomposes nothing. [scroll] is the list's, which the shell owns.
  */
 @Composable
 fun TodayScreen(
@@ -129,85 +143,301 @@ fun TodayScreen(
     onGo: (Destination) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val c = Qala.colors
-    val density = LocalDensity.current
     val model = (load as? TodayLoad.Ready)?.model
-    var topBarPx by remember { mutableIntStateOf(0) }
-    var headPx by remember { mutableIntStateOf(0) }
-    val band = remember { mutableStateOf(Rect.Zero) }
+    val drawer = rememberDrawerState()
+    val density = LocalDensity.current
     val statusTop = WindowInsets.statusBars.getTop(density)
-    val viewing = model?.let { viewingIndex(it.stages, it.nowIndex, ui.previewing) } ?: 0
-    val rampPx = with(density) { HeadBorderRamp.toPx() }
+    val navBottom = WindowInsets.navigationBars.getBottom(density)
+    // Back closes the drawer, one press from half or full, before it leaves Today.
+    BackHandler(enabled = model != null && drawer.stop != DrawerStop.Closed) { drawer.settle(DrawerStop.Closed) }
 
-    Box(modifier.fillMaxSize()) {
-        Column(Modifier.fillMaxSize().verticalScroll(scroll)) {
-            Column(Modifier.statusBarsPadding()) {
-                topBar(Modifier.padding(horizontal = 20.dp).onSizeChanged { topBarPx = it.height })
-                Column(
-                    Modifier
-                        .fillMaxWidth()
-                        .zIndex(1f)
-                        .offset { IntOffset(0, (scroll.value - topBarPx).coerceAtLeast(0)) }
-                        .onSizeChanged { headPx = it.height }
-                        .background(c.bg)
-                        .pointerInput(Unit) { }          // the head is opaque to touches too: a button scrolled under it is not pressed through it
-                        .drawBehind {
-                            // The edge appears as content starts sliding under the head, not while it still rests under the bar.
-                            val stuck = ((scroll.value - topBarPx) / rampPx).coerceIn(0f, 1f)
-                            val border = QalaTokens.borderWidth.toPx()
-                            drawRect(c.border.copy(alpha = c.border.alpha * stuck), Offset(0f, size.height - border), Size(size.width, border))
-                        },
-                ) {
-                    Column(Modifier.padding(horizontal = 20.dp).padding(top = 16.dp)) {
-                        GroupLabel(model?.eyebrow ?: "Today", Modifier.padding(bottom = 2.dp))
-                        QalaText("Today", Modifier.semantics { heading() }, QalaType.pageTitle, c.fg)
-                    }
-                    PreviewBar(
-                        visible = model != null && viewing != model.nowIndex,
-                        label = model?.stages?.getOrNull(viewing)?.label.orEmpty(),
-                        onBackToNow = { ui.previewing = null },
-                        modifier = Modifier.padding(horizontal = 20.dp),
-                    )
-                    Spacer(Modifier.height(12.dp))
-                }
-                Column(Modifier.padding(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 32.dp)) {
-                    if (model == null) {
-                        PlainNote(load)
-                    } else {
-                        val notchBand = { band.value }
-                        val hero = model.hero(viewing)
-                        val saveError by LocalAppContainer.current.workout.saveError.collectAsState()
-                        saveError?.let { message -> RailCard(rememberCardNotch(notchBand)) { SaveErrorContent(message) } }
-                        model.status?.let { card -> RailCard(rememberCardNotch(notchBand)) { StatusContent(card, model, ui) } }
-                        RailCard(rememberCardNotch(notchBand)) { HeroContent(hero, onGo) }
-                        RailCard(rememberCardNotch(notchBand)) { InfoContent(model.nextRun, onGo) }
-                        RailCard(rememberCardNotch(notchBand)) { InfoContent(model.readiness, onGo) }
-                        RailCard(rememberCardNotch(notchBand)) { WeekContent(model.week, onGo) }
-                        RailCard(rememberCardNotch(notchBand)) { InfoContent(model.weight, onGo) }
-                    }
+    Box(modifier.fillMaxSize().then(if (model != null) Modifier.drawerGestures(drawer) else Modifier)) {
+        TodayFilm(
+            parallaxPx = { drawer.anchors?.let { -0.08f * (it.closed - drawer.t) } ?: 0f },
+            extraScrim = { 0.26f * drawer.q1 + 0.2f * drawer.q2 },
+        )
+        if (model == null) {
+            Box(Modifier.align(Alignment.BottomCenter).padding(start = 16.dp, end = 16.dp, bottom = TabBarHeight + 24.dp).navigationBarsPadding()) { PlainNote(load) }
+            TodayIcons(onGo, Modifier.align(Alignment.TopEnd).statusBarsPadding().padding(end = 8.dp))
+        } else {
+            val viewing = viewingIndex(model.stages, model.nowIndex, ui.previewing)
+            val hero = model.hero(viewing)
+            // Which timeline is the one on show: the vertical list while the sheet is mostly down, the row once it is mostly up.
+            val rowActive by remember(drawer) { derivedStateOf { drawer.anchors?.rowOnly == true || drawer.q1 >= 0.47f } }
+            // A window too short for a hero over a sheet (a phone on its side) gets the day as one scrolling column over the film.
+            if (LocalConfiguration.current.screenHeightDp < 480) {
+                TodayCompact(model, hero, viewing, ui, scroll, onGo)
+            } else {
+                TodayLayout(drawer, statusTop, navBottom, Modifier.fillMaxSize()) {
+                    TodayContent(model, hero, viewing, ui, drawer, scroll, rowActive, onGo)
                 }
             }
         }
-        if (model != null) {
-            // The band for the rail: from the stuck head's lower edge to the bottom of the content area.
-            Box(
-                Modifier.fillMaxSize().layout { measurable, constraints ->
-                    val top = (statusTop + headPx).coerceIn(0, constraints.maxHeight)
-                    val placeable = measurable.measure(Constraints.fixed(constraints.maxWidth, constraints.maxHeight - top))
-                    layout(constraints.maxWidth, constraints.maxHeight) { placeable.place(0, top) }
-                },
-            ) {
-                DayRail(
-                    stages = model.stages,
-                    viewing = viewing,
-                    onStep = { delta -> ui.show(model, nextStage(model.stages, viewing, delta)) },
-                    onOpenMenu = { ui.menuOpen = true },
-                    onBandChanged = { band.value = it },
-                    modifier = Modifier.align(Alignment.CenterStart),
-                    excludeGestures = !ui.menuOpen && !ui.skip.open,          // a modal over the rail gives Back its edge back
+    }
+}
+
+private val OverFilm = Color.White.copy(alpha = 0.88f)
+private val EmberOnFilm = Color(0xFFFB923C)
+private val FilmShadow = Shadow(Color(0x66000000), Offset(0f, 2f), 10f)
+private val HeroKicker = QalaType.groupLabel.copy(shadow = FilmShadow)
+private val HeroTitle = QalaType.stageTitle.copy(fontSize = 30.sp, lineHeight = 34.sp, shadow = FilmShadow)
+private val HeroMeta = QalaType.body.copy(fontSize = 13.sp, lineHeight = 17.sp, shadow = FilmShadow)
+private val HeroNumber = QalaType.figure.copy(fontSize = 96.sp, lineHeight = 96.sp, letterSpacing = (-0.02).em, shadow = FilmShadow)
+private val HeroUnit = QalaType.figureUnit.copy(fontSize = 14.sp, lineHeight = 18.sp, shadow = FilmShadow)
+private val HeroCaption = QalaType.log.copy(fontSize = 10.sp, lineHeight = 12.sp, shadow = FilmShadow)
+private val PlateHeight = 44f
+
+@Composable
+private fun TodayIcons(onGo: (Destination) -> Unit, modifier: Modifier = Modifier) {
+    Row(modifier) {
+        IconButton(QalaIcons.History, "History", { onGo(Destination.History) }, tint = Color.White)
+        IconButton(QalaIcons.Settings, "Settings", { onGo(Destination.Settings) }, tint = Color.White)
+    }
+}
+
+/** Every layer of Today, each in its own slot for [TodayLayout] to place. */
+@Composable
+private fun TodayContent(
+    model: TodayModel,
+    hero: Hero,
+    viewing: Int,
+    ui: TodayUiState,
+    drawer: DrawerState,
+    scroll: ScrollState,
+    rowActive: Boolean,
+    onGo: (Destination) -> Unit,
+) {
+    val c = Qala.colors
+    val container = LocalAppContainer.current
+    val gym by container.settings.gym.collectAsState(initial = GymSettings())
+    val saveError by container.workout.saveError.collectAsState()
+    val bottomInset = TabBarHeight + WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+
+    // The head: the weekday and the kind of day, the title, and the preview bar while another stage is being previewed.
+    Layer(Slot.Head, Modifier.semantics { isTraversalGroup = true; traversalIndex = -3f }) {
+        Column(Modifier.fillMaxWidth().statusBarsPadding()) {
+            Column(Modifier.padding(start = 20.dp, end = 104.dp, top = 6.dp)) {
+                QalaText(model.eyebrow.uppercase(), Modifier.padding(bottom = 2.dp), HeroKicker, OverFilm, maxLines = 1)
+                QalaText("Today", Modifier.semantics { heading() }, QalaType.pageTitle.copy(fontSize = 36.sp, lineHeight = 42.sp, shadow = FilmShadow), Color.White)
+            }
+            PreviewBar(
+                visible = viewing != model.nowIndex,
+                label = model.stages.getOrNull(viewing)?.label.orEmpty(),
+                onBackToNow = { ui.previewing = null },
+                modifier = Modifier.padding(horizontal = 20.dp),
+            )
+        }
+    }
+    Layer(Slot.Icons) { TodayIcons(onGo) }
+
+    Layer(Slot.TimelineV, Modifier.semantics { isTraversalGroup = true; traversalIndex = -2f }) {
+        DayTimelineVertical(model.stages, viewing, active = !rowActive, onOpenMenu = { ui.menuOpen = true }, onStep = { ui.show(model, nextStage(model.stages, viewing, it)) })
+    }
+    Layer(Slot.TimelineRow, Modifier.semantics { isTraversalGroup = true; traversalIndex = -2f }) {
+        DayTimelineRow(
+            model.stages, viewing, active = rowActive, onOpenMenu = { ui.menuOpen = true }, onStep = { ui.show(model, nextStage(model.stages, viewing, it)) },
+            dock = { drawer.docked }, ink = { smooth((drawer.q2 - 0.02f) / 0.4f) },
+        )
+    }
+
+    // The hero, a part at a time, so the layout can scale and move each one.
+    Layer(Slot.Kicker) { QalaText(hero.kicker.uppercase(), style = HeroKicker, color = if (hero.now) EmberOnFilm else OverFilm, maxLines = 1) }
+    Layer(Slot.Title) { QalaText(hero.title, Modifier.semantics { heading() }, HeroTitle, Color.White, maxLines = 2) }
+    val meta = listOfNotNull(hero.subtitle, hero.detail).joinToString(" · ")
+    if (meta.isNotEmpty()) Layer(Slot.Meta) { QalaText(meta, style = HeroMeta, color = OverFilm, maxLines = 2) }
+    hero.figure?.let { figure ->
+        Layer(Slot.Number) { QalaText(figure.value, style = HeroNumber, color = Color.White, maxLines = 1) }
+        val unit = listOfNotNull(figure.unit, figure.times?.let { "× $it" }).joinToString(" ")
+        if (unit.isNotEmpty()) Layer(Slot.Unit) { QalaText(unit, style = HeroUnit, color = OverFilm, maxLines = 1) }
+        // The plates of one side of the top set follow "Show plates" in Settings.
+        val plateHint = rememberPlateHint(figure.plateWeight, gym.plates, enabled = gym.rest.showPlates && figure.plateWeight != null)
+        if (plateHint != null && plateHint.perSide.isNotEmpty()) {
+            Layer(Slot.Plates) { PlateFaces(plateHint.perSide, gym.plates.plates, height = PlateHeight) }
+            Layer(Slot.Caption) { QalaText(plateHint.shorthand, style = HeroCaption, color = OverFilm, maxLines = 1) }
+        }
+    }
+
+    // The action block: what the stage says and its buttons. White over the film, ink once it is over the cream sheet.
+    Layer(Slot.Action, Modifier.semantics { isTraversalGroup = true; traversalIndex = 0f }) {
+        ActionBlock(hero, saveError, { drawer.q1 }, onGo)
+    }
+
+    // The sheet. Its peek is decoration (the list has the same cards for TalkBack), and the list is always in the semantics tree.
+    Layer(Slot.Sheet, Modifier.clearAndSetSemantics { }) { SheetBody(drawer) }
+    Layer(Slot.Peek, Modifier.clearAndSetSemantics { }) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            PeekTile(model.nextRun, Modifier.weight(1f))
+            PeekTile(model.readiness, Modifier.weight(1f))
+        }
+    }
+    Layer(Slot.List, Modifier.semantics { isTraversalGroup = true; traversalIndex = 1f }) {
+        Column(
+            Modifier
+                .fillMaxSize()
+                .nestedScroll(drawer.nestedScroll)
+                .verticalScroll(scroll)
+                .padding(bottom = bottomInset + 16.dp),
+        ) {
+            model.status?.let { card -> SheetCard { StatusContent(card, model, ui) } }
+            SheetCard { InfoContent(model.readiness, onGo) }
+            Row(Modifier.height(IntrinsicSize.Max), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                SheetCard(Modifier.weight(1f).fillMaxHeight()) { InfoContent(model.nextRun, onGo) }
+                SheetCard(Modifier.weight(1f).fillMaxHeight()) { WeekContent(model.week, onGo) }
+            }
+            SheetCard { InfoContent(model.weight, onGo) }
+        }
+    }
+    Layer(Slot.DayLabel) { GroupLabel("The day") }
+    Layer(Slot.Handle) { Handle(drawer) }
+}
+
+/** The day on a window too short for the drawer: the head, the row, the hero and its buttons, and the cards, in one column that scrolls. */
+@Composable
+private fun TodayCompact(model: TodayModel, hero: Hero, viewing: Int, ui: TodayUiState, scroll: ScrollState, onGo: (Destination) -> Unit) {
+    val container = LocalAppContainer.current
+    val saveError by container.workout.saveError.collectAsState()
+    val bottomInset = TabBarHeight + WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+    Box(Modifier.fillMaxSize().background(Color(0x80140A04))) {
+        Column(Modifier.fillMaxSize().verticalScroll(scroll).statusBarsPadding().padding(horizontal = 20.dp).padding(bottom = bottomInset + 16.dp)) {
+            QalaText(model.eyebrow.uppercase(), Modifier.padding(top = 6.dp, end = 96.dp), HeroKicker, OverFilm, maxLines = 1)
+            QalaText("Today", Modifier.semantics { heading() }, QalaType.pageTitle.copy(shadow = FilmShadow), Color.White)
+            PreviewBar(visible = viewing != model.nowIndex, label = model.stages.getOrNull(viewing)?.label.orEmpty(), onBackToNow = { ui.previewing = null })
+            Box(Modifier.padding(top = 8.dp).height(DayTimelineRowHeight)) {
+                DayTimelineRow(model.stages, viewing, active = true, onOpenMenu = { ui.menuOpen = true }, onStep = { ui.show(model, nextStage(model.stages, viewing, it)) }, dock = { 0f }, ink = { 0f }, modifier = Modifier.fillMaxWidth())
+            }
+            QalaText(hero.kicker.uppercase(), Modifier.padding(top = 12.dp), HeroKicker, if (hero.now) EmberOnFilm else OverFilm, maxLines = 1)
+            QalaText(hero.title, Modifier.semantics { heading() }, HeroTitle, Color.White, maxLines = 2)
+            val meta = listOfNotNull(hero.subtitle, hero.detail).joinToString(" · ")
+            if (meta.isNotEmpty()) QalaText(meta, style = HeroMeta, color = OverFilm)
+            hero.figure?.let { f -> QalaText(listOfNotNull(f.value, f.unit, f.times?.let { "× $it" }).joinToString(" "), style = HeroNumber.copy(fontSize = 44.sp, lineHeight = 48.sp), color = Color.White) }
+            Spacer(Modifier.height(10.dp))
+            ActionBlock(hero, saveError, { 0f }, onGo)
+            Spacer(Modifier.height(16.dp))
+            model.status?.let { card -> SheetCard { StatusContent(card, model, ui) } }
+            SheetCard { InfoContent(model.readiness, onGo) }
+            SheetCard { InfoContent(model.nextRun, onGo) }
+            SheetCard { WeekContent(model.week, onGo) }
+            SheetCard { InfoContent(model.weight, onGo) }
+        }
+        TodayIcons(onGo, Modifier.align(Alignment.TopEnd).statusBarsPadding().padding(end = 8.dp))
+    }
+}
+
+/** The action block between the hero and the list: the save error, the stage's own lines, Start, and what goes with it. */
+@Composable
+private fun ActionBlock(hero: Hero, saveError: String?, ink: () -> Float, onGo: (Destination) -> Unit) {
+    val c = Qala.colors
+    // White over the film, the secondary ink over the cream sheet, turning as the sheet comes up. Read when drawn.
+    val text = { lerp(OverFilm, c.fgSecondary, ink()) }
+    val accent = { lerp(EmberOnFilm, c.accent, ink()) }
+    Column(Modifier.fillMaxWidth()) {
+        saveError?.let { message ->
+            // The workout could not be saved and is kept (D34): Resume, in the hero under this, tries again.
+            QalaText("NOT SAVED", accent, style = HeroKicker.copy(shadow = null), maxLines = 1)
+            QalaText(message, text, Modifier.padding(bottom = 6.dp).semantics { liveRegion = LiveRegionMode.Polite }, BodyStyle)
+        }
+        hero.lines.forEach { QalaText(it, text, Modifier.padding(bottom = 2.dp), BodyStyle) }
+        hero.cta?.let {
+            Spacer(Modifier.height(12.dp))
+            PrimaryButton(it.label, onClick = { onGo(it.to) }, icon = it.icon.vector(), enabled = hero.ctaEnabled)
+        }
+        hero.skip?.let {
+            Spacer(Modifier.height(8.dp))
+            SecondaryButton(it.label, onClick = { onGo(it.to) }, small = true)
+        }
+        hero.note?.let { QalaText(it, text, Modifier.padding(top = 10.dp), QalaType.body.copy(fontSize = 12.sp, lineHeight = 17.sp)) }
+        hero.link?.let { LinkButton(it.label, onClick = { onGo(it.to) }) }
+    }
+}
+
+private val CreamLight = Color(0xFFF7F0E5)
+
+/** The sheet itself: a cream body (the theme's own background in the dark) with a rounded top, a white edge, and a shadow that deepens as it comes up. */
+@Composable
+private fun SheetBody(drawer: DrawerState) {
+    val body = if (Qala.dark) Qala.colors.bg else CreamLight
+    Box(
+        Modifier.fillMaxSize().drawBehind {
+            val d = density
+            val radius = 20f * d
+            val shadow = 0.3f * drawer.q1 + 0.2f * drawer.q2
+            if (shadow > 0f) {
+                val reach = 34f * d
+                drawRect(
+                    Brush.verticalGradient(listOf(Color.Transparent, Color(0xFF140A04).copy(alpha = 0.38f * shadow)), startY = -reach, endY = 0f),
+                    Offset(0f, -reach), Size(size.width, reach),
                 )
             }
-        }
+            drawRoundRect(body.copy(alpha = 0.95f), Offset.Zero, size, CornerRadius(radius))
+            // The white edge along the top and round the corners.
+            val inset = d
+            val edge = Path().apply {
+                moveTo(inset, radius + inset)
+                arcTo(Rect(inset, inset, 2 * radius + inset, 2 * radius + inset), 180f, 90f, false)
+                lineTo(size.width - radius - inset, inset)
+                arcTo(Rect(size.width - 2 * radius - inset, inset, size.width - inset, 2 * radius + inset), 270f, 90f, false)
+            }
+            drawPath(edge, Color.White.copy(alpha = 0.7f), style = Stroke(2f * d))
+        },
+    )
+}
+
+/** The grab bar. A tap goes to the next stop (closed, half, full, closed); the same click is what TalkBack and a test use. */
+@Composable
+private fun Handle(drawer: DrawerState) {
+    val c = Qala.colors
+    val state = when (drawer.stop) {
+        DrawerStop.Closed -> "Closed"
+        DrawerStop.Half -> "Half open"
+        DrawerStop.Full -> "Open"
+    }
+    val label = when (drawer.stop) {
+        DrawerStop.Closed -> "Open the drawer"
+        DrawerStop.Half -> "Open the drawer fully"
+        DrawerStop.Full -> "Close the drawer"
+    }
+    Box(
+        Modifier
+            .fillMaxWidth()
+            .height(58.dp)
+            .semantics { contentDescription = "Day drawer"; stateDescription = state }
+            .clickable(interactionSource = null, indication = null, onClickLabel = label, role = Role.Button) { drawer.cycle() }
+            .drawBehind {
+                val d = density
+                drawRoundRect(c.fg.copy(alpha = 0.28f), Offset((size.width - 36f * d) / 2f, 8f * d), Size(36f * d, 4f * d), CornerRadius(2f * d))
+            },
+    )
+}
+
+/** A card in the drawer's list: a plain surface, the Beamer border and shadow, 14 dp inside. */
+@Composable
+private fun SheetCard(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
+    val c = Qala.colors
+    val border = QalaTokens.borderWidth
+    Column(
+        modifier
+            .fillMaxWidth()
+            .padding(bottom = 12.dp)
+            .beamerSurface(c.bgSurface, c.border, QalaTokens.radiusLg, c.shadowCard)
+            .padding(border + 14.dp),
+        content = content,
+    )
+}
+
+/** What the drawer shows while it is closed: the top of the next card or two, cut off by the tab bar. Decoration, not read out. */
+@Composable
+private fun PeekTile(card: InfoCard, modifier: Modifier = Modifier) {
+    val c = Qala.colors
+    val border = QalaTokens.borderWidth
+    Column(
+        modifier
+            .heightIn(min = 132.dp)
+            .beamerSurface(c.bgSurface, c.border, QalaTokens.radiusLg, c.shadowCard)
+            .padding(border + 12.dp),
+    ) {
+        GroupLabel(card.kicker)
+        QalaText(card.title, Modifier.padding(top = 2.dp), QalaType.cardTitle, maxLines = 2)
+        card.lines.firstOrNull()?.let { QalaText(it, Modifier.padding(top = 4.dp), QalaType.body.copy(fontSize = 12.sp, lineHeight = 16.sp), c.fgSecondary, maxLines = 3) }
     }
 }
 
@@ -247,84 +477,12 @@ private fun PlainNote(load: TodayLoad) {
 
 private val BodyStyle = QalaType.body.copy(fontSize = 13.sp, lineHeight = 19.sp)
 
-/** A Today card: 44 dp of start padding past the border so no glyph enters the notch zone, and the bite wired in. */
-@Composable
-private fun RailCard(notch: CardNotch, content: @Composable ColumnScope.() -> Unit) {
-    val c = Qala.colors
-    val border = QalaTokens.borderWidth
-    Column(
-        Modifier
-            .fillMaxWidth()
-            .padding(bottom = 12.dp)
-            .trackNotch(notch)
-            .beamerSurface(c.bgSurface, c.border, QalaTokens.radiusLg, c.shadowCard, notch = notch)
-            .padding(start = border + 44.dp, end = border + 14.dp, top = border + 14.dp, bottom = border + 14.dp),
-        content = content,
-    )
-}
-
 private fun CtaIcon.vector() = when (this) {
     CtaIcon.None -> null
     CtaIcon.CircleCheck -> QalaIcons.CircleCheck
     CtaIcon.Flame -> QalaIcons.Flame
     CtaIcon.Dumbbell -> QalaIcons.Dumbbell
     CtaIcon.SportShoe -> QalaIcons.SportShoe
-}
-
-@Composable
-private fun HeroContent(hero: Hero, onGo: (Destination) -> Unit) {
-    val c = Qala.colors
-    GroupLabel(hero.kicker, color = if (hero.now) c.accent else c.fgMuted)
-    QalaText(hero.title, Modifier.padding(top = 8.dp).semantics { heading() }, QalaType.stageTitle)
-    hero.subtitle?.let { QalaText(it, Modifier.padding(top = 4.dp), QalaType.hint, c.fgMuted) }
-    hero.figure?.let { figure ->
-        Column(
-            Modifier
-                .padding(top = 16.dp)
-                .fillMaxWidth()
-                .drawBehind { drawRect(c.border, Offset.Zero, Size(size.width, 1.dp.toPx())) }
-                .padding(top = 1.dp + 14.dp),
-        ) {
-            GroupLabel(figure.label)
-            QalaText(
-                buildAnnotatedString {
-                    append(figure.value)
-                    figure.unit?.let {
-                        append(" ")
-                        withStyle(SpanStyle(fontFamily = DmMonoFamily, fontWeight = FontWeight.Normal, fontSize = QalaType.figureUnit.fontSize, color = c.fgMuted)) { append(it) }
-                    }
-                    figure.times?.let { append(" × $it") }
-                },
-                Modifier.padding(vertical = 6.dp),
-                QalaType.figure,
-            )
-        }
-    }
-    hero.lines.forEach { QalaText(it, Modifier.padding(top = 8.dp), BodyStyle, c.fgSecondary) }
-    hero.detail?.let {
-        Row(Modifier.padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-            QalaIcon(QalaIcons.ListChecks, null, size = 16.dp, tint = c.fgSecondary)
-            QalaText(it, style = QalaType.body.copy(fontSize = QalaType.groupLabel.fontSize), color = c.fgSecondary)
-        }
-    }
-    hero.cta?.let {
-        Spacer(Modifier.height(18.dp))
-        PrimaryButton(it.label, onClick = { onGo(it.to) }, large = true, icon = it.icon.vector(), enabled = hero.ctaEnabled)
-    }
-    hero.skip?.let {
-        Spacer(Modifier.height(8.dp))
-        SecondaryButton(it.label, onClick = { onGo(it.to) })
-    }
-    hero.note?.let { QalaText(it, Modifier.padding(top = 12.dp), QalaType.body.copy(fontSize = 12.sp, lineHeight = 17.sp), c.fgSecondary) }
-    hero.link?.let { LinkButton(it.label, onClick = { onGo(it.to) }) }
-}
-
-/** The workout could not be saved and is kept (D34): Resume, in the hero under this, tries again. A polite live region, so it is spoken when it appears. */
-@Composable
-private fun SaveErrorContent(message: String) {
-    val c = Qala.colors
-    GroupLabel("Not saved", color = c.accent)
-    QalaText(message, Modifier.padding(top = 4.dp).semantics { liveRegion = LiveRegionMode.Polite }, BodyStyle, c.fg)
 }
 
 /**

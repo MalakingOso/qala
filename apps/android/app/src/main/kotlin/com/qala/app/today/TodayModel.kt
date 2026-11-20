@@ -1,5 +1,6 @@
 package com.qala.app.today
 
+import com.qala.app.workout.PlateMath
 import com.qala.app.checkin.CheckInPlan
 import com.qala.app.checkin.checkInPlan
 import com.qala.app.skip.SkipRequest
@@ -43,7 +44,7 @@ enum class HeroLayout { CheckIn, WarmUp, Lift, Run, Interlude }
  * The big number of a hero: "112.5 lb × 3+" for the lift's top set, "4.0 mi" for a run. [label] sits over it,
  * [value] and [times] are set in the hero numeral face and [unit] in the record face.
  */
-class HeroFigure(val label: String, val value: String, val unit: String?, val times: String? = null) {
+class HeroFigure(val label: String, val value: String, val unit: String?, val times: String? = null, val plateWeight: Double? = null) {
     val text: String get() = listOfNotNull(value, unit, times?.let { "× $it" }).joinToString(" ")
 }
 
@@ -111,15 +112,15 @@ sealed interface TodayLoad {
     class Ready(val model: TodayModel) : TodayLoad
 }
 
-fun todayLoad(snapshot: EngineSnapshot, use24h: Boolean, resume: Boolean = false): TodayLoad = when {
+fun todayLoad(snapshot: EngineSnapshot, use24h: Boolean, resume: Boolean = false, resumeWarmup: Boolean = false): TodayLoad = when {
     snapshot.error != null -> TodayLoad.Failed(snapshot.error!!)
     !snapshot.loaded -> TodayLoad.Loading
     snapshot.today == null -> TodayLoad.Failed("Today has nothing to show yet.")
-    else -> TodayLoad.Ready(TodayModel(snapshot, snapshot.today!!, use24h, resume))
+    else -> TodayLoad.Ready(TodayModel(snapshot, snapshot.today!!, use24h, resume, resumeWarmup))
 }
 
 /** Today for one snapshot: the head, the rail, the hero for any stage, and the four other cards. */
-class TodayModel(private val snapshot: EngineSnapshot, val plan: TodayPlan, private val use24h: Boolean, private val resume: Boolean = false) {
+class TodayModel(private val snapshot: EngineSnapshot, val plan: TodayPlan, private val use24h: Boolean, private val resume: Boolean = false, private val resumeWarmup: Boolean = false) {
     val stages: List<RailStage> = railStages(plan, use24h)
     val nowIndex: Int = nowIndex(stages)
     val eyebrow: String = headEyebrow(snapshot, plan)
@@ -144,7 +145,7 @@ class TodayModel(private val snapshot: EngineSnapshot, val plan: TodayPlan, priv
     /** What the skip sheet opens with: a new skip, or a change of the status already on today. */
     val skip: SkipRequest = skipRequest(snapshot.date, snapshot.status)
 
-    fun hero(viewing: Int): Hero = heroFor(snapshot, plan, viewing, nowIndex, use24h, resume)
+    fun hero(viewing: Int): Hero = heroFor(snapshot, plan, viewing, nowIndex, use24h, resume, resumeWarmup)
 }
 
 // ---- the rail ----
@@ -209,7 +210,7 @@ fun headEyebrow(snapshot: EngineSnapshot, plan: TodayPlan): String {
  * The hero for the stage at [viewing]. [nowIndex] is the stage the day is on: the hero's label says Now when they are
  * the same and Preview when they are not, and only the stage that is now has a live button.
  */
-fun heroFor(snapshot: EngineSnapshot, plan: TodayPlan, viewing: Int, nowIndex: Int, use24h: Boolean, resume: Boolean = false): Hero {
+fun heroFor(snapshot: EngineSnapshot, plan: TodayPlan, viewing: Int, nowIndex: Int, use24h: Boolean, resume: Boolean = false, resumeWarmup: Boolean = false): Hero {
     val stage = plan.stages[viewing.coerceIn(0, plan.stages.lastIndex)]
     val isNow = viewing == nowIndex
     val kicker = kicker(stage, isNow)
@@ -285,9 +286,15 @@ fun heroFor(snapshot: EngineSnapshot, plan: TodayPlan, viewing: Int, nowIndex: I
     }
     val open = stage.state == StageState.NOW
     // A half-logged workout is waiting (D34): the Warm-up stage counts as done only once a session is saved, so the button
-    // on either stage that is now takes the lifter back into it.
+    // on either stage that is now takes the lifter back into it. While the warm-up is unfinished and no set is logged (the draft
+    // holds only the warm-up, S46) it leads back to the warm-up.
     val resuming = resume && isNow && open && (stage.id == StageId.WARM_UP || stage.id == StageId.LIFT) && hero.cta != null
-    return (if (resuming) hero.copy(cta = Cta("Resume workout", Destination.Workout, CtaIcon.Dumbbell)) else hero).copy(
+    val resumed = when {
+        !resuming -> hero
+        resumeWarmup -> hero.copy(cta = Cta("Resume warm-up", Destination.WarmUp, CtaIcon.Dumbbell))
+        else -> hero.copy(cta = Cta("Resume workout", Destination.Workout, CtaIcon.Dumbbell))
+    }
+    return resumed.copy(
         now = isNow && stage.state != StageState.DONE && stage.state != StageState.SKIPPED,
         skip = if (isNow && open && !stage.passive && plan.liftDay && snapshot.status == null) Cta("Skip today", Destination.Skip) else null,
     )
@@ -353,7 +360,8 @@ private fun liftHero(snapshot: EngineSnapshot, plan: TodayPlan, kicker: String, 
         figure = if (top.weight == null) {
             HeroFigure("Your top set", trimNumber(top.reps), "reps")
         } else {
-            HeroFigure("Your top set", trimNumber(top.weight!!), unitName(top.unit), trimNumber(top.reps) + if (top.amrap) "+" else "")
+            // The plates of the top set are drawn next to it when it is a barbell lift in pounds (and Settings shows plates).
+            HeroFigure("Your top set", trimNumber(top.weight!!), unitName(top.unit), trimNumber(top.reps) + if (top.amrap) "+" else "", plateWeight = top.weight.takeIf { PlateMath.applies(top.unit, hero.equipment == "barbell") })
         },
         lines = listOfNotNull(
             snapshot.injured.firstOrNull()?.let { injuredLine(it) },

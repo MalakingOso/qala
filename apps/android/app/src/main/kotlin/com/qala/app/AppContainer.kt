@@ -31,7 +31,9 @@ import com.qala.app.coach.CoachStore
 import com.qala.app.coach.HttpCoachClient
 import com.qala.app.run.RunRecording
 import com.qala.app.workout.AndroidRestAlarm
+import com.qala.app.workout.AndroidWorkoutNotifier
 import com.qala.app.workout.RestAlarm
+import com.qala.app.workout.WorkoutNotifier
 import com.qala.app.workout.WorkoutStore
 import com.qala.data.seed.DebugSeeder
 import com.qala.data.sync.RecordWriter
@@ -64,6 +66,8 @@ class AppContainer(
     coachClient: CoachClient = HttpCoachClient(BuildConfig.COACH_BASE_URL),
     /** The OS alarm behind the rest-end notification; the default does nothing, so tests and previews set none. */
     restAlarm: RestAlarm = RestAlarm.None,
+    /** The ongoing notification of a workout; the default shows nothing. */
+    notifier: WorkoutNotifier = WorkoutNotifier.None,
 ) {
     val writer = RecordWriter(RoomTransactor(database))
 
@@ -92,6 +96,7 @@ class AppContainer(
         env,
         scope,
         restAlarm,
+        notifier,
         fatigueByMuscle = { engine.snapshot.value.stateView?.fatigueMuscle.orEmpty() },
     )
 
@@ -146,7 +151,7 @@ class AppContainer(
         /** The one container of the process, so a recreated activity does not open the database twice. */
         fun obtain(context: Context): AppContainer =
             instance ?: synchronized(this) {
-                instance ?: AppContainer(QalaDatabase.open(context), restAlarm = AndroidRestAlarm(context)).also { instance = it }
+                instance ?: AppContainer(QalaDatabase.open(context), restAlarm = AndroidRestAlarm(context), notifier = AndroidWorkoutNotifier(context)).also { instance = it }
             }
     }
 }

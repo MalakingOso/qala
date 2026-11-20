@@ -45,7 +45,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun takeRoute(intent: Intent) {
-        if (intent.getBooleanExtra(EXTRA_OPEN_REST, false)) container.pendingRoute.value = Route.Rest
+        if (intent.getBooleanExtra(EXTRA_OPEN_WORKOUT, false)) container.pendingRoute.value = Route.Workout
         // Debug builds only: `--ez qala.openRun true` opens the Run screen, for the emulator's GPS playback.
         if (BuildConfig.DEBUG && intent.getBooleanExtra(EXTRA_OPEN_RUN, false)) container.pendingRoute.value = Route.Run
     }
@@ -69,8 +69,8 @@ class MainActivity : ComponentActivity() {
     }
 
     companion object {
-        /** The rest-end notification opens Rest: a boolean extra on the intent it fires. */
-        const val EXTRA_OPEN_REST = "qala.openRest"
+        /** The workout notification and the rest alerts open the workout, or Rest while one is running: a boolean extra on the intent they fire. */
+        const val EXTRA_OPEN_WORKOUT = "qala.openWorkout"
 
         /** A debug build opens the Run screen when this boolean extra is true. A release build ignores it. */
         const val EXTRA_OPEN_RUN = "qala.openRun"

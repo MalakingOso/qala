@@ -54,14 +54,20 @@ val Route.isFocus: Boolean
 val Route.tab: Route get() = if (isPushed) Route.Today else this
 
 /**
- * Where the user is, the tab a pushed screen returns to, and, for All exercises, the flow screen it was opened from
- * (Warm-up, Workout or Rest), which is where its Back goes.
+ * Where the user is, the tab a pushed screen returns to, and, for All exercises and for a Warm-up opened from the workout,
+ * the flow screen it was opened from (Warm-up, Workout or Rest), which is where its Back goes.
  */
 data class Nav(val route: Route = Route.Today, val origin: Route = Route.Today, val parent: Route? = null) {
     fun selectTab(tab: Route) = Nav(tab, Route.Today)
 
-    /** Pushes [screen] over this one. All exercises remembers the screen it was opened over; every other screen starts afresh. */
-    fun push(screen: Route) = Nav(screen, if (route.isPushed) origin else route, parent = if (screen == Route.AllExercises) route else null)
+    /**
+     * Pushes [screen] over this one. All exercises remembers the screen it was opened over, and so does the Warm-up the workout
+     * links to, so Back returns to the workout; every other screen starts afresh.
+     */
+    fun push(screen: Route): Nav =
+        // The Warm-up the workout linked to goes back to it when it starts the workout, rather than stacking a second one.
+        if (screen == Route.Workout && route == Route.WarmUp && parent == Route.Workout) Nav(Route.Workout, origin)
+        else Nav(screen, if (route.isPushed) origin else route, parent = if (screen == Route.AllExercises || (screen == Route.WarmUp && route == Route.Workout)) route else null)
 
     /**
      * The state after Back, or null at the root (Today), where Back leaves the app. Rest goes back to the workout under
@@ -69,7 +75,7 @@ data class Nav(val route: Route = Route.Today, val origin: Route = Route.Today, 
      */
     fun back(): Nav? = when {
         route == Route.Rest -> Nav(Route.Workout, origin)
-        route == Route.AllExercises && parent != null -> Nav(parent, origin)
+        (route == Route.AllExercises || route == Route.WarmUp) && parent != null -> Nav(parent, origin)
         route.isPushed -> Nav(origin, Route.Today)
         route != Route.Today -> Nav(Route.Today, Route.Today)
         else -> null

@@ -91,6 +91,12 @@ class M4FlowTest {
     /** A control inside the open skip sheet (the same words are on the screen behind it). */
     private fun inSheet(title: String, text: String) = rule.onNode(hasText(text) and hasClickAction() and hasAnyAncestor(sheetPane(title)))
 
+    /** The cards live in the drawer, which starts closed with its list under the tab bar: the handle's click opens it (closed, half, full). */
+    private fun openCards() {
+        repeat(2) { rule.onNodeWithContentDescription("Day drawer").performClick() }
+        rule.waitForIdle()
+    }
+
     private fun openSkipSheet() {
         rule.onNodeWithText("Skip today").performClick()
         waitFor { rule.onAllNodes(sheetPane("Skip today")).fetchSemanticsNodes().isNotEmpty() }
@@ -120,7 +126,7 @@ class M4FlowTest {
         rule.onNodeWithText("READINESS · ESTIMATE", substring = true).performScrollTo()
         val before = readinessPoints()
 
-        rule.onNodeWithText("Check in").performScrollTo().performClick()
+        rule.onNodeWithText("Check in").performClick()
         rule.onNodeWithText("Save check-in").assertIsDisplayed()
         // Recovery 3 and the first muscle the day trains at "still sore now".
         rule.onNodeWithContentDescription("3 of 10").performClick()
@@ -164,7 +170,8 @@ class M4FlowTest {
         rule.onNodeWithText("Skip today").assertDoesNotExist()
         rule.onNodeWithContentDescription("Undo today's skip, sick").assertExists()
 
-        rule.onNodeWithContentDescription("Undo today's skip, sick").performClick()
+        openCards()
+        rule.onNodeWithContentDescription("Undo today's skip, sick").performScrollTo().performClick()
         railSays("Day stages: check-in now, 0 of 6 done")
         waitFor { !textShown("Resting to get well. The plan shifts out.") }
         rule.onNodeWithText("Skip today").assertExists()
@@ -198,7 +205,7 @@ class M4FlowTest {
         railSays("Day stages: check-in now, 0 of 6 done")           // an injury trains around the muscle: the lift stays
         rule.onNodeWithText("Skip today").assertDoesNotExist()
 
-        rule.onNodeWithText("Check in").performScrollTo().performClick()
+        rule.onNodeWithText("Check in").performClick()
         rule.onNodeWithText("injured, still sore now").assertExists()
         rule.onNode(hasContentDescription("4, still sore now") and hasAnyAncestor(hasContentDescription("Quads soreness"))).assertExists()
     }
@@ -218,7 +225,8 @@ class M4FlowTest {
         waitForText("Feeling better?")
         rule.onNodeWithText("Since ", substring = true).assertExists()
 
-        rule.onNodeWithText("Still sick").performClick()
+        openCards()
+        rule.onNodeWithText("Still sick").performScrollTo().performClick()
         waitFor { !textShown("Feeling better?") }
         // A rebuild in the same session does not bring it back.
         container.engine.refresh()
@@ -238,7 +246,8 @@ class M4FlowTest {
         waitForText("Feeling better?")
         railSays("Day stages: check-in now, 0 of 3 done")
 
-        rule.onNodeWithText("I am better").performClick()
+        openCards()
+        rule.onNodeWithText("I am better").performScrollTo().performClick()
         railSays("Day stages: check-in now, 0 of 6 done")
         waitFor { !textShown("Feeling better?") }
         // The days already marked keep their mark: the status ended yesterday, it was not erased.
@@ -311,7 +320,7 @@ class M4FlowTest {
         assertNull("nothing to skip with no program", rule.onAllNodes(hasText("Skip today")).fetchSemanticsNodes().firstOrNull())
 
         // The check-in works with nothing behind it: four fixed muscles, save writes a record.
-        rule.onNodeWithText("Check in").performScrollTo().performClick()
+        rule.onNodeWithText("Check in").performClick()
         rule.onNodeWithText("Upper back").assertExists()
         rule.onNodeWithText("Rest-day tip".uppercase()).assertExists()
         rule.onNodeWithText("Save check-in").performClick()
