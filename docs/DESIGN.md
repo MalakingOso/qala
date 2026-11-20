@@ -218,6 +218,8 @@ Code lives in `apps/web/src/shared/charts/`. The plate drawing and the readiness
 
 ### 6.3 Chart catalog
 
+Changed 2026-11-18 (S46): Session complete's time split is a donut, not a stacked bar or columns: the total in the middle, Warm-up, Lifting and Resting in viz1, viz2 and viz3 with a legend of minutes and percent, and the Table toggle kept. A warm-up that was not measured is left out and the others keep their colours. Ramp-set rests count as Warm-up, not Lifting.
+
 | Chart | Where | Form | Library |
 |---|---|---|---|
 | This week | Today hero, landing | seven-day strip: one bar per day, height the day's load, fill the part done; done teal, today ember on an `--accent-subtle` band, later outlined, rest a dash; a lift/run/both/rest glyph and the day letter under each; a caption naming the tapped, hovered or focused day (today by default) and a week total line (U13) | HTML/CSS, no plotting library |
@@ -287,6 +289,8 @@ Build, 2026-09-30: composition unchanged. Stage cards share one title style and 
 
 Decided 2026-11-13 (D34): when a half-logged workout draft exists, the hero says "Resume workout".
 
+Changed 2026-11-19 (S48): on the phone, Today is a film and a drawer, not a rail beside cards. A muted loop with a 1960s Super 8 look (faded warm colour, soft grain, a faint flicker, a vignette) fills the screen under the status bar and the tab bar, which is dark glass over it. The head (weekday and kind of day, the title, the preview bar) sits on the film with History and Settings as two white icon buttons at the top right. The day is a vertical list of six dots at the left while the drawer is closed, and a row of the same dots once it is open. The hero for the stage being looked at is white on the film: kicker, title, a meta line, and for a lift or a run a big figure with its unit and, for a barbell lift in pounds, the plates of one side with their shorthand. Under it the action block holds the stage's lines and its button. The cream drawer has three stops. Closed shows the top of the next run and readiness cards. Half shrinks the hero above it and pins the action block at its top, with the cards below. Full docks the hero into a dark now card under a day card holding the row, with the action block and the cards following, and the cards scroll. One drag moves everything together; nothing pops. Back closes the drawer in one press. A window under 480 dp high gets one scrolling column instead.
+
 ### 7.2 Plan (U4)
 
 Header: block name and periodization, `< Week 3 of 6 >` with arrows, a thin strip of the block's weeks (done, current in ember, deload lighter). Day tabs Monday to Sunday with the date and a glyph (`dumbbell`, `sport-shoe`, `bed`), the selected day underlined in ember. Below: day title and length including warm-up, the Start workout button, Overview / Details. Overview is a two-column grid of exercise cards (name, sets x reps x load, a note icon when a note is waiting, a chip such as "+1 set"). Details lists the warm-up, every set, and the day's run.
@@ -307,6 +311,8 @@ Four numbered groups from PLAN 6.7, each with a duration: General (the machine, 
 
 Build, 2026-09-30: four numbered step cards with their times. Soft tissue and mobility items are check rows. Ramp sets show load, reps, plate discs and rest per row, the extra step flagged in ember, and a closing work-sets row.
 
+Changed 2026-11-18 (S45, S46): three steps. Easy cardio has a countdown (the planner's minutes, -1 min and +1 min, a Start cardio button, a buzz at zero) that keeps counting when the screen is left; Soft tissue and Mobility are check rows. The Ramp sets step moved into the workout (7.5). Looking at the warm-up opens nothing; the first action opens the draft and the ongoing notification, and the countdown, the ticks and the warm-up clock are kept in it. The Workout header's Warm-up button comes back here and Back returns to the workout.
+
 ### 7.5 Workout: one exercise (U5, T9, T10)
 
 Top: collapse, day name and the ticking workout clock, Finish. A segmented progress bar, one segment per exercise, filled per completed set, the current one outlined. "Exercise 1 of 6 · Set 3 of 3". A returning note card when one is waiting. The exercise title and last time's sets. The logging card: weight x reps as big figures with -/+ steppers, plate shorthand chips and a calculator button, RPE chips 7-10 in half steps. Actions: Info, Swap, Note, Log set (primary). A rest preview and the next exercise. "All exercises" and a swipe hint.
@@ -315,6 +321,8 @@ Build, 2026-09-30: flow header (all exercises, session clock, Finish). Progress 
 
 Decided 2026-11-13 (D33, D34): prescriptions round to what the saved plate inventory can load (207.5 lb with no 1.25 lb pairs shows 205), lb only. With Automatic rest off, the set row offers a tap-to-start rest. A failed save shows a message and keeps the draft.
 
+Changed 2026-11-18 (S45, S46, S47): the header has a second line, a Warm-up button and, while a rest runs, a "Rest 1:42" pill (then "Rest +0:12") that opens Rest. Each exercise lists its ramp sets, W1 to Wn, above the work sets, lighter: weight, reps, the plates of one side as small faces and the ramp's rest; a tap ticks one and starts that rest. In the open set's logger the loaded sleeve (96 dp, fixed) sits under the weight figure with the per-side numbers on a line beneath it; its plates slide on and to place, the last plates stay until the new ones are ready, and the figure and its unit are separate texts, so stepping the weight moves only the plates. A done set that was edited shows a check and "Saved" for a second after Save (or after moving off it) and the logger goes back to the open set. A set a grind lowered says "lowered after a grind"; a dropped one reads "dropped" and is muted.
+
 ### 7.6 Rest (T8, T10)
 
 The workout top bar stays. "Back Squat · set 2 logged: 245 x 4 @ 9". The countdown as a ticking figure with "of 3:45", a progress bar, Ready early and +30 s. The next set's load as the plate drawing ("Same as last set" or the change instruction). "Why 3:45" lists base, pace, effort, readiness adjustments with their seconds. A card for the change to the next exercise ("After squats: RDL 205. Take off 45 and 10, add 35 each side.").
@@ -322,6 +330,8 @@ The workout top bar stays. "Back Squat · set 2 logged: 245 x 4 @ 9". The countd
 Build, 2026-09-30: the bar runs down as time passes. Ready early is the primary and becomes Start set 3 at zero, with +30 s beside it (the separate Next set button is gone). The next set's load sits on its own card with the loaded bar. Why 3:45 is a ledger: base, each adjustment with its seconds, the total. The plate change after this exercise is its own card with before and after discs.
 
 Decided 2026-11-13 (D34): when a rest ends with the app in the background, a notification fires; the haptic stays for while Rest is showing.
+
+Changed 2026-11-18 (S45, S47): the countdown is the app's, not this screen's. A short buzz and soft tick come at T minus N (Off, 10, 15 or 30 s), the end buzzes, and at zero the app moves to Workout with the next set open while this rest stays open, so the clock reads "+0:12" here and in the pill until the next set is logged. The next set's plates are the loaded sleeve with the per-side numbers under it. The ledger sums its rows against the cap: a row that crosses it shows the part that fit, rows after it are greyed, unsigned and marked "at max", rounding and "Raised to the minimum" are rows of their own, and when a grind lowered or dropped sets a "Load adjusted" card says what changed and why.
 
 ### 7.7 All exercises
 
