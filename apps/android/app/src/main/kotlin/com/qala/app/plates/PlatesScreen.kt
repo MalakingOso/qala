@@ -1,6 +1,9 @@
 package com.qala.app.plates
 
 import android.graphics.BitmapFactory
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.ScrollState
@@ -20,6 +23,8 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.key
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -29,6 +34,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.ImageBitmap
@@ -36,8 +42,10 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.hideFromAccessibility
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.qala.app.LocalAppContainer
@@ -174,32 +182,53 @@ private fun rememberSpriteBitmap(file: String): ImageBitmap? {
 }
 
 /**
- * One side of the loaded bar, every weight where a lifter sees it. Sprites only:
- * the bar, sleeve and plates are the Blender renders, placed by [plateLayout].
+ * One side of the loaded bar, every weight where a lifter sees it. Sprites only: the bar, sleeve and plates are the Blender
+ * renders, placed by [plateLayout]. [LoadedSleeve] is that drawing at any height, which the plate calculator draws large and the
+ * logger draws small under the weight figure.
  */
 @Composable
 private fun PlateDrawing(perSide: List<Double>, ez: Boolean, caption: String, inventory: List<PlateEntry>) {
+    LoadedSleeve(perSide, inventory, Modifier.fillMaxWidth(), DrawHeightDp.dp, ez, labelled = true, description = caption)
+}
+
+/**
+ * The loaded sleeve at a fixed [height]: the one place the plate sprites are laid out. With [animated] each plate slides to its
+ * place as the load changes and a new plate slides on, so a stepper that moves the weight moves only the plates. The
+ * [labelled] weights under the inner plates are for the large drawing; a small one leaves them to the numbers beside it.
+ */
+@Composable
+fun LoadedSleeve(
+    perSide: List<Double>,
+    inventory: List<PlateEntry>,
+    modifier: Modifier = Modifier,
+    height: Dp = DrawHeightDp.dp,
+    ez: Boolean = false,
+    labelled: Boolean = false,
+    animated: Boolean = true,
+    description: String? = null,
+) {
     val c = Qala.colors
     BoxWithConstraints(
-        Modifier
-            .fillMaxWidth()
-            .height(DrawHeightDp.dp)
-            .semantics { contentDescription = caption },
+        modifier
+            .height(height)
+            .semantics { if (description != null) contentDescription = description else hideFromAccessibility() },
     ) {
-        val layout = remember(perSide, ez, maxWidth, inventory) { plateLayout(perSide, ez, maxWidth.value, inventory) }
+        val layout = remember(perSide, ez, maxWidth, inventory, height, labelled) { plateLayout(perSide, ez, maxWidth.value, inventory, height.value, labelled) }
         val context = LocalContext.current
         val files = layout.draws.map { it.sprite.file }.distinct()
+        // The sprites already decoded stay, so a plate that is swapped for another never leaves a hole while its image loads.
         val bitmaps by produceState<Map<String, ImageBitmap>>(emptyMap(), files) {
-            value = withContext(Dispatchers.IO) {
-                files.mapNotNull { file ->
+            val have = value
+            val fresh = withContext(Dispatchers.IO) {
+                files.filter { it !in have }.mapNotNull { file ->
                     try {
-                        context.assets.open("plates/$file").use { BitmapFactory.decodeStream(it)?.asImageBitmap() }
-                            ?.let { file to it }
+                        context.assets.open("plates/$file").use { BitmapFactory.decodeStream(it)?.asImageBitmap() }?.let { file to it }
                     } catch (_: Exception) {
                         null
                     }
                 }.toMap()
             }
+            value = have + fresh
         }
         layout.floor?.let { floor ->
             Canvas(Modifier.fillMaxSize()) {
@@ -211,8 +240,10 @@ private fun PlateDrawing(perSide: List<Double>, ez: Boolean, caption: String, in
             }
         }
         for (draw in layout.draws.sortedBy { it.z }) {
-            val bitmap = bitmaps[draw.sprite.file]
-            if (bitmap != null) {
+            val bitmap = bitmaps[draw.sprite.file] ?: continue
+            if (animated && draw.z in PlateZ) {
+                key(draw.z) { PlateSpriteImage(bitmap, draw) }
+            } else {
                 Image(
                     bitmap = bitmap,
                     contentDescription = null,
@@ -236,6 +267,34 @@ private fun PlateDrawing(perSide: List<Double>, ez: Boolean, caption: String, in
         }
     }
 }
+
+/** The z of the plate sprites in [plateLayout]: 10 and up for the plates, the sleeve and bar below, the sleeve end above. */
+private val PlateZ = 10..39
+
+/** One plate: it glides to its place when the layout moves it, and slides on from the end of the sleeve when it is new. */
+@Composable
+private fun PlateSpriteImage(bitmap: ImageBitmap, draw: SpriteDraw) {
+    val spec = spring<Float>(stiffness = Spring.StiffnessMediumLow)
+    val left by animateFloatAsState(draw.left, spec, label = "plate-left")
+    val top by animateFloatAsState(draw.top, spec, label = "plate-top")
+    val width by animateFloatAsState(draw.width, spec, label = "plate-width")
+    val height by animateFloatAsState(draw.height, spec, label = "plate-height")
+    var arrived by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { arrived = true }
+    val slide by animateFloatAsState(if (arrived) 0f else SlideInDp, spec, label = "plate-slide")
+    val alpha by animateFloatAsState(if (arrived) 1f else 0f, spec, label = "plate-alpha")
+    Image(
+        bitmap = bitmap,
+        contentDescription = null,
+        modifier = Modifier
+            .offset(x = (left + slide).dp, y = top.dp)
+            .size(width = width.dp, height = height.dp)
+            .alpha(alpha),
+        contentScale = ContentScale.FillBounds,
+    )
+}
+
+private const val SlideInDp = 24f
 
 /** One plate face at inventory-row size, whatever its weight, in the colour [inventory] gives it. */
 @Composable

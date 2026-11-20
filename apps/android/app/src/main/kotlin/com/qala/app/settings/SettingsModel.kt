@@ -67,6 +67,9 @@ val ThemeLabels = listOf("Light", "Dark", "System")
 val TitleFontLabels = listOf("Qala Test", "Faustina")
 val AlertLabels = listOf("Vibrate", "Sound", "Both")
 
+/** The rest warning: off, or this many seconds before the end (S45). Matches [com.qala.data.model.RestSettings.WarnChoices]. */
+val WarnLabels = listOf("Off", "10 s", "15 s", "30 s")
+
 /** The cue choices in [com.qala.data.model.CueEvery] order, in the lifter's distance unit. */
 fun cueLabels(unit: WeightUnit): List<String> = if (unit == WeightUnit.Kg) listOf("0.5 km", "1 km", "5 min") else listOf("0.5 mi", "1 mi", "5 min")
 const val TitleSample = "Lower A · 245 × 4"

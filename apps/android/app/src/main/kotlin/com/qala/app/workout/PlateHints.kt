@@ -29,6 +29,12 @@ object PlateMath {
         return PlateHint(load.perSide, QalaCore.platesShorthand(load.perSide), load.total)
     }
 
+    /** The heaviest load the plates on [setup] can make that is no more than [weight]: what a lowered set goes down to. */
+    fun floor(weight: Double, setup: PlateSettings = PlateSettings()): Double {
+        val plan = QalaCore.planPlates(weight, setup.defaultBar, setup.plates)
+        return plan.exact?.total ?: plan.below?.total ?: setup.defaultBar
+    }
+
     /** How to get from [currentPerSide] to [nextWeight] with the fewest plates moved; null when nothing is loadable. */
     fun change(currentPerSide: List<Double>, nextWeight: Double, setup: PlateSettings = PlateSettings()): NextPlateChoice? =
         QalaCore.chooseNextPlates(currentPerSide, nextWeight, setup.defaultBar, setup.plates, 0.0)

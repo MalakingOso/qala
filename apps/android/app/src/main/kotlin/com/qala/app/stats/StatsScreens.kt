@@ -15,6 +15,8 @@ import androidx.compose.ui.unit.dp
 import com.qala.app.LocalAppContainer
 import com.qala.app.charts.ChartCard
 import com.qala.app.charts.ColumnChart
+import com.qala.app.charts.Donut
+import com.qala.app.charts.DonutSlice
 import com.qala.app.charts.LineChart
 import com.qala.app.charts.ReadinessRing
 import com.qala.app.run.elapsedText
@@ -191,16 +193,21 @@ private fun SummaryBody(s: SessionSummary) {
     val lift = unitName(s.unit)
     Card(hero = true) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Column { GroupLabel("Time"); QalaText(elapsedText(s.elapsedSec.toDouble()), style = QalaType.figure, color = Qala.colors.fg) }
+            // The same total the time split shows in its middle: the warm-up, the lifting and the resting.
+            Column { GroupLabel("Time"); QalaText(elapsedText(((s.warmupSec ?: 0) + s.liftSec + s.restSec).toDouble()), style = QalaType.figure, color = Qala.colors.fg) }
             Column { GroupLabel("Sets"); QalaText("${s.sets}", style = QalaType.figure, color = Qala.colors.fg) }
         }
     }
-    val parts = listOfNotNull(s.warmupSec?.let { "Warm-up" to it }, "Lifting" to s.liftSec, "Resting" to s.restSec)
+    // The warm-up slice is left out when it was not measured; the colours belong to the slices, so the others do not shift.
+    val c = Qala.colors
+    val parts = listOfNotNull(s.warmupSec?.takeIf { it > 0 }?.let { Triple("Warm-up", it, c.viz1) }, Triple("Lifting", s.liftSec, c.viz2), Triple("Resting", s.restSec, c.viz3))
+    val total = parts.sumOf { it.second }
+    fun share(seconds: Int) = if (total > 0) "${Math.round(seconds * 100.0 / total)}%" else "0%"
     ChartCard(
         title = "Time split",
-        summary = "Where the time went: " + parts.joinToString(", ") { "${it.first} ${elapsedText(it.second.toDouble())}" } + ".",
-        table = parts.map { it.first to elapsedText(it.second.toDouble()) },
-    ) { ColumnChart(parts.map { it.second / 60.0 }, parts.map { it.first }) }
+        summary = "Where the time went, ${elapsedText(total.toDouble())} in all: " + parts.joinToString(", ") { "${it.first} ${elapsedText(it.second.toDouble())}, ${share(it.second)}" } + ".",
+        table = parts.map { it.first to "${elapsedText(it.second.toDouble())} · ${share(it.second)}" },
+    ) { Donut(parts.map { DonutSlice(it.first, it.second.toDouble(), it.third, "${elapsedText(it.second.toDouble())} · ${share(it.second)}") }, elapsedText(total.toDouble()), "total") }
     if (s.setsByMuscle.isNotEmpty()) {
         val top = s.setsByMuscle.take(8)
         ChartCard(

@@ -3,6 +3,10 @@
 //! The rest is a base for the lift's class and rep range (or the program's own), times the lifter's learned pace, plus the
 //! adjustments the set earned (effort, a miss, a late set or rep drift, low readiness), rounded to 15 s and kept inside the
 //! class's range. The result carries reason codes and numbers, never prose: the app words each row of the "Why" ledger.
+//!
+//! The class's top is a cap the rows are summed against, in order: a row that crosses it counts only the part that fit and the
+//! rows after it count nothing (`applied`), so the applied rows always add up to the rest. A program's own rest raises the cap
+//! for its lift, up to [HARD_CAP]. The plan also says whether the set was a grind and whether the load should come down.
 
 use serde::{Deserialize, Serialize};
 
@@ -55,6 +59,14 @@ pub struct RestInput {
     pub set_number: u32,
     #[serde(default)]
     pub amrap: bool,
+    /// The bottom of the set's rep range (8 on an 8-12 set), when it has one: fewer reps than this is a miss.
+    #[serde(default)]
+    pub min_reps: Option<f64>,
+    /// The work set before this one in the exercise was a grind, and the exercise's load was already lowered today.
+    #[serde(default)]
+    pub prev_grind: bool,
+    #[serde(default)]
+    pub lowered: bool,
     /// The program's own rest for the set, when it names one: it replaces the table's base.
     pub explicit_base: Option<i32>,
     /// The load of the set just logged, and the exercise's first work set today (rep drift needs both at one load).
@@ -99,16 +111,47 @@ pub enum RestCode {
     /// Reps or RPE slipped against the first set at the same load.
     RestDrift,
     RestLowReadiness,
-    /// Rounded to 15 s and clamped: `value` and `other` are the range in seconds.
+    /// Rounded to 15 s.
     RestRound,
+    /// Raised to the class's shortest rest: `value` is that rest in seconds.
+    RestFloor,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct RestRow {
     pub code: RestCode,
+    /// What the row asks for.
     pub seconds: i32,
+    /// The part of it that fit under the cap: less than `seconds` when the row crossed the cap, 0 when it came after it.
+    pub applied: i32,
     pub value: Option<f64>,
     pub other: Option<f64>,
+}
+
+/// What a grind asks of the load of the sets still to come.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub enum AutoregAction {
+    /// Lower the remaining sets by `percent`, rounded down to loadable plates.
+    Lower,
+    /// Drop the remaining sets of the exercise.
+    DropRemaining,
+}
+
+/// Why the load steps in: the rest would have run past the cap, or two work sets in a row were grinds.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub enum AutoregWhy {
+    CapOverflow,
+    TwoInARow,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+pub struct Autoreg {
+    pub action: AutoregAction,
+    /// 5 or 10 for [AutoregAction::Lower], 0 for a drop.
+    pub percent: u32,
+    pub why: AutoregWhy,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
@@ -120,6 +163,9 @@ pub struct RestPlan {
     pub adjust: i32,
     pub multiplier: f64,
     pub rows: Vec<RestRow>,
+    /// The set was a grind: RPE 9.5 or more, or reps under the bottom of the range with no lower RPE logged. Never for an AMRAP.
+    pub grind: bool,
+    pub autoreg: Option<Autoreg>,
 }
 
 struct Cell {
@@ -143,6 +189,9 @@ fn cell(strength: bool, class: RestClass) -> Cell {
 pub fn round15(seconds: f64) -> i32 {
     (js_round(seconds / 15.0) * 15.0) as i32
 }
+
+/// No rest is planned past this, whatever the program asks for.
+pub const HARD_CAP: i32 = 300;
 
 const ALPHA: f64 = 0.1;
 const M_MIN: f64 = 0.75;
@@ -179,22 +228,49 @@ fn base_code(class: RestClass, strength: bool, explicit: bool) -> RestCode {
     }
 }
 
-fn row(code: RestCode, seconds: i32, value: Option<f64>, other: Option<f64>) -> RestRow {
-    RestRow { code, seconds, value, other }
+/// The rows of the ledger, summed against the cap as they come.
+struct Ledger {
+    rows: Vec<RestRow>,
+    sum: i32,
+    cap: i32,
+}
+
+impl Ledger {
+    /// Adds a row asking for [seconds]; what counts is the part that fits under the cap (a cut is always taken in full).
+    /// Returns what counted.
+    fn add(&mut self, code: RestCode, seconds: i32, value: Option<f64>, other: Option<f64>) -> i32 {
+        let applied = if seconds > 0 { seconds.min((self.cap - self.sum).max(0)) } else { seconds };
+        self.sum += applied;
+        self.rows.push(RestRow { code, seconds, applied, value, other });
+        applied
+    }
+}
+
+/// Whether the set was a grind, and whether it also missed its reps.
+fn grind_of(input: &RestInput) -> (bool, bool) {
+    if input.amrap {
+        return (false, false);
+    }
+    let missed = input.logged_reps < input.min_reps.unwrap_or(input.target_reps);
+    let hard = input.logged_rpe.is_some_and(|r| r >= 9.5);
+    // A miss with no RPE counts as RPE 10; a miss with a lower RPE logged was just a short set.
+    (hard || (missed && input.logged_rpe.is_none()), missed)
 }
 
 /// The rest after a set.
 pub fn plan_rest(input: &RestInput) -> RestPlan {
     let strength = input.target_reps <= 6.0;
     let cell = cell(strength, input.class);
-    let base = input.explicit_base.unwrap_or(cell.base);
-    let mut rows = vec![row(base_code(input.class, strength, input.explicit_base.is_some()), base, None, None)];
+    let cap = input.explicit_base.map_or(cell.max, |e| cell.max.max(e)).min(HARD_CAP);
+    let base = input.explicit_base.unwrap_or(cell.base).min(cap);
+    let mut ledger = Ledger { rows: vec![], sum: 0, cap };
+    ledger.add(base_code(input.class, strength, input.explicit_base.is_some()), base, None, None);
 
     let history = if input.exercise_history.len() >= OWN_AFTER { &input.exercise_history } else { &input.class_history };
     let m = learned_multiplier(history);
     let paced = js_round(base as f64 * m) as i32;
     if paced != base {
-        rows.push(row(RestCode::RestPace, paced - base, Some(m), None));
+        ledger.add(RestCode::RestPace, paced - base, Some(m), None);
     }
 
     let mut adjust = 0;
@@ -202,41 +278,52 @@ pub fn plan_rest(input: &RestInput) -> RestPlan {
     let failed = rpe.is_some_and(|r| r >= 10.0 || (input.logged_reps < input.target_reps && !input.amrap && r >= 9.5));
     if failed {
         let a = if input.class == RestClass::Isolation { 30 } else { 60 };
-        adjust += a;
-        rows.push(row(RestCode::RestFailure, a, rpe, None));
+        adjust += ledger.add(RestCode::RestFailure, a, rpe, None);
     } else if let (Some(r), Some(t)) = (rpe, input.target_rpe) {
         let e = (30.0 * (r - t)).clamp(-30.0, 45.0) as i32;
         if e != 0 {
-            adjust += e;
-            rows.push(row(if e > 0 { RestCode::RestEffortHigh } else { RestCode::RestEffortLow }, e, Some(r), Some(t)));
+            adjust += ledger.add(if e > 0 { RestCode::RestEffortHigh } else { RestCode::RestEffortLow }, e, Some(r), Some(t));
         }
     }
     if !failed && !input.amrap && input.logged_reps < input.target_reps {
-        adjust += 30;
-        rows.push(row(RestCode::RestRepsShort, 30, Some(input.target_reps), None));
+        adjust += ledger.add(RestCode::RestRepsShort, 30, Some(input.target_reps), None);
     }
 
     // Session fatigue is the larger of a late set on a heavy lift and drift against the first set, not the sum.
     if strength && input.class == RestClass::Main && input.set_number >= 4 {
-        adjust += 30;
-        rows.push(row(RestCode::RestLateSet, 30, Some(input.set_number as f64), None));
+        adjust += ledger.add(RestCode::RestLateSet, 30, Some(input.set_number as f64), None);
     } else if drifted(input, strength) {
-        adjust += 30;
-        rows.push(row(RestCode::RestDrift, 30, None, None));
+        adjust += ledger.add(RestCode::RestDrift, 30, None, None);
     }
 
     let tired = input.soreness == Some(4) || input.prs.is_some_and(|p| p <= 4.0) || input.fatigue_local.is_some_and(|f| f >= 0.7);
     if tired {
-        adjust += 30;
-        rows.push(row(RestCode::RestLowReadiness, 30, None, None));
+        adjust += ledger.add(RestCode::RestLowReadiness, 30, None, None);
     }
 
-    let seconds = round15(base as f64 * m + adjust as f64).clamp(cell.min, cell.max);
-    let shown = paced + adjust;
-    if seconds != shown {
-        rows.push(row(RestCode::RestRound, seconds - shown, Some(cell.min as f64), Some(cell.max as f64)));
+    let overflow = ledger.rows.iter().any(|r| r.applied < r.seconds);
+    let total = ledger.sum;
+    // Rounded up past the cap goes back to it; below the class's shortest rest goes up to that.
+    let rounded = round15(total as f64).min(cap);
+    if rounded != total {
+        ledger.add(RestCode::RestRound, rounded - total, None, None);
     }
-    RestPlan { seconds, base, adjust, multiplier: m, rows }
+    let seconds = rounded.max(cell.min);
+    if seconds != rounded {
+        ledger.add(RestCode::RestFloor, seconds - rounded, Some(cell.min as f64), None);
+    }
+
+    let (grind, missed) = grind_of(input);
+    let autoreg = (grind && (overflow || input.prev_grind)).then(|| {
+        let why = if overflow { AutoregWhy::CapOverflow } else { AutoregWhy::TwoInARow };
+        if input.lowered {
+            Autoreg { action: AutoregAction::DropRemaining, percent: 0, why }
+        } else {
+            let hard = missed || rpe.is_none_or(|r| r >= 10.0);
+            Autoreg { action: AutoregAction::Lower, percent: if hard { 10 } else { 5 }, why }
+        }
+    });
+    RestPlan { seconds, base, adjust, multiplier: m, rows: ledger.rows, grind, autoreg }
 }
 
 /// Reps fell 20% or more against the first set at the same load (hypertrophy), or RPE rose a full point (strength).
@@ -266,6 +353,9 @@ mod tests {
             target_rpe: None,
             set_number: 1,
             amrap: false,
+            min_reps: None,
+            prev_grind: false,
+            lowered: false,
             explicit_base: None,
             weight: Some(100.0),
             first: None,
@@ -291,7 +381,7 @@ mod tests {
         let hard = RestInput { logged_rpe: Some(9.0), target_rpe: Some(8.0), ..input(RestClass::Main, 5.0, 5.0) };
         let p = plan_rest(&hard);
         assert_eq!(p.seconds, 210);
-        assert_eq!(p.rows.iter().map(|r| r.seconds).sum::<i32>(), 210);
+        assert_eq!(p.rows.iter().map(|r| r.applied).sum::<i32>(), 210);
     }
 
     #[test]
@@ -362,10 +452,45 @@ mod tests {
     }
 
     #[test]
-    fn the_program_rest_replaces_the_base_and_the_clamps_still_apply() {
+    fn the_program_rest_raises_the_cap_up_to_five_minutes_and_rows_past_it_count_nothing() {
+        // A program rest above the class's top is its own cap: 240 s on an isolation lift stays 240 s.
         let p = plan_rest(&RestInput { explicit_base: Some(240), ..input(RestClass::Isolation, 12.0, 12.0) });
-        assert_eq!((p.seconds, p.base), (150, 240));
-        assert_eq!(codes(&p), vec![RestCode::RestBaseProgram, RestCode::RestRound]);
+        assert_eq!((p.seconds, p.base), (240, 240));
+        assert_eq!(codes(&p), vec![RestCode::RestBaseProgram]);
+        // At the 5:00 ceiling a grind's +60 does not fit: the row is kept, counts nothing, and the ledger still adds up.
+        let top = RestInput { explicit_base: Some(300), logged_rpe: Some(10.0), ..input(RestClass::Main, 5.0, 5.0) };
+        let p = plan_rest(&top);
+        assert_eq!(p.seconds, 300);
+        assert_eq!(p.rows.iter().map(|r| (r.seconds, r.applied)).collect::<Vec<_>>(), vec![(300, 300), (60, 0)]);
+        assert_eq!(p.rows.iter().map(|r| r.applied).sum::<i32>(), 300);
+        assert_eq!(p.autoreg.map(|a| (a.action, a.percent, a.why)), Some((AutoregAction::Lower, 10, AutoregWhy::CapOverflow)));
+        // A row that crosses the cap counts only the part that fit.
+        let near = RestInput { explicit_base: Some(270), logged_rpe: Some(10.0), ..input(RestClass::Main, 5.0, 5.0) };
+        assert_eq!(plan_rest(&near).rows[1].applied, 30);
+        // Below the class's shortest rest, the floor row says so.
+        let short = plan_rest(&RestInput { explicit_base: Some(60), ..input(RestClass::Main, 5.0, 5.0) });
+        assert_eq!((short.seconds, codes(&short)), (120, vec![RestCode::RestBaseProgram, RestCode::RestFloor]));
+    }
+
+    #[test]
+    fn a_grind_lowers_the_load_when_the_rest_overflows_or_twice_in_a_row() {
+        let rpe = |r: f64| RestInput { logged_rpe: Some(r), ..input(RestClass::Main, 5.0, 5.0) };
+        // One grind with room in the rest does nothing.
+        assert!(plan_rest(&rpe(10.0)).autoreg.is_none() && plan_rest(&rpe(10.0)).grind);
+        // The second in a row steps in: 5% at RPE 9.5 with all reps, 10% at RPE 10 or a miss, then the rest of the sets go.
+        let again = |r: RestInput| RestInput { prev_grind: true, ..r };
+        assert_eq!(plan_rest(&again(rpe(9.5))).autoreg.map(|a| a.percent), Some(5));
+        assert_eq!(plan_rest(&again(rpe(10.0))).autoreg.map(|a| a.percent), Some(10));
+        let miss = RestInput { min_reps: Some(5.0), ..input(RestClass::Main, 5.0, 4.0) };
+        assert!(plan_rest(&miss).grind);
+        assert_eq!(plan_rest(&again(miss.clone())).autoreg.map(|a| a.percent), Some(10));
+        let lowered = RestInput { lowered: true, ..again(rpe(10.0)) };
+        assert_eq!(plan_rest(&lowered).autoreg.map(|a| (a.action, a.percent)), Some((AutoregAction::DropRemaining, 0)));
+        // 10 reps on an 8-12 set is in the range, and a miss with a lower RPE logged is not a grind. AMRAP never is.
+        let range = RestInput { min_reps: Some(8.0), ..input(RestClass::Secondary, 12.0, 10.0) };
+        assert!(!plan_rest(&range).grind);
+        assert!(!plan_rest(&RestInput { logged_rpe: Some(8.0), ..miss.clone() }).grind);
+        assert!(!plan_rest(&RestInput { amrap: true, logged_rpe: Some(10.0), ..miss }).grind);
     }
 
     #[test]
@@ -379,7 +504,7 @@ mod tests {
         let p = plan_rest(&learned);
         assert_eq!(p.seconds, 105);
         assert!(codes(&p).contains(&RestCode::RestPace));
-        assert_eq!(p.rows.iter().map(|r| r.seconds).sum::<i32>(), 105);
+        assert_eq!(p.rows.iter().map(|r| r.applied).sum::<i32>(), 105);
     }
 
     #[test]

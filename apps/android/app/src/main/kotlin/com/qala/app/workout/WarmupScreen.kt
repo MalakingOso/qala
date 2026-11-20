@@ -21,6 +21,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -33,6 +34,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -63,10 +65,12 @@ private sealed interface WarmupLoad {
 }
 
 /**
- * The warm-up (DESIGN 7.4, DECISIONS T6): four numbered steps, easy cardio, soft tissue with the owner's tools (their
- * Blender renders, never drawn), dynamic mobility, then ramp sets worked out from each exercise's working weight.
- * Soft tissue and mobility are check rows. Start workout marks the warm-up stage done, as the stub's Mark done did, and
- * goes to the workout; Skip goes there without a mark, and Back leaves with nothing recorded.
+ * The warm-up (DESIGN 7.4, DECISIONS T6, S46): three numbered steps, easy cardio with a countdown, soft tissue with the owner's
+ * tools (their Blender renders, never drawn) and dynamic mobility. The ramp sets are not here: they sit above the sets of each
+ * exercise in the workout, where they are ticked. Soft tissue and mobility are check rows, and the countdown runs on the
+ * clock, so all of it is kept in the workout draft, opened by the first action here (looking opens nothing), and survives
+ * leaving the screen. Start workout marks the warm-up stage done, as the stub's Mark done did, and goes to the workout; Skip goes
+ * there without a mark, and Back leaves with nothing recorded.
  *
  * [onStart] and [onSkip] push the workout; [onAllExercises] pushes the grid of the day's exercises. [day] is today's
  * program day, null while Today is still loading.
@@ -79,9 +83,11 @@ fun WarmupScreen(day: Int?, onBack: () -> Unit, onStart: () -> Unit, onSkip: () 
         if (day != null) load = container.workout.warmup(day)?.let { WarmupLoad.Ready(it) } ?: WarmupLoad.Empty
     }
     val c = Qala.colors
-    var checked by rememberSaveable { mutableStateOf("") }          // ids of the rows ticked, comma separated
-    val ticked = remember(checked) { checked.split(',').filter { it.isNotEmpty() }.toSet() }
-    val flip = { id: String -> checked = (if (id in ticked) ticked - id else ticked + id).joinToString(",") }
+    val state by container.workout.state.collectAsState()
+    val draft = state?.takeIf { it.day == day }
+    val ticked = remember(draft?.warmupTicked) { draft?.warmupTicked.orEmpty().toSet() }
+    // The container's scope, not the screen's: a tick that opens the draft must not be cancelled by leaving the screen.
+    val flip = { id: String -> if (day != null) container.scope.launch { container.workout.flipWarmup(day, id) } }
 
     Column(Modifier.fillMaxSize()) {
         Column(
@@ -111,7 +117,11 @@ fun WarmupScreen(day: Int?, onBack: () -> Unit, onStart: () -> Unit, onSkip: () 
             when (load) {
                 WarmupLoad.Loading -> QalaText("Getting your warm-up ready.", style = QalaType.hint, color = c.fgMuted)
                 WarmupLoad.Empty -> QalaText("Nothing to lift today, so there is nothing to warm up for.", style = QalaType.hint, color = c.fgMuted)
-                is WarmupLoad.Ready -> WarmupSteps(ready!!, ticked, flip)
+                is WarmupLoad.Ready -> WarmupSteps(
+                    ready!!, ticked, flip, draft?.cardio,
+                    onCardio = { seconds -> if (day != null) container.scope.launch { container.workout.startCardio(day, seconds) } },
+                    onAddCardio = container.workout::addCardio,
+                )
             }
         }
         if (load is WarmupLoad.Ready) {
@@ -132,13 +142,13 @@ fun WarmupScreen(day: Int?, onBack: () -> Unit, onStart: () -> Unit, onSkip: () 
 }
 
 @Composable
-private fun WarmupSteps(view: WarmupView, ticked: Set<String>, flip: (String) -> Unit) {
+private fun WarmupSteps(view: WarmupView, ticked: Set<String>, flip: (String) -> Unit, cardio: RestTimer?, onCardio: (Int) -> Unit, onAddCardio: (Int) -> Unit) {
     val plan = view.plan
     val c = Qala.colors
     var n = 0
 
     if (view.blocksOff) {
-        QalaText("Your warm-up is off in Settings, so there is no cardio, soft tissue or mobility. The ramp sets stay.", Modifier.padding(horizontal = 4.dp), QalaType.hint, c.fgMuted)
+        QalaText("Your warm-up is off in Settings, so there is no cardio, soft tissue or mobility. The ramp sets stay, above the sets in the workout.", Modifier.padding(horizontal = 4.dp), QalaType.hint, c.fgMuted)
     }
 
     plan.block(BlockKind.General)?.let { general ->
@@ -152,6 +162,7 @@ private fun WarmupSteps(view: WarmupView, ticked: Set<String>, flip: (String) ->
                     }
                 }
             }
+            CardioCountdown(general.minutes * 60, cardio, onCardio, onAddCardio)
         }
     }
     plan.block(BlockKind.SoftTissue)?.let { tissue ->
@@ -179,23 +190,6 @@ private fun WarmupSteps(view: WarmupView, ticked: Set<String>, flip: (String) ->
         Step(++n, "Mobility", "${mobility.minutes} min") {
             mobility.items.forEachIndexed { i, item ->
                 CheckRow(item.id in ticked, { flip(item.id) }, i > 0, item.title, item.detail)
-            }
-        }
-    }
-    Step(++n, "Ramp sets", "up to the work sets") {
-        val shown = plan.ramps.filter { it.workWeight != null }
-        if (shown.isEmpty()) QalaText("Bodyweight work today: no ramp, just start easy.", style = QalaType.hint, color = c.fgMuted)
-        shown.forEachIndexed { i, ramp ->
-            Column(Modifier.fillMaxWidth().padding(top = if (i > 0) 14.dp else 0.dp)) {
-                Row(Modifier.fillMaxWidth().padding(bottom = 4.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Bottom) {
-                    QalaText(ramp.name, style = QalaType.bodyStrong, color = c.fg, maxLines = 1, modifier = Modifier.weight(1f))
-                    QalaText("work: ${formatWeight(ramp.workWeight!!)} ${unitLabel(view.unit)} × ${ramp.workReps}", style = QalaType.log.copy(fontSize = 12.sp, lineHeight = 17.sp), color = c.fgMuted, maxLines = 1)
-                }
-                if (ramp.steps.isEmpty()) QalaText("No ramp needed: it is light.", style = QalaType.hint, color = c.fgMuted)
-                ramp.steps.forEach { step ->
-                    val hint = if (ramp.barbell && !step.bar) view.plateHints[step.load] else null
-                    RampRow(step, view.unit, plateShorthand = hint?.let { plateLine(step.load, it) })
-                }
             }
         }
     }
@@ -257,29 +251,33 @@ private fun CheckRow(
 }
 
 /**
- * One ramp step: its weight and reps, the rest after it, and [plateShorthand] ("per side 45 · 45 · 10") under them when
- * the plates work provides it. The step the soreness or a low recovery added is flagged in the accent colour.
+ * The cardio countdown: the planner's minutes with -1 and +1 before it starts, the clock once it has, and the same two buttons while
+ * it runs. It counts from the moment it was started, so leaving the screen and coming back finds it where it is; at zero the shell
+ * buzzes, and this says it is done.
  */
 @Composable
-private fun RampRow(step: RampStep, unit: WeightUnit, plateShorthand: String?) {
+private fun CardioCountdown(plannedSec: Int, timer: RestTimer?, onStart: (Int) -> Unit, onAdd: (Int) -> Unit) {
     val c = Qala.colors
-    Column(
-        Modifier
-            .fillMaxWidth()
-            .defaultMinSize(minHeight = 44.dp)
-            .padding(vertical = 6.dp)
-            .semantics(mergeDescendants = true) {},
-    ) {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            QalaText(
-                (if (step.bar) "Bar" else "${formatWeight(step.load)} ${unitLabel(unit)}") + " × ${step.reps}",
-                style = QalaType.log.copy(fontSize = 14.sp, lineHeight = 20.sp),
-                color = if (step.extra) c.accent else c.fg,
-                maxLines = 1,
-            )
-            QalaText("rest ${formatClock(step.restSec)}", style = QalaType.hint.copy(fontSize = 12.sp, lineHeight = 16.sp), color = c.fgMuted, maxLines = 1)
-        }
-        if (step.extra) QalaText("extra step*", style = QalaType.hint.copy(fontSize = 11.5.sp, lineHeight = 15.sp), color = c.accent)
-        if (plateShorthand != null) QalaText(plateShorthand, style = QalaType.hint.copy(fontSize = 11.5.sp, lineHeight = 15.sp), color = c.fgMuted)
+    val container = LocalAppContainer.current
+    var chosen by rememberSaveable(plannedSec) { mutableStateOf(plannedSec) }
+    val now by rememberNow(container.env.clock, timer?.startedAtMs ?: 0L)
+    val running = timer != null
+    val remaining = timer?.remainingSec(now) ?: chosen
+    val over = running && timer!!.isUp(now)
+    val adjust = { delta: Int -> if (running) onAdd(delta) else chosen = (chosen + delta).coerceAtLeast(MinCardioSec) }
+    Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+        SecondaryButton("-1 min", { adjust(-60) }, Modifier.semantics { contentDescription = "One minute less cardio" }, small = true, enabled = (timer?.budgetSec ?: chosen) > MinCardioSec)
+        QalaText(
+            if (over) "Done" else formatClock(remaining),
+            Modifier.weight(1f).semantics { contentDescription = if (over) "Cardio is done" else "${remaining / 60} minutes ${remaining % 60} seconds of cardio left" },
+            QalaType.ticking.copy(fontSize = 34.sp, lineHeight = 40.sp),
+            if (over) c.accent else c.fg,
+            androidx.compose.ui.text.style.TextAlign.Center,
+            maxLines = 1,
+        )
+        SecondaryButton("+1 min", { adjust(60) }, Modifier.semantics { contentDescription = "One minute more cardio" }, small = true)
+    }
+    if (!running) {
+        PrimaryButton("Start cardio", { onStart(chosen) }, Modifier.fillMaxWidth().padding(top = 8.dp), icon = QalaIcons.Bike)
     }
 }

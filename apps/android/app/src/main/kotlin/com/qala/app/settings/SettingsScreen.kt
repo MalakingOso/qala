@@ -41,6 +41,7 @@ import com.qala.data.model.GymSettings
 import com.qala.data.model.CueEvery
 import com.qala.data.model.PlateSettings
 import com.qala.data.model.RestAlert
+import com.qala.data.model.RestSettings
 import com.qala.data.model.SettingsRecord
 import com.qala.data.model.ThemeMode
 import com.qala.data.model.TitleFont
@@ -421,6 +422,26 @@ fun SettingsScreen(
                 on = gym.rest.showPlates,
                 onToggle = { on -> edit(gym.copy(rest = gym.rest.copy(showPlates = on))) { setShowPlates(on) } },
             )
+            ToggleRow(
+                label = "Adjust load on grinds",
+                hint = "A grind lowers the sets still to come, or drops them",
+                on = gym.rest.adjustLoad,
+                onToggle = { on -> edit(gym.copy(rest = gym.rest.copy(adjustLoad = on))) { setAdjustLoad(on) } },
+            )
+            GroupRow(vertical = 8.dp) {
+                QalaText("Warning", Modifier.weight(1f), QalaType.body)
+                ScalePicker(
+                    labels = WarnLabels,
+                    selected = RestSettings.WarnChoices.indexOf(gym.rest.warnSec).coerceAtLeast(0),
+                    onPick = { i ->
+                        val seconds = RestSettings.WarnChoices[i]
+                        edit(gym.copy(rest = gym.rest.copy(warnSec = seconds))) { setRestWarning(seconds) }
+                    },
+                    groupLabel = "Warning before a rest ends",
+                    modifier = Modifier.width(260.dp),
+                    cellHeight = 44.dp,
+                )
+            }
             GroupRow(vertical = 8.dp, last = true) {
                 QalaText("Alert", Modifier.weight(1f), QalaType.body)
                 ScalePicker(

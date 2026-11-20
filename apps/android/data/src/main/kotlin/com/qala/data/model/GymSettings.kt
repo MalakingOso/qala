@@ -130,7 +130,16 @@ data class RestSettings(
     val alert: RestAlert = RestAlert.Vibrate,
     /** The rest plan learns the lifter's pace from the rests taken (D32). Off, every rest is planned at the base. */
     val learn: Boolean = true,
-)
+    /** Seconds before the end of a rest that a short buzz and a soft tick say it is nearly over; 0 is off (S45). */
+    val warnSec: Int = 10,
+    /** A grind lowers or drops the sets still to come when the rest would run past its cap or it is the second in a row (S47). */
+    val adjustLoad: Boolean = true,
+) {
+    companion object {
+        /** What the warning can be set to: off, then seconds before the end. */
+        val WarnChoices = listOf(0, 10, 15, 30)
+    }
+}
 
 /** Light, dark, or whatever the system is set to. The default is Light, as on the web. */
 enum class ThemeMode(val wire: String) {
@@ -218,6 +227,8 @@ data class GymSettings(
                     showPlates = rest.leaf("showPlates", Boolean.serializer(), auto.showPlates),
                     alert = RestAlert.of(rest.leaf("alert", String.serializer(), auto.alert.wire)),
                     learn = rest.leaf("learn", Boolean.serializer(), auto.learn),
+                    warnSec = rest.leaf("warnSec", Int.serializer(), auto.warnSec).takeIf { it in RestSettings.WarnChoices } ?: auto.warnSec,
+                    adjustLoad = rest.leaf("adjustLoad", Boolean.serializer(), auto.adjustLoad),
                 ),
                 running = RunningSettings(
                     cues = running.leaf("cues", Boolean.serializer(), true),

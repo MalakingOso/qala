@@ -1,5 +1,6 @@
 package com.qala.app.plan
 
+import com.qala.app.workout.PlateMath
 import com.qala.app.skip.spanLine
 import com.qala.app.today.CtaIcon
 import com.qala.app.today.Cta
@@ -133,6 +134,8 @@ class ExerciseRow(
     /** "150 lb × 3", one per set. */
     val sets: List<String>,
     val warmups: List<String>,
+    /** Each set's weight when it is a barbell load in pounds, which gets plate faces beside it; null for any other set. */
+    val plateWeights: List<Double?> = emptyList(),
 )
 
 /** The run on a day, as a row beside the exercises. */
@@ -420,6 +423,7 @@ class PlanModel(
         scheme = setScheme(e.sets),
         sets = e.sets.map { setText(it) },
         warmups = e.warmups.map { setText(it) },
+        plateWeights = e.sets.map { s -> s.weight?.takeIf { PlateMath.applies(s.unit, e.equipment == "barbell") } },
     )
 
     // ---- the week ----

@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
@@ -71,21 +72,18 @@ fun Stepper(
         GroupLabel(label)
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             StepButton(QalaIcons.Minus, decreaseDescription, canDecrease) { onStep(-1) }
-            val text: AnnotatedString = buildAnnotatedString {
-                append(value)
-                if (unit != null) withStyle(SpanStyle(fontSize = 13.sp, color = c.fgMuted)) { append(" $unit") }
+            val figure = QalaType.figure.copy(fontSize = 38.sp, lineHeight = 46.sp, fontFeatureSettings = "tnum, lnum")
+            val describe = Modifier.semantics(mergeDescendants = true) { contentDescription = "$label, $value" + (unit?.let { " $it" } ?: "") }
+            if (unit == null) {
+                QalaText(value, Modifier.weight(1f).defaultMinSize(minHeight = 52.dp).then(describe), figure, c.fg, TextAlign.Center, maxLines = 1)
+            } else {
+                // The number and its unit are two texts either side of the middle: the number ends where the unit begins, so a
+                // figure that gains a digit (95 to 100) grows to the left and the unit stays put, instead of the pair re-centring.
+                Row(Modifier.weight(1f).defaultMinSize(minHeight = 52.dp).then(describe), verticalAlignment = Alignment.CenterVertically) {
+                    QalaText(value, Modifier.weight(1f), figure, c.fg, TextAlign.End, maxLines = 1)
+                    QalaText(unit, Modifier.weight(1f).padding(start = 5.dp), QalaType.figure.copy(fontSize = 13.sp, lineHeight = 46.sp), c.fgMuted, TextAlign.Start, maxLines = 1)
+                }
             }
-            QalaText(
-                text,
-                Modifier
-                    .weight(1f)
-                    .defaultMinSize(minHeight = 52.dp)
-                    .semantics(mergeDescendants = true) { contentDescription = "$label, $value" + (unit?.let { " $it" } ?: "") },
-                QalaType.figure.copy(fontSize = 38.sp, lineHeight = 46.sp, fontFeatureSettings = "tnum, lnum"),
-                c.fg,
-                TextAlign.Center,
-                maxLines = 1,
-            )
             StepButton(QalaIcons.Plus, increaseDescription, canIncrease) { onStep(1) }
         }
     }

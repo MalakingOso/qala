@@ -43,7 +43,8 @@ class WorkoutModelTest {
         val one = open.log(t0)!!.state.startRest(SetRef(0, 0), SetRef(0, 1), t0).endRest(t0 + 60_000L)
         val two = one.log(t0 + 70_000L)!!.state
         val muscles = mapOf(two.exercises[0].exerciseId to com.qala.data.core.ExerciseMuscles(listOf("quads", "glutes")))
-        val summary = two.summary(t0 + 600_000L, warmupSec = 420, muscles = muscles)
+        val measured = two.copy(warmupSec = 420)
+        val summary = measured.summary(t0 + 600_000L, muscles = muscles)
         assertEquals(600, summary.elapsedSec)
         assertEquals(60, summary.restSec)
         assertEquals("what is left once the rest is taken out", 540, summary.liftSec)
@@ -54,7 +55,7 @@ class WorkoutModelTest {
         val first = two.exercises[0].sets[0]
         assertEquals(first.weight!! * (1 + first.reps / 30), summary.e1rms.single().e1rm, 1e-9)
         // The same split goes into the saved session.
-        val lifted = two.toLifted(t0 + 600_000L, 420)
+        val lifted = measured.toLifted(t0 + 600_000L)
         assertEquals(listOf(420, 540, 60), listOf(lifted.warmupSec, lifted.liftSec, lifted.restSec))
     }
 
@@ -111,15 +112,18 @@ class WorkoutModelTest {
     @Test
     fun onlyBarbellLiftsInPoundsGetPlateHints() {
         assertEquals(listOf(true, true, false), open.exercises.map { it.barbell })
-        assertEquals("the cable pulldown's 80 lb is not a plate load", listOf(150.0, 100.0), open.plateWeights())
+        assertEquals("the cable pulldown's 80 lb is not a plate load", listOf(150.0, 100.0), open.plateWeights(reach = 0))
         val kg = WorkoutFixtures.open(WeightUnit.Kg)
         assertEquals(listOf(false, false, false), kg.exercises.map { it.barbell })
-        assertEquals(emptyList<Double>(), kg.plateWeights())
+        assertEquals(emptyList<Double>(), kg.plateWeights(reach = 0))
     }
 
     @Test
     fun theStepperMovesTheWeightsThatWantPlates() {
-        assertEquals(listOf(155.0, 150.0, 100.0), open.stepWeight(1).plateWeights())
+        val stepped = open.stepWeight(1)
+        assertEquals(listOf(155.0, 150.0, 100.0), stepped.plateWeights(reach = 0))
+        // The weights a few presses either way of the open set are asked for ahead, so the plates are there when the weight lands.
+        assertTrue(stepped.plateWeights().containsAll(listOf(125.0, 160.0, 185.0)))
     }
 
     @Test
@@ -259,12 +263,13 @@ class WorkoutModelTest {
     }
 
     @Test
-    fun loggingASetAlreadyDoneSavesTheNewNumbersAndStaysPut() {
+    fun loggingASetAlreadyDoneSavesTheNewNumbersAndNamesTheSetThatWasOpen() {
         val first = open.log(1)!!.state
         val edited = first.pickSet(0).stepWeight(1).log(9)!!
         assertFalse("not a first logging, so no rest", edited.first)
-        assertNull(edited.next)
-        assertEquals(0, edited.state.exercise.selected)
+        assertEquals("the logger goes back to the first set still open, once Saved has shown", SetRef(0, 1), edited.next)
+        assertEquals("until then it stays on the saved row", 0, edited.state.exercise.selected)
+        assertNull("the edit is kept, no longer unsaved", edited.state.dirty)
         assertEquals(155.0, edited.state.exercise.sets[0].weight!!, 0.0)
         assertEquals("the time of the first logging stands", 1L, edited.state.exercise.sets[0].loggedAtMs)
         assertEquals(1, edited.state.loggedSets)
@@ -443,11 +448,11 @@ class WorkoutModelTest {
     }
 
     @Test
-    fun editingASetAlreadyLoggedStaysPutWhetherOrNotRestIsAutomatic() {
+    fun savingASetAlreadyLoggedSaysSavedAndOpensNoRestWhetherOrNotRestIsAutomatic() {
         val done = open.log(1)!!.state.pickSet(0)
         for (auto in listOf(true, false)) {
             val settled = done.log(2)!!.settle(2, autoRest = auto)
-            assertEquals(AfterLog.Stay, settled.after)
+            assertEquals(AfterLog.Saved, settled.after)
             assertNull(settled.state.rest)
         }
     }

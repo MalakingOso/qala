@@ -26,6 +26,11 @@ data class RestRequest(
     val targetRpe: Double? = null,
     val setNumber: Int = 1,
     val amrap: Boolean = false,
+    /** The bottom of the set's rep range: fewer reps than this is a miss. */
+    val minReps: Double? = null,
+    /** The work set before this one was a grind; the exercise's load was already lowered today. */
+    val prevGrind: Boolean = false,
+    val lowered: Boolean = false,
     val explicitBase: Int? = null,
     val weight: Double? = null,
     val first: RestFirstSet? = null,
@@ -53,13 +58,39 @@ enum class RestCode {
     @SerialName("REST_DRIFT") Drift,
     @SerialName("REST_LOW_READINESS") LowReadiness,
     @SerialName("REST_ROUND") Round,
+    @SerialName("REST_FLOOR") Floor,
+}
+
+/** [seconds] is what the row asks for, [applied] the part of it that fit under the cap (0 for a row after the cap). */
+@Serializable
+data class RestRowDto(val code: RestCode, val seconds: Int, val applied: Int = seconds, val value: Double? = null, val other: Double? = null)
+
+/** What a grind asks of the sets to come: lower them by [percent], or drop them (`dropRemaining`). */
+@Serializable
+enum class AutoregAction {
+    @SerialName("lower") Lower,
+    @SerialName("dropRemaining") DropRemaining,
 }
 
 @Serializable
-data class RestRowDto(val code: RestCode, val seconds: Int, val value: Double? = null, val other: Double? = null)
+enum class AutoregWhy {
+    @SerialName("capOverflow") CapOverflow,
+    @SerialName("twoInARow") TwoInARow,
+}
 
 @Serializable
-data class RestPlanDto(val seconds: Int, val base: Int, val adjust: Int, val multiplier: Double, val rows: List<RestRowDto>)
+data class AutoregDto(val action: AutoregAction, val percent: Int, val why: AutoregWhy)
+
+@Serializable
+data class RestPlanDto(
+    val seconds: Int,
+    val base: Int,
+    val adjust: Int,
+    val multiplier: Double,
+    val rows: List<RestRowDto>,
+    val grind: Boolean = false,
+    val autoreg: AutoregDto? = null,
+)
 
 fun QalaCore.planRest(request: RestRequest): RestPlanDto =
     call(RestRequest.serializer(), RestPlanDto.serializer(), request, ::ffiPlanRest)

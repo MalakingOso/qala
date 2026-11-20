@@ -23,6 +23,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -36,9 +37,18 @@ val ContentMaxWidth = 560.dp
 
 class TabItem(val label: String, val icon: ImageVector)
 
+/** The tab bar without the navigation inset: Today's sheet stops are measured against it. */
+val TabBarHeight = 72.dp
+
+/** The tab bar over Today's film: dark tint (no cheap backdrop blur on native), a hairline on top, white and pale-blue labels in either theme. */
+private val GlassFill = Color(0xEB160D08)
+private val GlassRule = Color(0x29FFFFFF)
+private val GlassInactive = Color(0xFFBCC5DA)
+private val GlassEmber = Color(0xFFE0652B)
+
 /**
  * The bottom tab bar: 72 dp plus the navigation inset, a 2 dp top border, and a 40 x 3 dp ember bar over the
- * active tab. Tabs are at least 44 dp tall.
+ * active tab. Tabs are at least 44 dp tall. [glass] is the dark translucent version Today overlays on its film.
  */
 @Composable
 fun TabBar(
@@ -46,18 +56,25 @@ fun TabBar(
     selectedIndex: Int,
     onSelect: (Int) -> Unit,
     modifier: Modifier = Modifier,
+    glass: Boolean = false,
 ) {
     val c = Qala.colors
+    val fill = if (glass) GlassFill else c.bgSurface
+    val rule = if (glass) GlassRule else c.border
+    val ember = if (glass) GlassEmber else c.accent
+    val ink = if (glass) Color.White else c.fg
+    val muted = if (glass) GlassInactive else c.fgMuted
     Box(modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
         Column(
             Modifier
                 .widthIn(max = ContentMaxWidth)
                 .fillMaxWidth()
-                .background(c.bgSurface)
+                .background(fill)
                 .windowInsetsPadding(WindowInsets.navigationBars),
         ) {
-            Box(Modifier.fillMaxWidth().height(QalaTokens.borderWidth).background(c.border))
-            Row(Modifier.fillMaxWidth().height(72.dp - QalaTokens.borderWidth)) {
+            val ruleHeight = if (glass) 1.dp else QalaTokens.borderWidth
+            Box(Modifier.fillMaxWidth().height(ruleHeight).background(rule))
+            Row(Modifier.fillMaxWidth().height(TabBarHeight - ruleHeight)) {
                 items.forEachIndexed { i, item ->
                     val active = i == selectedIndex
                     Box(
@@ -78,15 +95,15 @@ fun TabBar(
                                 Modifier
                                     .align(Alignment.TopCenter)
                                     .size(width = 40.dp, height = 3.dp)
-                                    .background(c.accent),
+                                    .background(ember),
                             )
                         }
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(5.dp),
                         ) {
-                            QalaIcon(item.icon, null, size = 22.dp, tint = if (active) c.fg else c.fgMuted)
-                            QalaText(item.label, style = QalaType.tabLabel, color = if (active) c.fg else c.fgMuted, maxLines = 1)
+                            QalaIcon(item.icon, null, size = 22.dp, tint = if (active) ink else muted)
+                            QalaText(item.label, style = QalaType.tabLabel, color = if (active) ink else muted, maxLines = 1)
                         }
                     }
                 }

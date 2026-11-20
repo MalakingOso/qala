@@ -9,6 +9,7 @@ import com.qala.data.model.EquipmentItem
 import com.qala.data.model.GymSettings
 import com.qala.data.model.PlateSettings
 import com.qala.data.model.RestAlert
+import com.qala.data.model.RestSettings
 import com.qala.data.model.RunPlan
 import com.qala.data.model.RunPlanDay
 import com.qala.data.model.SettingsRecord
@@ -55,7 +56,7 @@ object SettingsGroups {
     /** `enabled`, `softTissue`, `preferPercussion`, `minutes`: how the warm-up is built. */
     const val WARMUP = "warmup"
 
-    /** `auto` (logging a set opens Rest), `showPlates` (plate hints are shown), `alert` (vibrate, sound or both) and `learn` (the rest plan learns the lifter's pace). */
+    /** `auto` (logging a set opens Rest), `showPlates` (plate hints are shown), `alert` (vibrate, sound or both), `learn` (the rest plan learns the lifter's pace), `warnSec` (the warning before a rest ends, 0 off) and `adjustLoad` (a grind lowers the sets to come). */
     const val REST = "rest"
 
     /** `cues` (speak cues), `cueEvery` (half, one or time) and `autopause`: what a run does. */
@@ -190,6 +191,13 @@ class SettingsRepository(
     suspend fun setLearnFromTaps(on: Boolean) = leaf(SettingsGroups.REST, "learn", JsonPrimitive(on))
 
     suspend fun setRestAlert(alert: RestAlert) = leaf(SettingsGroups.REST, "alert", JsonPrimitive(alert.wire))
+
+    suspend fun setRestWarning(seconds: Int) {
+        require(seconds in RestSettings.WarnChoices) { "the rest warning is off, 10, 15 or 30 seconds" }
+        leaf(SettingsGroups.REST, "warnSec", JsonPrimitive(seconds))
+    }
+
+    suspend fun setAdjustLoad(on: Boolean) = leaf(SettingsGroups.REST, "adjustLoad", JsonPrimitive(on))
 
     // ---- running ----
 

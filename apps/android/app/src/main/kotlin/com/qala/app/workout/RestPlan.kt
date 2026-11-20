@@ -1,5 +1,6 @@
 package com.qala.app.workout
 
+import com.qala.data.core.AutoregDto
 import com.qala.data.core.QalaCore
 import com.qala.data.core.RestCode
 import com.qala.data.core.RestFirstSet
@@ -18,12 +19,15 @@ import kotlinx.serialization.Serializable
  * the rest down, and stays here.
  */
 
-/** One line of the "Why" ledger: the base, then each adjustment in signed seconds. */
+/**
+ * One line of the "Why" ledger: the base, then each adjustment in signed seconds. [seconds] is what counted under the cap. A row
+ * that came after the cap has [seconds] 0 and [atMax] true: it is shown greyed, unsigned, as "at max", and is not summed.
+ */
 @Serializable
-data class RestRow(val label: String, val seconds: Int)
+data class RestRow(val label: String, val seconds: Int, val atMax: Boolean = false)
 
-/** A rest: the seconds to take, the ledger that adds up to them, and what a later look at this rest needs (D32). */
-data class RestPlan(val seconds: Int, val base: Int, val adjust: Int, val rows: List<RestRow>)
+/** A rest: the seconds to take, the ledger that adds up to them, and what a later look at this rest needs (D32). [autoreg] is what a grind asks of the load (S47). */
+data class RestPlan(val seconds: Int, val base: Int, val adjust: Int, val rows: List<RestRow>, val grind: Boolean = false, val autoreg: AutoregDto? = null)
 
 /** What the set just logged says about the rest after it, with what the day and the history add. */
 data class RestInput(
@@ -43,6 +47,11 @@ data class RestInput(
     val first: RestFirstSet? = null,
     /** What the day and the history say: soreness, recovery, local fatigue and past rests. See [RestContext]. */
     val context: RestContext = RestContext(),
+    /** The bottom of the set's rep range (8 on 8-12): fewer reps than this is a miss. */
+    val minReps: Double? = null,
+    /** The set before this one in the exercise was a grind, and its load was already lowered today. */
+    val prevGrind: Boolean = false,
+    val lowered: Boolean = false,
 )
 
 /**
@@ -60,6 +69,9 @@ fun restPlan(input: RestInput): RestPlan {
             targetRpe = input.targetRpe,
             setNumber = input.setNumber,
             amrap = input.amrap,
+            minReps = input.minReps,
+            prevGrind = input.prevGrind,
+            lowered = input.lowered,
             explicitBase = input.explicitBase,
             weight = input.weight,
             first = input.first,
@@ -70,7 +82,7 @@ fun restPlan(input: RestInput): RestPlan {
             classHistory = c.cls,
         ),
     )
-    return RestPlan(plan.seconds, plan.base, plan.adjust, plan.rows.map { RestRow(rowLabel(it), it.seconds) })
+    return RestPlan(plan.seconds, plan.base, plan.adjust, plan.rows.map { RestRow(rowLabel(it), it.applied, atMax = it.applied == 0 && it.seconds > 0) }, plan.grind, plan.autoreg)
 }
 
 /** The words for one row of the ledger. */
@@ -90,7 +102,8 @@ fun rowLabel(row: RestRowDto): String {
         RestCode.LateSet -> "Set ${(v ?: 0.0).toInt()} of a heavy lift"
         RestCode.Drift -> "Reps or effort slipped since the first set"
         RestCode.LowReadiness -> "Not fully recovered today"
-        RestCode.Round -> "Rounded to 15 s, kept between ${formatClock((v ?: 0.0).toInt())} and ${formatClock((o ?: 0.0).toInt())}"
+        RestCode.Round -> "Rounded to the nearest 15 s"
+        RestCode.Floor -> "Raised to the minimum, ${formatClock((v ?: 0.0).toInt())}"
     }
 }
 
@@ -112,6 +125,12 @@ data class RestTimer(val startedAtMs: Long, val budgetSec: Int) {
 
     /** The part of the budget still to go, 1 down to 0, for the bar. */
     fun fraction(nowMs: Long): Float = if (budgetSec <= 0) 0f else remainingSec(nowMs).toFloat() / budgetSec
+
+    /** When the time is up, on the clock. */
+    val endsAtMs: Long get() = startedAtMs + budgetSec * 1000L
+
+    /** Whole seconds past the end, 0 until the time is up: a rest left running while the next set is being done. */
+    fun overSec(nowMs: Long): Int = (elapsedSec(nowMs) - budgetSec).coerceAtLeast(0)
 
     /** The same rest [seconds] longer. */
     fun plus(seconds: Int): RestTimer = copy(budgetSec = budgetSec + seconds)

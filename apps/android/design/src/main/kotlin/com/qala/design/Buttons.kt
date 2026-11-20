@@ -117,7 +117,7 @@ fun SecondaryButton(
     }
 }
 
-/** A 44 dp square with a [size] icon: the header and toolbar button. */
+/** A 44 dp square with a [size] icon: the header and toolbar button. [tint] fixes the icon's colour (Today's buttons are white over the film). */
 @Composable
 fun IconButton(
     icon: ImageVector,
@@ -125,6 +125,7 @@ fun IconButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     size: Dp = 20.dp,
+    tint: Color? = null,
 ) {
     val c = Qala.colors
     val interaction = remember { MutableInteractionSource() }
@@ -142,7 +143,7 @@ fun IconButton(
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        QalaIcon(icon, contentDescription, size = size, tint = if (pressed) c.fg else c.fgSecondary)
+        QalaIcon(icon, contentDescription, size = size, tint = tint ?: if (pressed) c.fg else c.fgSecondary)
     }
 }
 

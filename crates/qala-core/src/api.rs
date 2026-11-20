@@ -330,7 +330,7 @@ pub fn round_weight(request: &str) -> ApiResult {
 }
 
 /// `{v, class, targetReps, loggedReps, loggedRpe?, targetRpe?, setNumber?, amrap?, explicitBase?, weight?, first?, soreness?,
-/// prs?, fatigueLocal?, exerciseHistory?, classHistory?}` -> the rest plan (`seconds`, `base`, `adjust`, `multiplier`, `rows`).
+/// prs?, fatigueLocal?, minReps?, prevGrind?, lowered?, exerciseHistory?, classHistory?}` -> the rest plan (`seconds`, `base`, `adjust`, `multiplier`, `rows` with `applied`, `grind`, `autoreg?`).
 pub fn plan_rest(request: &str) -> ApiResult {
     let r: crate::rest::RestInput = parse_request(request)?;
     respond(&crate::rest::plan_rest(&r))

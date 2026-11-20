@@ -16,6 +16,7 @@ import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.qala.data.IsoTime
@@ -232,7 +233,8 @@ class WorkoutFlowTest {
         rule.onNodeWithText("Log set 1").performClick()
         waitForText("Log set 2")
         assertNull("logging opened no rest", container.workout.state.value!!.rest)
-        rule.onNodeWithContentDescription("Start rest after set 1").performClick()
+        // The open set 2 was brought into view, which left set 1's row (and the ramp rows above it) scrolled up: scroll to its Rest button first.
+        rule.onNodeWithContentDescription("Start rest after set 1").performScrollTo().performClick()
         waitForText("Ready early")
         assertNotNull(container.workout.state.value!!.rest)
         rule.onNodeWithText("Ready early").performClick()
@@ -422,7 +424,9 @@ class WorkoutFlowTest {
         railSays("Day stages: warm-up now, 1 of 6 done")
         rule.onNodeWithText("Start warm-up").performClick()
         waitForText("Easy cardio")
-        rule.onNodeWithText("Ramp sets").assertExists()
+        // The ramp sets are not a step here any more: they sit above the sets in the workout (S46). The cardio has its countdown.
+        rule.onNodeWithText("Start cardio").assertExists()
+        rule.onNodeWithText("Ramp sets").assertDoesNotExist()
         rule.onNodeWithText("Start workout").performClick()
         waitForText("Log set 1")
         rule.runOnUiThread { rule.activity.onBackPressedDispatcher.onBackPressed() }

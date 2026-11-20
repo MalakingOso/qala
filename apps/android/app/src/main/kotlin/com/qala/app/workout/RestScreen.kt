@@ -1,6 +1,5 @@
 package com.qala.app.workout
 
-import android.media.RingtoneManager
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -20,12 +19,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
@@ -34,8 +30,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.qala.app.LocalAppContainer
-import com.qala.app.rememberAskForNotifications
-import com.qala.data.model.RestAlert
+import com.qala.app.plates.LoadedSleeve
+import com.qala.data.core.AutoregAction
+import com.qala.data.core.AutoregWhy
+import com.qala.data.core.PlateEntry
 import com.qala.data.model.WeightUnit
 import com.qala.design.Card
 import com.qala.design.FlowBottomBar
@@ -56,11 +54,13 @@ import com.qala.design.SecondaryButton
  * early is the one primary (it reads "Start set 3" once the time is up) and +30 s lengthens the rest. Going back, or
  * starting the set, returns to the workout, which is already on the next set.
  *
+ * The countdown's warning and end are not this screen's: the shell answers them from any screen (S45), and at zero it moves to the
+ * workout and leaves the rest open, so this screen shows the time past the end ("+0:12") until the next set is logged.
+ *
  * The next set's plates come from the running rest ([RestState.perSide] and [RestState.plateInstruction], computed by the
- * store off the main thread from the Rust plate math on the bar and plates in Settings): what goes on each side, heaviest
- * first, and the change from what is on the bar ("take off 5, add 25 each side"). They are absent for a lift with no
- * plates, until the plate math has answered, and when Settings hides plates. A plate shows as its weight; the sprites are
- * not drawn here.
+ * store off the main thread from the Rust plate math on the bar and plates in Settings): the loaded sleeve with the per-side
+ * numbers beneath it, and the change from what is on the bar ("take off 5, add 25 each side"). They are absent for a lift with no
+ * plates, until the plate math has answered, and when Settings hides plates.
  */
 @Composable
 fun RestScreen(onBack: () -> Unit, onAllExercises: () -> Unit) {
@@ -69,34 +69,24 @@ fun RestScreen(onBack: () -> Unit, onAllExercises: () -> Unit) {
     val all by store.state.collectAsState()
     val state = all
     val rest = state?.rest
-    // No rest to show (the process was killed after the rest ended, or the workout was finished): back to the workout.
-    LaunchedEffect(rest == null) { if (rest == null) onBack() }
+    // No rest to show (the workout was finished, or the rest ended): back to the workout. After a killed process the stored
+    // draft has to be taken up first, or the empty state of a cold start would send a tapped notification straight back.
+    val loaded by produceState(false, store) { store.awaitLoaded(); value = true }
+    LaunchedEffect(loaded, rest == null) { if (loaded && rest == null) onBack() }
     if (state == null || rest == null) return
 
     KeepScreenOn()
-    // The first rest asks to be allowed to say when it is over while the app is in the background (D34).
-    val askForNotifications = rememberAskForNotifications()
-    LaunchedEffect(Unit) { askForNotifications() }
     val c = Qala.colors
     val now by rememberNow(container.env.clock, rest.startedAtMs)
     val timer = rest.timer
     val remaining = timer.remainingSec(now)
     val up = timer.isUp(now)
-    val haptic = LocalHapticFeedback.current
-    val context = LocalContext.current
-    val alert = store.gym.collectAsState().value.rest.alert
-    // The alert setting (D32): a buzz, the notification sound, or both, the same as the notification uses in the background.
-    val buzz = rememberUpdatedState {
-        if (alert != RestAlert.Sound) haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-        if (alert != RestAlert.Vibrate) RingtoneManager.getRingtone(context, RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))?.play()
-    }
-    LaunchedEffect(up, rest.startedAtMs) { if (up && timer.budgetSec > 0 && now - rest.startedAtMs < (timer.budgetSec + 5) * 1000L) buzz.value() }
 
     val gym by store.gym.collectAsState()
     val from = state.restLogged()
     val next = state.restNext()
     val plates = next?.let { restPlatesView(gym.rest.showPlates, rest, it) }
-    val ready = { store.endRest() }            // the workout is already on the next set; ending the rest drops its alarm, and with no rest left this screen goes back
+    val ready = { store.endRest() }            // the workout is already on the next set; ending the rest keeps what was taken and drops its alarm, and with no rest left this screen goes back
 
     Column(Modifier.fillMaxSize()) {
         Column(
@@ -108,22 +98,23 @@ fun RestScreen(onBack: () -> Unit, onAllExercises: () -> Unit) {
                 .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 16.dp),
         ) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.Top) {
-                FlowHead("Rest", onBack, Modifier.weight(1f), eyebrow = from?.let { "${it.exerciseName} · set ${it.setNumber} logged" })
+                FlowHead("Rest", onBack, Modifier.weight(1f), eyebrow = from?.let { "${it.exerciseName} · ${if (it.warmup) "warm-up set" else "set"} ${it.setNumber} ${if (it.warmup) "done" else "logged"}" })
                 FlowIconButton(QalaIcons.LayoutGrid, "All exercises", onAllExercises)
             }
 
             Card(hero = true) {
                 if (from != null) {
-                    val logged = (if (from.weight != null) "${formatWeight(from.weight)} ${unitLabel(from.unit)} × " else "") + formatWeight(from.reps) + (from.rpe?.let { " @ ${formatWeight(it)}" } ?: "")
+                    val logged = (if (from.weight != null) "${formatWeight(from.weight)} ${unitLabel(from.unit)} × " else if (from.warmup) "Bar × " else "") + formatWeight(from.reps) + (from.rpe?.let { " @ ${formatWeight(it)}" } ?: "")
                     QalaText(logged, Modifier.fillMaxWidth(), QalaType.log, c.fgMuted, TextAlign.Center)
                 }
                 QalaText(
-                    formatClock(remaining),
+                    // Past the end the rest is still open, counting what is taken on top of what was asked.
+                    if (up) "+${formatClock(timer.overSec(now))}" else formatClock(remaining),
                     Modifier
                         .fillMaxWidth()
                         .padding(top = 4.dp)
                         .semantics {
-                            contentDescription = if (up) "Rest is over" else "${remaining / 60} minutes ${remaining % 60} seconds left"
+                            contentDescription = if (up) "Rest is over, ${timer.overSec(now)} seconds past" else "${remaining / 60} minutes ${remaining % 60} seconds left"
                         },
                     QalaType.ticking.copy(fontSize = 104.sp, lineHeight = 112.sp),
                     if (up) c.accent else c.fg,
@@ -156,7 +147,7 @@ fun RestScreen(onBack: () -> Unit, onAllExercises: () -> Unit) {
                         )
                     }
                     if (next.newExercise) QalaText("Set ${next.setNumber} of ${next.setCount}", Modifier.padding(top = 2.dp), QalaType.hint, c.fgMuted)
-                    if (plates?.perSide != null) PlateWeights(plates.perSide)
+                    if (plates?.perSide != null) PerSide(plates.perSide, gym.plates.plates)
                     // A weight the plates cannot make says what they do make, as the set rows do ("loads 205").
                     plates?.loadsNote?.let {
                         QalaText(it, Modifier.fillMaxWidth().padding(top = 6.dp), QalaType.hint, c.fgMuted, TextAlign.Center)
@@ -167,6 +158,7 @@ fun RestScreen(onBack: () -> Unit, onAllExercises: () -> Unit) {
                 QalaText("That was the last set.", Modifier.padding(top = 16.dp), QalaType.hint, c.fgMuted)
             }
 
+            rest.autoreg?.let { AutoregCard(it, next?.unit ?: WeightUnit.Lb, Modifier.padding(top = 12.dp)) }
             Ledger(rest, Modifier.padding(top = 12.dp))
         }
         FlowBottomBar {
@@ -183,27 +175,34 @@ fun RestScreen(onBack: () -> Unit, onAllExercises: () -> Unit) {
     }
 }
 
-/** The plates for each side as the weights they are, heaviest first: the placeholder until the plate sprites exist. */
+/** What goes on each side for the next set: the loaded sleeve, then the numbers of its plates. */
 @Composable
-private fun PlateWeights(perSide: List<Double>) {
+private fun PerSide(perSide: List<Double>, inventory: List<PlateEntry>) {
     val c = Qala.colors
-    Row(Modifier.fillMaxWidth().padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally), verticalAlignment = Alignment.CenterVertically) {
-        GroupLabel("Per side", Modifier.padding(end = 4.dp))
-        if (perSide.isEmpty()) {
-            QalaText("bar only", style = QalaType.log, color = c.fgSecondary)
-        } else {
-            perSide.forEach { w ->
-                QalaText(
-                    formatWeight(w),
-                    Modifier.border(QalaTokens.borderWidth, c.borderStrong, RoundedCornerShape(QalaTokens.radius)).padding(horizontal = 10.dp, vertical = 8.dp),
-                    QalaType.log.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Medium),
-                    c.fg,
-                    maxLines = 1,
-                )
-            }
-        }
+    Column(Modifier.fillMaxWidth().padding(top = 10.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        LoadedSleeve(perSide, inventory, Modifier.fillMaxWidth(), 110.dp)
+        GroupLabel("Per side", Modifier.padding(top = 6.dp))
+        QalaText(if (perSide.isEmpty()) "bar only" else perSide.joinToString(" · ") { formatWeight(it) }, Modifier.padding(top = 2.dp), QalaType.log, c.fgSecondary)
     }
 }
+
+/** What a grind did to the sets still to come, in words (S47). */
+@Composable
+private fun AutoregCard(note: AutoregNote, unit: WeightUnit, modifier: Modifier) {
+    val c = Qala.colors
+    val why = if (note.why == AutoregWhy.CapOverflow) "the rest would have run past its limit" else "that was the second grind in a row"
+    val words = when (note.action) {
+        AutoregAction.DropRemaining -> "Dropped ${setsLeft(note.sets)} left of this lift, since $why."
+        AutoregAction.Lower -> "Lowered ${setsLeft(note.sets)} left of this lift by ${note.percent}%" +
+            (note.weight?.let { ", the next to ${formatWeight(it)} ${unitLabel(unit)}" } ?: "") + ", since $why."
+    }
+    Card(modifier, contentPadding = 16.dp) {
+        GroupLabel("Load adjusted")
+        QalaText(words, Modifier.padding(top = 4.dp), QalaType.body.copy(fontSize = 13.sp, lineHeight = 19.sp), c.fgSecondary)
+    }
+}
+
+private fun setsLeft(n: Int) = if (n == 1) "the 1 set" else "the $n sets"
 
 /** "Why 3:00": the base and each adjustment in signed seconds, then the rest (DECISIONS U18). */
 @Composable
@@ -221,8 +220,11 @@ private fun Ledger(rest: RestState, modifier: Modifier) {
                     .semantics(mergeDescendants = true) {},
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                QalaText(row.label, Modifier.weight(1f).padding(end = 12.dp), QalaType.body.copy(fontSize = 13.sp, lineHeight = 19.sp), c.fgSecondary)
-                if (i == 0) {
+                QalaText(row.label, Modifier.weight(1f).padding(end = 12.dp), QalaType.body.copy(fontSize = 13.sp, lineHeight = 19.sp), if (row.atMax) c.fgMuted else c.fgSecondary)
+                if (row.atMax) {
+                    // Past the cap: it asked for time that did not fit, so it counts for nothing and has no sign.
+                    QalaText("at max", style = QalaType.hint.copy(fontSize = 12.sp, lineHeight = 17.sp), color = c.fgMuted, maxLines = 1)
+                } else if (i == 0) {
                     QalaText(formatClock(row.seconds), style = QalaType.log, color = c.fg, maxLines = 1)
                 } else {
                     QalaText(formatSigned(row.seconds), style = QalaType.log, color = if (row.seconds > 0) c.accent else c.progress, maxLines = 1)

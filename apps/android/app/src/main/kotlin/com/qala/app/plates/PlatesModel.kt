@@ -164,7 +164,7 @@ data class PlateLayout(val draws: List<SpriteDraw>, val labels: List<PlateLabel>
  * point on its image that sits on the axis at `u`. Mirrors the web drawing,
  * apart from the sleeve-end bore clip (noted in the plates report).
  */
-fun plateLayout(perSide: List<Double>, ez: Boolean, width: Float, inventory: List<PlateEntry> = DefaultLbPlates): PlateLayout {
+fun plateLayout(perSide: List<Double>, ez: Boolean, width: Float, inventory: List<PlateEntry> = DefaultLbPlates, height: Float = DrawHeightDp, labelled: Boolean = true): PlateLayout {
     if (width <= 0f) return PlateLayout(emptyList(), emptyList(), null)
     val ax = PlateSprites.AXIS_X
     val ay = PlateSprites.AXIS_Y
@@ -188,9 +188,10 @@ fun plateLayout(perSide: List<Double>, ez: Boolean, width: Float, inventory: Lis
     val rightPx = (uEnd - endIn) * ax + (endSprite.w - endSprite.ox)
     val needW = leftPx + rightPx
     val plateH = PlateSprites.sprites.getValue("plate_45_blue").h.toFloat()
-    val s = min(MaxScale, min((width - 8f) / needW, (DrawHeightDp - LabelHeight - 6f) / plateH))
+    val labelH = if (labelled) LabelHeight else 0f
+    val s = min(MaxScale, min((width - 8f) / needW, (height - labelH - 6f) / plateH))
     val p0x = (width - needW * s) / 2f + leftPx * s
-    val p0y = (DrawHeightDp - LabelHeight) / 2f + 6f
+    val p0y = (height - labelH) / 2f + 6f
     fun at(uu: Float): Pair<Float, Float> = (p0x + uu * ax * s) to (p0y + uu * ay * s)
     fun draw(sprite: PlateSprite, uu: Float, z: Int): SpriteDraw {
         val (x, y) = at(uu)
@@ -222,7 +223,7 @@ fun plateLayout(perSide: List<Double>, ez: Boolean, width: Float, inventory: Lis
     }
     val labels = ArrayList<PlateLabel>()
     var lastX = Float.NEGATIVE_INFINITY
-    for (i in 0 until (perSide.size - 1).coerceAtLeast(0)) {
+    for (i in 0 until (if (labelled) (perSide.size - 1).coerceAtLeast(0) else 0)) {
         val sp = plateSprites[i] ?: continue
         val x = at(starts[i]).first - sp.ox * s + (thick[i] * ax * s) / 2f
         if (x - lastX < 16f) continue

@@ -78,7 +78,8 @@ class RestPlanTest {
     fun theRestIsRoundedAndKeptInRangeAndTheLedgerSaysSo() {
         val plan = rest(ExerciseClass.Isolation, 12.0, reps = 11.0, rpe = 9.0, targetRpe = 7.0)   // 90 + 45 + 30 = 165, over the 150 cap
         assertEquals(150, plan.seconds)
-        assertEquals(-15, plan.rows.last().seconds)
+        assertEquals("the row that crossed the cap counts only the part that fit", 15, plan.rows.last().seconds)
+        assertFalse(plan.rows.last().atMax)
         assertEquals("the ledger adds up to the rest", plan.seconds, plan.rows.sumOf { it.seconds })
         assertEquals("a plain rest adds up too", 180, rest().rows.sumOf { it.seconds })
     }

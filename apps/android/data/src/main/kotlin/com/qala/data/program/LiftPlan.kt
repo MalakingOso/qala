@@ -89,6 +89,8 @@ data class LoggedSet(
     val rpe: Double? = null,
     val jointPain: Boolean = false,
     val rest: LoggedRest? = null,
+    /** Done at a load the app lowered after a grind: the finish-day scripts see it as a miss (`completedReps` 0), the history keeps [reps]. */
+    val asMiss: Boolean = false,
 )
 
 private fun JsonElement?.double(): Double? = (this as? JsonPrimitive)?.takeIf { it !is JsonNull }?.doubleOrNull
@@ -132,7 +134,7 @@ fun completeEntry(entry: JsonObject, logged: List<LoggedSet?>, fallbackUnit: Wei
         val unit = weightUnitOf(set["weight"].obj(), fallbackUnit)
         val extra = LinkedHashMap<String, JsonElement>()
         extra["isCompleted"] = JsonPrimitive(true)
-        extra["completedReps"] = jsonNumber(done.reps)
+        extra["completedReps"] = jsonNumber(if (done.asMiss) 0.0 else done.reps)
         val completedWeight = if (done.weight != null) {
             JsonObject(mapOf("value" to jsonNumber(done.weight), "unit" to JsonPrimitive(unit.name.lowercase())))
         } else {

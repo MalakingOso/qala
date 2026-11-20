@@ -7,6 +7,8 @@
     <!-- The rest-end notification (D34): the alarm that fires it, granted at install for a timer, and the notification itself, asked when the first rest starts. -->
     <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- The ongoing workout notification asks to be a Live Update on Android 16 and later (S45); without this it is an ordinary ongoing notification. -->
+    <uses-permission android:name="android.permission.POST_PROMOTED_NOTIFICATIONS" />
 
     <!-- Run recording (A2). Both location permissions are declared because Android 12 and later lets the user pick approximate-only. -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />

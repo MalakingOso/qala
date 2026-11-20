@@ -33,12 +33,14 @@ fun e1rmOf(weight: Double, reps: Double): Double? = when {
 }
 
 /**
- * The summary of this workout finished at [finishedAtMs], with [warmupSec] the time the warm-up took when it was measured. The
- * lifting time is what is left of the workout once the rests are taken out, so the three parts never add up to more than it.
+ * The summary of this workout finished at [finishedAtMs]. The warm-up's slice is the time its screen took (when it was measured)
+ * plus the rests between ramp sets; the lifting time is what is left of the workout once the rests and the ramp rests are taken
+ * out, so the three parts never add up to more than it.
  */
-fun WorkoutState.summary(finishedAtMs: Long, warmupSec: Int?, muscles: Map<String, ExerciseMuscles?>): SessionSummary {
+fun WorkoutState.summary(finishedAtMs: Long, muscles: Map<String, ExerciseMuscles?>): SessionSummary {
     val elapsed = ((finishedAtMs - startedAtMs).coerceAtLeast(0) / 1000).toInt()
     val rest = restSeconds()
+    val ramp = rampRestSeconds()
     val perMuscle = HashMap<String, Int>()
     for (ex in exercises) {
         if (ex.doneCount == 0) continue
@@ -52,8 +54,8 @@ fun WorkoutState.summary(finishedAtMs: Long, warmupSec: Int?, muscles: Map<Strin
         dayName = dayName,
         unit = exercises.firstOrNull()?.unit ?: WeightUnit.Lb,
         elapsedSec = elapsed,
-        warmupSec = warmupSec,
-        liftSec = (elapsed - rest).coerceAtLeast(0),
+        warmupSec = if (warmupSec == null && ramp == 0) null else (warmupSec ?: 0) + ramp,
+        liftSec = (elapsed - rest - ramp).coerceAtLeast(0),
         restSec = rest,
         sets = loggedSets,
         setsByMuscle = perMuscle.entries.sortedWith(compareByDescending<Map.Entry<String, Int>> { it.value }.thenBy { it.key }).map { it.key to it.value },

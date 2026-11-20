@@ -1,5 +1,8 @@
 package com.qala.app.workout
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -21,6 +24,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -48,6 +52,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.qala.app.LocalAppContainer
+import com.qala.app.plates.LoadedSleeve
+import com.qala.app.plates.PlateFace
+import com.qala.app.rememberAskForNotifications
+import com.qala.data.core.PlateEntry
 import com.qala.data.model.WeightUnit
 import com.qala.design.Card
 import com.qala.design.FlowBottomBar
@@ -90,15 +98,18 @@ private fun rpeMeaning(rpe: Double): String = when (rpe) {
  * Today, whether the workout was finished or only left.
  */
 @Composable
-fun WorkoutScreen(day: Int?, onBack: () -> Unit, onRest: () -> Unit, onAllExercises: () -> Unit, onFinished: () -> Unit = onBack) {
+fun WorkoutScreen(day: Int?, onBack: () -> Unit, onRest: () -> Unit, onAllExercises: () -> Unit, onWarmup: () -> Unit = {}, onFinished: () -> Unit = onBack) {
     val container = LocalAppContainer.current
     val store = container.workout
     val all by store.state.collectAsState()
     var opened by remember { mutableStateOf<Opened?>(null) }
+    // The first workout asks to be allowed to say when a rest is over while the app is in the background (D34, S46).
+    val askForNotifications = rememberAskForNotifications()
     LaunchedEffect(day) {
         if (day != null) {
             opened = store.open(day)
             store.clearSaveError()
+            if (opened == Opened.Ready) askForNotifications()
         }
     }
     val state = all?.takeIf { it.day == day }
@@ -106,7 +117,7 @@ fun WorkoutScreen(day: Int?, onBack: () -> Unit, onRest: () -> Unit, onAllExerci
     KeepScreenOn()
     Column(Modifier.fillMaxSize()) {
         when {
-            state != null -> WorkoutBody(state, store, onBack, onRest, onAllExercises, onFinished)
+            state != null -> WorkoutBody(state, store, onBack, onRest, onAllExercises, onWarmup, onFinished)
             opened == Opened.NoDay -> Notice("Nothing to lift today", "The program has no exercise for this day.", onBack)
             else -> Notice("Getting your workout ready", null, onBack)
         }
@@ -124,7 +135,7 @@ private fun Notice(title: String, detail: String?, onBack: () -> Unit) {
 }
 
 @Composable
-private fun WorkoutBody(state: WorkoutState, store: WorkoutStore, onBack: () -> Unit, onRest: () -> Unit, onAllExercises: () -> Unit, onFinished: () -> Unit) {
+private fun WorkoutBody(state: WorkoutState, store: WorkoutStore, onBack: () -> Unit, onRest: () -> Unit, onAllExercises: () -> Unit, onWarmup: () -> Unit, onFinished: () -> Unit) {
     val container = LocalAppContainer.current
     val c = Qala.colors
     var finishOpen by rememberSaveable { mutableStateOf(false) }
@@ -140,6 +151,7 @@ private fun WorkoutBody(state: WorkoutState, store: WorkoutStore, onBack: () -> 
     val now by rememberNow(container.env.clock, state.startedAtMs)
     val plates by store.plateHints.collectAsState()
     val gym by store.gym.collectAsState()
+    val saved by store.saved.collectAsState()
 
     Box(Modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize().semantics { if (finishOpen) hideFromAccessibility() }) {
@@ -149,7 +161,10 @@ private fun WorkoutBody(state: WorkoutState, store: WorkoutStore, onBack: () -> 
                     elapsedSec = ((now - state.startedAtMs) / 1000).toInt(),
                     onBack = onBack,
                     onAllExercises = onAllExercises,
+                    onWarmup = onWarmup,
+                    onRest = onRest,
                     onFinish = { finishOpen = true },
+                    clock = container.env.clock,
                 )
                 ExerciseSegments(state) { i -> store.show(i) }
                 NeighbourRow(state, onPrev = store::prev, onNext = store::next)
@@ -159,7 +174,7 @@ private fun WorkoutBody(state: WorkoutState, store: WorkoutStore, onBack: () -> 
                 modifier = Modifier.weight(1f).fillMaxWidth(),
                 key = { it },
             ) { page ->
-                ExercisePage(state, page, store, plates, gym.rest.showPlates, manualRest = !gym.rest.auto, onRest = onRest)
+                ExercisePage(state, page, store, plates, gym.rest.showPlates, gym.plates.plates, saved, manualRest = !gym.rest.auto, onRest = onRest)
             }
             FlowBottomBar {
                 val hint = state.restHint(gym.rest.auto)
@@ -179,7 +194,7 @@ private fun WorkoutBody(state: WorkoutState, store: WorkoutStore, onBack: () -> 
                             when (store.log()) {
                                 AfterLog.Rest -> onRest()
                                 AfterLog.Finish -> finishOpen = true
-                                AfterLog.Stay, AfterLog.Next -> {}
+                                AfterLog.Stay, AfterLog.Next, AfterLog.Saved -> {}
                             }
                         }
                     },
@@ -215,7 +230,10 @@ private fun Header(
     elapsedSec: Int,
     onBack: () -> Unit,
     onAllExercises: () -> Unit,
+    onWarmup: () -> Unit,
+    onRest: () -> Unit,
     onFinish: () -> Unit,
+    clock: com.qala.data.repo.DeviceClock,
 ) {
     Row(Modifier.fillMaxWidth().padding(bottom = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Top) {
         FlowIconButton(QalaIcons.ChevronLeft, "Back", onBack)
@@ -225,6 +243,34 @@ private fun Header(
         }
         FlowIconButton(QalaIcons.LayoutGrid, "All exercises", onAllExercises)
         FlowIconButton(QalaIcons.Check, "Finish workout", onFinish)
+    }
+    // The way back to the warm-up, and the rest that is running: it stays one tap away from every set (S46).
+    Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).padding(bottom = 4.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+        SecondaryButton("Warm-up", onWarmup, small = true, icon = QalaIcons.Bike)
+        state.rest?.let { RestPill(it, clock, onRest) }
+    }
+}
+
+/** "Rest 1:42" counting down, then "Rest +0:12" for the time past the end: opens Rest. */
+@Composable
+private fun RestPill(rest: RestState, clock: com.qala.data.repo.DeviceClock, onClick: () -> Unit) {
+    val c = Qala.colors
+    val now by rememberNow(clock, rest.startedAtMs)
+    val timer = rest.timer
+    val over = timer.isUp(now)
+    val text = if (over) "Rest +${formatClock(timer.overSec(now))}" else "Rest ${formatClock(timer.remainingSec(now))}"
+    Row(
+        Modifier
+            .heightIn(min = 44.dp)
+            .clickable(role = Role.Button, onClickLabel = "Open the rest", onClick = onClick)
+            .border(QalaTokens.borderWidth, c.accent, RoundedCornerShape(QalaTokens.radius))
+            .padding(horizontal = 12.dp)
+            .semantics(mergeDescendants = true) { contentDescription = if (over) "Rest is over, ${timer.overSec(now)} seconds ago" else "Rest, ${timer.remainingSec(now)} seconds left" },
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        QalaIcon(QalaIcons.Hourglass, null, size = 16.dp, tint = c.accent)
+        QalaText(text, style = QalaType.log.copy(fontSize = 14.sp, lineHeight = 20.sp), color = c.accent, maxLines = 1)
     }
 }
 
@@ -241,7 +287,7 @@ private fun ExerciseSegments(state: WorkoutState, onPick: (Int) -> Unit) {
                     .heightIn(min = 44.dp)
                     .clickable(role = Role.Tab, onClickLabel = "Go to ${ex.name}") { onPick(i) }
                     .semantics {
-                        contentDescription = "${ex.name}, ${ex.doneCount} of ${ex.sets.size} sets done"
+                        contentDescription = "${ex.name}, ${ex.doneCount} of ${ex.setCount} sets done"
                         selected = current
                     },
                 contentAlignment = Alignment.Center,
@@ -253,7 +299,7 @@ private fun ExerciseSegments(state: WorkoutState, onPick: (Int) -> Unit) {
                         .padding(horizontal = 6.dp, vertical = 9.dp),
                     horizontalArrangement = Arrangement.spacedBy(3.dp),
                 ) {
-                    ex.sets.forEach { set ->
+                    ex.sets.filter { !it.skipped }.forEach { set ->
                         Box(
                             Modifier
                                 .weight(1f)
@@ -303,10 +349,25 @@ private fun NeighbourButton(name: String?, description: String, leading: Boolean
 // ---- one exercise ----
 
 @Composable
-private fun ExercisePage(state: WorkoutState, page: Int, store: WorkoutStore, plates: Map<Double, PlateHint>, showPlates: Boolean, manualRest: Boolean, onRest: () -> Unit) {
+private fun ExercisePage(
+    state: WorkoutState,
+    page: Int,
+    store: WorkoutStore,
+    plates: Map<Double, PlateHint>,
+    showPlates: Boolean,
+    inventory: List<PlateEntry>,
+    saved: SetRef?,
+    manualRest: Boolean,
+    onRest: () -> Unit,
+) {
     val ex = state.exercises[page]
     val unit = ex.unit
     val scroll = rememberScrollState()
+    // The plates of the open set: the last answer stays until the next one comes, so the sleeve never blanks as the weight moves.
+    val openWeight = ex.sets.getOrNull(ex.selected)?.weight
+    val hint = if (showPlates && ex.barbell && openWeight != null) plates[openWeight] else null
+    var lastHint by remember { mutableStateOf<PlateHint?>(null) }
+    LaunchedEffect(hint) { if (hint != null) lastHint = hint }
     Column(
         Modifier
             .fillMaxSize()
@@ -314,24 +375,37 @@ private fun ExercisePage(state: WorkoutState, page: Int, store: WorkoutStore, pl
             .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 16.dp),
     ) {
         Card(hero = true, contentPadding = 14.dp) {
-            GroupLabel("Exercise ${page + 1} of ${state.exercises.size} · ${ex.sets.size} sets")
+            GroupLabel("Exercise ${page + 1} of ${state.exercises.size} · ${ex.setCount} sets")
             QalaText(ex.name, Modifier.padding(top = 4.dp).semantics { heading() }, QalaType.stageTitle, Qala.colors.fg)
             if (ex.lastTime != null) QalaText("Last time ${ex.lastTime}", Modifier.padding(top = 4.dp), QalaType.log.copy(fontSize = 12.sp, lineHeight = 17.sp), Qala.colors.fgMuted)
             Spacer(Modifier.height(10.dp))
+            if (ex.ramps.isNotEmpty()) {
+                ex.ramps.forEachIndexed { i, step ->
+                    RampRow(
+                        number = i + 1,
+                        step = step,
+                        unit = unit,
+                        faces = if (showPlates && ex.barbell && !step.bar) plates[step.load]?.perSide else null,
+                        inventory = inventory,
+                        onClick = { store.tickRamp(page, i) },
+                    )
+                }
+                Box(Modifier.padding(vertical = 4.dp).fillMaxWidth().height(QalaTokens.borderWidth).background(Qala.colors.borderStrong))
+            }
             ex.sets.forEachIndexed { i, set ->
-                val selected = i == ex.selected && page == state.current
+                val selected = i == ex.selected && page == state.current && !set.skipped
                 SetRow(
                     number = i + 1,
                     set = set,
                     unit = unit,
                     selected = selected,
                     last = i == ex.sets.lastIndex,
-                    plateShorthand = setPlateLine(showPlates, ex.barbell, set.weight, plates),
-                    onClick = { store.pickSet(i) },
+                    saved = saved == SetRef(page, i),
+                    onClick = { if (!set.skipped) store.pickSet(i) },
                     // With Automatic rest off a done set offers the rest it would have started (D34).
                     onRest = if (manualRest && set.done) ({ if (store.startRest(SetRef(page, i))) onRest() }) else null,
                 ) {
-                    Logger(set, unit, store)
+                    Logger(set, unit, store, sleeve = if (showPlates && ex.barbell) SleeveView(hint, lastHint, inventory) else null)
                 }
             }
         }
@@ -343,9 +417,52 @@ private fun ExercisePage(state: WorkoutState, page: Int, store: WorkoutStore, pl
 }
 
 /**
+ * One step of the ramp, above the work sets and lighter than them (S46): "W1 · 95 lb × 5", the plates of one side as small faces,
+ * and the rest after it. Tapping ticks it and starts that short rest; tapping again takes the tick back. Nothing here is logged:
+ * no RPE, and it never reaches progression.
+ */
+@Composable
+private fun RampRow(number: Int, step: RampSetState, unit: WeightUnit, faces: List<Double>?, inventory: List<PlateEntry>, onClick: () -> Unit) {
+    val c = Qala.colors
+    val load = if (step.bar) "Bar" else "${formatWeight(step.load)} ${unitLabel(unit)}"
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .heightIn(min = 44.dp)
+            .toggleable(value = step.done, role = Role.Checkbox, onValueChange = { onClick() })
+            .semantics(mergeDescendants = true) { contentDescription = "Warm-up set $number, $load times ${step.reps}, rest ${formatClock(step.restSec)}" + if (step.done) ", done" else "" },
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            Modifier
+                .size(22.dp)
+                .background(if (step.done) c.progressFill else androidx.compose.ui.graphics.Color.Transparent, CircleShape)
+                .border(QalaTokens.borderWidth, if (step.done) c.progressFill else c.border, CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            if (step.done) QalaIcon(QalaIcons.Check, null, size = 14.dp, tint = androidx.compose.ui.graphics.Color.White)
+        }
+        QalaText("W$number", Modifier.width(26.dp), QalaType.hint.copy(fontSize = 12.sp, lineHeight = 16.sp), c.fgMuted, maxLines = 1)
+        Column(Modifier.weight(1f)) {
+            QalaText("$load × ${step.reps}", style = QalaType.log.copy(fontSize = 13.sp, lineHeight = 18.sp), color = if (step.done) c.fgMuted else c.fgSecondary, maxLines = 1)
+            if (faces != null && faces.isNotEmpty()) {
+                Row(Modifier.padding(top = 2.dp), horizontalArrangement = Arrangement.spacedBy(2.dp), verticalAlignment = Alignment.CenterVertically) {
+                    faces.forEach { PlateFace(it, inventory, RampFaceDp) }
+                }
+            }
+        }
+        QalaText("rest ${formatClock(step.restSec)}", style = QalaType.hint.copy(fontSize = 11.5.sp, lineHeight = 15.sp), color = c.fgMuted, maxLines = 1)
+    }
+}
+
+/** The height of a plate face on a ramp row, small enough that a row stays a single line of weight and a line of plates. */
+private const val RampFaceDp = 16f
+
+/**
  * One set of the exercise as a row, the progress of the exercise (DECISIONS U18): a number or a check, the prescription,
- * what was done once it is, and [plateShorthand] ("per side 45 · 45 · 10") under it when the plates work provides it.
- * The selected row opens into the logger ([logger]).
+ * what was done once it is, and a "Saved" check for a moment after an edit of it was kept. A set a grind dropped is struck out
+ * and one it lowered says so. The selected row opens into the logger ([logger]).
  */
 @Composable
 private fun SetRow(
@@ -354,7 +471,7 @@ private fun SetRow(
     unit: WeightUnit,
     selected: Boolean,
     last: Boolean,
-    plateShorthand: String?,
+    saved: Boolean,
     onClick: () -> Unit,
     onRest: (() -> Unit)?,
     logger: @Composable () -> Unit,
@@ -362,7 +479,9 @@ private fun SetRow(
     val c = Qala.colors
     val bring = remember { BringIntoViewRequester() }
     LaunchedEffect(selected) { if (selected) bring.bringIntoView() }
-    val target = (if (set.targetWeight != null) "${formatWeight(set.targetWeight)} ${unitLabel(unit)} × " else "") + repsTarget(set.targetReps, set.minReps, set.amrap)
+    // A lowered set shows the load it is now at; the program's own number stays in the saved record for the scripts.
+    val shownWeight = if (set.adjusted) set.weight else set.targetWeight
+    val target = (if (shownWeight != null) "${formatWeight(shownWeight)} ${unitLabel(unit)} × " else "") + repsTarget(set.targetReps, set.minReps, set.amrap)
     val done = if (set.done) (if (set.weight != null) "${formatWeight(set.weight)} × " else "") + formatWeight(set.reps) + (set.rpe?.let { " @ ${formatWeight(it)}" } ?: "") else null
     Column(
         Modifier
@@ -374,9 +493,9 @@ private fun SetRow(
             Modifier
                 .fillMaxWidth()
                 .heightIn(min = 52.dp)
-                .clickable(role = Role.Button, onClickLabel = "Go to set $number", onClick = onClick)
+                .clickable(enabled = !set.skipped, role = Role.Button, onClickLabel = "Go to set $number", onClick = onClick)
                 .semantics(mergeDescendants = true) {
-                    contentDescription = "Set $number, " + (if (done != null) "done, $done" else target) + if (set.amrap) ", as many reps as you can" else ""
+                    contentDescription = "Set $number, " + (if (set.skipped) "dropped after a grind" else if (done != null) "done, $done" else target) + if (set.amrap) ", as many reps as you can" else ""
                     this.selected = selected
                 },
             horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -394,13 +513,19 @@ private fun SetRow(
             }
             Column(Modifier.weight(1f)) {
                 QalaText(
-                    "Set $number · " + (done ?: target),
+                    if (set.skipped) "Set $number · dropped" else "Set $number · " + (done ?: target),
                     style = QalaType.log.copy(fontSize = 14.sp, lineHeight = 20.sp, fontWeight = if (selected) androidx.compose.ui.text.font.FontWeight.Medium else androidx.compose.ui.text.font.FontWeight.Normal),
-                    color = if (set.done && !selected) c.fgMuted else c.fg,
+                    color = if ((set.done && !selected) || set.skipped) c.fgMuted else c.fg,
                     maxLines = 1,
                 )
                 if (set.done && done != null) QalaText("target $target", style = QalaType.hint.copy(fontSize = 11.5.sp, lineHeight = 15.sp), color = c.fgMuted, maxLines = 1)
-                if (plateShorthand != null) QalaText(plateShorthand, style = QalaType.hint.copy(fontSize = 11.5.sp, lineHeight = 15.sp), color = c.fgMuted, maxLines = 1)
+                if (set.adjusted && !set.done) QalaText("lowered after a grind", style = QalaType.hint.copy(fontSize = 11.5.sp, lineHeight = 15.sp), color = c.accent, maxLines = 1)
+            }
+            AnimatedVisibility(visible = saved, enter = fadeIn(), exit = fadeOut()) {
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
+                    QalaIcon(QalaIcons.Check, null, size = 14.dp, tint = c.progress)
+                    QalaText("Saved", style = QalaType.hint.copy(fontSize = 12.sp, lineHeight = 16.sp), color = c.progress, maxLines = 1)
+                }
             }
             if (set.amrap) {
                 QalaText("AMRAP", Modifier.border(QalaTokens.borderWidth, c.accent, RoundedCornerShape(QalaTokens.radius)).padding(horizontal = 6.dp, vertical = 2.dp), QalaType.groupLabel.copy(fontSize = 10.sp), c.accent, maxLines = 1)
@@ -415,9 +540,16 @@ private fun SetRow(
     }
 }
 
-/** The open set: weight and reps steppers, then the RPE strip with its anchors and what the pick means. */
+/** The plates under the weight figure: the answer for this weight when there is one, else the last answer, and the inventory the colours come from. */
+private class SleeveView(val now: PlateHint?, val last: PlateHint?, val inventory: List<PlateEntry>)
+
+/**
+ * The open set: weight stepper with the loaded sleeve under it, reps stepper, then the RPE strip with its anchors and what the
+ * pick means. The sleeve has a fixed height and the numbers under it a fixed line, reserved even before the plate math has
+ * answered, so stepping the weight moves the plates and nothing else (S46).
+ */
 @Composable
-private fun Logger(set: SetState, unit: WeightUnit, store: WorkoutStore) {
+private fun Logger(set: SetState, unit: WeightUnit, store: WorkoutStore, sleeve: SleeveView?) {
     val c = Qala.colors
     Column(
         Modifier
@@ -428,7 +560,26 @@ private fun Logger(set: SetState, unit: WeightUnit, store: WorkoutStore) {
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         if (set.weight != null) {
-            Stepper("Weight", formatWeight(set.weight), { store.stepWeight(it) }, "Less weight", "More weight", unit = unitLabel(unit), canDecrease = set.weight > 0)
+            Column {
+                Stepper("Weight", formatWeight(set.weight), { store.stepWeight(it) }, "Less weight", "More weight", unit = unitLabel(unit), canDecrease = set.weight > 0)
+                if (sleeve != null) {
+                    val shown = sleeve.now ?: sleeve.last
+                    LoadedSleeve(shown?.perSide.orEmpty(), sleeve.inventory, Modifier.fillMaxWidth().padding(top = 4.dp), SleeveHeightDp.dp)
+                    // The numbers of the plates on the sleeve: this weight's when they are known, the last ones until they are.
+                    QalaText(
+                        when {
+                            sleeve.now != null -> plateLine(set.weight, sleeve.now)
+                            shown != null -> shown.shorthand
+                            else -> ""
+                        },
+                        Modifier.fillMaxWidth().padding(top = 4.dp).heightIn(min = 22.dp),
+                        QalaType.hint.copy(fontSize = 11.5.sp, lineHeight = 16.sp),
+                        c.fgMuted,
+                        TextAlign.Center,
+                        maxLines = 1,
+                    )
+                }
+            }
         }
         Stepper(
             label = if (set.amrap) "Reps (as many as you can)" else "Reps",
@@ -461,6 +612,9 @@ private fun Logger(set: SetState, unit: WeightUnit, store: WorkoutStore) {
         }
     }
 }
+
+/** The sleeve under the weight figure: tall enough for a full 45 lb plate to read, the same height whatever is on it. */
+private const val SleeveHeightDp = 96f
 
 /** The tools under the card (DECISIONS U18). Only joint pain is wired today: it flags the set on the saved record. */
 @Composable

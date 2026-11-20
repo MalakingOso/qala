@@ -1,6 +1,7 @@
 package com.qala.app.charts
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -124,6 +126,57 @@ fun ColumnChart(values: List<Double>, labels: List<String>, modifier: Modifier =
         modifier.height(160.dp),
     )
 }
+
+/** One slice of a [Donut]: its [value] sets the arc, [detail] is what the legend says beside its [label]. */
+data class DonutSlice(val label: String, val value: Double, val color: Color, val detail: String)
+
+/**
+ * A ring cut into [slices] by their values, with [centre] in the middle (the total) and a legend beside it. A slice of nothing is
+ * left out of the ring and the legend. The slices carry their own colours, so a missing one never shifts the others'.
+ */
+@Composable
+fun Donut(slices: List<DonutSlice>, centre: String, caption: String, modifier: Modifier = Modifier) {
+    val c = Qala.colors
+    val shown = slices.filter { it.value > 0 }
+    val total = shown.sumOf { it.value }
+    Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
+        Box(Modifier.size(DonutSize), contentAlignment = Alignment.Center) {
+            Canvas(Modifier.size(DonutSize)) {
+                val stroke = DonutStroke.toPx()
+                val inset = stroke / 2f
+                val arc = Size(size.width - stroke, size.height - stroke)
+                if (total <= 0.0) {
+                    drawArc(c.grid, 0f, 360f, false, Offset(inset, inset), arc, style = Stroke(stroke))
+                } else {
+                    var start = -90f
+                    shown.forEach { slice ->
+                        val sweep = (slice.value / total * 360.0).toFloat()
+                        drawArc(slice.color, start, sweep, false, Offset(inset, inset), arc, style = Stroke(stroke))
+                        start += sweep
+                    }
+                }
+            }
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                QalaText(centre, style = QalaType.figure.copy(fontSize = 22.sp, lineHeight = 26.sp), color = c.fg, maxLines = 1)
+                QalaText(caption, style = QalaType.hint.copy(fontSize = 11.sp, lineHeight = 14.sp), color = c.fgMuted, maxLines = 1)
+            }
+        }
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            shown.forEach { slice ->
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Box(Modifier.size(12.dp).background(slice.color, androidx.compose.foundation.shape.CircleShape))
+                    Column {
+                        QalaText(slice.label, style = QalaType.bodyStrong, color = c.fg, maxLines = 1)
+                        QalaText(slice.detail, style = QalaType.log.copy(fontSize = 12.sp, lineHeight = 17.sp), color = c.fgMuted, maxLines = 1)
+                    }
+                }
+            }
+        }
+    }
+}
+
+private val DonutSize = 148.dp
+private val DonutStroke = 22.dp
 
 /** Today's readiness as a ring, 0 to 100. It has a description and no table: it is one number. */
 @Composable

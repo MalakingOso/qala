@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
@@ -32,6 +33,10 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.qala.app.LocalAppContainer
+import com.qala.app.plates.PlateFaces
+import com.qala.app.plates.rememberPerSide
+import com.qala.data.core.PlateEntry
+import com.qala.data.model.GymSettings
 import com.qala.app.skip.skipIcon
 import com.qala.app.today.CtaIcon
 import com.qala.app.today.Destination
@@ -276,6 +281,9 @@ private fun Modifier.rule(): Modifier {
 private fun ExerciseList(card: DayCard) {
     val c = Qala.colors
     val rows = if (card.view == PlanView.WarmUp) card.exercises.filter { it.warmups.isNotEmpty() } else card.exercises
+    // Plate faces next to the prescribed weights, as "Show plates" in Settings has them (S46).
+    val gym by LocalAppContainer.current.settings.gym.collectAsState(initial = GymSettings())
+    val perSide = rememberPerSide(rows.flatMap { it.plateWeights }.filterNotNull(), gym.plates, enabled = gym.rest.showPlates && card.view != PlanView.WarmUp)
     Column(Modifier.padding(top = 12.dp)) {
         rows.forEachIndexed { i, e ->
             // TODO: a tap on an exercise should open it in All exercises (as the mockup's chevron implies) once that route exists.
@@ -287,8 +295,12 @@ private fun ExerciseList(card: DayCard) {
             ) {
                 QalaText(e.name, style = QalaType.bodyStrong, color = c.fg)
                 when (card.view) {
-                    PlanView.Overview -> QalaText(e.scheme, Modifier.padding(top = 2.dp), Mono, c.fgSecondary)
-                    PlanView.EverySet -> SetLines(e.sets)
+                    PlanView.Overview -> {
+                        QalaText(e.scheme, Modifier.padding(top = 2.dp), Mono, c.fgSecondary)
+                        // The heaviest set's plates, once for the exercise.
+                        e.plateWeights.filterNotNull().maxOrNull()?.let { w -> perSide[w]?.let { PlateFaces(it, gym.plates.plates, Modifier.padding(top = 4.dp)) } }
+                    }
+                    PlanView.EverySet -> SetLines(e.sets, e.plateWeights.map { w -> w?.let { perSide[it] } }, gym.plates.plates)
                     PlanView.WarmUp -> SetLines(e.warmups)
                 }
             }
@@ -298,13 +310,14 @@ private fun ExerciseList(card: DayCard) {
 }
 
 @Composable
-private fun SetLines(sets: List<String>) {
+private fun SetLines(sets: List<String>, faces: List<List<Double>?> = emptyList(), inventory: List<PlateEntry> = emptyList()) {
     val c = Qala.colors
     Column(Modifier.padding(top = 4.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
         sets.forEachIndexed { i, text ->
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
                 QalaText("${i + 1}", style = Mono, color = c.fgMuted)
                 QalaText(text, style = Mono, color = c.fgSecondary)
+                faces.getOrNull(i)?.let { PlateFaces(it, inventory) }
             }
         }
     }

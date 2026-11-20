@@ -36,7 +36,7 @@ sealed interface AllExState {
 /** "5 × 3 @ 207.5 lb", "5 × 3+ @ 207.5 lb" when the first set is as many as possible, "3 × 12" with no weight, "no sets" for none. */
 fun detailLine(ex: ExerciseState): String {
     val first = ex.sets.firstOrNull() ?: return "no sets"
-    val base = "${ex.sets.size} × ${repsTarget(first.targetReps, first.minReps, first.amrap)}"
+    val base = "${ex.setCount} × ${repsTarget(first.targetReps, first.minReps, first.amrap)}"
     val weight = first.targetWeight ?: return base
     return "$base @ ${formatWeight(weight)} ${unitLabel(ex.unit)}"
 }
@@ -44,7 +44,7 @@ fun detailLine(ex: ExerciseState): String {
 /** Cards in the day's order; the current one is the exercise the workout is on. */
 fun allExCards(state: WorkoutState): List<AllExCard> =
     state.exercises.mapIndexed { i, ex ->
-        AllExCard(number = i + 1, name = ex.name, line = detailLine(ex), done = ex.sets.map { it.done }, current = i == state.current)
+        AllExCard(number = i + 1, name = ex.name, line = detailLine(ex), done = ex.sets.filter { !it.skipped }.map { it.done }, current = i == state.current)
     }
 
 /** "Day 4 · 3 exercises · 11 sets", or "· 4 of 11 sets" once any are logged: the line under the title. */
