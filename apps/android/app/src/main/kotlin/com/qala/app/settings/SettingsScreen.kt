@@ -47,6 +47,7 @@ import com.qala.data.model.ThemeMode
 import com.qala.data.model.TitleFont
 import com.qala.data.model.WeightUnit
 import com.qala.data.repo.SettingsRepository
+import com.qala.design.LocalBarClearance
 import com.qala.design.DayStrip
 import com.qala.design.FlowHead
 import com.qala.design.GearSlot
@@ -149,7 +150,7 @@ fun SettingsScreen(
             .fillMaxSize()
             .verticalScroll(scroll)
             .statusBarsPadding()
-            .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 24.dp),
+            .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 24.dp + LocalBarClearance.current),
     ) {
         FlowHead("Settings", onBack)
 

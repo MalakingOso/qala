@@ -15,14 +15,17 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -37,9 +40,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.hideFromAccessibility
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.qala.app.settings.SettingsFocus
 import com.qala.app.workout.Alerts
@@ -61,6 +66,8 @@ import com.qala.data.model.ThemeMode
 import com.qala.data.model.TitleFont
 import com.qala.design.ContentMaxWidth
 import com.qala.design.FaustinaFamily
+import com.qala.design.LocalBarClearance
+import com.qala.design.TabBarHeight
 import com.qala.design.QalaTestFamily
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
@@ -254,12 +261,21 @@ fun QalaApp(animate: Boolean? = null) {
                         .then(if (nav.route == Route.CheckIn || nav.route == Route.Coach || nav.route == Route.PlanPicker) Modifier.imePadding() else Modifier)      // the note, the coach's composer and the starting weights stay above the keyboard
                         .semantics { if (ui.skip.open) hideFromAccessibility() },                        // the skip sheet is modal: the screen behind it is not reachable
                 ) {
-                    key(nav.route) {       // each screen keeps its own scroll position
-                        val scroll = rememberScrollState()
-                        Box(Modifier.weight(1f).fillMaxWidth()) { screen(scroll) }
+                    // The tab bar floats over the screen and paints nothing behind it, so each screen scrolls clear of it by this much: its zone plus the
+                    // navigation inset, and nothing where the lifting flow has no bar (a thumb mid-set should not land on Plan, and the screens want the height)
+                    // or a keyboard is up.
+                    val density = LocalDensity.current
+                    val keyboardUp = WindowInsets.ime.getBottom(density) > 0
+                    val clearance = if (nav.route.isFocus || keyboardUp) 0.dp else TabBarHeight + with(density) { WindowInsets.navigationBars.getBottom(density).toDp() }
+                    CompositionLocalProvider(LocalBarClearance provides clearance) {
+                        key(nav.route) {       // each screen keeps its own scroll position
+                            val scroll = rememberScrollState()
+                            Box(Modifier.weight(1f).fillMaxWidth()) { screen(scroll) }
+                        }
                     }
-                    // The lifting flow has no tab bar: a thumb mid-set should not land on Plan, and the screens want the height.
-                    if (!nav.route.isFocus) tabBar(false, Modifier)
+                }
+                if (!nav.route.isFocus) {
+                    tabBar(false, Modifier.align(Alignment.BottomCenter).semantics { if (ui.skip.open) hideFromAccessibility() })
                 }
             }
             if (nav.route == Route.Today) TodayMenu(today, ui, Modifier.zIndex(2f))

@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasAnyAncestor
@@ -169,7 +171,8 @@ class SettingsFlowTest {
         rule.onNodeWithText("Lower A · 245 × 4").performScrollTo().assertExists()
         rule.onNodeWithContentDescription("Dark").performScrollTo().performClick()
         waitFor { runBlocking { container.settings.gym.first().appearance.theme } == ThemeMode.Dark }
-        rule.onNodeWithContentDescription("Faustina").performScrollTo().performClick()
+        // The last option scrolls to the bottom edge of the list, which the floating tab bar covers, so it is clicked by its action and not by a touch at its centre.
+        rule.onNodeWithContentDescription("Faustina").performScrollTo().performSemanticsAction(SemanticsActions.OnClick)
         waitFor { runBlocking { container.settings.gym.first().appearance.titleFont } == TitleFont.Faustina }
     }
 

@@ -44,6 +44,7 @@ import com.qala.app.today.TodayLoad
 import com.qala.data.IsoTime
 import com.qala.data.engine.EngineSnapshot
 import com.qala.data.plan.PlanWeekData
+import com.qala.design.LocalBarClearance
 import com.qala.design.Card
 import com.qala.design.ChoiceChip
 import com.qala.design.DayTabItem
@@ -86,7 +87,7 @@ fun PlanScreen(
     onChangePlan: () -> Unit,
 ) {
     Column(Modifier.fillMaxSize().verticalScroll(scroll)) {
-        Column(Modifier.statusBarsPadding().padding(horizontal = 20.dp).padding(bottom = 32.dp)) {
+        Column(Modifier.statusBarsPadding().padding(horizontal = 20.dp).padding(bottom = 32.dp + LocalBarClearance.current)) {
             topBar(Modifier)
             val input = snapshot.input
             when {

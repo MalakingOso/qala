@@ -38,6 +38,7 @@ import com.qala.app.today.TodayScreen
 import com.qala.app.today.TodayUiState
 import com.qala.data.engine.EngineSnapshot
 import com.qala.data.model.GymSettings
+import com.qala.design.LocalBarClearance
 import com.qala.design.Card
 import com.qala.design.PageHead
 import com.qala.design.Qala
@@ -98,7 +99,7 @@ private fun programDay(today: TodayLoad): Int? = (today as? TodayLoad.Ready)?.mo
 @Composable
 private fun Plain(scroll: ScrollState, topBar: @Composable (Modifier) -> Unit, content: @Composable ColumnScope.() -> Unit) {
     Column(Modifier.fillMaxSize().verticalScroll(scroll)) {
-        Column(Modifier.statusBarsPadding().padding(horizontal = 20.dp).padding(bottom = 32.dp)) {
+        Column(Modifier.statusBarsPadding().padding(horizontal = 20.dp).padding(bottom = 32.dp + LocalBarClearance.current)) {
             topBar(Modifier)
             Spacer(Modifier.height(16.dp))
             content()

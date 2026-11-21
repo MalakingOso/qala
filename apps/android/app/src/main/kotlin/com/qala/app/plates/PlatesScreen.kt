@@ -56,6 +56,7 @@ import com.qala.data.core.QalaCore
 import com.qala.data.core.nearestLoadable
 import com.qala.data.model.GymSettings
 import com.qala.data.core.planPlates
+import com.qala.design.LocalBarClearance
 import com.qala.design.Card
 import com.qala.design.FlowHead
 import com.qala.design.Group
@@ -104,7 +105,7 @@ fun PlatesScreen(scroll: ScrollState, onBack: () -> Unit, onEditPlates: () -> Un
             .fillMaxSize()
             .verticalScroll(scroll)
             .statusBarsPadding()
-            .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 24.dp),
+            .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 24.dp + LocalBarClearance.current),
     ) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.weight(1f)) { FlowHead("Plates", onBack) }

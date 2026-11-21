@@ -32,6 +32,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.qala.design.LocalBarClearance
 import com.qala.design.Card
 import com.qala.design.FlowHead
 import com.qala.design.GroupLabel
@@ -121,6 +122,7 @@ fun CheckInScreen(
         // Save stays under the scroll: a hairline above it, the ground colour behind it.
         Column(
             Modifier
+                .padding(bottom = LocalBarClearance.current)          // the floating tab bar sits under it, with nothing painted between
                 .fillMaxWidth()
                 .background(c.bg)
                 .drawBehind { drawRect(c.border, Offset.Zero, Size(size.width, QalaTokens.borderWidth.toPx())) }

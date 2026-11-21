@@ -48,6 +48,7 @@ import androidx.compose.ui.unit.sp
 import com.qala.app.workout.PlateMath
 import com.qala.app.workout.plateLine
 import com.qala.data.model.GymSettings
+import com.qala.design.LocalBarClearance
 import com.qala.design.Card
 import com.qala.design.GroupLabel
 import com.qala.design.PrimaryButton
@@ -329,6 +330,7 @@ private fun Composer(draft: String, onDraft: (String) -> Unit, onSend: () -> Uni
     val c = Qala.colors
     Row(
         Modifier
+            .padding(bottom = LocalBarClearance.current)          // the floating tab bar sits under it, with nothing painted between
             .fillMaxWidth()
             .background(c.bg)
             .drawBehind { drawRect(c.border, Offset.Zero, Size(size.width, QalaTokens.borderWidth.toPx())) }

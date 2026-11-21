@@ -36,6 +36,7 @@ import com.qala.data.program.BuiltinPlan
 import com.qala.data.program.Builtins
 import com.qala.data.program.StartResult
 import com.qala.data.program.StartingWeights
+import com.qala.design.LocalBarClearance
 import com.qala.design.Card
 import com.qala.design.FlowHead
 import com.qala.design.Group
@@ -73,7 +74,7 @@ fun PlanPickerScreen(scroll: ScrollState, onBack: () -> Unit) {
             .fillMaxSize()
             .verticalScroll(scroll)
             .statusBarsPadding()
-            .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 24.dp),
+            .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 24.dp + LocalBarClearance.current),
     ) {
         FlowHead(picked?.name ?: "Choose a plan", onBack = { if (picked != null) pickedId = null else onBack() })
         val settings = record
