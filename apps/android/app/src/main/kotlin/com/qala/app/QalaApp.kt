@@ -29,11 +29,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.hideFromAccessibility
@@ -42,6 +44,10 @@ import androidx.compose.ui.zIndex
 import com.qala.app.settings.SettingsFocus
 import com.qala.app.workout.Alerts
 import com.qala.app.workout.AppVisibility
+import com.qala.app.workout.FlowBackdrop
+import com.qala.app.workout.HandOver
+import com.qala.app.workout.HandOverCurve
+import com.qala.app.workout.HandOverVeil
 import com.qala.app.workout.WorkoutEvent
 import com.qala.app.run.RunState
 import com.qala.app.skip.SkipSheet
@@ -64,6 +70,8 @@ import com.qala.design.QalaTheme
 import com.qala.design.TabBar
 import com.qala.design.TabItem
 import com.qala.design.TopBar
+import com.qala.design.animationsEnabled
+import kotlinx.coroutines.launch
 
 private val TabItems = mapOf(
     Route.Today to TabItem("Today", QalaIcons.Sun),
@@ -81,9 +89,13 @@ private val TabItems = mapOf(
  *
  * The day menu is composed here, after the shell's own [BackHandler], so its handler registers later and wins while
  * the menu is open, and so its scrim covers the tab bar and the status bar too.
+ *
+ * Start warm-up and Resume workout on Today hand over to the flow rather than cut (S49): a softened still fades in over Today and its film,
+ * the shell swaps screens under it, and it fades out to the wash as the flow's content comes in. [animate] overrides whether system animations
+ * are on (a test sets it); the default reads the system, and with them off the hand-over is a plain swap.
  */
 @Composable
-fun QalaApp() {
+fun QalaApp(animate: Boolean? = null) {
     val container = LocalAppContainer.current
     // Settings' Appearance: Light, Dark or System, and the face of the titles. Light and Qala Test until the stored choice has been read.
     val look by remember(container) { container.settings.gym.map { it.appearance }.distinctUntilChanged() }.collectAsState(initial = AppearanceSettings())
@@ -94,11 +106,14 @@ fun QalaApp() {
     }
     QalaTheme(dark, if (look.titleFont == TitleFont.Faustina) FaustinaFamily else QalaTestFamily) {
         var nav by rememberSaveable(stateSaver = Nav.Saver) { mutableStateOf(Nav()) }
-        SystemBars(dark, overFilm = nav.route == Route.Today)
+        SystemBars(dark, overFilm = nav.route == Route.Today || nav.route.onWash)
+        val handOver = remember { HandOver() }
+        val scope = rememberCoroutineScope()
         // The plate calculator's Edit plates lands on Settings scrolled to the inventory.
         var settingsFocus by remember { mutableStateOf<SettingsFocus?>(null) }
         val back = nav.back()
         BackHandler(enabled = back != null) { back?.let { nav = it } }
+        BackHandler(enabled = handOver.running) {}          // registered after the one above, so it wins: Back does nothing mid-flight
 
         // A run that is recording or waiting on its Summary opens its screen once, when the app comes up with it.
         val runState by container.runRecording.state.collectAsState()
@@ -178,7 +193,16 @@ fun QalaApp() {
                     )
                 },
                 onGo = { to ->
-                    if (to == Destination.Skip) (today as? TodayLoad.Ready)?.let { ui.skip.show(it.model.skip) } else nav = nav.go(to)
+                    when {
+                        handOver.running -> {}                  // a second tap during the hand-over is ignored
+                        to == Destination.Skip -> (today as? TodayLoad.Ready)?.let { ui.skip.show(it.model.skip) }
+                        nav.route == Route.Today && (to == Destination.WarmUp || to == Destination.Workout) && (animate ?: animationsEnabled(context)) ->
+                            scope.launch {
+                                // Only if Today is still where the shell is: a notification or a rest ending may have moved it meanwhile.
+                                handOver.run { if (latest.route == Route.Today) nav = latest.go(to) }
+                            }
+                        else -> nav = nav.go(to)
+                    }
                 },
                 onBack = { nav.back()?.let { nav = it } },
                 onPlates = { nav = nav.push(Route.Plates) },
@@ -199,6 +223,7 @@ fun QalaApp() {
         }
 
         Box(Modifier.fillMaxSize().background(Qala.colors.bg), contentAlignment = Alignment.TopCenter) {
+            if (nav.route.onWash) FlowBackdrop()
             if (nav.route == Route.Today) {
                 // Today is full window: the film runs under the status bar and the tab bar, and the tab bar is dark glass over it.
                 key(nav.route) {
@@ -209,19 +234,23 @@ fun QalaApp() {
                     }
                 }
             } else {
-                // Content scrolls under the status bar; this keeps the clock and icons readable over it.
-                Spacer(
-                    Modifier
-                        .align(Alignment.TopStart)
-                        .fillMaxWidth()
-                        .windowInsetsTopHeight(WindowInsets.statusBars)
-                        .background(Qala.colors.bg)
-                        .zIndex(1f),
-                )
+                // Content scrolls under the status bar; this keeps the clock and icons readable over it. The wash needs none: it is under the bar already.
+                if (!nav.route.onWash) {
+                    Spacer(
+                        Modifier
+                            .align(Alignment.TopStart)
+                            .fillMaxWidth()
+                            .windowInsetsTopHeight(WindowInsets.statusBars)
+                            .background(Qala.colors.bg)
+                            .zIndex(1f),
+                    )
+                }
                 Column(
                     Modifier
                         .widthIn(max = ContentMaxWidth)
                         .fillMaxSize()
+                        // The flow's content comes in as the second half of the hand-over runs; read in the layer, so a frame of it recomposes nothing.
+                        .then(if (nav.route.onWash) Modifier.graphicsLayer { alpha = HandOverCurve.content(handOver.progress) } else Modifier)
                         .then(if (nav.route == Route.CheckIn || nav.route == Route.Coach || nav.route == Route.PlanPicker) Modifier.imePadding() else Modifier)      // the note, the coach's composer and the starting weights stay above the keyboard
                         .semantics { if (ui.skip.open) hideFromAccessibility() },                        // the skip sheet is modal: the screen behind it is not reachable
                 ) {
@@ -236,6 +265,7 @@ fun QalaApp() {
             if (nav.route == Route.Today) TodayMenu(today, ui, Modifier.zIndex(2f))
             // Change on Settings' Training status opens the same sheet over Settings.
             if (nav.route == Route.Today || nav.route == Route.Settings) SkipSheet(ui.skip, Modifier.zIndex(3f))
+            HandOverVeil(handOver, Modifier.zIndex(10f))
         }
     }
 }

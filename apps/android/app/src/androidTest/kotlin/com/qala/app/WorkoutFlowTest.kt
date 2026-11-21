@@ -9,6 +9,8 @@ import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.assertIsNotSelected
+import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isHeading
@@ -86,8 +88,9 @@ class WorkoutFlowTest {
     /** The app, in a tester that can save and restore what `rememberSaveable` holds, as a rotation does. */
     private val restoration by lazy { StateRestorationTester(rule) }
 
-    private fun showApp(container: AppContainer) = restoration.setContent {
-        CompositionLocalProvider(LocalAppContainer provides container) { QalaApp() }
+    /** [animate] is off by default, so Today hands over to the flow at once and the other tests need not wait for it; the hand-over has its own tests. */
+    private fun showApp(container: AppContainer, animate: Boolean = false) = restoration.setContent {
+        CompositionLocalProvider(LocalAppContainer provides container) { QalaApp(animate) }
     }
 
     private fun waitFor(timeoutMs: Long = 120_000, condition: () -> Boolean) = rule.waitUntil(timeoutMs, condition)
@@ -328,14 +331,18 @@ class WorkoutFlowTest {
     }
 
     @Test
-    fun anExerciseIsReachedByNameFromTheNeighbourButtonAndTheGrid() = runBlocking {
+    fun anExerciseIsReachedFromTheRailAndTheGrid() = runBlocking {
         val container = container()
         reachTheLift(container)
         startWorkout()
         val names = container.workout.state.value!!.exercises.map { it.name }
-        rule.onNodeWithContentDescription("Next exercise, ${names[1]}").performClick()
+        // The rail has a node per exercise, each described by its name and how many sets are done, and the open one is selected.
+        fun node(i: Int) = rule.onNode(hasContentDescription("${names[i]}, ", substring = true) and hasClickAction())
+        node(0).assertIsSelected()
+        node(1).performClick()
         waitFor { container.workout.state.value!!.current == 1 }
-        rule.onNodeWithContentDescription("Previous exercise, ${names[0]}").assertExists()
+        node(1).assertIsSelected()
+        node(0).assertIsNotSelected()
         // The zoom-out is its own screen; picking an exercise there goes to it in the workout.
         rule.onNodeWithContentDescription("All exercises").performClick()
         rule.onNode(isHeading() and hasText("All exercises")).assertExists()
@@ -380,6 +387,43 @@ class WorkoutFlowTest {
     }
 
     @Test
+    fun startWarmUpHandsOverFromTodayInsteadOfCutting() = runBlocking {
+        val container = container()
+        showApp(container, animate = true)
+        waitForText("GZCLP DAY", substring = true)
+        container.checkIns.save(7.0)
+        railSays("Day stages: warm-up now, 1 of 6 done")
+        rule.mainClock.autoAdvance = false
+        rule.onNodeWithText("Start warm-up").performClick()
+        rule.mainClock.advanceTimeBy(120)
+        // The first half is still running: Today is the screen, under the softened still.
+        rule.onNodeWithText("Start warm-up").assertExists()
+        assertFalse(textShown("EASY CARDIO", substring = true))
+        rule.mainClock.advanceTimeBy(500)
+        // Past the swap: Today is gone and the warm-up is coming in.
+        rule.onNodeWithText("Start warm-up").assertDoesNotExist()
+        rule.mainClock.autoAdvance = true
+        waitForText("EASY CARDIO", substring = true)
+        container.database.close()
+    }
+
+    @Test
+    fun withAnimationsOffStartWarmUpSwapsAtOnce() = runBlocking {
+        val container = container()
+        showApp(container, animate = false)
+        waitForText("GZCLP DAY", substring = true)
+        container.checkIns.save(7.0)
+        railSays("Day stages: warm-up now, 1 of 6 done")
+        rule.mainClock.autoAdvance = false
+        rule.onNodeWithText("Start warm-up").performClick()
+        rule.mainClock.advanceTimeBy(48)
+        rule.onNodeWithText("Start warm-up").assertDoesNotExist()
+        rule.mainClock.autoAdvance = true
+        waitForText("EASY CARDIO", substring = true)
+        container.database.close()
+    }
+
+    @Test
     fun theGridShowsTheDayDuringTheWarmUpWithoutStartingTheWorkout() = runBlocking {
         val container = container()
         showApp(container)
@@ -387,7 +431,7 @@ class WorkoutFlowTest {
         container.checkIns.save(7.0)
         railSays("Day stages: warm-up now, 1 of 6 done")
         rule.onNodeWithText("Start warm-up").performClick()
-        waitForText("Easy cardio")
+        waitForText("EASY CARDIO", substring = true)
         rule.onNodeWithContentDescription("All exercises").performClick()
         rule.onNode(isHeading() and hasText("All exercises")).assertExists()
         waitFor { rule.onAllNodes(hasContentDescription("0 of ", substring = true)).fetchSemanticsNodes().isNotEmpty() }
@@ -396,7 +440,7 @@ class WorkoutFlowTest {
         assertTrue(rule.onAllNodes(hasContentDescription("sets done", substring = true) and hasClickAction()).fetchSemanticsNodes().isEmpty())
         assertNull(container.workout.state.value)
         rule.onNodeWithContentDescription("Back").performClick()
-        waitForText("Easy cardio")
+        waitForText("EASY CARDIO", substring = true)
         container.database.close()
     }
 
@@ -423,7 +467,7 @@ class WorkoutFlowTest {
         container.checkIns.save(7.0)
         railSays("Day stages: warm-up now, 1 of 6 done")
         rule.onNodeWithText("Start warm-up").performClick()
-        waitForText("Easy cardio")
+        waitForText("EASY CARDIO", substring = true)
         // The ramp sets are not a step here any more: they sit above the sets in the workout (S46). The cardio has its countdown.
         rule.onNodeWithText("Start cardio").assertExists()
         rule.onNodeWithText("Ramp sets").assertDoesNotExist()

@@ -46,16 +46,21 @@ fun FlowIconButton(
 
 /**
  * The bar pinned under a lifting screen: the ground colour with a hairline above it, clear of the navigation bar (the
- * lifting flow has no tab bar, which is what normally clears it). Holds the screen's one primary action.
+ * lifting flow has no tab bar, which is what normally clears it). Holds the screen's one primary action. [onWash] makes
+ * it transparent with no hairline, for the screens that sit on the frosted still (S49).
  */
 @Composable
-fun FlowBottomBar(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+fun FlowBottomBar(modifier: Modifier = Modifier, onWash: Boolean = false, content: @Composable () -> Unit) {
     val c = Qala.colors
     Column(
         modifier
             .fillMaxWidth()
-            .background(c.bg)
-            .drawBehind { drawRect(c.border, Offset.Zero, Size(size.width, QalaTokens.borderWidth.toPx())) }
+            .then(
+                if (onWash) Modifier
+                else Modifier
+                    .background(c.bg)
+                    .drawBehind { drawRect(c.border, Offset.Zero, Size(size.width, QalaTokens.borderWidth.toPx())) },
+            )
             .windowInsetsPadding(WindowInsets.navigationBars)
             .padding(start = 16.dp, end = 16.dp, top = 10.dp + QalaTokens.borderWidth, bottom = 12.dp),
     ) {

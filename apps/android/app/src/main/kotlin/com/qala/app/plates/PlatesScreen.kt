@@ -37,6 +37,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
@@ -194,7 +195,9 @@ private fun PlateDrawing(perSide: List<Double>, ez: Boolean, caption: String, in
 /**
  * The loaded sleeve at a fixed [height]: the one place the plate sprites are laid out. With [animated] each plate slides to its
  * place as the load changes and a new plate slides on, so a stepper that moves the weight moves only the plates. The
- * [labelled] weights under the inner plates are for the large drawing; a small one leaves them to the numbers beside it.
+ * [labelled] weights under the inner plates are for the large drawing; a small one leaves them to the numbers beside it. [barLength] cuts the bar
+ * behind the collar down to a stub that long; the default draws it to the edge.
+ * [floorColor] replaces the ellipse the bar sits on (a dark one, over the wash).
  */
 @Composable
 fun LoadedSleeve(
@@ -206,6 +209,8 @@ fun LoadedSleeve(
     labelled: Boolean = false,
     animated: Boolean = true,
     description: String? = null,
+    barLength: Dp? = null,
+    floorColor: Color? = null,
 ) {
     val c = Qala.colors
     BoxWithConstraints(
@@ -213,7 +218,7 @@ fun LoadedSleeve(
             .height(height)
             .semantics { if (description != null) contentDescription = description else hideFromAccessibility() },
     ) {
-        val layout = remember(perSide, ez, maxWidth, inventory, height, labelled) { plateLayout(perSide, ez, maxWidth.value, inventory, height.value, labelled) }
+        val layout = remember(perSide, ez, maxWidth, inventory, height, labelled, barLength) { plateLayout(perSide, ez, maxWidth.value, inventory, height.value, labelled, barLength?.value) }
         val context = LocalContext.current
         val files = layout.draws.map { it.sprite.file }.distinct()
         // The sprites already decoded stay, so a plate that is swapped for another never leaves a hole while its image loads.
@@ -233,7 +238,7 @@ fun LoadedSleeve(
         layout.floor?.let { floor ->
             Canvas(Modifier.fillMaxSize()) {
                 drawOval(
-                    color = c.bgRecessed,
+                    color = floorColor ?: c.bgRecessed,
                     topLeft = Offset((floor.cx - floor.rx).dp.toPx(), (floor.cy - floor.ry).dp.toPx()),
                     size = Size((floor.rx * 2).dp.toPx(), (floor.ry * 2).dp.toPx()),
                 )

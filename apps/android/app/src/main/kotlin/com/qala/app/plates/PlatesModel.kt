@@ -162,9 +162,10 @@ data class PlateLayout(val draws: List<SpriteDraw>, val labels: List<PlateLabel>
  * Where every sprite goes for one loaded side, in a drawing [width] dp wide.
  * `u` is inches along the bar from the collar's face; a sprite's `ox, oy` is the
  * point on its image that sits on the axis at `u`. Mirrors the web drawing,
- * apart from the sleeve-end bore clip (noted in the plates report).
+ * apart from the sleeve-end bore clip (noted in the plates report). With [barDp] the bar behind the collar is only that long in dp, a short
+ * stub instead of one that runs to the edge of the drawing (the workout wants the plates, not the bar).
  */
-fun plateLayout(perSide: List<Double>, ez: Boolean, width: Float, inventory: List<PlateEntry> = DefaultLbPlates, height: Float = DrawHeightDp, labelled: Boolean = true): PlateLayout {
+fun plateLayout(perSide: List<Double>, ez: Boolean, width: Float, inventory: List<PlateEntry> = DefaultLbPlates, height: Float = DrawHeightDp, labelled: Boolean = true, barDp: Float? = null): PlateLayout {
     if (width <= 0f) return PlateLayout(emptyList(), emptyList(), null)
     val ax = PlateSprites.AXIS_X
     val ay = PlateSprites.AXIS_Y
@@ -203,7 +204,8 @@ fun plateLayout(perSide: List<Double>, ez: Boolean, width: Float, inventory: Lis
     } else {
         val knurl = PlateSprites.sprites.getValue("knurl_tile")
         var uu = -7f
-        while (at(uu).first + (knurl.w - knurl.ox) * s > 0f) {
+        val collarX = at(0f).first
+        while (at(uu).first + (knurl.w - knurl.ox) * s > 0f && (barDp == null || at(uu).first > collarX - barDp)) {
             draws.add(draw(knurl, uu, 1))
             uu -= tile
         }

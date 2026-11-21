@@ -90,8 +90,8 @@ class TodayRouteTest {
         rule.onAllNodes(hasText("GZCLP DAY", substring = true)).fetchSemanticsNodes().isNotEmpty()
     }
 
-    private fun waitForText(text: String) = rule.waitUntil(timeoutMillis = 120_000) {
-        rule.onAllNodes(hasText(text)).fetchSemanticsNodes().isNotEmpty()
+    private fun waitForText(text: String, substring: Boolean = false) = rule.waitUntil(timeoutMillis = 120_000) {
+        rule.onAllNodes(hasText(text, substring = substring)).fetchSemanticsNodes().isNotEmpty()
     }
 
     @Test
@@ -106,7 +106,7 @@ class TodayRouteTest {
 
         // The warm-up's Start workout marks its stage and opens the workout; Back from there is Today, one stage on.
         rule.onNodeWithText("Start warm-up").performClick()
-        waitForText("Easy cardio")
+        waitForText("EASY CARDIO", substring = true)
         rule.onNodeWithText("Start workout").performClick()
         waitForText("Log set 1")
         rule.runOnUiThread { rule.activity.onBackPressedDispatcher.onBackPressed() }
@@ -147,11 +147,11 @@ class TodayRouteTest {
         rule.onNodeWithText("Save check-in").performClick()
         railSays("Day stages: warm-up now, 1 of 6 done")
         rule.onNodeWithText("Start warm-up").performClick()
-        waitForText("Easy cardio")
+        waitForText("EASY CARDIO", substring = true)
         rule.runOnUiThread { rule.activity.onBackPressedDispatcher.onBackPressed() }
         rule.onNodeWithText("Start warm-up").assertExists()
         rule.onNodeWithText("Start warm-up").performClick()
-        waitForText("Easy cardio")
+        waitForText("EASY CARDIO", substring = true)
         rule.onNodeWithContentDescription("Back").performClick()
         rule.onNodeWithText("Start warm-up").assertExists()
         railSays("Day stages: warm-up now, 1 of 6 done")             // leaving the warm-up records nothing

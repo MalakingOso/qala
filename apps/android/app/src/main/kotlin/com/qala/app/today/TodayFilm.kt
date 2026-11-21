@@ -210,7 +210,7 @@ private val GrainStep = listOf(0f to 0f, -31f to 17f, 23f to -29f, -17f to -41f)
 private val Flick = Color(0xFFFFE2AA)
 
 /** 256 px of monochrome noise whose alpha follows how far each pixel is from mid grey: soft, and the same tile every launch. */
-private fun grainTile(): androidx.compose.ui.graphics.ImageBitmap {
+internal fun grainTile(): androidx.compose.ui.graphics.ImageBitmap {
     val size = 256
     val random = java.util.Random(8)
     val pixels = IntArray(size * size) {

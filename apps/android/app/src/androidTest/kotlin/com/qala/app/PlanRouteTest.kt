@@ -167,7 +167,7 @@ class PlanRouteTest {
         waitForText("Warm-up comes before the lift.")
         rule.onNodeWithText("Start workout").assertDoesNotExist()
         rule.onNodeWithText("Start warm-up").performClick()
-        waitForText("Easy cardio")
+        waitForText("EASY CARDIO", substring = true)
         rule.onNodeWithText("Start workout").performClick()
         waitForText("Log set 1")
         rule.runOnUiThread { rule.activity.onBackPressedDispatcher.onBackPressed() }

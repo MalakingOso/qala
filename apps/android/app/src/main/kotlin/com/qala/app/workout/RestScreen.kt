@@ -22,6 +22,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
@@ -35,10 +36,9 @@ import com.qala.data.core.AutoregAction
 import com.qala.data.core.AutoregWhy
 import com.qala.data.core.PlateEntry
 import com.qala.data.model.WeightUnit
-import com.qala.design.Card
 import com.qala.design.FlowBottomBar
-import com.qala.design.FlowHead
-import com.qala.design.FlowIconButton
+import com.qala.design.FlowRail
+import com.qala.design.GlassButton
 import com.qala.design.GroupLabel
 import com.qala.design.PrimaryButton
 import com.qala.design.Qala
@@ -47,6 +47,8 @@ import com.qala.design.QalaText
 import com.qala.design.QalaTokens
 import com.qala.design.QalaType
 import com.qala.design.SecondaryButton
+import com.qala.design.Wash
+import com.qala.design.WashCard
 
 /**
  * Rest (DESIGN 7.6, DECISIONS U18): the countdown is the screen. A ticking figure in the hero numeral face, the rest it
@@ -89,79 +91,81 @@ fun RestScreen(onBack: () -> Unit, onAllExercises: () -> Unit) {
     val ready = { store.endRest() }            // the workout is already on the next set; ending the rest keeps what was taken and drops its alarm, and with no rest left this screen goes back
 
     Column(Modifier.fillMaxSize()) {
-        Column(
-            Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-                .statusBarsPadding()
-                .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 16.dp),
+        WashHead(
+            title = "Rest",
+            kicker = from?.let { "${it.exerciseName} · ${if (it.warmup) "warm-up set" else "set"} ${it.setNumber} ${if (it.warmup) "done" else "logged"}" },
+            onBack = onBack,
+            modifier = Modifier.statusBarsPadding().padding(start = 16.dp, end = 16.dp, top = 12.dp),
         ) {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.Top) {
-                FlowHead("Rest", onBack, Modifier.weight(1f), eyebrow = from?.let { "${it.exerciseName} · ${if (it.warmup) "warm-up set" else "set"} ${it.setNumber} ${if (it.warmup) "done" else "logged"}" })
-                FlowIconButton(QalaIcons.LayoutGrid, "All exercises", onAllExercises)
-            }
-
-            Card(hero = true) {
+            GlassButton(onAllExercises, icon = QalaIcons.LayoutGrid, description = "All exercises")
+        }
+        Row(Modifier.weight(1f).fillMaxWidth()) {
+            // A display here: choosing another exercise in the middle of a rest is for the workout, one tap back.
+            FlowRail(flowNodes(state, hourglass = true), Modifier.fillMaxHeight().padding(top = 12.dp))
+            Column(
+                Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .verticalScroll(rememberScrollState())
+                    .padding(end = 16.dp, top = 12.dp, bottom = 16.dp),
+            ) {
                 if (from != null) {
                     val logged = (if (from.weight != null) "${formatWeight(from.weight)} ${unitLabel(from.unit)} × " else if (from.warmup) "Bar × " else "") + formatWeight(from.reps) + (from.rpe?.let { " @ ${formatWeight(it)}" } ?: "")
-                    QalaText(logged, Modifier.fillMaxWidth(), QalaType.log, c.fgMuted, TextAlign.Center)
+                    QalaText(logged, style = Wash.Body.copy(fontSize = 13.sp, lineHeight = 18.sp), color = Wash.Text2)
                 }
                 QalaText(
                     // Past the end the rest is still open, counting what is taken on top of what was asked.
                     if (up) "+${formatClock(timer.overSec(now))}" else formatClock(remaining),
                     Modifier
-                        .fillMaxWidth()
-                        .padding(top = 4.dp)
+                        .padding(top = 2.dp)
                         .semantics {
                             contentDescription = if (up) "Rest is over, ${timer.overSec(now)} seconds past" else "${remaining / 60} minutes ${remaining % 60} seconds left"
                         },
-                    QalaType.ticking.copy(fontSize = 104.sp, lineHeight = 112.sp),
-                    if (up) c.accent else c.fg,
-                    TextAlign.Center,
+                    QalaType.ticking.copy(fontSize = 104.sp, lineHeight = 96.sp, shadow = Wash.TextShadow),
+                    if (up) Wash.Ember else Wash.Text,
                     maxLines = 1,
                 )
-                QalaText("of ${formatClock(timer.budgetSec)}", Modifier.fillMaxWidth(), QalaType.hint, c.fgMuted, TextAlign.Center)
+                QalaText("of ${formatClock(timer.budgetSec)}", Modifier.padding(top = 6.dp), Wash.Kicker, Wash.Text2)
                 Box(
                     Modifier
-                        .padding(top = 16.dp)
+                        .padding(top = 10.dp)
                         .fillMaxWidth()
                         .height(12.dp)
-                        .background(c.grid, RoundedCornerShape(6.dp))
+                        .background(Color.White.copy(alpha = 0.28f), RoundedCornerShape(6.dp))
                         .semantics { progressBarRangeInfo = ProgressBarRangeInfo(remaining.toFloat(), 0f..timer.budgetSec.toFloat().coerceAtLeast(1f)) },
                 ) {
-                    Box(Modifier.fillMaxHeight().fillMaxWidth(timer.fraction(now)).background(c.accent, RoundedCornerShape(6.dp)))
+                    Box(Modifier.fillMaxHeight().fillMaxWidth(timer.fraction(now)).background(Wash.Ember, RoundedCornerShape(6.dp)))
                 }
-            }
 
-            if (next != null) {
-                Card(Modifier.padding(top = 12.dp), contentPadding = 16.dp) {
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Bottom) {
-                        GroupLabel(if (next.newExercise) "Next · ${next.exerciseName}" else "Next · set ${next.setNumber}", Modifier.weight(1f, fill = false))
-                        QalaText(
-                            (if (next.weight != null) "${formatWeight(next.weight)} ${unitLabel(next.unit)} × " else "") + next.reps,
-                            Modifier.padding(start = 8.dp),
-                            QalaType.figure.copy(fontSize = 22.sp, lineHeight = 28.sp),
-                            c.fg,
-                            maxLines = 1,
-                        )
+                if (next != null) {
+                    WashCard(Modifier.padding(top = 16.dp)) {
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Bottom) {
+                            GroupLabel(if (next.newExercise) "Next · ${next.exerciseName}" else "Next · set ${next.setNumber}", Modifier.weight(1f, fill = false))
+                            QalaText(
+                                (if (next.weight != null) "${formatWeight(next.weight)} ${unitLabel(next.unit)} × " else "") + next.reps,
+                                Modifier.padding(start = 8.dp),
+                                QalaType.figure.copy(fontSize = 22.sp, lineHeight = 28.sp),
+                                c.fg,
+                                maxLines = 1,
+                            )
+                        }
+                        if (next.newExercise) QalaText("Set ${next.setNumber} of ${next.setCount}", Modifier.padding(top = 2.dp), QalaType.hint, c.fgMuted)
+                        if (plates?.perSide != null) PerSide(plates.perSide, gym.plates.plates)
+                        // A weight the plates cannot make says what they do make, as the set rows do ("loads 205").
+                        plates?.loadsNote?.let {
+                            QalaText(it, Modifier.fillMaxWidth().padding(top = 6.dp), QalaType.hint, c.fgMuted, TextAlign.Center)
+                        }
+                        plates?.changeLine?.let { QalaText(it, Modifier.padding(top = 8.dp), QalaType.hint, c.fgMuted) }
                     }
-                    if (next.newExercise) QalaText("Set ${next.setNumber} of ${next.setCount}", Modifier.padding(top = 2.dp), QalaType.hint, c.fgMuted)
-                    if (plates?.perSide != null) PerSide(plates.perSide, gym.plates.plates)
-                    // A weight the plates cannot make says what they do make, as the set rows do ("loads 205").
-                    plates?.loadsNote?.let {
-                        QalaText(it, Modifier.fillMaxWidth().padding(top = 6.dp), QalaType.hint, c.fgMuted, TextAlign.Center)
-                    }
-                    plates?.changeLine?.let { QalaText(it, Modifier.padding(top = 8.dp), QalaType.hint, c.fgMuted) }
+                } else {
+                    QalaText("That was the last set.", Modifier.padding(top = 16.dp), Wash.Body, Wash.Text2)
                 }
-            } else {
-                QalaText("That was the last set.", Modifier.padding(top = 16.dp), QalaType.hint, c.fgMuted)
-            }
 
-            rest.autoreg?.let { AutoregCard(it, next?.unit ?: WeightUnit.Lb, Modifier.padding(top = 12.dp)) }
-            Ledger(rest, Modifier.padding(top = 12.dp))
+                rest.autoreg?.let { AutoregCard(it, next?.unit ?: WeightUnit.Lb, Modifier.padding(top = 12.dp)) }
+                Ledger(rest, Modifier.padding(top = 12.dp))
+            }
         }
-        FlowBottomBar {
+        FlowBottomBar(onWash = true) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
                 SecondaryButton("+30 s", { store.addRest(30) }, Modifier.weight(0.45f))
                 PrimaryButton(
@@ -196,7 +200,7 @@ private fun AutoregCard(note: AutoregNote, unit: WeightUnit, modifier: Modifier)
         AutoregAction.Lower -> "Lowered ${setsLeft(note.sets)} left of this lift by ${note.percent}%" +
             (note.weight?.let { ", the next to ${formatWeight(it)} ${unitLabel(unit)}" } ?: "") + ", since $why."
     }
-    Card(modifier, contentPadding = 16.dp) {
+    WashCard(modifier) {
         GroupLabel("Load adjusted")
         QalaText(words, Modifier.padding(top = 4.dp), QalaType.body.copy(fontSize = 13.sp, lineHeight = 19.sp), c.fgSecondary)
     }
@@ -208,7 +212,7 @@ private fun setsLeft(n: Int) = if (n == 1) "the 1 set" else "the $n sets"
 @Composable
 private fun Ledger(rest: RestState, modifier: Modifier) {
     val c = Qala.colors
-    Card(modifier, contentPadding = 16.dp) {
+    WashCard(modifier) {
         val planned = rest.rows.sumOf { it.seconds }
         val added = rest.seconds - planned
         GroupLabel("Why ${formatClock(rest.seconds)}", Modifier.padding(bottom = 4.dp))
