@@ -9,6 +9,7 @@ import { ArrowRight } from "../icons.ts";
 import { DeviceMorph } from "../DeviceMorph.tsx";
 import { IntroHero } from "../intro/IntroHero.tsx";
 import { LandingEvidence } from "./LandingEvidence.tsx";
+import { LandingLife } from "./LandingLife.tsx";
 
 const TRANSITION_MS = 900;
 /* The plate's centre and width as a fraction of the clip (shared/intro/
@@ -198,6 +199,7 @@ export function LandingPage() {
           </div>
           <DeviceMorph />
         </section>
+        <LandingLife />
         <LandingEvidence />
       </main>
       <footer className="landing-footer" inert={mainInert ? true : undefined}>

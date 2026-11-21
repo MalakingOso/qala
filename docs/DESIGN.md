@@ -461,6 +461,20 @@ loops phone, laptop, desktop and then the bare app card
 (`shared/DeviceMorph.tsx`, CSS keyframes only, static laptop under reduced
 motion), to show where Qala runs.
 
+"Made for real life" (`shared/landing/LandingLife.tsx`, 2026-11-21) follows,
+between the hero and the literature. Six plain cards that say what Qala
+does in ordinary weeks: vacation without losing the thread (vacation and
+sick shift the plan out; a break or a scheduling conflict rests in place,
+7.18), lifting and running on one readiness score, warm-ups that are part
+of the plan (7.4: easy cardio, soft tissue and mobility from soreness and
+owned equipment, ramp sets in the workout), a smooth modern app (one
+primary action per screen, readable mid set), growth over months (a fixed
+reference 1RM per block, the Kalman e1RM and the check-in baseline
+learning the lifter), and the roadmap's MCP server for the user's own LLM,
+tagged as roadmap because it is not built. The cards use the same top rule
+and small tag as the literature cards below them, with no icons and no
+nested cards.
+
 "Grounded in the literature" (U28) follows, in two halves. First, what the
 engine is built from: seven cards covering the fitness-fatigue model, the
 Kalman e1RM estimate, the check-in readiness measures, autoregulation,

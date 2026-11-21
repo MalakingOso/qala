@@ -1381,6 +1381,44 @@ table.data tr.row-link a:focus-visible {
   line-height: 1.2;
   margin: 12px 0 40px;
 }
+/* The "made for real life" section (shared/landing/LandingLife.tsx): six
+ * short cards, each with a top rule and a small tag, in the same plain
+ * voice as the literature cards below it. No icons and no cards inside
+ * cards. */
+.life-lede {
+  max-width: 68ch;
+  margin: -20px 0 40px;
+  color: var(--fg-secondary);
+  font-size: 15px;
+  line-height: 1.85;
+}
+.life-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 32px 40px;
+}
+.life-card {
+  border-top: var(--border-width) solid var(--border);
+  padding-top: 16px;
+}
+.life-tag {
+  display: inline-block;
+  font-size: 10px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.life-card h4 {
+  font-size: 19px;
+  margin: 10px 0 10px;
+  line-height: 1.25;
+}
+.life-card p {
+  color: var(--fg-secondary);
+  font-size: 13px;
+  line-height: 1.8;
+  margin: 0;
+}
 /* The expanded "Grounded in the literature" section
  * (shared/landing/LandingEvidence.tsx): a lede, then the published work the
  * engine is built from, then what you can do with it, shown with real
@@ -1658,6 +1696,9 @@ table.data tr.row-link a:focus-visible {
   background: rgb(255 255 255 / 0.42);
 }
 @media (max-width: 900px) {
+  .life-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
   .evidence-cards {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -1672,6 +1713,10 @@ table.data tr.row-link a:focus-visible {
   }
 }
 @media (max-width: 760px) {
+  .life-cards {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
   .evidence-cards {
     grid-template-columns: 1fr;
     gap: 28px;
