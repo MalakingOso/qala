@@ -19,10 +19,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -35,8 +32,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -77,8 +72,8 @@ private val TabTitle = Wash.Title.copy(fontSize = 34.sp, lineHeight = 38.sp)
 
 /**
  * The one head. A tab screen (no [onBack]) has the [eyebrow] over a 34 sp title and its [actions] at the right. A pushed screen starts with
- * a glass Back and uses the 30 sp title. White on the wash with a text shadow, the same in Light and Dark. The title is the heading
- * TalkBack jumps to.
+ * a glass Back and uses the 30 sp title. White on the wash with a text shadow, the same in Light and Dark. The title may take two lines, and
+ * is the heading TalkBack jumps to.
  */
 @Composable
 fun ScreenHead(
@@ -92,7 +87,7 @@ fun ScreenHead(
         if (onBack != null) GlassButton(onBack, icon = QalaIcons.ChevronLeft, description = "Back")
         Column(Modifier.weight(1f).padding(top = 2.dp)) {
             if (eyebrow != null) QalaText(eyebrow.uppercase(), style = Wash.Kicker, color = Wash.Text2, maxLines = 1)
-            QalaText(title, Modifier.semantics { heading() }, if (onBack == null) TabTitle else Wash.Title, Wash.Text, maxLines = 1)
+            QalaText(title, Modifier.semantics { heading() }, if (onBack == null) TabTitle else Wash.Title, Wash.Text, maxLines = 2)
         }
         actions()
     }
@@ -134,7 +129,7 @@ fun WashPage(
 
 /**
  * A screen of the Sheet carrier: the wash head, then Today's cream sheet carrying [content], on the [WashScrim.Board3] scrim. The sheet
- * starts 20 dp under the head and runs at least to the bottom of the screen, so a short page is still cream to the edge. Inside it are
+ * starts 20 dp under the head and is at least one screen high, so a short page is still cream to the bottom edge. Inside it are
  * 16 dp gutters, 26 dp of air at the top and [LocalBarClearance] and 16 dp under the last row. The theme decides the sheet's colour.
  */
 @Composable
@@ -146,17 +141,15 @@ fun SheetPage(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     BoxWithConstraints(modifier.fillMaxSize()) {
-        // A scroll column measures its children without a height limit, so the sheet's minimum is the screen less what is above it.
-        var headPx by remember { mutableIntStateOf(0) }
-        val minSheet = (maxHeight - with(LocalDensity.current) { headPx.toDp() } - 20.dp).coerceAtLeast(0.dp)
+        val screen = maxHeight          // taken here because the scroll column's own scope has no height to give
         WashScrimLayer(WashScrim.Board3)
         Column(Modifier.fillMaxSize().verticalScroll(scroll)) {
-            Box(Modifier.onSizeChanged { headPx = it.height }.headPadding()) { head() }
+            Box(Modifier.headPadding()) { head() }
             Spacer(Modifier.height(20.dp))
             Column(
                 Modifier
                     .fillMaxWidth()
-                    .heightIn(min = minSheet)
+                    .heightIn(min = screen)
                     .sheetSurface(sheetColor())
                     .padding(start = 16.dp, end = 16.dp, top = 26.dp, bottom = LocalBarClearance.current + 16.dp),
                 content = content,
@@ -234,7 +227,6 @@ fun PinnedBar(modifier: Modifier = Modifier, content: @Composable RowScope.() ->
             .drawBehind {
                 sheetShadow(0.3f)
                 drawRect(fill)
-                drawRect(Color.White.copy(alpha = 0.7f), size = Size(size.width, 1.dp.toPx()))
             }
             .padding(start = 16.dp, end = 16.dp, top = 10.dp, bottom = LocalBarClearance.current),
         horizontalArrangement = Arrangement.spacedBy(8.dp),

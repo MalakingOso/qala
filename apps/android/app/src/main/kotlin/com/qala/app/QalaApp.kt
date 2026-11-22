@@ -276,8 +276,8 @@ fun QalaApp(animate: Boolean? = null) {
 private val HandedOver = setOf(Destination.CheckIn, Destination.WarmUp, Destination.Workout, Destination.Run, Destination.History, Destination.Settings)
 
 /**
- * The status and navigation bars follow the app's own theme, not the system's, and their icons are light on every route: Today's film and
- * the wash under every other screen are dark in both themes.
+ * The status and navigation bars are transparent with light icons on every route, whatever the theme: Today's film and the wash under every
+ * other screen are dark in both.
  */
 @Composable
 private fun SystemBars() {
