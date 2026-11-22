@@ -78,8 +78,8 @@ class StatsRouteTest {
         showApp()
         waitFor { textShown("GZCLP DAY", substring = true) }
         tab("Progress")
-        waitFor { textShown("E1RM", substring = true) }              // a main lift's strength line, from the engine's observations
-        waitFor { textShown("SETS BY MUSCLE, THIS WEEK") || textShown("RUNNING, PER WEEK") }
+        waitFor { textShown("ESTIMATED 1RM", substring = true) }     // a main lift's strength hero, from the engine's observations
+        waitFor { textShown("Sets by muscle, this week") || textShown("Running, per week") }
         // The Table button swaps the first chart for the same numbers as rows, and back.
         val table = rule.onAllNodes(hasText("Table") and hasClickAction())[0]
         table.performClick()
@@ -97,6 +97,6 @@ class StatsRouteTest {
         // The ring is a description and no table: "Readiness 80 of 100" is among the descriptions.
         waitFor { rule.onAllNodes(hasContentDescription(" of 100", substring = true)).fetchSemanticsNodes().isNotEmpty() }
         waitFor { textShown("READINESS, LAST 7 DAYS") }
-        waitFor { textShown("BODY WEIGHT") }
+        waitFor { textShown("Body weight") }
     }
 }
