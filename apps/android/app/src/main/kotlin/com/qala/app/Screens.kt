@@ -75,8 +75,8 @@ fun Screen(
     when (route) {
         Route.Today -> TodayScreen(today, ui, scroll, onGo)
         Route.Plan -> PlanScreen(snapshot, today, scroll, topBar, onGo, onChangePlan = { onPush(Route.PlanPicker) })
-        Route.Body -> Plain(scroll, topBar) { BodyScreen(snapshot) }
-        Route.Progress -> Plain(scroll, topBar) { ProgressScreen(snapshot) }
+        Route.Body -> BodyScreen(snapshot, scroll, onCheckIn = { onGo(Destination.CheckIn) })
+        Route.Progress -> ProgressScreen(snapshot, scroll)
         Route.SessionComplete -> Plain(scroll, topBar) { SessionCompleteScreen(onBack) }
         Route.Coach -> CoachTab(snapshot, scroll, topBar)
         Route.History -> HistoryScreen(scroll, onBack)
