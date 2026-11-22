@@ -109,7 +109,7 @@ private fun Empty(text: String) {
 
 /**
  * Progress on the Glass carrier: a chip per main lift under the head, the picked lift's e1RM as the hero card, then this week's sets by
- * muscle and the weeks of running. The picked lift is kept across a rotation and a return to the tab.
+ * muscle and the weeks of running. The picked lift is kept across a rotation.
  */
 @Composable
 fun ProgressScreen(snapshot: EngineSnapshot, scroll: ScrollState) {
@@ -233,7 +233,8 @@ private fun LiftCard(t: LiftTrend, word: String) {
 
 /** "Up 12 lb in 8 weeks", "Down 3 lb in 4 weeks", or "Holding at 294 lb" when the line has not moved or has one point. */
 private fun liftHeadline(first: DatedValue, last: DatedValue, word: String): String {
-    val change = tenth(last.value - first.value)
+    // From the two figures as shown, so the headline always adds up with them.
+    val change = tenth(tenth(last.value) - tenth(first.value))
     if (first === last || change == 0.0) return "Holding at ${fig(last.value)} $word"
     val days = ChronoUnit.DAYS.between(LocalDate.parse(first.date.take(10)), LocalDate.parse(last.date.take(10)))
     val span = when {
