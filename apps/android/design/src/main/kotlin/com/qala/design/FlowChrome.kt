@@ -22,7 +22,7 @@ import androidx.compose.ui.unit.dp
 
 /**
  * A 44 dp bordered square with an icon, the head-of-screen button of the lifting flow (Back, all exercises, Finish):
- * the same surface as the Back button of [FlowHead], with an optional ink fill for the one that is on.
+ * the same surface as the glass Back button of the head, with an optional ink fill for the one that is on.
  */
 @Composable
 fun FlowIconButton(

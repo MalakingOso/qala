@@ -2,17 +2,20 @@ package com.qala.app.plan
 
 import android.text.format.DateFormat
 import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -27,10 +30,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import com.qala.app.LocalAppContainer
 import com.qala.app.plates.PlateFaces
@@ -44,11 +56,9 @@ import com.qala.app.today.TodayLoad
 import com.qala.data.IsoTime
 import com.qala.data.engine.EngineSnapshot
 import com.qala.data.plan.PlanWeekData
-import com.qala.design.LocalBarClearance
-import com.qala.design.Card
 import com.qala.design.ChoiceChip
 import com.qala.design.DayTabItem
-import com.qala.design.DayTabs
+import com.qala.design.GlassButton
 import com.qala.design.Group
 import com.qala.design.GroupLabel
 import com.qala.design.GroupRow
@@ -60,8 +70,11 @@ import com.qala.design.QalaIcon
 import com.qala.design.QalaIcons
 import com.qala.design.QalaText
 import com.qala.design.QalaType
+import com.qala.design.ScreenHead
 import com.qala.design.SecondaryButton
-import com.qala.design.WeekSwitcher
+import com.qala.design.SheetCard
+import com.qala.design.SheetPage
+import com.qala.design.Wash
 import kotlinx.coroutines.withContext
 
 private val PlanNavSaver: Saver<PlanNav, List<Int>> = Saver(
@@ -70,8 +83,9 @@ private val PlanNavSaver: Saver<PlanNav, List<Int>> = Saver(
 )
 
 /**
- * Plan (DESIGN 7.2, mockups/phone-refresh-plan.html): arrows over the week, a tab for each day, the day's own exercises and,
- * on today, one Start workout button. It fills the shell's content box under the brand bar and scrolls on [scroll].
+ * Plan (DESIGN 7.2, DECISIONS S51): the wash head with the program and its rotation over the title, a glass Change plan at its end, the
+ * week's arrows and a glass tab for each day under it, then the cream sheet carrying the selected day (its exercises and, on today,
+ * one Start workout button) and the week's summary. It scrolls on [scroll].
  *
  * The week is laid out by the data module from the records behind the engine snapshot, off the main thread, so it is
  * the week Today's strip and rail show, and any other week the arrows reach. Where the user is looking (week, day and
@@ -82,37 +96,29 @@ fun PlanScreen(
     snapshot: EngineSnapshot,
     today: TodayLoad,
     scroll: ScrollState,
-    topBar: @Composable (Modifier) -> Unit,
     onGo: (Destination) -> Unit,
     onChangePlan: () -> Unit,
 ) {
-    Column(Modifier.fillMaxSize().verticalScroll(scroll)) {
-        Column(Modifier.statusBarsPadding().padding(horizontal = 20.dp).padding(bottom = 32.dp + LocalBarClearance.current)) {
-            topBar(Modifier)
-            val input = snapshot.input
-            when {
-                snapshot.error != null -> PlanHead("Plan could not be worked out.", snapshot.error)
-                !snapshot.loaded || input == null -> PlanHead("Getting your plan ready.", null)
-                else -> PlanContent(snapshot, today, onGo, onChangePlan)
-            }
-        }
+    val input = snapshot.input
+    when {
+        snapshot.error != null -> PlanShell(scroll, "Plan could not be worked out.", snapshot.error)
+        !snapshot.loaded || input == null -> PlanShell(scroll, "Getting your plan ready.", null)
+        else -> PlanContent(snapshot, today, scroll, onGo, onChangePlan)
     }
 }
 
+/** The page with nothing to show yet: the title under [eyebrow] and, if there is one, the [note] on the sheet. */
 @Composable
-private fun PlanHead(eyebrow: String, note: String?, onChangePlan: (() -> Unit)? = null) {
-    Column(Modifier.padding(top = 16.dp, bottom = if (onChangePlan == null) 16.dp else 4.dp)) {
-        GroupLabel(eyebrow, Modifier.padding(bottom = 2.dp))
-        QalaText("Plan", Modifier.semantics { heading() }, QalaType.pageTitle, Qala.colors.fg)
-        note?.let { QalaText(it, Modifier.padding(top = 8.dp), BodyStyle, Qala.colors.fgSecondary) }
-        onChangePlan?.let { LinkButton("Change plan", it) }
+private fun PlanShell(scroll: ScrollState, eyebrow: String, note: String?) {
+    SheetPage(scroll, head = { ScreenHead("Plan", eyebrow = eyebrow) }) {
+        note?.let { QalaText(it, style = BodyStyle, color = Qala.colors.fgSecondary) }
     }
 }
 
 private val BodyStyle = QalaType.body.copy(fontSize = 13.sp, lineHeight = 19.sp)
 
 @Composable
-private fun PlanContent(snapshot: EngineSnapshot, today: TodayLoad, onGo: (Destination) -> Unit, onChangePlan: () -> Unit) {
+private fun PlanContent(snapshot: EngineSnapshot, today: TodayLoad, scroll: ScrollState, onGo: (Destination) -> Unit, onChangePlan: () -> Unit) {
     val container = LocalAppContainer.current
     val input = snapshot.input!!
     val use24h = DateFormat.is24HourFormat(LocalContext.current)
@@ -126,7 +132,7 @@ private fun PlanContent(snapshot: EngineSnapshot, today: TodayLoad, onGo: (Desti
     }
     val data = week
     if (data == null) {
-        PlanHead("Getting your plan ready.", null)
+        PlanShell(scroll, "Getting your plan ready.", null)
         return
     }
     // What Today would offer next, so Plan's button on today follows Today's stage order instead of deciding it again.
@@ -134,49 +140,132 @@ private fun PlanContent(snapshot: EngineSnapshot, today: TodayLoad, onGo: (Desti
     val model = remember(data, shown, bounds, use24h, next) { PlanModel(data, shown, bounds, use24h, next) }
     val c = Qala.colors
 
+    // No program: the empty week gives way to the way out of it. A run plan still has days worth showing under it.
     val hasProgram = data.programName != null
-    PlanHead(model.eyebrow, null, onChangePlan.takeIf { hasProgram })
-    if (!hasProgram) {
-        // No program: the empty week gives way to the way out of it. A run plan still has days worth showing under it.
-        Card {
-            QalaText("No plan yet. Choose one and each training day lists its lifts here.", style = QalaType.hint, color = c.fgMuted)
-            Spacer(Modifier.height(16.dp))
-            PrimaryButton("Choose a plan", onClick = onChangePlan, large = true)
-        }
-        if (!snapshot.hasRunPlan) return
-        Spacer(Modifier.height(16.dp))
-    }
-    Card(contentPadding = 14.dp) {
-        WeekSwitcher(
-            label = model.week.label,
-            range = model.week.range,
-            canPrevious = model.week.canPrevious,
-            canNext = model.week.canNext,
-            onPrevious = { nav = shown.previous(bounds) },
-            onNext = { nav = shown.next(bounds) },
-        )
-        if (!model.week.onThisWeek) {
-            LinkButton(
-                "Back to this week",
-                onClick = { nav = shown.thisWeek(IsoTime.weekdayIndex(snapshot.date)) },
-                Modifier.align(Alignment.CenterHorizontally),
-            )
-        }
-    }
-    Spacer(Modifier.height(12.dp))
-    DayTabs(
-        items = model.tabs.map { it.item() },
-        onSelect = { nav = shown.select(it) },
-        groupLabel = "Days of the week",
-    )
-    Spacer(Modifier.height(12.dp))
-    DayCardView(model.card, onPick = { nav = shown.show(it) }, onGo = onGo)
-    Spacer(Modifier.height(16.dp))
-    Group(model.summary.title) {
-        GroupRow(last = true) {
+    val showWeek = hasProgram || snapshot.hasRunPlan
+    SheetPage(
+        scroll,
+        head = {
             Column {
-                QalaText(model.summary.holds, style = QalaType.bodyStrong, color = c.fg)
-                QalaText(model.summary.went, Modifier.padding(top = 2.dp), QalaType.hint, c.fgMuted)
+                ScreenHead(
+                    "Plan",
+                    eyebrow = model.eyebrow,
+                    actions = { if (hasProgram) GlassButton(onChangePlan, Modifier.padding(top = 10.dp), label = "Change plan") },
+                )
+                if (showWeek) {
+                    GlassWeekSwitcher(
+                        model.week,
+                        onPrevious = { nav = shown.previous(bounds) },
+                        onNext = { nav = shown.next(bounds) },
+                        Modifier.padding(top = 10.dp),
+                    )
+                    if (!model.week.onThisWeek) {
+                        LinkButton(
+                            "Back to this week",
+                            onClick = { nav = shown.thisWeek(IsoTime.weekdayIndex(snapshot.date)) },
+                            Modifier.align(Alignment.CenterHorizontally),
+                            color = Wash.Text,
+                        )
+                    }
+                    GlassDayTabs(
+                        items = model.tabs.map { it.item() },
+                        onSelect = { nav = shown.select(it) },
+                        groupLabel = "Days of the week",
+                        Modifier.padding(top = 8.dp),
+                    )
+                }
+            }
+        },
+    ) {
+        if (!hasProgram) {
+            SheetCard {
+                QalaText("No plan yet. Choose one and each training day lists its lifts here.", style = QalaType.hint, color = c.fgMuted)
+                Spacer(Modifier.height(16.dp))
+                PrimaryButton("Choose a plan", onClick = onChangePlan, large = true)
+            }
+        }
+        if (showWeek) {
+            DayCardView(model.card, onPick = { nav = shown.show(it) }, onGo = onGo)
+            Group(model.summary.title) {
+                GroupRow(last = true) {
+                    Column {
+                        QalaText(model.summary.holds, style = QalaType.bodyStrong, color = c.fg)
+                        QalaText(model.summary.went, Modifier.padding(top = 2.dp), QalaType.hint, c.fgMuted)
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * `<  This week  >` over the wash: a glass arrow either side of the week's label and the dates under it. The label is a heading and
+ * a polite live region, so moving to another week is spoken. An arrow with no week beyond it is dimmed and inert.
+ */
+@Composable
+private fun GlassWeekSwitcher(week: WeekBar, onPrevious: () -> Unit, onNext: () -> Unit, modifier: Modifier = Modifier) {
+    Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+        GlassButton(onPrevious, icon = QalaIcons.ChevronLeft, description = "Previous week", enabled = week.canPrevious)
+        Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
+            QalaText(
+                week.label,
+                Modifier.semantics { heading(); liveRegion = LiveRegionMode.Polite },
+                QalaType.cardTitle.copy(fontSize = 16.sp, lineHeight = 20.sp, shadow = Wash.TextShadow),
+                Wash.Text,
+                TextAlign.Center,
+                maxLines = 1,
+            )
+            QalaText(week.range, style = Wash.Small.copy(fontSize = 11.sp, lineHeight = 14.sp), color = Color.White.copy(alpha = 0.8f), textAlign = TextAlign.Center, maxLines = 1)
+        }
+        GlassButton(onNext, icon = QalaIcons.ChevronRight, description = "Next week", enabled = week.canNext)
+    }
+}
+
+/**
+ * A glass pill for each day of the week: the weekday over the day of the month, then a glyph, sharing the width. The picked one is
+ * the light chip and today's name reads in ember when it is not the one picked; a done day's glyph is teal, and a day skipped or not
+ * logged is struck through. Each pill answers to its [DayTabItem.description] for a screen reader, and the row to [groupLabel].
+ */
+@Composable
+private fun GlassDayTabs(items: List<DayTabItem>, onSelect: (Int) -> Unit, groupLabel: String, modifier: Modifier = Modifier) {
+    val shape = RoundedCornerShape(24.dp)
+    Row(
+        modifier.fillMaxWidth().selectableGroup().semantics { contentDescription = groupLabel },
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        items.forEachIndexed { i, item ->
+            val ink = if (item.selected) Wash.EmberInk else Wash.Text
+            val strike = if (item.struck) TextDecoration.LineThrough else TextDecoration.None
+            Column(
+                Modifier
+                    .weight(1f)
+                    .defaultMinSize(minHeight = 72.dp)
+                    .background(if (item.selected) Wash.Text2 else Wash.GlassFill, shape)
+                    .border(1.dp, if (item.selected) Color.Transparent else Wash.GlassBorder, shape)
+                    .selectable(
+                        selected = item.selected,
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        role = Role.Tab,
+                        onClick = { onSelect(i) },
+                    )
+                    .semantics { contentDescription = item.description }
+                    .padding(vertical = 8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(3.dp, Alignment.CenterVertically),
+            ) {
+                QalaText(
+                    item.name.uppercase(),
+                    style = QalaType.tabLabel.copy(fontSize = 10.sp, lineHeight = 12.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.08.em, textDecoration = strike),
+                    color = when {
+                        item.selected -> Wash.EmberInk.copy(alpha = 0.72f)
+                        item.today -> Wash.Ember
+                        else -> Color.White.copy(alpha = 0.8f)
+                    },
+                    maxLines = 1,
+                )
+                QalaText(item.date, style = QalaType.log.copy(fontSize = 15.sp, lineHeight = 18.sp, fontWeight = FontWeight.Medium, textDecoration = strike), color = ink, maxLines = 1)
+                QalaIcon(item.glyph, null, size = 16.dp, tint = if (item.selected) ink else if (item.done) Wash.Teal else Color.White.copy(alpha = 0.6f))
             }
         }
     }
@@ -207,11 +296,11 @@ private fun CtaIcon.vector() = when (this) {
     CtaIcon.SportShoe -> QalaIcons.SportShoe
 }
 
-/** The selected day. Today's card carries the shadow, and its button is the one ember fill on the screen. */
+/** The selected day on a sheet card. Today's eyebrow is ember, and its button is the one ember fill on the screen. */
 @Composable
 private fun DayCardView(card: DayCard, onPick: (PlanView) -> Unit, onGo: (Destination) -> Unit) {
     val c = Qala.colors
-    Card(hero = card.hero) {
+    SheetCard {
         GroupLabel(card.eyebrow, color = if (card.hero) c.accent else c.fgMuted)
         if (card.reason != null) {
             Row(Modifier.padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -222,7 +311,7 @@ private fun DayCardView(card: DayCard, onPick: (PlanView) -> Unit, onGo: (Destin
                 }
             }
         } else {
-            QalaText(card.title, Modifier.padding(top = 8.dp).semantics { heading() }, QalaType.stageTitle)
+            QalaText(card.title, Modifier.padding(top = 6.dp).semantics { heading() }, QalaType.stageTitle.copy(fontSize = 26.sp, lineHeight = 30.sp))
             card.subtitle?.let { QalaText(it, Modifier.padding(top = 4.dp), QalaType.hint, c.fgMuted) }
         }
         card.detail?.let {
@@ -288,21 +377,26 @@ private fun ExerciseList(card: DayCard) {
     Column(Modifier.padding(top = 12.dp)) {
         rows.forEachIndexed { i, e ->
             // TODO: a tap on an exercise should open it in All exercises (as the mockup's chevron implies) once that route exists.
-            Column(
+            Row(
                 Modifier
                     .fillMaxWidth()
                     .then(if (i == 0) Modifier else Modifier.rule())
-                    .padding(vertical = 10.dp),
+                    .defaultMinSize(minHeight = 48.dp)
+                    .padding(vertical = 6.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                QalaText(e.name, style = QalaType.bodyStrong, color = c.fg)
-                when (card.view) {
-                    PlanView.Overview -> {
-                        QalaText(e.scheme, Modifier.padding(top = 2.dp), Mono, c.fgSecondary)
-                        // The heaviest set's plates, once for the exercise.
-                        e.plateWeights.filterNotNull().maxOrNull()?.let { w -> perSide[w]?.let { PlateFaces(it, gym.plates.plates, Modifier.padding(top = 4.dp)) } }
+                Column(Modifier.weight(1f)) {
+                    QalaText(e.name, style = QalaType.bodyStrong, color = c.fg)
+                    when (card.view) {
+                        PlanView.Overview -> QalaText(e.scheme, Modifier.padding(top = 2.dp), Mono, c.fgSecondary)
+                        PlanView.EverySet -> SetLines(e.sets, e.plateWeights.map { w -> w?.let { perSide[it] } }, gym.plates.plates)
+                        PlanView.WarmUp -> SetLines(e.warmups)
                     }
-                    PlanView.EverySet -> SetLines(e.sets, e.plateWeights.map { w -> w?.let { perSide[it] } }, gym.plates.plates)
-                    PlanView.WarmUp -> SetLines(e.warmups)
+                }
+                // The heaviest set's plates, once for the exercise, at the row's end.
+                if (card.view == PlanView.Overview) {
+                    e.plateWeights.filterNotNull().maxOrNull()?.let { w -> perSide[w]?.let { PlateFaces(it, gym.plates.plates, height = 28f) } }
                 }
             }
         }

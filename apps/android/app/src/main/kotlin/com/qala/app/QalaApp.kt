@@ -73,7 +73,6 @@ import com.qala.design.QalaIcons
 import com.qala.design.QalaTheme
 import com.qala.design.TabBar
 import com.qala.design.TabItem
-import com.qala.design.TopBar
 import com.qala.design.animationsEnabled
 import kotlinx.coroutines.launch
 
@@ -190,13 +189,6 @@ fun QalaApp(animate: Boolean? = null) {
                 today = today,
                 snapshot = snapshot,
                 ui = ui,
-                topBar = { modifier ->
-                    TopBar(
-                        onHistory = { nav = nav.push(Route.History) },
-                        onSettings = { nav = nav.push(Route.Settings) },
-                        modifier = modifier,
-                    )
-                },
                 onGo = { to ->
                     when {
                         handOver.running -> {}                  // a second tap during the hand-over is ignored

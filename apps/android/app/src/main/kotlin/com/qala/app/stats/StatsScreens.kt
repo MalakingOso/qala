@@ -70,7 +70,6 @@ import com.qala.design.Card
 import com.qala.design.GlassCard
 import com.qala.design.GlassPage
 import com.qala.design.GroupLabel
-import com.qala.design.PageHead
 import com.qala.design.PinnedBar
 import com.qala.design.PrimaryButton
 import com.qala.design.Qala

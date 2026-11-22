@@ -5,14 +5,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -47,9 +44,7 @@ import com.qala.data.model.ThemeMode
 import com.qala.data.model.TitleFont
 import com.qala.data.model.WeightUnit
 import com.qala.data.repo.SettingsRepository
-import com.qala.design.LocalBarClearance
 import com.qala.design.DayStrip
-import com.qala.design.FlowHead
 import com.qala.design.GearSlot
 import com.qala.design.Group
 import com.qala.design.GroupRow
@@ -62,7 +57,9 @@ import com.qala.design.QalaText
 import com.qala.design.QalaType
 import com.qala.design.RowStepper
 import com.qala.design.ScalePicker
+import com.qala.design.ScreenHead
 import com.qala.design.SecondaryButton
+import com.qala.design.SheetPage
 import com.qala.design.ToggleRow
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineStart
@@ -85,7 +82,7 @@ private val GroupGap = 14.dp
  * Appearance (theme and title font) closes the screen. Left out on purpose: Check-ins (the daily sleep and stress check-in does not exist on Android), Running
  * (run recording is not built) and Coach (its screen shows the status).
  *
- * Each tap shows its result at once and hands over to the stored value when it catches up, so two quick taps on a stepper
+ * The groups sit on the cream sheet under a wash head (S51), so they follow the theme. Each tap shows its result at once and hands over to the stored value when it catches up, so two quick taps on a stepper
  * do not undo each other, and the writes go in tap order. Today's skip sheet opens over this screen from Change, and Set
  * active ends the status the way Today's Undo does.
  */
@@ -145,15 +142,7 @@ fun SettingsScreen(
         }
     }
 
-    Column(
-        Modifier
-            .fillMaxSize()
-            .verticalScroll(scroll)
-            .statusBarsPadding()
-            .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 24.dp + LocalBarClearance.current),
-    ) {
-        FlowHead("Settings", onBack)
-
+    SheetPage(scroll, head = { ScreenHead("Settings", onBack = onBack) }) {
         // ---- training status ----
         val status = model?.let { statusLine(it.dayStatus) }
         Group(

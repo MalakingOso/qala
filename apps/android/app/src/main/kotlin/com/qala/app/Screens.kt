@@ -52,8 +52,8 @@ import kotlinx.coroutines.launch
 
 /**
  * The screen for [route], filling the shell's content box. Today brings its own scroll column and fixed layers, and so
- * do the lifting screens (a pinned bar under their own scroll); the screens that have not moved to a page frame yet are the same
- * header over a padded column, and [topBar] is theirs alone (it goes with [Plain]). [onPush] opens a screen over this one (Workout opens
+ * do the lifting screens (a pinned bar under their own scroll); every other screen is a page frame ([com.qala.design.WashPage],
+ * [com.qala.design.SheetPage] or [com.qala.design.GlassPage]) with the head inside it. [onPush] opens a screen over this one (Workout opens
  * Rest, the warm-up opens Workout, and each of the three opens All exercises, whose Back returns to it). [settingsFocus] is the group
  * Settings opens scrolled to, if one sent the lifter there; Settings calls [onSettingsFocused] once it has scrolled.
  */
@@ -64,7 +64,6 @@ fun Screen(
     today: TodayLoad,
     snapshot: EngineSnapshot,
     ui: TodayUiState,
-    topBar: @Composable (Modifier) -> Unit,
     onGo: (Destination) -> Unit,
     onBack: () -> Unit,
     onPlates: () -> Unit,
@@ -75,11 +74,11 @@ fun Screen(
 ) {
     when (route) {
         Route.Today -> TodayScreen(today, ui, scroll, onGo)
-        Route.Plan -> PlanScreen(snapshot, today, scroll, topBar, onGo, onChangePlan = { onPush(Route.PlanPicker) })
+        Route.Plan -> PlanScreen(snapshot, today, scroll, onGo, onChangePlan = { onPush(Route.PlanPicker) })
         Route.Body -> BodyScreen(snapshot, scroll, onCheckIn = { onGo(Destination.CheckIn) })
         Route.Progress -> ProgressScreen(snapshot, scroll)
         Route.SessionComplete -> SessionCompleteScreen(scroll, onBack)
-        Route.Coach -> CoachTab(snapshot, scroll, topBar)
+        Route.Coach -> CoachTab(snapshot, scroll)
         Route.History -> HistoryScreen(scroll, onBack)
         Route.Settings -> SettingsScreen(scroll, today, ui, settingsFocus, onSettingsFocused, onBack, onPlates)
         Route.Plates -> PlatesScreen(scroll, onBack, onEditPlates)
@@ -103,25 +102,7 @@ fun Screen(
 /** The program day Today has chosen for today, which the lifting screens open: null while Today is loading or on a day with no lift. */
 private fun programDay(today: TodayLoad): Int? = (today as? TodayLoad.Ready)?.model?.plan?.programDay
 
-/**
- * A scrolling screen under the brand bar, with the 20 dp page gutters. Transitional: the screens that still use it move to
- * [com.qala.design.WashPage], [com.qala.design.SheetPage] or [com.qala.design.GlassPage], and this goes with them.
- */
-@Composable
-private fun Plain(scroll: ScrollState, topBar: @Composable (Modifier) -> Unit, content: @Composable ColumnScope.() -> Unit) {
-    Column(Modifier.fillMaxSize().verticalScroll(scroll)) {
-        Column(Modifier.statusBarsPadding().padding(horizontal = 20.dp).padding(bottom = 32.dp + LocalBarClearance.current)) {
-            topBar(Modifier)
-            Spacer(Modifier.height(16.dp))
-            content()
-        }
-    }
-}
-
-/**
- * Transitional, like [Plain]: a lifting screen that has not moved to [com.qala.design.WashPage] yet keeps the soft scrim the shell's
- * backdrop used to paint under it. A screen that has moved paints its own, so it comes out of this.
- */
+/** The lifting screens (Warm-up, Workout, Rest) lay themselves out; this gives them the soft scrim a page frame would paint. */
 @Composable
 private fun OnSoftWash(content: @Composable () -> Unit) {
     Box(Modifier.fillMaxSize()) {
@@ -132,11 +113,11 @@ private fun OnSoftWash(content: @Composable () -> Unit) {
 
 /** The Coach tab over the container's coach store, the day the engine snapshot describes, and the plates Settings holds. */
 @Composable
-private fun CoachTab(snapshot: EngineSnapshot, scroll: ScrollState, topBar: @Composable (Modifier) -> Unit) {
+private fun CoachTab(snapshot: EngineSnapshot, scroll: ScrollState) {
     val container = LocalAppContainer.current
     val gym by container.settings.gym.collectAsState(initial = GymSettings())
     val day = remember(snapshot) { coachDay(snapshot) }
-    CoachScreen(container.coach, day, gym, scroll, topBar)
+    CoachScreen(container.coach, day, gym, scroll)
 }
 
 /** The check-in over the day Today is showing; Save writes the record on the container's scope and goes home. */
