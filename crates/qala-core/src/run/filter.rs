@@ -327,13 +327,3 @@ impl FixFilter {
         0
     }
 }
-
-/// Batch convenience over [`FixFilter`]: input order is arrival order; fixes whose timestamps go
-/// backwards are dropped as duplicates.
-pub fn filter_fixes(fixes: &[Fix], opts: &FilterOptions) -> Result<Vec<FilteredPoint>, RunError> {
-    let mut f = FixFilter::new(opts)?;
-    for fix in fixes {
-        f.push(fix);
-    }
-    Ok(f.into_points())
-}

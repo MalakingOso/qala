@@ -181,11 +181,6 @@ impl GuidedRun {
         })
     }
 
-    /// Expanded steps (one TCX lap each).
-    pub fn expanded_steps(&self) -> &[ExpandedStep] {
-        &self.steps
-    }
-
     /// Per-step measured summaries for finished steps.
     pub fn step_summaries(&self) -> &[StepSummary] {
         &self.summaries

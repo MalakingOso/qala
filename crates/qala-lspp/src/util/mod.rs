@@ -5,5 +5,4 @@ pub mod collection;
 pub mod generator;
 pub mod math;
 pub mod object;
-pub mod set_utils;
 pub mod string;

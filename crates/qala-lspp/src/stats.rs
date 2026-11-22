@@ -1,34 +1,10 @@
 //! Port of `models/stats.ts`.
 
 use crate::js::js_trunc_len;
-use crate::types::{IPercentage, ISettings, IStats, IWeight};
+use crate::types::{ISettings, IStats, IWeight};
 use crate::util::collection::sort_by;
 use crate::weight::{add, build, divide};
 
-/// `Stats_name`. `None` for a key outside the stats definitions.
-pub fn name(key: &str) -> Option<&'static str> {
-    Some(match key {
-        "bicepLeft" => "Left Bicep",
-        "bicepRight" => "Right Bicep",
-        "calfLeft" => "Left Calf",
-        "calfRight" => "Right Calf",
-        "chest" => "Chest",
-        "forearmLeft" => "Left Forearm",
-        "forearmRight" => "Right Forearm",
-        "hips" => "Hips",
-        "neck" => "Neck",
-        "shoulders" => "Shoulders",
-        "thighLeft" => "Left Thigh",
-        "thighRight" => "Right Thigh",
-        "waist" => "Waist",
-        "weight" => "Bodyweight",
-        "bodyfat" => "Bodyfat",
-        "sleep" => "Sleep",
-        "calories" => "Calories",
-        "protein" => "Protein",
-        _ => return None,
-    })
-}
 
 /// `Stats_getCurrentBodyweight`: the most recent bodyweight entry.
 pub fn get_current_bodyweight(stats: &IStats) -> Option<IWeight> {
@@ -60,20 +36,4 @@ pub fn get_current_moving_average_bodyweight(stats: &IStats, settings: &ISetting
     Some(divide(total, recent.len() as f64))
 }
 
-/// `Stats_getCurrentBodyfat`
-pub fn get_current_bodyfat(stats: &IStats) -> Option<IPercentage> {
-    let all = stats.percentage.bodyfat.as_deref().unwrap_or(&[]);
-    sort_by(all, |w| w.timestamp as f64, true).first().map(|w| w.value)
-}
 
-/// `Stats_getEmpty`
-pub fn get_empty() -> IStats {
-    IStats::default()
-}
-
-/// `Stats_isEmpty`: no stat key holds any entries.
-pub fn is_empty(stats: &IStats) -> bool {
-    stats.weight.weight.as_ref().is_none_or(|v| v.is_empty())
-        && stats.percentage.bodyfat.as_ref().is_none_or(|v| v.is_empty())
-        && stats.length.values().all(|v| v.is_empty())
-}

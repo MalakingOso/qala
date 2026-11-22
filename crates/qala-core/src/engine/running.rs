@@ -158,13 +158,6 @@ pub fn threshold_pace_from_race(race_dist_m: f64, race_sec: f64) -> f64 {
     d / 3600.0
 }
 
-/// A distance and the time it took.
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub struct Effort {
-    pub distance_m: f64,
-    pub seconds: f64,
-}
-
 /// Critical speed: the least-squares slope of distance against time through the best 400, 800
 /// and 5000 m efforts of the last 90 days (Smyth 2020). `None` when fewer than three of those
 /// distances qualify.

@@ -10,7 +10,6 @@
 //! JS truthiness is kept where the TS relies on it: an empty `since`, `until` or `muscle` string
 //! counts as absent, exactly like `""` does in `!a.since` and `a.until &&`.
 
-use crate::time::local_date_key;
 use serde::{Deserialize, Serialize};
 
 /// Add calendar days to a `YYYY-MM-DD` key (UTC math, DST-safe): `addDaysKey` in TS. A malformed
@@ -264,17 +263,6 @@ pub fn apply_injury_to_checkin(checkin: &Checkin, injured: &[String]) -> Checkin
 // ---------------------------------------------------------------------------------------
 // Date keys. The calendar math lives in `time.rs`.
 // ---------------------------------------------------------------------------------------
-
-/// `YYYY-MM-DD` from a year, month and day. Zero padded; the values are not validated.
-pub fn date_key_from_ymd(year: i32, month: u32, day: u32) -> String {
-    format!("{year:04}-{month:02}-{day:02}")
-}
-
-/// The user's calendar day as `YYYY-MM-DD` for an instant (epoch ms) and a UTC offset in minutes
-/// (`-240` for EDT). The caller supplies both; nothing here reads a clock.
-pub fn today_key(epoch_ms: i64, offset_min: i32) -> String {
-    local_date_key(epoch_ms, offset_min)
-}
 
 #[cfg(test)]
 mod tests {
@@ -626,61 +614,6 @@ mod tests {
             try_add_days_key("2026-09-30", 1).as_deref(),
             Ok("2026-10-01")
         );
-    }
-
-    #[test]
-    fn date_key_from_ymd_pads() {
-        assert_eq!(date_key_from_ymd(2026, 9, 3), "2026-09-03");
-        assert_eq!(date_key_from_ymd(2026, 12, 31), "2026-12-31");
-        assert_eq!(date_key_from_ymd(7, 1, 1), "0007-01-01");
-    }
-
-    #[test]
-    fn today_key_follows_the_offset() {
-        // 2026-10-02T03:30:00Z.
-        let ms = 1_790_911_800_000;
-        assert_eq!(today_key(ms, 0), "2026-10-02");
-        assert_eq!(
-            today_key(ms, -240),
-            "2026-10-01",
-            "New York is still on the 1st"
-        );
-        assert_eq!(today_key(ms, 540), "2026-10-02", "Tokyo");
-        assert_eq!(today_key(ms, 14 * 60), "2026-10-02");
-        assert_eq!(today_key(ms, -12 * 60), "2026-10-01");
-        // Local midnight edges (2026-10-02T00:00:00Z).
-        let midnight = 1_790_899_200_000;
-        assert_eq!(
-            today_key(midnight - 1, 0),
-            "2026-10-01",
-            "one ms before UTC midnight"
-        );
-        assert_eq!(today_key(midnight, 0), "2026-10-02", "UTC midnight");
-        assert_eq!(
-            today_key(midnight - 1, 60),
-            "2026-10-02",
-            "one ms before, +01:00"
-        );
-        // Negative epochs floor correctly instead of truncating toward zero.
-        assert_eq!(today_key(-1, 0), "1969-12-31");
-        assert_eq!(today_key(0, 0), "1970-01-01");
-        assert_eq!(today_key(0, -1), "1969-12-31");
-        // DST days in the offset the caller supplies: 2026-03-08T06:30Z is 01:30 EST, and a day
-        // later is 02:30 EDT on the 9th.
-        assert_eq!(today_key(1_772_951_400_000, -300), "2026-03-08");
-        assert_eq!(
-            today_key(1_772_951_400_000 + 86_400_000, -240),
-            "2026-03-09"
-        );
-    }
-
-    #[test]
-    fn today_key_does_not_panic_on_extreme_input() {
-        for ms in [i64::MIN, i64::MAX, 0, i64::MAX / 2, i64::MIN / 2] {
-            for off in [i32::MIN, -1440, 0, 1440, i32::MAX] {
-                assert!(!today_key(ms, off).is_empty());
-            }
-        }
     }
 
     #[test]

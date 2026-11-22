@@ -162,11 +162,6 @@ pub fn weekday_of_days(days: i64) -> u8 {
     ((days.rem_euclid(7) + 4) % 7) as u8
 }
 
-/// Day of week of a `YYYY-MM-DD` key, 0 = Sunday.
-pub fn weekday_of_key(key: &str) -> Result<u8, TimeError> {
-    Ok(weekday_of_days(days_from_date_key(key)?))
-}
-
 /// Parses an ISO 8601 instant to epoch milliseconds.
 ///
 /// Accepts `YYYY-MM-DDTHH:MM[:SS[.f+]]` followed by `Z`, `+HH:MM` or `-HH:MM`, and a bare
@@ -544,15 +539,5 @@ mod tests {
             date_key_from_days(days_from_civil(-1, 12, 31)),
             "-000001-12-31"
         );
-    }
-
-    #[test]
-    fn weekdays() {
-        assert_eq!(weekday_of_key("1970-01-01"), Ok(4));
-        assert_eq!(weekday_of_key("2026-10-02"), Ok(5));
-        assert_eq!(weekday_of_key("2026-10-04"), Ok(0));
-        assert_eq!(weekday_of_key("2026-03-08"), Ok(0));
-        assert_eq!(weekday_of_key("1969-12-31"), Ok(3));
-        assert!(weekday_of_key("bad").is_err());
     }
 }

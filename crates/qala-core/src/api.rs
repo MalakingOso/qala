@@ -49,11 +49,6 @@ impl std::error::Error for ApiError {}
 
 pub type ApiResult = Result<String, ApiError>;
 
-/// `{"v":1,"error":{"kind":...,"message":...}}`, for shims that return errors as data (wasm).
-pub fn error_envelope(e: &ApiError) -> String {
-    serde_json::json!({ "v": VERSION, "error": { "kind": e.kind(), "message": e.message() } }).to_string()
-}
-
 /// Wrap a result value in the success envelope.
 pub fn ok(result: Value) -> ApiResult {
     Ok(serde_json::json!({ "v": VERSION, "result": result }).to_string())

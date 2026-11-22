@@ -20,13 +20,13 @@ use crate::script_runner::ScriptRunner;
 use crate::set::is_empty_or_finished;
 use crate::stats::get_current_moving_average_bodyweight;
 use crate::types::{
-    HistoryEntryVtype, IDayData, IExerciseType, IHistoryEntry, IHistoryRecord, IPercentage, IProgramMode,
+    IDayData, IExerciseType, IHistoryEntry, IHistoryRecord, IProgramMode,
     IProgramState, IProgressMode, IScriptBindings, IScriptFnContext, ISet, ISettings, IStats, IUnit, IWeight,
     ScriptValue, SetVtype, WeightOrPct,
 };
 use crate::util::collection::find_index_reverse;
 use crate::util::generator::UidSource;
-use crate::weight::{self, UnitOrPct};
+use crate::weight;
 
 /// The result of `Progress_defaultEngineBindings`: neutral values for the Qala
 /// engine bindings.
@@ -751,6 +751,3 @@ pub fn run_update_script_for_entry(
     }
     Ok(new_entry)
 }
-
-#[allow(dead_code)]
-fn _unused(_: HistoryEntryVtype, _: IPercentage, _: UnitOrPct) {}

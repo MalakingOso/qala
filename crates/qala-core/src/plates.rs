@@ -540,17 +540,3 @@ pub fn round_weight(
         Some(load) => load.total,
     }
 }
-
-/// Round to an arbitrary step (e.g. dumbbell steps), halves up.
-/// Panics when `step` is not positive, mirroring the TS `RangeError`.
-pub fn round_to_step(value: f64, step: f64) -> f64 {
-    assert!(step > 0.0, "step must be positive");
-    js_round(value / step) * step
-}
-
-/// True when the total can be loaded exactly with the inventory.
-pub fn is_loadable(total: f64, bar_weight: f64, plates: &[PlateEntry], collar_weight: f64) -> bool {
-    plan_plates(total, bar_weight, plates, collar_weight)
-        .exact
-        .is_some()
-}

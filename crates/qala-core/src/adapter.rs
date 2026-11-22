@@ -453,22 +453,6 @@ pub fn build_engine_state(
     })
 }
 
-/// The `program_day_index` of every lift record that has one, stubs included, in chronological
-/// order (ties by id). Today's sequencing counts a stub as a logged day. Records carry no
-/// deleted flag, so the caller removes deleted ones first. Errors on an unparseable date.
-pub fn logged_program_days(records: &[SessionRecord]) -> Result<Vec<u32>, AdapterError> {
-    let mut days: Vec<(i64, &str, u32)> = Vec::new();
-    for r in records {
-        if let SessionRecord::Lift(l) = r {
-            if let Some(index) = l.program_day_index {
-                days.push((parse_iso(&l.started_at)?, &l.id, index));
-            }
-        }
-    }
-    days.sort_by(|a, b| (a.0, a.1).cmp(&(b.0, b.1)));
-    Ok(days.into_iter().map(|(_, _, index)| index).collect())
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1020,35 +1004,6 @@ mod tests {
             build_engine_state(&[], &inf_checkin, &lb()),
             Err(AdapterError::NonFinite(_))
         ));
-        assert!(logged_program_days(&[squat_session("a", "bad")]).is_ok());
-    }
-
-    #[test]
-    fn logged_program_days_include_stubs_in_chronological_order() {
-        let mk = |id: &str, at: &str, day: Option<u32>, stub: bool| {
-            SessionRecord::Lift(LiftSessionRecord {
-                id: id.to_string(),
-                started_at: at.to_string(),
-                program_day_index: day,
-                stub,
-                minutes: None,
-                srpe: None,
-                entries: vec![],
-            })
-        };
-        let records = vec![
-            mk("c", "2026-09-18T09:00:00-04:00", Some(2), false),
-            mk("a", "2026-09-14T09:00:00-04:00", Some(0), true),
-            SessionRecord::Run(run("r", "2026-09-15T09:00:00-04:00", 5000.0)),
-            mk("none", "2026-09-16T09:00:00-04:00", None, false),
-            mk("b", "2026-09-16T21:00:00Z", Some(1), true),
-            // Same instant as "b" (17:00 EDT is 21:00Z): id breaks the tie, "b" before "d".
-            mk("d", "2026-09-16T17:00:00-04:00", Some(7), false),
-        ];
-        assert_eq!(logged_program_days(&records).unwrap(), vec![0, 1, 7, 2]);
-        assert_eq!(logged_program_days(&[]).unwrap(), Vec::<u32>::new());
-        let bad = vec![mk("x", "soon", Some(1), false)];
-        assert!(logged_program_days(&bad).is_err());
     }
 
     #[test]

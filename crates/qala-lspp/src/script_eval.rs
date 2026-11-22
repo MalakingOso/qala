@@ -21,7 +21,7 @@ use crate::script_fns::{
 use crate::script_parse::{self, Node, NodeKind};
 use crate::types::errors::{IErrorKind, LiftoscriptSyntaxError};
 use crate::types::{
-    IAssignmentOp, ILiftoscriptEvaluatorUpdate, ILiftoscriptVariableValue, IPercentage, IProgramMode, IProgramState,
+    IAssignmentOp, ILiftoscriptEvaluatorUpdate, ILiftoscriptVariableValue, IProgramMode, IProgramState,
     IScriptBindings, IScriptFnContext, IScriptStaticType, ITargetIndex, IUnit, IWeight, JsNumber, ScriptValue,
     WeightOrPct,
 };
@@ -172,10 +172,6 @@ fn set_at<T: Clone>(v: &mut Vec<T>, i: usize, value: T, pad: T) {
         v.push(pad.clone());
     }
     v[i] = value;
-}
-
-fn opt_num(v: Option<ScriptValue>) -> Option<f64> {
-    v.map(|s| s.value())
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -1804,11 +1800,6 @@ impl<'a> LiftoscriptEvaluator<'a> {
             )),
         }
     }
-}
-
-#[allow(dead_code)]
-fn _types(_: IPercentage, _: Option<f64>) {
-    let _ = opt_num(None);
 }
 
 #[cfg(test)]

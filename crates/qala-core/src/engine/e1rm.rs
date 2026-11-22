@@ -7,9 +7,6 @@
 use super::state::SetLog;
 use crate::js::js_is_integer;
 
-/// `RTS_VERIFICATION_STATUS` in rtsTable.ts.
-pub const RTS_VERIFICATION_STATUS: &str = "unverified-third-party-reproduction";
-
 /// Cells that failed the 1 point spot-check and must use rule 3, as `"rpe:reps"` keys. Empty
 /// until the pre-ship check is done.
 const RTS_FLAGGED_CELLS: [&str; 0] = [];

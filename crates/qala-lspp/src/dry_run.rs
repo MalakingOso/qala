@@ -18,8 +18,7 @@ use serde::Serialize;
 
 use crate::program;
 use crate::runtime::{self, RunAllOpts};
-use crate::stats;
-use crate::types::{IDayData, IEvaluatedProgram, IHistoryEntry, ISettings, IWeight};
+use crate::types::{IDayData, IEvaluatedProgram, IHistoryEntry, ISettings, IStats, IWeight};
 use crate::util::generator::UidSource;
 
 #[derive(Debug, Clone, Default)]
@@ -133,7 +132,7 @@ pub fn dry_run(
     let limit = opts.sessions.unwrap_or(planned.max(1)).min(MAX_SESSIONS);
     let mut current = program.clone();
     let mut day = opts.from_day.unwrap_or(program.next_day);
-    let empty_stats = stats::get_empty();
+    let empty_stats = IStats::default();
     let mut sessions = Vec::new();
     let mut blank_sets = 0;
     let mut final_text = String::new();

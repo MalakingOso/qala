@@ -164,6 +164,7 @@ fn readiness_at(
 
 /// `predictReadiness` of readiness.ts: the state is read as stored (no decay) and `now_iso` is
 /// only the reference time of the PRS window. Errors when `now_iso` does not parse.
+#[cfg(test)]
 pub fn predict_readiness_core(
     state: &EngineState,
     checkin: &Checkin,

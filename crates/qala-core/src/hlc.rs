@@ -242,12 +242,6 @@ pub struct Field<T> {
     pub hlc: Hlc,
 }
 
-impl<T> Field<T> {
-    pub fn new(value: T, hlc: Hlc) -> Field<T> {
-        Field { value, hlc }
-    }
-}
-
 /// Merge two copies of one field: the higher clock wins. Equal clocks keep `local`, which makes
 /// merging idempotent.
 ///
