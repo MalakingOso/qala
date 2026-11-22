@@ -75,6 +75,11 @@ object Wash {
     val Title = QalaType.stageTitle.copy(fontSize = 30.sp, lineHeight = 34.sp, shadow = TextShadow)
     val Body = QalaType.log.copy(fontSize = 12.5.sp, lineHeight = 18.sp, shadow = TextShadow)
     val Small = QalaType.log.copy(fontSize = 12.sp, lineHeight = 16.sp, shadow = TextShadow)
+
+    /** The chart language's fixed colours (S51): the film's ember for now, the night card under every chart, and its small mono labels. */
+    val Night = Color(0xFF1C120C)
+    val ChartEmber = Color(0xFFE0652B)
+    val ChartLabel = QalaType.log.copy(fontSize = 10.sp, lineHeight = 12.sp, color = Color.White.copy(alpha = 0.7f))
 }
 
 /**
