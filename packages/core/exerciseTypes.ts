@@ -72,9 +72,3 @@ export interface ExerciseOverride {
   bar?: string;
   restClass?: RestClass;
 }
-
-export interface ExerciseOverlay {
-  hidden: string[];
-  custom: Record<string, Exercise>;
-  overrides: Record<string, ExerciseOverride>;
-}

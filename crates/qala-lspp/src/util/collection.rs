@@ -5,41 +5,7 @@
 use crate::js::{js_number_to_string, js_order_keys, js_sort_by};
 use indexmap::IndexMap;
 
-pub fn in_groups_of<T: Clone>(length: usize, collection: &[T]) -> Vec<Vec<T>> {
-    if collection.is_empty() {
-        return Vec::new();
-    }
-    let mut result: Vec<Vec<T>> = vec![Vec::new()];
-    for item in collection {
-        let full = result.last().map(|l| l.len() >= length).unwrap_or(false);
-        if full {
-            result.push(Vec::new());
-        }
-        if let Some(last) = result.last_mut() {
-            last.push(item.clone());
-        }
-    }
-    result
-}
 
-/// Starts a new group whenever `cond(last_in_group, item)` is true. Empty input gives `[[]]`, as in the TS.
-pub fn group_by<T: Clone>(items: &[T], mut cond: impl FnMut(&T, &T) -> bool) -> Vec<Vec<T>> {
-    let mut memo: Vec<Vec<T>> = vec![Vec::new()];
-    for item in items {
-        let start_new = memo
-            .last()
-            .and_then(|g| g.last())
-            .map(|last| cond(last, item))
-            .unwrap_or(false);
-        if start_new {
-            memo.push(Vec::new());
-        }
-        if let Some(g) = memo.last_mut() {
-            g.push(item.clone());
-        }
-    }
-    memo
-}
 
 fn by_key<T: Clone>(items: impl Iterator<Item = T>, condition: impl Fn(&T) -> String) -> Vec<T> {
     let mut map: IndexMap<String, T> = IndexMap::new();

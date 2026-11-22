@@ -51,8 +51,6 @@ export * from "./splits.ts";
 export * from "./volume.ts";
 export * from "./templates.ts";
 export * from "./emit.ts";
-export * from "./runplans.ts";
-export * from "./hybrid.ts";
 
 const MAIN_LIFT_IDS = new Set(["squat", "bench", "deadlift", "ohp"]);
 

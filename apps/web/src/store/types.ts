@@ -1,7 +1,6 @@
-/* Local document model for the web shells. Mirrors the automerge shape in
- * packages/core/schema.ts (PLAN section 7); field names match the core
- * schema where they overlap. `PlateEntry` is imported directly rather than
- * duplicated: it's plain portable TypeScript (no bare/jsr specifiers), so
+/* Local document model for the web shells. Mirrors the old automerge document
+ * shape (PLAN section 7; `packages/core/schema.ts` held it until it was
+ * deleted). `PlateEntry` is imported directly rather than duplicated: it's plain portable TypeScript (no bare/jsr specifiers), so
  * there's nothing bundler-unfriendly about importing it here. This model
  * as a whole gets replaced by the real automerge document once the client
  * sync layer is built (see the report). */

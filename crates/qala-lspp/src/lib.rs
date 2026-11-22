@@ -7,7 +7,6 @@ pub mod util;
 pub mod types;
 pub mod weight;
 pub mod equipment;
-pub mod set;
 pub mod stats;
 pub mod exercise;
 pub mod script_parse;

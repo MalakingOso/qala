@@ -1,29 +1,12 @@
-/** Plate inventory types and the bumper color table. The plate math itself is
+/** The plate entry type and the bumper color table. The plate math itself is
  * in `crates/qala-core/src/plates.rs`. */
 
 export type PlateUnit = "lb" | "kg";
-export type ColorScheme = "bumper" | "iron" | "custom";
-
-export interface Bar {
-  id: string;
-  name: string;
-  /** Bar weight in the inventory unit. */
-  weight: number;
-  default?: boolean;
-}
 
 export interface PlateEntry {
   weight: number;
   pairs: number | "enough";
   color: string;
-}
-
-export interface PlateInventory {
-  unit: PlateUnit;
-  collarWeight: number;
-  bars: Bar[];
-  plates: PlateEntry[];
-  colorScheme: ColorScheme;
 }
 
 export const IRON_COLOR = "charcoal";

@@ -17,7 +17,6 @@ use crate::js::{js_max, js_round, js_trunc_len};
 use crate::script_eval::SyntaxResult;
 use crate::script_fns::{EvalValue, IScriptFnName, IScriptFunctions};
 use crate::script_runner::ScriptRunner;
-use crate::set::is_empty_or_finished;
 use crate::stats::get_current_moving_average_bodyweight;
 use crate::types::{
     IDayData, IExerciseType, IHistoryEntry, IHistoryRecord, IProgramMode,
@@ -426,6 +425,11 @@ impl IScriptFunctions<'_> {
             }
         }
     }
+}
+
+/// `Reps_isEmptyOrFinished`: no sets, or every set completed.
+fn is_empty_or_finished(sets: &[ISet]) -> bool {
+    sets.iter().all(|s| s.is_completed == Some(true))
 }
 
 /// `Progress_isFullyEmptyOrFinishedSet`
