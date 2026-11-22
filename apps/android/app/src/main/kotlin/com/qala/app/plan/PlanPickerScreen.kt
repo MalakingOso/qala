@@ -3,15 +3,14 @@ package com.qala.app.plan
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -36,17 +35,20 @@ import com.qala.data.program.BuiltinPlan
 import com.qala.data.program.Builtins
 import com.qala.data.program.StartResult
 import com.qala.data.program.StartingWeights
-import com.qala.design.LocalBarClearance
-import com.qala.design.Card
-import com.qala.design.FlowHead
 import com.qala.design.Group
 import com.qala.design.GroupLabel
 import com.qala.design.GroupRow
 import com.qala.design.PrimaryButton
 import com.qala.design.Qala
+import com.qala.design.QalaIcon
+import com.qala.design.QalaIcons
 import com.qala.design.QalaText
 import com.qala.design.QalaTextField
+import com.qala.design.QalaTokens
 import com.qala.design.QalaType
+import com.qala.design.ScreenHead
+import com.qala.design.SheetPage
+import com.qala.design.beamerSurface
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
@@ -69,41 +71,41 @@ fun PlanPickerScreen(scroll: ScrollState, onBack: () -> Unit) {
     val picked = Builtins.byId(pickedId)
     BackHandler(enabled = picked != null) { pickedId = null }
 
-    Column(
-        Modifier
-            .fillMaxSize()
-            .verticalScroll(scroll)
-            .statusBarsPadding()
-            .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 24.dp + LocalBarClearance.current),
-    ) {
-        FlowHead(picked?.name ?: "Choose a plan", onBack = { if (picked != null) pickedId = null else onBack() })
+    SheetPage(scroll, head = { ScreenHead(picked?.name ?: "Choose a plan", onBack = { if (picked != null) pickedId = null else onBack() }) }) {
         val settings = record
         val exerciseData = data
         when {
             settings == null || exerciseData == null -> Unit
             picked == null -> {
                 QalaText("A plan starts at week 1. What you have logged stays in History.", Modifier.padding(bottom = 12.dp), QalaType.hint, Qala.colors.fgMuted)
-                for (plan in Builtins.all) {
-                    PlanCard(plan, current = active?.id == plan.id, onClick = { pickedId = plan.id })
-                    Spacer(Modifier.height(12.dp))
-                }
+                for (plan in Builtins.all) PlanCard(plan, current = active?.id == plan.id, onClick = { pickedId = plan.id })
             }
             else -> StartingWeightsStep(picked, current = active?.id == picked.id, settings, exerciseData, onStarted = onBack)
         }
     }
 }
 
+/** A sheet card (the Beamer surface of [com.qala.design.SheetCard]) that is one tap target; the plan in use has the accent border. */
 @Composable
 private fun PlanCard(plan: BuiltinPlan, current: Boolean, onClick: () -> Unit) {
     val c = Qala.colors
-    Card(
+    Column(
         Modifier
+            .fillMaxWidth()
+            .padding(bottom = 12.dp)
+            .beamerSurface(c.bgSurface, if (current) c.accent else c.border, QalaTokens.radiusLg, c.shadowCard)
             .clickable(role = Role.Button, onClickLabel = "Choose ${plan.name}", onClick = onClick)
-            .semantics(mergeDescendants = true) {},
+            .semantics(mergeDescendants = true) {}
+            .padding(QalaTokens.borderWidth + 14.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             QalaText(plan.name, Modifier.weight(1f), QalaType.cardTitle, c.fg)
-            if (current) GroupLabel("Current", color = c.accent)
+            if (current) {
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
+                    QalaIcon(QalaIcons.Check, null, size = 14.dp, tint = c.accent)
+                    GroupLabel("Current", color = c.accent)
+                }
+            }
         }
         QalaText("${plan.daysPerWeek} days a week · ${plan.audience}", Modifier.padding(top = 2.dp), QalaType.hint, c.fgMuted)
         QalaText(plan.blurb, Modifier.padding(top = 10.dp), BodyStyle, c.fgSecondary)

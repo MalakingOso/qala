@@ -6,6 +6,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,9 +20,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.key
@@ -35,6 +35,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
@@ -56,9 +57,7 @@ import com.qala.data.core.QalaCore
 import com.qala.data.core.nearestLoadable
 import com.qala.data.model.GymSettings
 import com.qala.data.core.planPlates
-import com.qala.design.LocalBarClearance
-import com.qala.design.Card
-import com.qala.design.FlowHead
+import com.qala.design.GlassButton
 import com.qala.design.Group
 import com.qala.design.GroupLabel
 import com.qala.design.GroupRow
@@ -68,7 +67,10 @@ import com.qala.design.QalaIcons
 import com.qala.design.QalaText
 import com.qala.design.QalaType
 import com.qala.design.ScalePicker
-import com.qala.design.SecondaryButton
+import com.qala.design.ScreenHead
+import com.qala.design.SheetCard
+import com.qala.design.SheetPage
+import com.qala.design.Wash
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -100,19 +102,11 @@ fun PlatesScreen(scroll: ScrollState, onBack: () -> Unit, onEditPlates: () -> Un
     val load = plan?.nearestLoadable()
     val perSide = load?.perSide ?: emptyList()
 
-    Column(
-        Modifier
-            .fillMaxSize()
-            .verticalScroll(scroll)
-            .statusBarsPadding()
-            .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 24.dp + LocalBarClearance.current),
+    SheetPage(
+        scroll,
+        head = { ScreenHead("Plates", onBack = onBack, actions = { GlassButton(onEditPlates, label = "Edit plates") }) },
     ) {
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Box(Modifier.weight(1f)) { FlowHead("Plates", onBack) }
-            SecondaryButton("Edit plates", onClick = onEditPlates, small = true)
-        }
-        Spacer(Modifier.height(16.dp))
-        Card(hero = true, contentPadding = 16.dp) {
+        SheetCard {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Column(Modifier.weight(1.2f)) {
                     GroupLabel("Target")
@@ -142,9 +136,11 @@ fun PlatesScreen(scroll: ScrollState, onBack: () -> Unit, onEditPlates: () -> Un
                     )
                 }
             }
-            Spacer(Modifier.height(8.dp))
             val caption = calcCaption(bar, perSide, load?.perSideTotal ?: 0.0)
-            PlateDrawing(perSide, bar.ez, caption, setup.plates)
+            // The loaded bar sits on a night ground of its own, the chart panel's, so the plates read the same in both themes.
+            Box(Modifier.fillMaxWidth().padding(top = 14.dp, bottom = 8.dp).clip(RoundedCornerShape(10.dp)).background(Wash.Night).padding(horizontal = 12.dp, vertical = 4.dp)) {
+                PlateDrawing(perSide, bar.ez, caption, setup.plates)
+            }
             QalaText(caption, style = QalaType.body, color = c.fgSecondary)
             Spacer(Modifier.height(4.dp))
             val summary = calcSummary(bar, load, target)
@@ -156,7 +152,7 @@ fun PlatesScreen(scroll: ScrollState, onBack: () -> Unit, onEditPlates: () -> Un
                 }
             }
         }
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(4.dp))
         Group("Your plates") {
             setup.plates.forEachIndexed { i, entry ->
                 GroupRow(last = i == setup.plates.lastIndex) {
@@ -190,7 +186,10 @@ private fun rememberSpriteBitmap(file: String): ImageBitmap? {
  */
 @Composable
 private fun PlateDrawing(perSide: List<Double>, ez: Boolean, caption: String, inventory: List<PlateEntry>) {
-    LoadedSleeve(perSide, inventory, Modifier.fillMaxWidth(), DrawHeightDp.dp, ez, labelled = true, description = caption)
+    LoadedSleeve(
+        perSide, inventory, Modifier.fillMaxWidth(), DrawHeightDp.dp, ez, labelled = true, description = caption,
+        floorColor = Color(0, 0, 0, 56), labelColor = Wash.ChartLabel.color,
+    )
 }
 
 /**
@@ -198,7 +197,8 @@ private fun PlateDrawing(perSide: List<Double>, ez: Boolean, caption: String, in
  * place as the load changes and a new plate slides on, so a stepper that moves the weight moves only the plates. The
  * [labelled] weights under the inner plates are for the large drawing; a small one leaves them to the numbers beside it. [barLength] cuts the bar
  * behind the collar down to a stub that long; the default draws it to the edge.
- * [floorColor] replaces the ellipse the bar sits on (a dark one, over the wash).
+ * [floorColor] replaces the ellipse the bar sits on (a dark one, over the wash), and [labelColor] the weights under the plates (a light
+ * one, over a dark ground).
  */
 @Composable
 fun LoadedSleeve(
@@ -212,6 +212,7 @@ fun LoadedSleeve(
     description: String? = null,
     barLength: Dp? = null,
     floorColor: Color? = null,
+    labelColor: Color? = null,
 ) {
     val c = Qala.colors
     BoxWithConstraints(
@@ -264,7 +265,7 @@ fun LoadedSleeve(
             QalaText(
                 label.text,
                 style = QalaType.log.copy(fontSize = 10.sp),
-                color = c.fgMuted,
+                color = labelColor ?: c.fgMuted,
                 textAlign = TextAlign.Center,
                 modifier = Modifier
                     .offset(x = (label.centerX - 14f).dp, y = label.top.dp)

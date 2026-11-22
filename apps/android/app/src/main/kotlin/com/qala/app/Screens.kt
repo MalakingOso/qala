@@ -74,11 +74,11 @@ fun Screen(
 ) {
     when (route) {
         Route.Today -> TodayScreen(today, ui, scroll, onGo)
-        Route.Plan -> PlanScreen(snapshot, today, scroll, topBar, onGo, onChangePlan = { onPush(Route.PlanPicker) })
+        Route.Plan -> PlanScreen(snapshot, today, scroll, onGo, onChangePlan = { onPush(Route.PlanPicker) })
         Route.Body -> Plain(scroll, topBar) { BodyScreen(snapshot) }
         Route.Progress -> Plain(scroll, topBar) { ProgressScreen(snapshot) }
         Route.SessionComplete -> Plain(scroll, topBar) { SessionCompleteScreen(onBack) }
-        Route.Coach -> CoachTab(snapshot, scroll, topBar)
+        Route.Coach -> CoachTab(snapshot, scroll)
         Route.History -> HistoryScreen(scroll, onBack)
         Route.Settings -> SettingsScreen(scroll, today, ui, settingsFocus, onSettingsFocused, onBack, onPlates)
         Route.Plates -> PlatesScreen(scroll, onBack, onEditPlates)
@@ -131,11 +131,11 @@ private fun OnSoftWash(content: @Composable () -> Unit) {
 
 /** The Coach tab over the container's coach store, the day the engine snapshot describes, and the plates Settings holds. */
 @Composable
-private fun CoachTab(snapshot: EngineSnapshot, scroll: ScrollState, topBar: @Composable (Modifier) -> Unit) {
+private fun CoachTab(snapshot: EngineSnapshot, scroll: ScrollState) {
     val container = LocalAppContainer.current
     val gym by container.settings.gym.collectAsState(initial = GymSettings())
     val day = remember(snapshot) { coachDay(snapshot) }
-    CoachScreen(container.coach, day, gym, scroll, topBar)
+    CoachScreen(container.coach, day, gym, scroll)
 }
 
 /** The check-in over the day Today is showing; Save writes the record on the container's scope and goes home. */

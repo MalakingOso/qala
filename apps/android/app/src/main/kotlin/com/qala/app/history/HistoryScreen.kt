@@ -3,11 +3,7 @@ package com.qala.app.history
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -19,9 +15,6 @@ import com.qala.app.LocalAppContainer
 import com.qala.data.core.QalaCore
 import com.qala.data.core.dayName
 import com.qala.data.repo.ActiveProgram
-import com.qala.design.LocalBarClearance
-import com.qala.design.Card
-import com.qala.design.FlowHead
 import com.qala.design.Group
 import com.qala.design.GroupRow
 import com.qala.design.Qala
@@ -29,6 +22,9 @@ import com.qala.design.QalaIcon
 import com.qala.design.QalaIcons
 import com.qala.design.QalaText
 import com.qala.design.QalaType
+import com.qala.design.ScreenHead
+import com.qala.design.SheetCard
+import com.qala.design.SheetPage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonObject
@@ -36,7 +32,7 @@ import kotlinx.serialization.json.JsonObject
 /**
  * History: every session from Room, newest first, grouped by week. Lift rows show the volume and
  * minutes the session recorded; marked-done sessions, which have no sets, say so instead of
- * reading as empty workouts. Reached from the shell's header History button, as on the web.
+ * reading as empty workouts. Reached from Today's History button, as on the web, and laid on the cream sheet under a wash head (S51).
  */
 @Composable
 fun HistoryScreen(scroll: ScrollState, onBack: () -> Unit) {
@@ -58,16 +54,9 @@ fun HistoryScreen(scroll: ScrollState, onBack: () -> Unit) {
     }
     val weeks = historyWeeks(lifts, runs, dayNames, snapshot.unit, picked.sinceMs)
 
-    Column(
-        Modifier
-            .fillMaxSize()
-            .verticalScroll(scroll)
-            .statusBarsPadding()
-            .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 24.dp + LocalBarClearance.current),
-    ) {
-        FlowHead("History", onBack)
+    SheetPage(scroll, head = { ScreenHead("History", onBack = onBack) }) {
         if (weeks.isEmpty()) {
-            Card {
+            SheetCard {
                 QalaText("No sessions yet. Finish a day and it lands here.", style = QalaType.hint, color = c.fgMuted)
             }
         } else {
