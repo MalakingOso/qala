@@ -90,8 +90,6 @@ dependencies {
     implementation("androidx.compose.foundation:foundation")
     implementation("androidx.compose.runtime:runtime")
     implementation("androidx.compose.ui:ui")
-    // Charts (DECISIONS S10, D13): Vico for the ordinary charts; the ring and the run series are Canvas.
-    implementation("com.patrykandpatrick.vico:compose:3.3.1")
     // Today's looping film (DECISIONS S48): a muted ExoPlayer on a SurfaceView, shown through ContentFrame. 1.11.1 is the newest stable.
     implementation("androidx.media3:media3-exoplayer:1.11.1")
     implementation("androidx.media3:media3-ui-compose:1.11.1")
