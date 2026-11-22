@@ -1,9 +1,12 @@
 package com.qala.app.stats
 
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -11,9 +14,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
+import androidx.compose.ui.unit.sp
 import com.qala.app.LocalAppContainer
 import com.qala.app.charts.ChartCard
+import com.qala.app.charts.ChartSurface
 import com.qala.app.charts.ColumnChart
 import com.qala.app.charts.Donut
 import com.qala.app.charts.DonutSlice
@@ -32,10 +39,16 @@ import com.qala.data.stats.Stats
 import com.qala.design.Card
 import com.qala.design.GroupLabel
 import com.qala.design.PageHead
+import com.qala.design.PinnedBar
 import com.qala.design.PrimaryButton
 import com.qala.design.Qala
 import com.qala.design.QalaText
 import com.qala.design.QalaType
+import com.qala.design.ScreenHead
+import com.qala.design.Wash
+import com.qala.design.WashCard
+import com.qala.design.WashPage
+import com.qala.design.WashScrim
 import java.time.LocalDate
 import java.util.Locale
 import kotlin.math.roundToInt
@@ -168,56 +181,84 @@ private fun weightCard(weights: List<DatedValue>, unit: WeightUnit) {
 
 // ---- Session complete ----
 
-/** Opened after Finish workout. [saveError] is the message when the save failed and the workout was kept. */
+/**
+ * Opened after Finish workout, on the wash under [WashScrim.Board3] (S51 board Session): the figures and the charts are drawn straight
+ * on it, and Done is pinned. [saveError] is the message when the save failed and the workout was kept.
+ */
 @Composable
-fun SessionCompleteScreen(onDone: () -> Unit) {
+fun SessionCompleteScreen(scroll: ScrollState, onDone: () -> Unit) {
     val container = LocalAppContainer.current
     val summary by container.workout.summary.collectAsState()
     val saveError by container.workout.saveError.collectAsState()
     val s = summary
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        PageHead(if (saveError != null) "Not saved" else "Session complete", eyebrow = s?.dayName)
-        // Done is first, not last: the charts make the page long, and the way out must never be scrolled to.
-        PrimaryButton(if (saveError != null) "Back to Today" else "Done", onDone, Modifier.fillMaxWidth(), large = true)
-        saveError?.let { Card(contentPadding = 16.dp) { QalaText(it, style = QalaType.body, color = Qala.colors.fg) } }
-        if (s == null) {
-            Empty("There is no workout to show.")
-        } else {
-            SummaryBody(s)
+    WashPage(
+        scroll,
+        WashScrim.Board3,
+        head = { ScreenHead(if (saveError != null) "Not saved" else "Session complete", eyebrow = s?.dayName) },
+        pinned = { PinnedBar { PrimaryButton(if (saveError != null) "Back to Today" else "Done", onDone, large = true) } },
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
+            saveError?.let { WashCard(contentPadding = 16.dp) { QalaText(it, style = QalaType.body, color = Qala.colors.fg) } }
+            if (s == null) {
+                WashCard(contentPadding = 16.dp) { QalaText("There is no workout to show.", style = QalaType.hint, color = Qala.colors.fgMuted) }
+            } else {
+                SummaryBody(s)
+            }
         }
+        Spacer(Modifier.height(BarRoom))
+    }
+}
+
+/** The pinned bar's height without the tab bar's clearance: its 10 dp of top padding and the large button's 64 dp. The last card ends this far above the page's own bottom padding. */
+private val BarRoom = 74.dp
+
+/** The big figures under the head: the title face at 52 sp, white on the wash. */
+private val FigureStyle = Wash.Title.copy(fontSize = 52.sp, lineHeight = 52.sp, letterSpacing = (-0.02).em)
+
+/** A kicker over a big figure, white on the wash. A time of an hour or more ("1:05:20") drops to 44 sp so it stays inside its half of the row. */
+@Composable
+private fun SummaryFigure(label: String, value: String, modifier: Modifier = Modifier) {
+    Column(modifier) {
+        QalaText(label.uppercase(), style = Wash.Kicker, color = Wash.Text2)
+        QalaText(value, Modifier.padding(top = 4.dp), if (value.length > 5) FigureStyle.copy(fontSize = 44.sp, lineHeight = 44.sp) else FigureStyle, Wash.Text)
     }
 }
 
 @Composable
 private fun SummaryBody(s: SessionSummary) {
     val lift = unitName(s.unit)
-    Card(hero = true) {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            // The same total the time split shows in its middle: the warm-up, the lifting and the resting.
-            Column { GroupLabel("Time"); QalaText(elapsedText(((s.warmupSec ?: 0) + s.liftSec + s.restSec).toDouble()), style = QalaType.figure, color = Qala.colors.fg) }
-            Column { GroupLabel("Sets"); QalaText("${s.sets}", style = QalaType.figure, color = Qala.colors.fg) }
-        }
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        // The same total the time split shows in its middle: the warm-up, the lifting and the resting.
+        SummaryFigure("Time", elapsedText(((s.warmupSec ?: 0) + s.liftSec + s.restSec).toDouble()), Modifier.weight(1f))
+        SummaryFigure("Sets", "${s.sets}", Modifier.weight(1f))
     }
     // The warm-up slice is left out when it was not measured; the colours belong to the slices, so the others do not shift.
-    val c = Qala.colors
-    val parts = listOfNotNull(s.warmupSec?.takeIf { it > 0 }?.let { Triple("Warm-up", it, c.viz1) }, Triple("Lifting", s.liftSec, c.viz2), Triple("Resting", s.restSec, c.viz3))
+    val parts = listOfNotNull(
+        s.warmupSec?.takeIf { it > 0 }?.let { Triple("Warm-up", it, Wash.Teal) },
+        Triple("Lifting", s.liftSec, Wash.ChartEmber),
+        Triple("Resting", s.restSec, Color.White.copy(alpha = 0.35f)),
+    )
     val total = parts.sumOf { it.second }
     fun share(seconds: Int) = if (total > 0) "${Math.round(seconds * 100.0 / total)}%" else "0%"
     ChartCard(
         title = "Time split",
         summary = "Where the time went, ${elapsedText(total.toDouble())} in all: " + parts.joinToString(", ") { "${it.first} ${elapsedText(it.second.toDouble())}, ${share(it.second)}" } + ".",
         table = parts.map { it.first to "${elapsedText(it.second.toDouble())} · ${share(it.second)}" },
+        surface = ChartSurface.Wash,
     ) { Donut(parts.map { DonutSlice(it.first, it.second.toDouble(), it.third, "${elapsedText(it.second.toDouble())} · ${share(it.second)}") }, elapsedText(total.toDouble()), "total") }
     if (s.setsByMuscle.isNotEmpty()) {
         val top = s.setsByMuscle.take(8)
+        // A name stays whole while the bars are 66 dp apart (five or fewer); with more bars it is cut to five letters.
+        val room = if (top.size > 5) 5 else Int.MAX_VALUE
         ChartCard(
             title = "Sets by muscle",
             summary = "Sets this session: " + top.joinToString(", ") { "${muscleName(it.first)} ${it.second}" } + ".",
             table = s.setsByMuscle.map { muscleName(it.first).replaceFirstChar { c -> c.uppercase() } to "${it.second} sets" },
-        ) { ColumnChart(top.map { it.second.toDouble() }, top.map { muscleName(it.first).take(5) }) }
+            surface = ChartSurface.Wash,
+        ) { ColumnChart(top.map { it.second.toDouble() }, top.map { muscleName(it.first).take(room) }) }
     }
     if (s.e1rms.isNotEmpty()) {
-        Card(contentPadding = 16.dp) {
+        WashCard(contentPadding = 14.dp) {
             GroupLabel("Estimated 1RM")
             s.e1rms.forEach { e ->
                 Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.SpaceBetween) {

@@ -40,11 +40,12 @@ import com.qala.app.today.TodayUiState
 import com.qala.data.engine.EngineSnapshot
 import com.qala.data.model.GymSettings
 import com.qala.design.LocalBarClearance
-import com.qala.design.Card
-import com.qala.design.PageHead
 import com.qala.design.Qala
 import com.qala.design.QalaText
 import com.qala.design.QalaType
+import com.qala.design.ScreenHead
+import com.qala.design.WashCard
+import com.qala.design.WashPage
 import com.qala.design.WashScrim
 import com.qala.design.WashScrimLayer
 import kotlinx.coroutines.launch
@@ -77,13 +78,13 @@ fun Screen(
         Route.Plan -> PlanScreen(snapshot, today, scroll, topBar, onGo, onChangePlan = { onPush(Route.PlanPicker) })
         Route.Body -> Plain(scroll, topBar) { BodyScreen(snapshot) }
         Route.Progress -> Plain(scroll, topBar) { ProgressScreen(snapshot) }
-        Route.SessionComplete -> Plain(scroll, topBar) { SessionCompleteScreen(onBack) }
+        Route.SessionComplete -> SessionCompleteScreen(scroll, onBack)
         Route.Coach -> CoachTab(snapshot, scroll, topBar)
         Route.History -> HistoryScreen(scroll, onBack)
         Route.Settings -> SettingsScreen(scroll, today, ui, settingsFocus, onSettingsFocused, onBack, onPlates)
         Route.Plates -> PlatesScreen(scroll, onBack, onEditPlates)
         Route.PlanPicker -> PlanPickerScreen(scroll, onBack)
-        Route.CheckIn -> CheckInRoute(today, scroll, topBar, onBack)
+        Route.CheckIn -> CheckInRoute(today, scroll, onBack)
         Route.WarmUp -> OnSoftWash {
             WarmupScreen(
                 programDay(today), onBack,
@@ -95,7 +96,7 @@ fun Screen(
         }
         Route.Rest -> OnSoftWash { RestScreen(onBack, onAllExercises = { onPush(Route.AllExercises) }) }
         Route.Run -> RunRoute(snapshot, onBack)
-        Route.AllExercises -> OnSoftWash { AllExercisesScreen(programDay(today), onBack, onWorkout = { onPush(Route.Workout) }) }
+        Route.AllExercises -> AllExercisesScreen(programDay(today), onBack, onWorkout = { onPush(Route.Workout) })
     }
 }
 
@@ -140,24 +141,18 @@ private fun CoachTab(snapshot: EngineSnapshot, scroll: ScrollState, topBar: @Com
 
 /** The check-in over the day Today is showing; Save writes the record on the container's scope and goes home. */
 @Composable
-private fun CheckInRoute(today: TodayLoad, scroll: ScrollState, topBar: @Composable (Modifier) -> Unit, onBack: () -> Unit) {
+private fun CheckInRoute(today: TodayLoad, scroll: ScrollState, onBack: () -> Unit) {
     val container = LocalAppContainer.current
     val model = (today as? TodayLoad.Ready)?.model
     if (model == null) {
-        Plain(scroll, topBar) { StubScreen("Check-in", "Getting your day ready.") }
+        WashPage(scroll, WashScrim.Soft, head = { ScreenHead("Check-in", onBack = onBack) }) {
+            WashCard { QalaText("Getting your day ready.", style = QalaType.hint, color = Qala.colors.fgMuted) }
+        }
         return
     }
     CheckInScreen(model.checkIn, scroll, onBack) { save ->
         // The container's scope, not the screen's: going back leaves the screen, and a Room write must not be cancelled half way.
         container.scope.launch { container.checkIns.save(save.recovery, save.soreness, save.note) }
         onBack()
-    }
-}
-
-@Composable
-private fun StubScreen(title: String, note: String) {
-    PageHead(title)
-    Card {
-        QalaText(note, style = QalaType.hint, color = Qala.colors.fgMuted)
     }
 }
