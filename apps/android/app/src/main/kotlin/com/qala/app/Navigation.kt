@@ -51,11 +51,11 @@ val Route.isFocus: Boolean
     get() = this == Route.WarmUp || this == Route.Workout || this == Route.Rest || this == Route.AllExercises
 
 /**
- * The routes that sit on the frosted still (S49): the shell paints the wash behind them, full bleed, and they draw white-on-wash
- * content over it. All exercises keeps the plain look until it is restyled.
+ * The routes that sit on the frosted still (S49, S51): every one but Today, whose film is its own ground. The shell paints the wash behind
+ * them, full bleed, and each screen lays its own scrim and its content over it.
  */
 val Route.onWash: Boolean
-    get() = this == Route.WarmUp || this == Route.Workout || this == Route.Rest
+    get() = this != Route.Today
 
 /** The tab to highlight: a pushed screen counts as Today, as History and Settings do on the web. */
 val Route.tab: Route get() = if (isPushed) Route.Today else this

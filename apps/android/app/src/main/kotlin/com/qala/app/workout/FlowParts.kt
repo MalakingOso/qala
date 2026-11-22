@@ -1,38 +1,20 @@
 package com.qala.app.workout
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.heading
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.unit.dp
 import com.qala.design.FlowNode
-import com.qala.design.GlassButton
 import com.qala.design.QalaIcons
-import com.qala.design.QalaText
+import com.qala.design.ScreenHead
 import com.qala.design.StageDotState
-import com.qala.design.Wash
 
 /**
- * The head of a screen on the wash (S49): a glass Back, the white [kicker] over the title, and the screen's own [actions] at the end.
- * The title is the heading TalkBack jumps to.
+ * The head of a screen pushed over the wash (S49): a glass Back, the white [kicker] over the title, and the screen's own [actions] at the
+ * end. It is [ScreenHead] with a Back; Warm-up, Workout and Rest call it until they take [ScreenHead] themselves.
  */
 @Composable
 fun WashHead(title: String, kicker: String?, onBack: () -> Unit, modifier: Modifier = Modifier, actions: @Composable RowScope.() -> Unit = {}) {
-    Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Top) {
-        GlassButton(onBack, icon = QalaIcons.ChevronLeft, description = "Back")
-        Column(Modifier.weight(1f).padding(top = 2.dp)) {
-            if (kicker != null) QalaText(kicker.uppercase(), style = Wash.Kicker, color = Wash.Text2, maxLines = 1)
-            QalaText(title, Modifier.semantics { heading() }, Wash.Title, Wash.Text, maxLines = 1)
-        }
-        actions()
-    }
+    ScreenHead(title, modifier, eyebrow = kicker, onBack = onBack, actions = actions)
 }
 
 /** The short name under a rail node: the whole name when it fits, else its first two words. A node label is two lines of 11 characters at most. */

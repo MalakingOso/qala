@@ -7,7 +7,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -37,11 +36,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -95,8 +91,11 @@ import com.qala.design.QalaText
 import com.qala.design.QalaTokens
 import com.qala.design.QalaType
 import com.qala.design.SecondaryButton
+import com.qala.design.SheetCard
 import com.qala.design.TabBarHeight
 import com.qala.design.beamerSurface
+import com.qala.design.sheetColor
+import com.qala.design.sheetSurface
 import com.qala.design.nextStage
 import kotlinx.coroutines.launch
 
@@ -139,7 +138,6 @@ fun TodayScreen(
     load: TodayLoad,
     ui: TodayUiState,
     scroll: ScrollState,
-    topBar: @Composable (Modifier) -> Unit,
     onGo: (Destination) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -263,7 +261,7 @@ private fun TodayContent(
     }
 
     // The sheet. Its peek is decoration (the list has the same cards for TalkBack), and the list is always in the semantics tree.
-    Layer(Slot.Sheet, Modifier.clearAndSetSemantics { }) { SheetBody(drawer) }
+    Layer(Slot.Sheet, Modifier.clearAndSetSemantics { }) { Box(Modifier.fillMaxSize().sheetSurface(sheetColor()) { 0.3f * drawer.q1 + 0.2f * drawer.q2 }) }
     Layer(Slot.Peek, Modifier.clearAndSetSemantics { }) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             PeekTile(model.nextRun, Modifier.weight(1f))
@@ -350,38 +348,6 @@ private fun ActionBlock(hero: Hero, saveError: String?, ink: () -> Float, onGo: 
     }
 }
 
-private val CreamLight = Color(0xFFF7F0E5)
-
-/** The sheet itself: a cream body (the theme's own background in the dark) with a rounded top, a white edge, and a shadow that deepens as it comes up. */
-@Composable
-private fun SheetBody(drawer: DrawerState) {
-    val body = if (Qala.dark) Qala.colors.bg else CreamLight
-    Box(
-        Modifier.fillMaxSize().drawBehind {
-            val d = density
-            val radius = 20f * d
-            val shadow = 0.3f * drawer.q1 + 0.2f * drawer.q2
-            if (shadow > 0f) {
-                val reach = 34f * d
-                drawRect(
-                    Brush.verticalGradient(listOf(Color.Transparent, Color(0xFF140A04).copy(alpha = 0.38f * shadow)), startY = -reach, endY = 0f),
-                    Offset(0f, -reach), Size(size.width, reach),
-                )
-            }
-            drawRoundRect(body.copy(alpha = 0.95f), Offset.Zero, size, CornerRadius(radius))
-            // The white edge along the top and round the corners.
-            val inset = d
-            val edge = Path().apply {
-                moveTo(inset, radius + inset)
-                arcTo(Rect(inset, inset, 2 * radius + inset, 2 * radius + inset), 180f, 90f, false)
-                lineTo(size.width - radius - inset, inset)
-                arcTo(Rect(size.width - 2 * radius - inset, inset, size.width - inset, 2 * radius + inset), 270f, 90f, false)
-            }
-            drawPath(edge, Color.White.copy(alpha = 0.7f), style = Stroke(2f * d))
-        },
-    )
-}
-
 /** The grab bar. A tap goes to the next stop (closed, half, full, closed); the same click is what TalkBack and a test use. */
 @Composable
 private fun Handle(drawer: DrawerState) {
@@ -406,21 +372,6 @@ private fun Handle(drawer: DrawerState) {
                 val d = density
                 drawRoundRect(c.fg.copy(alpha = 0.28f), Offset((size.width - 36f * d) / 2f, 8f * d), Size(36f * d, 4f * d), CornerRadius(2f * d))
             },
-    )
-}
-
-/** A card in the drawer's list: a plain surface, the Beamer border and shadow, 14 dp inside. */
-@Composable
-private fun SheetCard(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
-    val c = Qala.colors
-    val border = QalaTokens.borderWidth
-    Column(
-        modifier
-            .fillMaxWidth()
-            .padding(bottom = 12.dp)
-            .beamerSurface(c.bgSurface, c.border, QalaTokens.radiusLg, c.shadowCard)
-            .padding(border + 14.dp),
-        content = content,
     )
 }
 

@@ -1,6 +1,7 @@
 package com.qala.app
 
 import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Spacer
@@ -44,14 +45,16 @@ import com.qala.design.PageHead
 import com.qala.design.Qala
 import com.qala.design.QalaText
 import com.qala.design.QalaType
+import com.qala.design.WashScrim
+import com.qala.design.WashScrimLayer
 import kotlinx.coroutines.launch
 
 /**
  * The screen for [route], filling the shell's content box. Today brings its own scroll column and fixed layers, and so
- * do the lifting screens (a pinned bar under their own scroll); every other screen is the same header over a padded
- * column. [onPush] opens a screen over this one (Workout opens Rest, the warm-up opens Workout, and each of the three
- * opens All exercises, whose Back returns to it). [settingsFocus] is the group Settings opens scrolled to, if one sent the
- * lifter there; Settings calls [onSettingsFocused] once it has scrolled.
+ * do the lifting screens (a pinned bar under their own scroll); the screens that have not moved to a page frame yet are the same
+ * header over a padded column, and [topBar] is theirs alone (it goes with [Plain]). [onPush] opens a screen over this one (Workout opens
+ * Rest, the warm-up opens Workout, and each of the three opens All exercises, whose Back returns to it). [settingsFocus] is the group
+ * Settings opens scrolled to, if one sent the lifter there; Settings calls [onSettingsFocused] once it has scrolled.
  */
 @Composable
 fun Screen(
@@ -70,7 +73,7 @@ fun Screen(
     onSettingsFocused: () -> Unit = {},
 ) {
     when (route) {
-        Route.Today -> TodayScreen(today, ui, scroll, topBar, onGo)
+        Route.Today -> TodayScreen(today, ui, scroll, onGo)
         Route.Plan -> PlanScreen(snapshot, today, scroll, topBar, onGo, onChangePlan = { onPush(Route.PlanPicker) })
         Route.Body -> Plain(scroll, topBar) { BodyScreen(snapshot) }
         Route.Progress -> Plain(scroll, topBar) { ProgressScreen(snapshot) }
@@ -81,21 +84,28 @@ fun Screen(
         Route.Plates -> PlatesScreen(scroll, onBack, onEditPlates)
         Route.PlanPicker -> PlanPickerScreen(scroll, onBack)
         Route.CheckIn -> CheckInRoute(today, scroll, topBar, onBack)
-        Route.WarmUp -> WarmupScreen(
-            programDay(today), onBack,
-            onStart = { onPush(Route.Workout) }, onSkip = { onPush(Route.Workout) }, onAllExercises = { onPush(Route.AllExercises) },
-        )
-        Route.Workout -> WorkoutScreen(programDay(today), onBack, onRest = { onPush(Route.Rest) }, onAllExercises = { onPush(Route.AllExercises) }, onWarmup = { onPush(Route.WarmUp) }, onFinished = { onPush(Route.SessionComplete) })
-        Route.Rest -> RestScreen(onBack, onAllExercises = { onPush(Route.AllExercises) })
+        Route.WarmUp -> OnSoftWash {
+            WarmupScreen(
+                programDay(today), onBack,
+                onStart = { onPush(Route.Workout) }, onSkip = { onPush(Route.Workout) }, onAllExercises = { onPush(Route.AllExercises) },
+            )
+        }
+        Route.Workout -> OnSoftWash {
+            WorkoutScreen(programDay(today), onBack, onRest = { onPush(Route.Rest) }, onAllExercises = { onPush(Route.AllExercises) }, onWarmup = { onPush(Route.WarmUp) }, onFinished = { onPush(Route.SessionComplete) })
+        }
+        Route.Rest -> OnSoftWash { RestScreen(onBack, onAllExercises = { onPush(Route.AllExercises) }) }
         Route.Run -> Plain(scroll, topBar) { RunRoute(snapshot, onBack) }
-        Route.AllExercises -> AllExercisesScreen(programDay(today), onBack, onWorkout = { onPush(Route.Workout) })
+        Route.AllExercises -> OnSoftWash { AllExercisesScreen(programDay(today), onBack, onWorkout = { onPush(Route.Workout) }) }
     }
 }
 
 /** The program day Today has chosen for today, which the lifting screens open: null while Today is loading or on a day with no lift. */
 private fun programDay(today: TodayLoad): Int? = (today as? TodayLoad.Ready)?.model?.plan?.programDay
 
-/** A scrolling screen under the brand bar, with the 20 dp page gutters. */
+/**
+ * A scrolling screen under the brand bar, with the 20 dp page gutters. Transitional: the screens that still use it move to
+ * [com.qala.design.WashPage], [com.qala.design.SheetPage] or [com.qala.design.GlassPage], and this goes with them.
+ */
 @Composable
 private fun Plain(scroll: ScrollState, topBar: @Composable (Modifier) -> Unit, content: @Composable ColumnScope.() -> Unit) {
     Column(Modifier.fillMaxSize().verticalScroll(scroll)) {
@@ -104,6 +114,18 @@ private fun Plain(scroll: ScrollState, topBar: @Composable (Modifier) -> Unit, c
             Spacer(Modifier.height(16.dp))
             content()
         }
+    }
+}
+
+/**
+ * Transitional, like [Plain]: a lifting screen that has not moved to [com.qala.design.WashPage] yet keeps the soft scrim the shell's
+ * backdrop used to paint under it. A screen that has moved paints its own, so it comes out of this.
+ */
+@Composable
+private fun OnSoftWash(content: @Composable () -> Unit) {
+    Box(Modifier.fillMaxSize()) {
+        WashScrimLayer(WashScrim.Soft)
+        content()
     }
 }
 

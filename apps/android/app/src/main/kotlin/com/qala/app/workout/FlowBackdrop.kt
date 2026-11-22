@@ -18,8 +18,6 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageShader
 import androidx.compose.ui.graphics.ShaderBrush
 import androidx.compose.ui.graphics.TileMode
@@ -35,8 +33,9 @@ import kotlin.math.max
 
 /**
  * The stationary background of Warm-up, Workout and Rest (DECISIONS S49): one film frame blurred down to a warm wash of its own
- * colour (scripts/bake-flow-backdrop.py), a still image with a very light grain, so nothing moves behind the controls. The scrim keeps
- * the top, where the white head text sits, a little darker. It is drawn once at the root of the shell and is not part of any screen.
+ * colour (scripts/bake-flow-backdrop.py), a still image with a very light grain, so nothing moves behind the controls. It is drawn once at
+ * the root of the shell, behind every screen but Today, and is not part of any screen. It paints no scrim: each page lays the one its
+ * content needs over it (`WashScrimLayer`), so two never stack.
  */
 @Composable
 fun FlowBackdrop(modifier: Modifier = Modifier) {
@@ -45,15 +44,8 @@ fun FlowBackdrop(modifier: Modifier = Modifier) {
         Box(
             Modifier.fillMaxSize().drawWithCache {
                 val grain = ShaderBrush(ImageShader(grainTile(), TileMode.Repeated, TileMode.Repeated))
-                val scrim = Brush.verticalGradient(
-                    0f to Color(20, 10, 4, 77),
-                    0.40f to Color(20, 10, 4, 46),
-                    0.75f to Color(20, 10, 4, 20),
-                    1f to Color(20, 10, 4, 0),
-                )
                 val density = this.density
                 onDrawBehind {
-                    drawRect(scrim)
                     // The film's grain tile, held still, at one dp per pixel: much quieter than on Today.
                     scale(density, density, Offset.Zero) {
                         drawRect(grain, Offset.Zero, Size(size.width / density, size.height / density), alpha = 0.07f)

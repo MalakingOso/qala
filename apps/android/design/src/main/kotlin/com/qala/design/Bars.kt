@@ -72,8 +72,8 @@ private val IslandMargin = 10.dp
  * The bottom tab bar, a dark island that floats in the [TabBarHeight] zone above the navigation inset (S50): 56 dp tall, fully rounded,
  * a hairline and a hard shadow, with 10 dp of page either side. The open tab is an ember pill that holds its icon and its name; the
  * others are icons alone and share what is left. The pill slides between tabs (it snaps with system animations off). Every tab still
- * answers to its name for TalkBack and for tests. [glass] is the more translucent version Today overlays on its film; elsewhere
- * the island is the theme's ink, so it reads the same on a light page and a dark one.
+ * answers to its name for TalkBack and for tests. It is the same dark glass on every screen and in both themes (S51), because the wash
+ * and the film behind it are dark in both.
  */
 @Composable
 fun TabBar(
@@ -81,13 +81,7 @@ fun TabBar(
     selectedIndex: Int,
     onSelect: (Int) -> Unit,
     modifier: Modifier = Modifier,
-    glass: Boolean = false,
 ) {
-    val c = Qala.colors
-    val rail = railColors()
-    val fill = if (glass) GlassFill else rail.rowSelBg
-    val rule = if (glass) GlassRule else if (Qala.dark) rail.rowSelBorder else Color.Transparent
-    val ember = if (glass) GlassEmber else c.accent
     val animate = animationsEnabled(LocalContext.current)
     Box(
         modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.navigationBars).height(TabBarHeight),
@@ -99,7 +93,7 @@ fun TabBar(
                 .fillMaxWidth()
                 .padding(horizontal = IslandMargin)
                 .height(IslandHeight)
-                .beamerSurface(fill, rule, IslandHeight / 2, IslandShadow, borderWidth = 1.dp)
+                .beamerSurface(GlassFill, GlassRule, IslandHeight / 2, IslandShadow, borderWidth = 1.dp)
                 .padding(6.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -111,7 +105,7 @@ fun TabBar(
                     Modifier
                         .weight(1f + 1.3f * open)
                         .fillMaxHeight()
-                        .background(ember.copy(alpha = open), CircleShape)
+                        .background(GlassEmber.copy(alpha = open), CircleShape)
                         .selectable(
                             selected = active,
                             interactionSource = remember { MutableInteractionSource() },

@@ -317,10 +317,9 @@ fun IconTile(icon: ImageVector, modifier: Modifier = Modifier, size: Dp = 36.dp,
     }
 }
 
-/** A quiet text action under a card's sentence: bold, underlined, with a 48 dp touch height. */
+/** A quiet text action under a card's sentence: bold, underlined, with a 48 dp touch height. [color] is the theme's ink unless a night surface needs another. */
 @Composable
-fun LinkButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    val c = Qala.colors
+fun LinkButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, color: Color = Qala.colors.fg) {
     Box(
         modifier
             .heightIn(min = 48.dp)
@@ -330,7 +329,7 @@ fun LinkButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier)
         QalaText(
             text,
             style = QalaType.button.copy(fontSize = 13.sp, lineHeight = 18.sp, textDecoration = TextDecoration.Underline),
-            color = c.fg,
+            color = color,
             maxLines = 1,
         )
     }

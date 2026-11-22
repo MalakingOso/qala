@@ -13,16 +13,13 @@ import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBars
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -97,9 +94,10 @@ private val TabItems = mapOf(
  * The day menu is composed here, after the shell's own [BackHandler], so its handler registers later and wins while
  * the menu is open, and so its scrim covers the tab bar and the status bar too.
  *
- * Start warm-up and Resume workout on Today hand over to the flow rather than cut (S49): a softened still fades in over Today and its film,
- * the shell swaps screens under it, and it fades out to the wash as the flow's content comes in. [animate] overrides whether system animations
- * are on (a test sets it); the default reads the system, and with them off the hand-over is a plain swap.
+ * Every deliberate push out of Today hands over to the wash rather than cut (S49, S51): Start warm-up, Resume workout, Check-in, Run, History
+ * and Settings. A softened still fades in over Today and its film, the shell swaps screens under it, and it fades out to the wash as the new
+ * screen's content comes in. A tap on a tab in the island is a plain swap. [animate] overrides whether system animations are on (a test sets
+ * it); the default reads the system, and with them off the hand-over is a plain swap.
  */
 @Composable
 fun QalaApp(animate: Boolean? = null) {
@@ -113,7 +111,7 @@ fun QalaApp(animate: Boolean? = null) {
     }
     QalaTheme(dark, if (look.titleFont == TitleFont.Faustina) FaustinaFamily else QalaTestFamily) {
         var nav by rememberSaveable(stateSaver = Nav.Saver) { mutableStateOf(Nav()) }
-        SystemBars(dark, overFilm = nav.route == Route.Today || nav.route.onWash)
+        SystemBars()
         val handOver = remember { HandOver() }
         val scope = rememberCoroutineScope()
         // The plate calculator's Edit plates lands on Settings scrolled to the inventory.
@@ -203,7 +201,7 @@ fun QalaApp(animate: Boolean? = null) {
                     when {
                         handOver.running -> {}                  // a second tap during the hand-over is ignored
                         to == Destination.Skip -> (today as? TodayLoad.Ready)?.let { ui.skip.show(it.model.skip) }
-                        nav.route == Route.Today && (to == Destination.WarmUp || to == Destination.Workout) && (animate ?: animationsEnabled(context)) ->
+                        nav.route == Route.Today && to in HandedOver && (animate ?: animationsEnabled(context)) ->
                             scope.launch {
                                 // Only if Today is still where the shell is: a notification or a rest ending may have moved it meanwhile.
                                 handOver.run { if (latest.route == Route.Today) nav = latest.go(to) }
@@ -219,13 +217,12 @@ fun QalaApp(animate: Boolean? = null) {
                 onSettingsFocused = { settingsFocus = null },
             )
         }
-        val tabBar: @Composable (Boolean, Modifier) -> Unit = { glass, modifier ->
+        val tabBar: @Composable (Modifier) -> Unit = { modifier ->
             TabBar(
                 items = Route.tabs.map { TabItems.getValue(it) },
                 selectedIndex = Route.tabs.indexOf(nav.route.tab),
                 onSelect = { nav = nav.selectTab(Route.tabs[it]) },
                 modifier = modifier,
-                glass = glass,
             )
         }
 
@@ -237,27 +234,16 @@ fun QalaApp(animate: Boolean? = null) {
                     val scroll = rememberScrollState()
                     Box(Modifier.fillMaxSize().semantics { if (ui.skip.open) hideFromAccessibility() }) {       // the skip sheet is modal: the screen behind it is not reachable
                         screen(scroll)
-                        tabBar(true, Modifier.align(Alignment.BottomCenter))
+                        tabBar(Modifier.align(Alignment.BottomCenter))
                     }
                 }
             } else {
-                // Content scrolls under the status bar; this keeps the clock and icons readable over it. The wash needs none: it is under the bar already.
-                if (!nav.route.onWash) {
-                    Spacer(
-                        Modifier
-                            .align(Alignment.TopStart)
-                            .fillMaxWidth()
-                            .windowInsetsTopHeight(WindowInsets.statusBars)
-                            .background(Qala.colors.bg)
-                            .zIndex(1f),
-                    )
-                }
                 Column(
                     Modifier
                         .widthIn(max = ContentMaxWidth)
                         .fillMaxSize()
-                        // The flow's content comes in as the second half of the hand-over runs; read in the layer, so a frame of it recomposes nothing.
-                        .then(if (nav.route.onWash) Modifier.graphicsLayer { alpha = HandOverCurve.content(handOver.progress) } else Modifier)
+                        // The screen's content comes in as the second half of the hand-over runs; read in the layer, so a frame of it recomposes nothing.
+                        .graphicsLayer { alpha = HandOverCurve.content(handOver.progress) }
                         .then(if (nav.route == Route.CheckIn || nav.route == Route.Coach || nav.route == Route.PlanPicker) Modifier.imePadding() else Modifier)      // the note, the coach's composer and the starting weights stay above the keyboard
                         .semantics { if (ui.skip.open) hideFromAccessibility() },                        // the skip sheet is modal: the screen behind it is not reachable
                 ) {
@@ -275,7 +261,7 @@ fun QalaApp(animate: Boolean? = null) {
                     }
                 }
                 if (!nav.route.isFocus) {
-                    tabBar(false, Modifier.align(Alignment.BottomCenter).semantics { if (ui.skip.open) hideFromAccessibility() })
+                    tabBar(Modifier.align(Alignment.BottomCenter).semantics { if (ui.skip.open) hideFromAccessibility() })
                 }
             }
             if (nav.route == Route.Today) TodayMenu(today, ui, Modifier.zIndex(2f))
@@ -286,17 +272,20 @@ fun QalaApp(animate: Boolean? = null) {
     }
 }
 
+/** The deliberate pushes out of Today that hand over to the wash; Plan and Body are tabs and swap plainly, and Skip opens a sheet. */
+private val HandedOver = setOf(Destination.CheckIn, Destination.WarmUp, Destination.Workout, Destination.Run, Destination.History, Destination.Settings)
+
 /**
- * The status and navigation bars follow the app's own theme, not the system's: Light on a dark phone still needs dark icons.
- * Today ([overFilm]) draws its film under both bars, so its icons are light in either theme.
+ * The status and navigation bars follow the app's own theme, not the system's, and their icons are light on every route: Today's film and
+ * the wash under every other screen are dark in both themes.
  */
 @Composable
-private fun SystemBars(dark: Boolean, overFilm: Boolean) {
+private fun SystemBars() {
     var context = LocalContext.current
     while (context is ContextWrapper && context !is ComponentActivity) context = context.baseContext
     val activity = context as? ComponentActivity ?: return
     SideEffect {
-        val bars = if (dark || overFilm) SystemBarStyle.dark(AndroidColor.TRANSPARENT) else SystemBarStyle.light(AndroidColor.TRANSPARENT, AndroidColor.TRANSPARENT)
+        val bars = SystemBarStyle.dark(AndroidColor.TRANSPARENT)
         activity.enableEdgeToEdge(statusBarStyle = bars, navigationBarStyle = bars)
     }
 }
