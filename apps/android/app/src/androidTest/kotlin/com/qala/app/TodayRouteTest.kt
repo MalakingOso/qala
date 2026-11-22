@@ -2,11 +2,7 @@ package com.qala.app
 
 import android.content.Context
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.semantics.LiveRegionMode
@@ -28,10 +24,6 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.qala.data.db.QalaDatabase
 import com.qala.data.repo.DeviceClock
 import com.qala.data.repo.RepoEnv
-import com.qala.design.DayMenu
-import com.qala.design.QalaTheme
-import com.qala.design.RailStage
-import com.qala.design.StageDotState
 import java.time.DayOfWeek
 import java.time.ZoneId
 import java.time.ZonedDateTime
@@ -43,7 +35,6 @@ import kotlinx.coroutines.cancel
 import org.junit.After
 import org.junit.Before
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -186,30 +177,5 @@ class TodayRouteTest {
         // The page title, the hero, and the four cards below it (some may be off screen but are still composed).
         assertTrue("found $headings headings", headings >= 4)
         rule.onNode(isHeading() and hasText("Today")).assertExists()
-    }
-
-    @Test
-    fun theMenusBackHandlerBeatsAnOuterOneWhileItIsOpen() {
-        var outer = 0
-        var open by mutableStateOf(true)
-        val stages = listOf(
-            RailStage("check-in", "Check-in", StageDotState.Now),
-            RailStage("recover", "Recover", StageDotState.Later, interlude = true),
-        )
-        rule.setContent {
-            QalaTheme {
-                // The shell's handler comes first in composition, the menu's after it, as in QalaApp.
-                BackHandler(enabled = true) { outer += 1 }
-                DayMenu(open = open, title = "Friday", stages = stages, viewing = 0, nowIndex = 0, onSelect = {}, onClose = { open = false })
-            }
-        }
-        rule.runOnUiThread { rule.activity.onBackPressedDispatcher.onBackPressed() }
-        rule.waitForIdle()
-        assertFalse("Back closed the menu", open)
-        assertEquals("and did not reach the outer handler", 0, outer)
-
-        rule.runOnUiThread { rule.activity.onBackPressedDispatcher.onBackPressed() }
-        rule.waitForIdle()
-        assertEquals("with the menu shut, Back belongs to the outer handler again", 1, outer)
     }
 }

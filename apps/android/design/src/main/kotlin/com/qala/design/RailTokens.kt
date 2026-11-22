@@ -26,36 +26,18 @@ import androidx.compose.ui.unit.Dp
  */
 @Immutable
 internal class RailColors(
-    val dotRing: Color,
-    val nodeBorder: Color,
-    val rowSelBg: Color,
-    val rowSelBorder: Color,
-    val rowSelFg: Color,
-    val rowSelFg2: Color,
     val scrim: Color,
     val glass: Color,
     val onInk: Color,          // text on the ink and teal fills
 ) {
     companion object {
         val Light = RailColors(
-            dotRing = Color(0xFF94A0B8),
-            nodeBorder = Color(15, 21, 42, 77),
-            rowSelBg = Color(0xFF0F152A),
-            rowSelBorder = Color(0xFF0F152A),
-            rowSelFg = Color.White,
-            rowSelFg2 = Color(255, 255, 255, 191),
             scrim = Color(15, 21, 42, 56),                          // fg at .22
             glass = Color(255, 255, 255, 179),
             onInk = Color.White,
         )
 
         val Dark = RailColors(
-            dotRing = Color(0xFFAAB4CC),
-            nodeBorder = Color(232, 236, 246, 87),
-            rowSelBg = Color(0xFF1F2A4D),
-            rowSelBorder = Color(232, 236, 246, 153),
-            rowSelFg = Color(0xFFE8ECF6),
-            rowSelFg2 = Color(0xFFAAB4CC),
             scrim = Color(3, 6, 16, 153),                           // ink is light in dark, so the scrim is near-black
             glass = Color(31, 42, 77, 179),
             onInk = Color(0xFF0B1020),

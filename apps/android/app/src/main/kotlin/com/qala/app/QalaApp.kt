@@ -55,7 +55,6 @@ import com.qala.app.run.RunState
 import com.qala.app.skip.SkipSheet
 import com.qala.app.today.Destination
 import com.qala.app.today.TodayLoad
-import com.qala.app.today.TodayMenu
 import com.qala.app.today.TodayUiState
 import com.qala.app.today.todayLoad
 import com.qala.data.model.AppearanceSettings
@@ -89,9 +88,6 @@ private val TabItems = mapOf(
  * gets a [Box] to fill, so a screen can host layers that do not scroll (Today's rail and pinned head) beside its own
  * scroll column, and the shell hands it the [ScrollState] it owns. The brand bar is the screen's to place, since on
  * Today it scrolls away with the content.
- *
- * The day menu is composed here, after the shell's own [BackHandler], so its handler registers later and wins while
- * the menu is open, and so its scrim covers the tab bar and the status bar too.
  *
  * Every deliberate push out of Today hands over to the wash rather than cut (S49, S51): Start warm-up, Resume workout, Check-in, Run, History
  * and Settings. A softened still fades in over Today and its film, the shell swaps screens under it, and it fades out to the wash as the new
@@ -256,7 +252,6 @@ fun QalaApp(animate: Boolean? = null) {
                     tabBar(Modifier.align(Alignment.BottomCenter).semantics { if (ui.skip.open) hideFromAccessibility() })
                 }
             }
-            if (nav.route == Route.Today) TodayMenu(today, ui, Modifier.zIndex(2f))
             // Change on Settings' Training status opens the same sheet over Settings.
             if (nav.route == Route.Today || nav.route == Route.Settings) SkipSheet(ui.skip, Modifier.zIndex(3f))
             HandOverVeil(handOver, Modifier.zIndex(10f))

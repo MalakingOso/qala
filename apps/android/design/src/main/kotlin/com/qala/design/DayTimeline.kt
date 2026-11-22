@@ -1,10 +1,12 @@
 package com.qala.design
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -16,6 +18,7 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.semantics.CustomAccessibilityAction
@@ -28,13 +31,14 @@ import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlin.math.abs
 import kotlin.math.roundToInt
 
 /*
  * Today's day timeline (DECISIONS S48): the same stages as the day rail, drawn as dots on the film. There are two versions of the
  * one list: a vertical list that is there while the sheet is closed, and a row that takes over as it comes up and then docks
- * into the day card. Each is told by its caller whether it is the one on show ([active]); only that one is a button for TalkBack
- * and for a finger, and the other is not in the semantics tree at all.
+ * into the day card. Each is told by its caller whether it is the one on show ([active]); only that one takes a tap (a tap on a stage
+ * shows it) and is in the semantics tree for TalkBack, and the other is not.
  */
 
 private val VideoTeal = Color(0xFF2DD4BF)
@@ -53,9 +57,9 @@ fun RailStage.timelineTime(): String? = when {
     else -> null
 }
 
-/** The timeline as one button for TalkBack and for a finger: the rail's description, the stage being viewed, Open day stages, and the two stepping actions. */
-private fun Modifier.timelineAccess(stages: List<RailStage>, viewing: Int, onOpenMenu: () -> Unit, onStep: (Int) -> Unit): Modifier = this
-    .semantics(mergeDescendants = true) {
+/** What TalkBack gets for the timeline: the rail's description, the stage being viewed, and the two stepping actions. The stages are buttons of their own. */
+private fun Modifier.timelineAccess(stages: List<RailStage>, viewing: Int, onStep: (Int) -> Unit): Modifier = this
+    .semantics {
         contentDescription = railDescription(stages)
         if (viewing != nowIndex(stages)) stateDescription = "Viewing ${stages.getOrNull(viewing)?.label.orEmpty()}"
         customActions = listOf(
@@ -71,10 +75,9 @@ private fun Modifier.timelineAccess(stages: List<RailStage>, viewing: Int, onOpe
             },
         )
     }
-    .clickable(onClickLabel = "Open day stages", role = Role.Button, onClick = onOpenMenu)
 
-private fun Modifier.timelineAccess(active: Boolean, stages: List<RailStage>, viewing: Int, onOpenMenu: () -> Unit, onStep: (Int) -> Unit): Modifier =
-    if (active) timelineAccess(stages, viewing, onOpenMenu, onStep) else clearAndSetSemantics { }
+private fun Modifier.timelineAccess(active: Boolean, stages: List<RailStage>, viewing: Int, onStep: (Int) -> Unit): Modifier =
+    if (active) timelineAccess(stages, viewing, onStep) else clearAndSetSemantics { }
 
 /** The index the progress line runs to: the last stage that is done or now. */
 private fun progressIndex(stages: List<RailStage>): Int = stages.indexOfLast { !it.interlude && (it.state == StageDotState.Done || it.state == StageDotState.Now) }.coerceAtLeast(0)
@@ -101,14 +104,14 @@ fun DayTimelineVertical(
     stages: List<RailStage>,
     viewing: Int,
     active: Boolean,
-    onOpenMenu: () -> Unit,
+    onSelect: (Int) -> Unit,
     onStep: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val nowAt = nowIndex(stages)
     Column(
         modifier
-            .timelineAccess(active, stages, viewing, onOpenMenu, onStep)
+            .timelineAccess(active, stages, viewing, onStep)
             .drawBehind {
                 val pitch = RowPitch.toPx()
                 val x = 5.dp.toPx()
@@ -122,8 +125,13 @@ fun DayTimelineVertical(
                 }
             },
     ) {
-        stages.forEach { stage ->
-            Row(Modifier.height(RowPitch)) {
+        stages.forEachIndexed { i, stage ->
+            Row(
+                Modifier
+                    .clickable(enabled = active, onClickLabel = "Show ${stage.label}", role = Role.Button) { onSelect(i) }
+                    .height(RowPitch)
+                    .padding(end = 24.dp),
+            ) {
                 Spacer(Modifier.width(LabelInset))
                 QalaText(stage.label, Modifier.height(18.dp), VLabel, Color.White, maxLines = 1)
                 stage.timelineTime()?.let {
@@ -174,7 +182,7 @@ fun DayTimelineRow(
     stages: List<RailStage>,
     viewing: Int,
     active: Boolean,
-    onOpenMenu: () -> Unit,
+    onSelect: (Int) -> Unit,
     onStep: (Int) -> Unit,
     dock: () -> Float,
     ink: () -> Float,
@@ -191,7 +199,13 @@ fun DayTimelineRow(
             }
         },
         modifier = modifier
-            .timelineAccess(active, stages, viewing, onOpenMenu, onStep)
+            .timelineAccess(active, stages, viewing, onStep)
+            // A tap shows the stage whose dot is nearest, so the whole height of the row is the target, not just the small labels.
+            .pointerInput(active, stages, onSelect) {
+                if (active && stages.isNotEmpty()) detectTapGestures { tap ->
+                    onSelect(stages.indices.minBy { abs(xAt(it, stages.size, size.width.toFloat(), dock(), density) - tap.x) })
+                }
+            }
             .drawBehind {
                 val e = ink()
                 val line = lerp(VideoLine, c.border.compositeOver(c.bgSurface), e)

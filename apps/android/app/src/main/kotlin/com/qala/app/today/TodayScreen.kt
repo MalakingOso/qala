@@ -74,7 +74,6 @@ import com.qala.app.skip.undoWrites
 import com.qala.data.model.GymSettings
 import com.qala.data.today.DayKind
 import com.qala.design.Card
-import com.qala.design.DayMenu
 import com.qala.design.DayTimelineRow
 import com.qala.design.DayTimelineRowHeight
 import com.qala.design.DayTimelineVertical
@@ -100,22 +99,20 @@ import com.qala.design.nextStage
 import kotlinx.coroutines.launch
 
 /**
- * Today's own state: which stage is being previewed and whether the menu is open. It lives in the shell, above the
- * route, because the menu is composed over the whole window (the tab bar included) while the rail and the cards live
- * in the content. Previewing is by stage id, with null meaning "follow now", so the screen stays on now when Mark
- * done moves it. It is reset whenever Today is left.
+ * Today's own state: which stage is being previewed. It lives in the shell, above the route, because the skip sheet is
+ * composed over the whole window (the tab bar included) while the timeline and the cards live in the content.
+ * Previewing is by stage id, with null meaning "follow now", so the screen stays on now when Mark done moves it. It
+ * is reset whenever Today is left.
  */
 @Stable
 class TodayUiState {
     var previewing by mutableStateOf<String?>(null)
-    var menuOpen by mutableStateOf(false)
 
-    /** The skip sheet, composed by the shell over the whole window like the menu. */
+    /** The skip sheet, composed by the shell over the whole window. */
     val skip = SkipSheetState()
 
     fun reset() {
         previewing = null
-        menuOpen = false
         skip.close()
     }
 
@@ -229,11 +226,11 @@ private fun TodayContent(
     Layer(Slot.Icons) { TodayIcons(onGo) }
 
     Layer(Slot.TimelineV, Modifier.semantics { isTraversalGroup = true; traversalIndex = -2f }) {
-        DayTimelineVertical(model.stages, viewing, active = !rowActive, onOpenMenu = { ui.menuOpen = true }, onStep = { ui.show(model, nextStage(model.stages, viewing, it)) })
+        DayTimelineVertical(model.stages, viewing, active = !rowActive, onSelect = { ui.show(model, it) }, onStep = { ui.show(model, nextStage(model.stages, viewing, it)) })
     }
     Layer(Slot.TimelineRow, Modifier.semantics { isTraversalGroup = true; traversalIndex = -2f }) {
         DayTimelineRow(
-            model.stages, viewing, active = rowActive, onOpenMenu = { ui.menuOpen = true }, onStep = { ui.show(model, nextStage(model.stages, viewing, it)) },
+            model.stages, viewing, active = rowActive, onSelect = { ui.show(model, it) }, onStep = { ui.show(model, nextStage(model.stages, viewing, it)) },
             dock = { drawer.docked }, ink = { smooth((drawer.q2 - 0.02f) / 0.4f) },
         )
     }
@@ -301,7 +298,7 @@ private fun TodayCompact(model: TodayModel, hero: Hero, viewing: Int, ui: TodayU
             QalaText("Today", Modifier.semantics { heading() }, QalaType.pageTitle.copy(shadow = FilmShadow), Color.White)
             PreviewBar(visible = viewing != model.nowIndex, label = model.stages.getOrNull(viewing)?.label.orEmpty(), onBackToNow = { ui.previewing = null })
             Box(Modifier.padding(top = 8.dp).height(DayTimelineRowHeight)) {
-                DayTimelineRow(model.stages, viewing, active = true, onOpenMenu = { ui.menuOpen = true }, onStep = { ui.show(model, nextStage(model.stages, viewing, it)) }, dock = { 0f }, ink = { 0f }, modifier = Modifier.fillMaxWidth())
+                DayTimelineRow(model.stages, viewing, active = true, onSelect = { ui.show(model, it) }, onStep = { ui.show(model, nextStage(model.stages, viewing, it)) }, dock = { 0f }, ink = { 0f }, modifier = Modifier.fillMaxWidth())
             }
             QalaText(hero.kicker.uppercase(), Modifier.padding(top = 12.dp), HeroKicker, if (hero.now) EmberOnFilm else OverFilm, maxLines = 1)
             QalaText(hero.title, Modifier.semantics { heading() }, HeroTitle, Color.White, maxLines = 2)
@@ -390,22 +387,6 @@ private fun PeekTile(card: InfoCard, modifier: Modifier = Modifier) {
         QalaText(card.title, Modifier.padding(top = 2.dp), QalaType.cardTitle, maxLines = 2)
         card.lines.firstOrNull()?.let { QalaText(it, Modifier.padding(top = 4.dp), QalaType.body.copy(fontSize = 12.sp, lineHeight = 16.sp), c.fgSecondary, maxLines = 3) }
     }
-}
-
-/** The day menu, composed by the shell over the whole window. Nothing is drawn until Today has a day. */
-@Composable
-fun TodayMenu(load: TodayLoad, ui: TodayUiState, modifier: Modifier = Modifier) {
-    val model = (load as? TodayLoad.Ready)?.model ?: return
-    DayMenu(
-        open = ui.menuOpen,
-        title = model.menuTitle,
-        stages = model.stages,
-        viewing = viewingIndex(model.stages, model.nowIndex, ui.previewing),
-        nowIndex = model.nowIndex,
-        onSelect = { ui.show(model, it) },
-        onClose = { ui.menuOpen = false },
-        modifier = modifier,
-    )
 }
 
 @Composable
