@@ -79,7 +79,7 @@ Plans: `docs/rust-core.md` (the core, and section 12 for the LS++ language).
 | Rename leftovers | done 2026-10-14 | `testdata/golden/lspp/`; the names that ran the TS oracle went with it (S28) | |
 | `gen:lspp` runs out of memory | gone 2026-11-12 | the generator and its gitignored corpora were deleted with the oracle (S28) | |
 | Generator port (R4) | deferred 2026-10-14 (owner) | rust-core 7; later the phone pulls generated workouts from the server instead | |
-| Retire `packages/liftoscript` as the oracle | done 2026-11-12 (S28) | the TS copy, `packages/run`, the rest of `packages/engine` and every golden and fuzz generator are deleted. `server/import.ts` reads the exercise catalog from `crates/qala-lspp/data/exercises.json`. Authoring will go to Rust or the server, never TS (D36). The tracked goldens are frozen fixtures | D36 |
+| Retire `packages/liftoscript` as the oracle | done 2026-11-12 (S28) | the TS copy, `packages/run`, `packages/engine` (its last file, `availability.ts`, went 2026-11-22) and every golden and fuzz generator are deleted. `server/import.ts` reads the exercise catalog from `crates/qala-lspp/data/exercises.json`. Authoring will go to Rust or the server, never TS (D36). The tracked goldens are frozen fixtures | D36 |
 
 ## Server and sync
 

@@ -311,6 +311,9 @@ fun PlateFace(weight: Double, inventory: List<PlateEntry>, height: Float = FaceC
             modifier = Modifier.size(width = (height * sprite.w / sprite.h).dp, height = height.dp),
             contentScale = ContentScale.FillBounds,
         )
+    } else if (sprite != null) {
+        // Hold the face's own width while it decodes, so the row does not jump when the image arrives.
+        Spacer(Modifier.size(width = (height * sprite.w / sprite.h).dp, height = height.dp))
     } else {
         Spacer(Modifier.size(height.dp))
     }

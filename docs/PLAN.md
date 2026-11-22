@@ -4,7 +4,7 @@ This document is the build plan. It records every decision made with berkley (th
 
 Status 2026-11-11: the v1 web build exists and the Android app is in progress; `docs/ROADMAP.md` says where things stand. This file is the 2026-09-13 handoff plan, trimmed the same day: sections 6 (engine rules), 12 (generator), 14 (gates) and 16a to 16f (roadmap items) are still the reference and are kept in full. Superseded sections (2, 3, 4, 7 to 10, 13, 15) are now one-paragraph pointers to the living doc that replaced them, with their headings kept so citations like "PLAN 6.3" still land. When this file and `docs/DECISIONS.md` disagree, DECISIONS wins.
 
-Note 2026-11-12 (S28): `packages/liftoscript`, `packages/run` and every `packages/engine` file except `availability.ts` were deleted; the logic they held lives in the Rust crates. The package paths below are history.
+Note 2026-11-12 (S28): `packages/liftoscript`, `packages/run` and every `packages/engine` file except `availability.ts` were deleted; the logic they held lives in the Rust crates. `availability.ts` went too on 2026-11-22, with the dead TS in `packages/core` (the package keeps the document types and the bumper color table). The package paths below are history.
 
 ## 1. Goal
 
