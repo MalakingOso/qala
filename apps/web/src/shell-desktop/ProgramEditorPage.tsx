@@ -16,8 +16,10 @@ import {
   linter,
   lintGutter,
 } from "@codemirror/lint";
-import { createBaselineDocument } from "../../../../packages/core/migrations.ts";
-import type { Lspp } from "../../../../packages/lspp/mod.ts";
+import {
+  BASELINE_CORE_SETTINGS,
+  type Lspp,
+} from "../../../../packages/lspp/mod.ts";
 import {
   caretAfterFormat,
   countIssues,
@@ -316,7 +318,7 @@ export function ProgramEditorPage() {
       return;
     }
     // The baseline settings, until real settings reach the web app.
-    const settings = api.settingsFromCore(createBaselineDocument().settings);
+    const settings = api.settingsFromCore(BASELINE_CORE_SETTINGS);
     if (!settings.ok) {
       setDry({ kind: "stopped", message: settings.message });
       return;

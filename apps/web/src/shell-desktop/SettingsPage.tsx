@@ -45,7 +45,6 @@ export function SettingsPage() {
           <PlateChips
             plates={s.plates.map((p) => p.weight)}
             inventory={s.plates}
-            mode="row"
             size={26}
           />
         </GroupRow>

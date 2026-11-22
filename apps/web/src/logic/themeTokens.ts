@@ -36,16 +36,6 @@ export function stripComments(css: string): string {
   return css.replace(/\/\*[\s\S]*?\*\//g, "");
 }
 
-/** Custom properties of the single rule whose selector matches `selector`
- * (a regex source; the first match wins). Comments are ignored. */
-export function blockVars(css: string, selector: string): Map<string, string> {
-  const m = stripComments(css).match(
-    new RegExp(`${selector}\\s*\\{([^}]*)\\}`, "s"),
-  );
-  if (!m) throw new Error(`missing ${selector} block in tokens.css`);
-  return declarations(m[1], selector);
-}
-
 function declarations(body: string, where: string): Map<string, string> {
   const vars = new Map<string, string>();
   const rest = body.replace(

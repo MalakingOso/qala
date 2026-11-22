@@ -17,7 +17,7 @@
  *           pieces: its lift added up under its run added up. */
 
 import type { WeekLoad, WeekLoadDay } from "../store/types.ts";
-import { type DayTime, dayTime, weekSummary } from "./weekRibbon.ts";
+import { weekSummary } from "./weekRibbon.ts";
 import { weekTotals } from "./weeklyLoad.ts";
 
 const DAY_NAMES = [
@@ -33,7 +33,6 @@ const DAY_NAMES = [
 export const DAYS_PER_WEEK = 7;
 export type Level = 0 | 1 | 2 | 3;
 export const LEVEL_LABELS = ["Day", "Week", "Month", "Block"] as const;
-export const LEVEL_NAMES = ["Day", "Week", "Month", "Block"] as const;
 
 /** How thick a bar may be at each level: thick where a slot is wide (a single
  * day, a whole week of the block), slimmer where many days share the chart. */
@@ -155,7 +154,6 @@ export interface BlockDay extends DayView {
   abs: number;
   /** Week index in the block, 0 to 5. */
   week: number;
-  time: DayTime;
   sessions: Session[];
   /** Lift and run load of the day, each the larger of done and planned. The
    * day's `size` is their sum: the pieces stack. */
@@ -247,7 +245,6 @@ export function blockModel(weeks: WeekLoad[]): BlockModel {
         size: liftSize + runSize,
         abs,
         week: wi,
-        time: dayTime(week, di),
         sessions: sessionsOf(week.days[di], v.today),
         liftSize,
         runSize,
@@ -938,12 +935,6 @@ export function hitAt(f: Frame, x: number): Hit | null {
 /* ---------- Captions, titles and tooltips ---------- */
 
 export interface Caption {
-  /** "Today", "Monday", "Week 2 · Monday" or "Week 3". */
-  when: string;
-  today: boolean;
-  /** The session, or at Day every session with its numbers. */
-  head: string;
-  nums: string;
   /** The whole line as plain text, for screen readers. */
   text: string;
 }
@@ -961,17 +952,11 @@ export function describeInspected(
   anchor: number,
 ): Caption {
   const day = model.days[clampDay(model, abs)];
-  if (!day) return { when: "", today: false, head: "", nums: "", text: "" };
+  if (!day) return { text: "" };
   const week = model.weeks[day.week];
   if (level > 2.5) {
     const head = week.deload ? "deload" : "";
-    return {
-      when: week.name,
-      today: week.relation === "current",
-      head,
-      nums: week.summary,
-      text: `${week.name} · ${join(head, week.summary)}`,
-    };
+    return { text: `${week.name} · ${join(head, week.summary)}` };
   }
   const rest = day.state === "rest";
   const when = day.today
@@ -993,13 +978,7 @@ export function describeInspected(
     head = day.session;
     nums = captionNums(day);
   }
-  return {
-    when,
-    today: day.today,
-    head,
-    nums,
-    text: `${when} · ${join(head, nums)}`,
-  };
+  return { text: `${when} · ${join(head, nums)}` };
 }
 
 /** The page title for the view: what the chart is showing. `level` is the
@@ -1170,7 +1149,7 @@ export function tableFor(model: BlockModel, level: Level, anchor: number) {
 
 /** The chart's name for assistive tech. */
 export function groupLabel(model: BlockModel, level: Level, anchor: number) {
-  return `Workout load, ${LEVEL_NAMES[level].toLowerCase()} view. ${
+  return `Workout load, ${LEVEL_LABELS[level].toLowerCase()} view. ${
     totalLine(model, level, anchor)
   }.`;
 }

@@ -83,9 +83,10 @@ if (check) {
     process.exit(1);
   }
   for (const s of Object.values(meta.sprites)) {
+    const wanted = await readFile(`${SRC_DIR}/${s.file}`);
     const bytes = await readFile(`${ASSETS}/${s.file}`).catch(() => null);
-    if (!bytes) {
-      console.error(`missing asset plates/${s.file}; run bun run gen:android`);
+    if (!bytes || !bytes.equals(wanted)) {
+      console.error(`asset plates/${s.file} is stale; run bun run gen:android`);
       process.exit(1);
     }
   }

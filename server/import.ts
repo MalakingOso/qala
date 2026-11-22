@@ -24,7 +24,11 @@ import {
   validateEditList,
   type WeightUnit,
 } from "../packages/llm/mod.ts";
-import type { LsppDiagnostic, LsppEvalError } from "../packages/lspp/mod.ts";
+import {
+  BASELINE_CORE_SETTINGS,
+  type LsppDiagnostic,
+  type LsppEvalError,
+} from "../packages/lspp/mod.ts";
 import exercises from "../crates/qala-lspp/data/exercises.json" with {
   type: "json",
 };
@@ -122,7 +126,6 @@ export async function liveImportDeps(
   baseUrl: string,
   fetchFn: typeof fetch = fetch,
 ): Promise<ImportRouteDeps> {
-  const { createBaselineDocument } = await import("../packages/core/mod.ts");
   const lspp = await loadLspp();
   const catalog: CatalogEntry[] = exercises.exercises.map((e) => ({
     id: e.id,
@@ -132,9 +135,9 @@ export async function liveImportDeps(
     transport: llamaTransport(baseUrl, fetchFn),
     catalog,
     validatorFor: (units) => {
-      const core = createBaselineDocument().settings;
-      core.units = { ...core.units, weight: units };
-      const settings = lspp.settingsFromCore(core);
+      const settings = lspp.settingsFromCore({
+        units: { ...BASELINE_CORE_SETTINGS.units, weight: units },
+      });
       // A wasm failure throws, so the pipeline reports "validator failed"
       // instead of passing the program unchecked.
       return (programText) => {

@@ -32,26 +32,28 @@ const PILLARS: Pillar[] = [
     tag: "Warm-up",
     title: "Warm-ups that are part of the plan",
     body:
-      "Easy cardio with its own countdown, then soft tissue and mobility " +
-      "chosen from what is sore and what equipment you own. Ramp sets " +
-      "live in the workout, where you load them.",
+      "You never have to guess how to warm up. Easy cardio with its own " +
+      "countdown, mobility picked for what is sore and what equipment you " +
+      "own, and ramp-up sets built right into the workout.",
   },
   {
     tag: "The app",
-    title: "A smooth, modern place to train",
+    title: "One clear step at a time",
     body:
-      "The native phone app and the desktop workspace share one engine. " +
-      "Check in, warm up, lift, rest, run: one primary action per screen, " +
-      "readable mid set, with sweaty hands.",
+      "No dashboards full of sliders before your first set. Check in, warm " +
+      "up, lift, rest, run: one primary action per screen on the phone, " +
+      "readable mid-set with sweaty hands, backed by a full desktop " +
+      "workspace whenever you want the bigger view.",
   },
   {
     tag: "Over months",
     title: "An app that grows with you",
     body:
-      "Each block fixes a reference 1RM to judge intensity against, and " +
-      "the engine tracks your e1RM and readiness against your own rolling " +
-      "baseline. Progression meets the lifter you are this month, not " +
-      "last season.",
+      "Start as a beginner with a proven plan and one screen at a time. As " +
+      "the months add up, the same engine tracks your strength trends, " +
+      "adapts to your recovery, and opens up a full program editor when " +
+      "you are ready to customize. You never have to graduate to another " +
+      "app.",
   },
   {
     tag: "Roadmap",
@@ -77,10 +79,9 @@ export function LandingLife() {
           Train through the weeks, not just the session.
         </h2>
         <p className="life-lede">
-          Fitness fatigue, e1RM and morning readiness move together, so a
-          hard day in one place is priced into the next in the other. The
-          same engine underneath keeps the count honest when life gets in
-          the way.
+          You don't need to know how to write a program or read a wall of
+          charts to train well. Qala handles the load math quietly in the
+          background and keeps the plan honest when life gets in the way.
         </p>
       </div>
       <div className="life-cards">

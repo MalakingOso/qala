@@ -276,9 +276,6 @@ export const sampleBlockWeeks: WeekLoad[] = [
   },
 ];
 
-/* The desktop ribbon's three weeks around week 3, the week in focus (U20). */
-export const sampleWeeks: WeekLoad[] = sampleBlockWeeks.slice(1, 4);
-
 /** Where the training block stands, for Overview's lede and the program page.
  * The deload is the last week of the block (Body's "Next planned: week 6"). */
 export const sampleBlock = {

@@ -1,10 +1,7 @@
 import { test } from "bun:test";
 import assert from "node:assert/strict";
 import {
-  acknowledge,
   deserialize,
-  enqueue,
-  nextBackoffMs,
   type QueuedOp,
 } from "./offlineQueue.ts";
 
@@ -17,18 +14,6 @@ function op(id: string): QueuedOp {
     attempts: 0,
   };
 }
-
-test("outbox keeps FIFO order and acknowledges by id", () => {
-  const q = enqueue(enqueue([], op("a")), op("b"));
-  assert.deepStrictEqual(q.map((o) => o.id), ["a", "b"]);
-  assert.deepStrictEqual(acknowledge(q, "a").map((o) => o.id), ["b"]);
-});
-
-test("backoff doubles and caps at 60s", () => {
-  assert.deepStrictEqual(nextBackoffMs(0), 1000);
-  assert.deepStrictEqual(nextBackoffMs(3), 8000);
-  assert.deepStrictEqual(nextBackoffMs(99), 60_000);
-});
 
 test("deserialize rejects garbage and keeps valid ops", () => {
   assert.deepStrictEqual(deserialize(null), []);

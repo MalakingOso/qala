@@ -14,19 +14,6 @@ export interface OutboxStorage {
   write(raw: string): void;
 }
 
-export function enqueue(queue: QueuedOp[], op: QueuedOp): QueuedOp[] {
-  return [...queue, op];
-}
-
-export function acknowledge(queue: QueuedOp[], id: string): QueuedOp[] {
-  return queue.filter((op) => op.id !== id);
-}
-
-/** Capped exponential backoff: 1s, 2s, 4s ... capped at 60s. */
-export function nextBackoffMs(attempts: number): number {
-  return Math.min(60_000, 1000 * 2 ** Math.max(0, attempts));
-}
-
 export function serialize(queue: QueuedOp[]): string {
   return JSON.stringify(queue);
 }

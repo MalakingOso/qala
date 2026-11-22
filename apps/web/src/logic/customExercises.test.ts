@@ -10,8 +10,8 @@ import {
   toLiftoscript,
   withCustomExercises,
 } from "./customExercises.ts";
-import { createBaselineDocument } from "../../../../packages/core/migrations.ts";
 import { loadLspp } from "../../../../server/lspp.ts";
+import { BASELINE_CORE_SETTINGS } from "../../../../packages/lspp/mod.ts";
 
 const draft = (over: Partial<CustomDraft> = {}): CustomDraft => ({
   name: "Zercher Hold",
@@ -124,7 +124,7 @@ Zercher Hold / 3x5 135lb
 
 test("the dry run resolves a custom exercise once it is merged in", async () => {
   const api = await loadLspp();
-  const bridged = api.settingsFromCore(createBaselineDocument().settings);
+  const bridged = api.settingsFromCore(BASELINE_CORE_SETTINGS);
   assert(bridged.ok);
 
   const plain = api.dryRun({ programText: PROGRAM, settings: bridged.value });

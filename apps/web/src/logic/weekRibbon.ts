@@ -20,14 +20,3 @@ export function weekSummary(week: WeekLoad): string {
   }
   return `${n(t.done)} done of ${n(t.planned)} planned`;
 }
-
-export type DayTime = "past" | "today" | "future";
-
-/** Whether a day is behind us, now, or still to come, for the whole ribbon. */
-export function dayTime(week: WeekLoad, dayIndex: number): DayTime {
-  if (week.relation === "past") return "past";
-  if (week.relation === "future") return "future";
-  const today = week.days.findIndex((d) => d.today);
-  if (today < 0) return "future";
-  return dayIndex < today ? "past" : dayIndex === today ? "today" : "future";
-}

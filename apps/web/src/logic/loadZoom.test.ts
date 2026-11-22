@@ -36,7 +36,7 @@ import {
   zoomTitle,
 } from "./loadZoom.ts";
 import { weekTotals } from "./weeklyLoad.ts";
-import { sampleBlockWeeks, sampleWeeks } from "../store/sample.ts";
+import { sampleBlockWeeks } from "../store/sample.ts";
 import type { WeekLoad } from "../store/types.ts";
 
 const box: Box = { width: 300, height: 88 };
@@ -83,7 +83,6 @@ test("the block has six weeks, 42 days and a deload at half of week 5", () => {
     "w3",
     "w4",
   ]);
-  assert.deepStrictEqual(sampleWeeks.map((w) => w.id), ["w2", "w3", "w4"]);
 });
 
 test("Week level stacks each day: lift under run, fill shares match describe()", () => {

@@ -43,8 +43,10 @@ test("range parsing follows bytes=start-end inclusive", () => {
   assert.deepStrictEqual(parseRange("bytes=90-", 100), { start: 90, end: 99 });
   assert.deepStrictEqual(parseRange("bytes=0-999", 100), { start: 0, end: 99 });
   assert.deepStrictEqual(parseRange("bytes=-10", 100), { start: 90, end: 99 });
-  assert.deepStrictEqual(parseRange("bytes=100-200", 100), null);
+  assert.deepStrictEqual(parseRange("bytes=100-200", 100), "unsatisfiable");
+  // Another unit, or an inverted range, is ignored and the whole file served.
   assert.deepStrictEqual(parseRange("items=0-9", 100), null);
+  assert.deepStrictEqual(parseRange("bytes=9-3", 100), null);
 });
 
 test("unpacked tiles serve 200, 206, and 404", async () => {

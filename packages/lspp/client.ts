@@ -38,6 +38,11 @@ export interface Lspp {
   settingsFromCore(coreSettings: unknown): LsppResult<unknown>;
 }
 
+/** What the Rust settings bridge reads of the core settings: the units. */
+export const BASELINE_CORE_SETTINGS = {
+  units: { weight: "lb", distance: "mi" },
+} as const;
+
 function fail<T>(kind: string, message: string): LsppResult<T> {
   return { ok: false, kind, message };
 }

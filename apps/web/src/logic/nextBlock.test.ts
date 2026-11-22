@@ -13,8 +13,10 @@ import {
   LSPP_EXERCISES,
   lsppExercise,
 } from "../../../../packages/generator/mod.ts";
-import { createBaselineDocument } from "../../../../packages/core/migrations.ts";
-import type { Lspp } from "../../../../packages/lspp/mod.ts";
+import {
+  BASELINE_CORE_SETTINGS,
+  type Lspp,
+} from "../../../../packages/lspp/mod.ts";
 import { loadLspp } from "../../../../server/lspp.ts";
 
 test("the input comes from the block and the lift estimates", () => {
@@ -71,7 +73,7 @@ test("an input the generator refuses comes back as a sentence", () => {
  * the baseline settings, as the Dry run card calls it. */
 
 function baseline(api: Lspp): unknown {
-  const settings = api.settingsFromCore(createBaselineDocument().settings);
+  const settings = api.settingsFromCore(BASELINE_CORE_SETTINGS);
   assert(settings.ok, settings.ok ? "" : settings.message);
   return settings.value;
 }

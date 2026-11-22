@@ -105,11 +105,6 @@ body[data-titlefont="faustina"] .figure {
   font-family: "Faustina", Georgia, serif;
 }
 
-.page {
-  max-width: 560px;
-  margin: 0 auto;
-  padding: 0 20px calc(72px + env(safe-area-inset-bottom) + 32px);
-}
 .page-desktop {
   min-height: 100dvh;
 }
@@ -279,32 +274,6 @@ button.chip:hover {
   color: var(--bg-surface);
 }
 
-.seg {
-  display: flex;
-  border: var(--border-width) solid var(--border);
-  border-radius: var(--radius);
-  overflow: hidden;
-  margin-bottom: 20px;
-}
-.seg button {
-  flex: 1;
-  border: none;
-  background: var(--bg-surface);
-  padding: 12px 8px;
-  min-height: 44px;
-  min-width: 0;
-  color: var(--fg-secondary);
-  cursor: pointer;
-}
-.seg button[aria-selected="true"] {
-  background: var(--bg-active);
-  color: var(--fg);
-  font-weight: 500;
-}
-.seg button + button {
-  border-left: var(--border-width) solid var(--border);
-}
-
 .toggle {
   width: 52px;
   height: 32px;
@@ -338,14 +307,6 @@ button.chip:hover {
   font-family: "DM Mono", monospace;
   font-size: 10px;
   color: var(--fg-secondary);
-}
-.chip-num {
-  position: absolute;
-  transform: translate(-50%, -50%);
-  font-family: "DM Mono", monospace;
-  font-weight: 500;
-  line-height: 1;
-  text-shadow: 0 0 1px rgba(0, 0, 0, .25);
 }
 .plate-discs {
   position: relative;
@@ -1749,35 +1710,9 @@ table.data tr.row-link a:focus-visible {
   margin: 0;
 }
 
-/* Phone flow screens (workout, rest, warm-up): a compact header with the
- * session clock and Finish, then one card that holds the task. */
-.ex-nav {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  margin-top: 16px;
-}
-.ex-nav .btn-secondary {
-  min-width: 0;
-  font-size: 12px;
-  padding: 0 12px;
-}
-.ex-nav .btn-secondary span {
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-.ex-nav .btn-secondary:first-child {
-  justify-content: flex-start;
-}
-.ex-nav .btn-secondary:last-child {
-  justify-content: flex-end;
-}
 .banner .why {
   margin: 0;
 }
-
-/* Form fields on phone cards. */
 
 /* Skipping a day and the training status (DESIGN 7.18). */
 .btn-primary:disabled {
@@ -1786,23 +1721,6 @@ table.data tr.row-link a:focus-visible {
   cursor: not-allowed;
 }
 
-.ex-row {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-.ex-row strong {
-  font-weight: 500;
-}
-.question {
-  margin: 20px 0 0;
-  color: var(--fg-secondary);
-  font-size: 13px;
-}
-.card-title + .question {
-  margin-top: 0;
-}
 
 /* Warm-up steps. */
 .gear-img {
@@ -1893,73 +1811,6 @@ table.data tr.row-link a:focus-visible {
   font-variant-numeric: tabular-nums;
 }
 
-/* Run screens. */
-.run-status {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-}
-.run-status-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  color: var(--fg-secondary);
-}
-.run-status-item.ok svg {
-  color: var(--success);
-}
-.run-why {
-  display: flex;
-  gap: 8px;
-  align-items: flex-start;
-  margin: 16px 0 20px;
-  font-size: 13px;
-  color: var(--fg-secondary);
-}
-.run-why svg {
-  margin-top: 3px;
-  color: var(--run);
-}
-.run-state {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--fg-muted);
-}
-.run-state.recording {
-  color: var(--danger);
-}
-.run-state::before {
-  content: "";
-  width: 8px;
-  height: 8px;
-  background: currentColor;
-}
-.run-figures {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px 8px;
-  margin: 0;
-}
-.run-figures > div {
-  display: flex;
-  flex-direction: column-reverse;
-}
-.run-figures dd {
-  margin: 0;
-  font-size: 26px;
-  line-height: 1.1;
-}
-.run-figures dt {
-  font-size: 11px;
-  color: var(--fg-muted);
-}
-
 /* Coach thread. */
 .memory-list {
   list-style: none;
@@ -2019,11 +1870,6 @@ table.data tr.row-link a:focus-visible {
   }
   .landing-hero h1 {
     font-size: clamp(42px, 9vw, 64px);
-  }
-}
-@media (max-width: 380px) {
-  .page {
-    padding-inline: 12px;
   }
 }
 @media (prefers-reduced-motion: reduce) {

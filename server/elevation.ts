@@ -1,11 +1,7 @@
 // Server-side elevation (docs/PLAN.md section 8a): Copernicus GLO-30 lookup for
-// the filtered run track (GPS altitude is never used), with a 3 m hysteresis
-// band for gain so barometer-style noise does not inflate climbing.
+// the filtered run track (GPS altitude is never used).
 
 import { stat } from "node:fs/promises";
-
-/** Hysteresis band in metres: smaller swings are treated as noise. */
-export const ELEVATION_HYSTERESIS_M = 3;
 
 /**
  * GLO-30 tile name covering `lat`/`lon`. Tiles are 1x1 degree, named like
@@ -52,67 +48,4 @@ export async function lookupElevation(
   }
   // Tile present but no decoder yet; see TODO above.
   return null;
-}
-
-export interface ElevationSummary {
-  gainM: number;
-  lossM: number;
-  samples: number;
-}
-
-/**
- * Climb and descent with a hysteresis band: only accumulated movement beyond
- * the band commits to gain/loss, so small oscillations around a level do not
- * count. Null samples (no DEM coverage) are skipped without resetting.
- */
-export function elevationGain(
-  elevations: ReadonlyArray<number | null>,
-  hysteresisM = ELEVATION_HYSTERESIS_M,
-): ElevationSummary {
-  let gainM = 0;
-  let lossM = 0;
-  let samples = 0;
-  let ref: number | null = null;
-  for (const e of elevations) {
-    if (e === null || !Number.isFinite(e)) continue;
-    samples += 1;
-    if (ref === null) {
-      ref = e;
-      continue;
-    }
-    if (e - ref >= hysteresisM) {
-      gainM += e - ref;
-      ref = e;
-    } else if (ref - e >= hysteresisM) {
-      lossM += ref - e;
-      ref = e;
-    }
-  }
-  return { gainM, lossM, samples };
-}
-
-export interface TrackPoint {
-  lat: number;
-  lon: number;
-  alt?: number | null;
-}
-
-/**
- * Fill `alt` for each track point from the DEM and summarise climb/descent.
- * Points without coverage keep `alt: null` and are skipped by the gain math.
- */
-export async function enrichTrackWithElevation(
-  track: TrackPoint[],
-  demDir: string,
-  hysteresisM = ELEVATION_HYSTERESIS_M,
-): Promise<{ track: TrackPoint[]; summary: ElevationSummary }> {
-  const out: TrackPoint[] = [];
-  for (const p of track) {
-    out.push({ ...p, alt: await lookupElevation(p.lat, p.lon, demDir) });
-  }
-  const summary = elevationGain(
-    out.map((p) => p.alt ?? null),
-    hysteresisM,
-  );
-  return { track: out, summary };
 }

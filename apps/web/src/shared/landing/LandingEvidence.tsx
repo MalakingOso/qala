@@ -114,14 +114,13 @@ const TABS: Tab[] = [
     label: "Lifting",
     title: "Plan, log and progress your lifts",
     body:
-      "The program, the day's session and the trend all come from the same " +
-      "engine — edit the plan in plain text on desktop, log every set on " +
-      "the phone.",
+      "Start with a built-in beginner plan or edit your own in plain text on " +
+      "desktop, then log every set on the phone from the same engine.",
     bullets: [
-      "A readable LS++ program, edited with a live week preview",
-      "Today's top set with readiness and the reason it moved",
-      "Per-set RPE, a self-adjusting rest timer and a plate calculator",
-      "e1RM tracked against the block's fixed reference 1RM",
+      "Built-in starter plans, plus a plain-text LS++ editor with a live week preview",
+      "Today's working sets with readiness and the reason any weight moved",
+      "A plate calculator that shows what to load, a self-adjusting rest timer and per-set RPE",
+      "Estimated maxes (e1RM) tracked over each block so you can see real progress",
     ],
     phone: {
       img: phoneWorkout,
@@ -149,8 +148,8 @@ const TABS: Tab[] = [
       "off.",
     bullets: [
       "Guided runs with GPS and audio cues, screen off",
-      "sRPE and rTSS counted beside your lifting load",
-      "VDOT and running fitness tracked over the block",
+      "Run effort and training stress (sRPE, rTSS) counted beside your lifting",
+      "Running fitness (VDOT) tracked over the block",
       "A long run lowers the next squat day's expectation",
     ],
     phone: {
@@ -174,9 +173,9 @@ const TABS: Tab[] = [
     label: "Coach",
     title: "A local coach that shows its work",
     body:
-      "Coach answers the why, proposes changes inside the engine's limits " +
-      "and remembers what matters — and every suggestion passes the same " +
-      "clamped envelope as the engine before you accept it.",
+      "Ask why today's weight moved or what to do when something feels off. " +
+      "Coach answers in plain language, remembers what matters, and stays " +
+      "inside the engine's safe limits before you accept any change.",
     bullets: [
       "Runs on your own hardware, no cloud",
       "Suggested loads beside the engine's, with reasoning",
@@ -236,10 +235,10 @@ export function LandingEvidence() {
           A reason behind every number.
         </h2>
         <p className="evidence-lede">
-          Qala's engine is not a black box. Every load it moves traces back to
-          published training research — the same models and rules used by
-          coaches and sport scientists — and the app shows you the reasoning,
-          not just the result.
+          Serious training should not be reserved for competitive lifters. You
+          do not have to learn the math below to use Qala — it runs quietly for
+          you from day one, grounded in published research, and shows its
+          reasoning on screen whenever you are curious.
         </p>
       </div>
 

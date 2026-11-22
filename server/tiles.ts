@@ -8,10 +8,6 @@ import { stat } from "node:fs/promises";
 const PMTILES_TYPE = "application/octet-stream";
 const MVT_TYPE = "application/vnd.mapbox-vector-tile";
 
-export interface TilesOptions {
-  tilesDir: string;
-}
-
 /** Resolve a tile request path inside `tilesDir`, or null when it escapes. */
 export function resolveTilePath(
   tilesDir: string,
@@ -47,27 +43,28 @@ interface RangeSpec {
   end: number; // inclusive
 }
 
-/** Parse a single `bytes=start-end` range against `size`, or null. */
+/**
+ * Parse a single `bytes=a-b`, `a-` or `-n` range against `size`. Null means
+ * serve the whole file: no header, another unit, or syntax we do not
+ * understand, which RFC 9110 lets us ignore.
+ */
 export function parseRange(
   header: string | null,
   size: number,
-): RangeSpec | null {
+): RangeSpec | "unsatisfiable" | null {
   if (header === null) return null;
-  const m = header.trim().match(/^bytes=(\d*)-(\d*)$/);
-  if (!m) return null;
-  const [, startStr, endStr] = m;
-  if (startStr === "" && endStr === "") return null;
-  if (startStr === "") {
-    // Suffix range: last N bytes.
-    const n = Number(endStr);
-    if (!Number.isSafeInteger(n) || n <= 0) return null;
-    if (n >= size) return { start: 0, end: size - 1 };
-    return { start: size - n, end: size - 1 };
+  const m = /^bytes=(\d*)-(\d*)$/.exec(header.trim());
+  if (!m || (m[1] === "" && m[2] === "")) return null;
+  if (m[1] === "") {
+    // Suffix range: last n bytes.
+    const n = Number(m[2]);
+    if (n === 0 || size === 0) return "unsatisfiable";
+    return { start: Math.max(0, size - n), end: size - 1 };
   }
-  const start = Number(startStr);
-  if (!Number.isSafeInteger(start) || start >= size) return null;
-  const end = endStr === "" ? size - 1 : Math.min(Number(endStr), size - 1);
-  if (!Number.isSafeInteger(end) || end < start) return null;
+  const start = Number(m[1]);
+  if (start >= size) return "unsatisfiable";
+  const end = m[2] === "" ? size - 1 : Math.min(Number(m[2]), size - 1);
+  if (end < start) return null;
   return { start, end };
 }
 
@@ -96,7 +93,7 @@ export async function serveTileFile(
   const baseHeaders = { "content-type": type, "accept-ranges": "bytes" };
 
   const range = parseRange(req.headers.get("range"), size);
-  if (req.headers.get("range") !== null && range === null) {
+  if (range === "unsatisfiable") {
     return Response.json(
       { error: "invalid range" },
       { status: 416, headers: { "content-range": `bytes */${size}` } },

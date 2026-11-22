@@ -30,28 +30,8 @@ interface Sprite {
 const SPRITES = meta.sprites as Record<string, Sprite>;
 const BASE = `${import.meta.env.BASE_URL}plates/`;
 
-/** Thickness in inches (what the renders used). */
-const THICK: Record<string, number> = {
-  "55": 3.3,
-  "45": 2.9,
-  "35": 2.3,
-  "25": 1.67,
-  "10": 0.94,
-  "5": 0.75,
-  "2.5": 0.6,
-  "1.25": 0.5,
-};
-const DIAMETER: Record<string, number> = {
-  "55": 17.7,
-  "45": 17.7,
-  "35": 17.7,
-  "25": 17.7,
-  "10": 17.7,
-  "5": 9,
-  "2.5": 6.5,
-  "1.25": 5,
-};
-const RENDERED = Object.keys(THICK).map(Number).sort((a, b) => a - b);
+/** The weights that have a render. */
+const RENDERED = [1.25, 2.5, 5, 10, 25, 35, 45, 55];
 const COLORS = [
   "red",
   "blue",
@@ -64,7 +44,7 @@ const COLORS = [
 
 /** The plate size to draw for a weight: itself, or the nearest rendered one. */
 function sizeKey(weight: number): string {
-  if (THICK[String(weight)] !== undefined) return String(weight);
+  if (RENDERED.includes(weight)) return String(weight);
   const near = RENDERED.reduce((a, b) =>
     Math.abs(b - weight) < Math.abs(a - weight) ? b : a
   );
@@ -83,14 +63,13 @@ function colorName(weight: number, inventory?: PlateEntry[]): string {
 
 /** The sprite for a plate, in its color if rendered, else the nearest. */
 function plateSprite(
-  prefix: "plate" | "face",
   weight: number,
   inventory?: PlateEntry[],
 ): Sprite | undefined {
   const k = sizeKey(weight);
   const want = colorName(weight, inventory);
   for (const c of [want, "charcoal", "silver", "blue"]) {
-    const s = SPRITES[`${prefix}_${k}_${c}`];
+    const s = SPRITES[`face_${k}_${c}`];
     if (s) return s;
   }
   return undefined;
@@ -100,69 +79,29 @@ function fmt(n: number) {
   return String(Math.round(n * 100) / 100);
 }
 
-/** Small plates for lists and shorthand, from the nearly face-on renders.
- *
- * - `stack` (default): the plates for one side, each in front of the last, in
- *   their real relative sizes, with the weight printed on the outermost one.
- * - `row`: separate plates side by side, all the same size, each numbered, for
- *   listing different plates (settings).
- * - `single`: one plate at the same size whatever its weight, no number, for a
- *   row that already says the weight in words (inventory). */
+/** Small plates for a list, from the nearly face-on renders: separate plates
+ * side by side, all the same size, each with its weight under it (settings). */
 export function PlateChips(
-  { plates, inventory, mode = "stack", size }: {
+  { plates, inventory, size = 30 }: {
     plates: number[];
     inventory?: PlateEntry[];
-    mode?: "stack" | "row" | "single";
-    /** css px height of a full-size plate */
+    /** css px height of a plate */
     size?: number;
   },
 ) {
   if (plates.length === 0) return <span className="kbd-hint">bar only</span>;
-  const uniform = mode !== "stack";
-  const BIG = size ?? (mode === "row" ? 30 : mode === "single" ? 38 : 38);
-  const ppi = meta.face_px_per_in ?? 10.1;
-  const kFull = BIG / (17.7 * ppi);
   let x = 0;
-  const prev: number[] = []; // widths of the plates already placed
+  let prev = 0; // width of the plate before
   const items = plates.map((w, i) => {
-    const sp = plateSprite("face", w, inventory);
-    const d = DIAMETER[sizeKey(w)] ?? 17.7;
-    // stacked plates keep their real relative sizes; listed ones are all the same
-    const k = uniform && sp ? BIG / sp.h : kFull;
-    const wpx = sp ? sp.w * k : 0;
-    if (i > 0) {
-      x += uniform ? prev[i - 1] + 5 : d < 17
-        // a small iron plate sits out beyond the bumpers, clear of them, so
-        // it reads as a plate and not as a hole in the one behind
-        ? Math.max(8, prev[i - 1] * 0.78)
-        : plates[i - 1] === w
-        ? 8 // a pair pressed together
-        : Math.max(
-          8,
-          (THICK[sizeKey(plates[i - 1])] * 0.8 * 2 + (d / 17.7) * 7) * 0.9,
-        );
-    }
-    const item = {
-      w,
-      sp,
-      k,
-      x,
-      wpx,
-      small: d < 17,
-      ink: ["white", "silver"].includes(colorName(w, inventory))
-        ? "#0f152a"
-        : "#fff",
-    };
-    prev[i] = wpx;
-    return item;
+    const sp = plateSprite(w, inventory);
+    const k = sp ? size / sp.h : 0;
+    if (i > 0) x += prev + 5;
+    prev = sp ? sp.w * k : 0;
+    return { w, sp, k, x, wpx: prev };
   });
   const width = Math.max(...items.map((it) => it.x + it.wpx));
-  const H = BIG + 4;
-  const LABEL = mode === "row" ? 12 : 0; // weights go under listed plates
-  // Stacked plates print the weight on the outermost one, if it is a bumper
-  // (a small iron plate has no room beside its hub).
-  // No numbers on a stack: the weights are always written beside or under it.
-  const numbered = (_i: number) => false;
+  const H = size + 4;
+  const LABEL = 12; // weights go under the plates
   return (
     <span
       className="plate-discs"
@@ -192,36 +131,17 @@ export function PlateChips(
                 height={it.sp.h * it.k}
                 style={{ display: "block", maxWidth: "none" }}
               />
-              {mode === "row"
-                ? (
-                  <span
-                    className="plate-under"
-                    style={{
-                      left: "50%",
-                      top: it.sp.h * it.k + 1,
-                      zIndex: 1,
-                      color: "var(--fg-secondary)",
-                    }}
-                  >
-                    {fmt(it.w)}
-                  </span>
-                )
-                : null}
-              {numbered(i)
-                ? (
-                  <span
-                    className="chip-num"
-                    style={{
-                      color: it.ink,
-                      left: "25%",
-                      top: "50%",
-                      fontSize: Math.max(7, BIG * 0.22),
-                    }}
-                  >
-                    {fmt(it.w)}
-                  </span>
-                )
-                : null}
+              <span
+                className="plate-under"
+                style={{
+                  left: "50%",
+                  top: it.sp.h * it.k + 1,
+                  zIndex: 1,
+                  color: "var(--fg-secondary)",
+                }}
+              >
+                {fmt(it.w)}
+              </span>
             </span>
           )
           : null

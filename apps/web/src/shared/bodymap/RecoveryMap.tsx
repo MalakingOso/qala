@@ -12,7 +12,6 @@
 
 import { useRef, useState } from "react";
 import { ChartShell } from "../charts/ChartShell.tsx";
-import { SegmentedControl } from "../ui.tsx";
 import { BODY } from "./data.ts";
 import { BodyMap, type MuscleStyle } from "./BodyMap.tsx";
 
@@ -74,25 +73,19 @@ function nameOf(view: "front" | "back", id: string) {
   return view === "front" && id === "back" ? "Traps" : NAMES[id] ?? id;
 }
 
-export function RecoveryMap({ muscles, now = new Date(), flat, both }: {
+export function RecoveryMap({ muscles, now = new Date(), flat }: {
   muscles: MuscleRecovery[];
   now?: Date;
   /** Skip the card chrome when a parent card supplies it. */
   flat?: boolean;
-  /** Draw the front and back side by side instead of behind a toggle
-   * (the desktop lede, DECISIONS U21). */
-  both?: boolean;
 }) {
   // Longest recovery first: the order you step through with the arrows.
   const order = [...muscles].sort((a, b) => b.hours - a.hours);
-  const [view, setView] = useState<"front" | "back">("front");
   const [sel, setSel] = useState(order[0]?.id ?? "");
   const byId = new Map(muscles.map((m) => [m.id, m]));
 
   function pick(id: string) {
     setSel(id);
-    const here = BODY[view].parts.some((p) => p.id === id && p.anchors);
-    if (!here) setView(view === "front" ? "back" : "front");
   }
   function step(by: number) {
     const i = order.findIndex((m) => m.id === sel);
@@ -138,8 +131,6 @@ export function RecoveryMap({ muscles, now = new Date(), flat, both }: {
         <BodyMap
           view={v}
           muscles={styles}
-          label=""
-          asGroup
           onSelect={(id) => byId.has(id) && pick(id)}
         />
         {L.callouts.map((c) => {
@@ -221,37 +212,10 @@ export function RecoveryMap({ muscles, now = new Date(), flat, both }: {
           .join(", ")
       }.`}
     >
-      {both
-        ? (
-          <div className="map-pair">
-            {renderMap("front")}
-            {renderMap("back")}
-          </div>
-        )
-        : (
-          <>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                whiteSpace: "nowrap",
-              }}
-            >
-              <SegmentedControl
-                label="Body view"
-                value={view}
-                onPick={setView}
-                options={[{ value: "front", label: "Front" }, {
-                  value: "back",
-                  label: "Back",
-                }]}
-              />
-            </div>
-            <div style={{ maxWidth: 480, margin: "20px auto 0" }}>
-              {renderMap(view)}
-            </div>
-          </>
-        )}
+      <div className="map-pair">
+        {renderMap("front")}
+        {renderMap("back")}
+      </div>
       <div
         aria-hidden="true"
         style={{
@@ -284,7 +248,7 @@ export function RecoveryMap({ muscles, now = new Date(), flat, both }: {
       </div>
       {byId.has(sel) && (
         <DecayPanel
-          name={both && sel === "back" ? "Back" : nameOf(view, sel)}
+          name={sel === "back" ? "Back" : nameOf("front", sel)}
           hours={byId.get(sel)!.hours}
           index={order.findIndex((m) => m.id === sel)}
           count={order.length}

@@ -25,7 +25,7 @@ export function DesktopBodyPage() {
         } above your low line · average ${sampleReadiness.avg}`}
         title="Body"
       >
-        <RecoveryMap flat both muscles={sampleRecovery} />
+        <RecoveryMap flat muscles={sampleRecovery} />
       </PageHeader>
       <div className="two-col even">
         <ReadinessLine

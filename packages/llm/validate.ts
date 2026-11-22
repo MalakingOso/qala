@@ -53,11 +53,6 @@ export interface ValidateOptions {
   kind?: string;
   promptHash?: string;
   date?: string;
-  /**
-   * When true, out-of-envelope numbers discard instead of clamping.
-   * Default false: clamp per PLAN 11 ("clamped/discarded and logged").
-   */
-  strict?: boolean;
 }
 
 /** FNV-1a 32-bit hash, hex encoded. Sync stand-in for a prompt hash. */
@@ -156,7 +151,6 @@ export function validateEnvelopeAdjustment(
     reason: reason.trim(),
   };
   if (isOutOfEnvelope(adj, env)) {
-    if (opts.strict) return discard(raw, opts, "out of envelope (strict)");
     const clamped: EnvelopeAdjustment = {
       weightPct: clampWeightPct(adj.weightPct, env),
       sets: clampSets(adj.sets, env),
@@ -360,12 +354,4 @@ export function classifyCoachTopic(text: string): TopicVerdict {
   if (!inHit || outHit) return { inScope: false, topics: [] };
   const topics = COACH_TOPICS.filter((t) => lower.includes(t));
   return { inScope: true, topics: topics.length > 0 ? topics : ["training"] };
-}
-
-export function isCoachTopic(text: string): boolean {
-  return classifyCoachTopic(text).inScope;
-}
-
-export function declineResponse(): { message: string } {
-  return { message: DECLINE_TEXT };
 }

@@ -2,7 +2,12 @@
 // The wasm itself is built by `bun run build:wasm` and loaded by the host;
 // this package never loads it.
 
-export { createLspp, type Lspp, MAX_LSPP_TEXT_CHARS } from "./client.ts";
+export {
+  BASELINE_CORE_SETTINGS,
+  createLspp,
+  type Lspp,
+  MAX_LSPP_TEXT_CHARS,
+} from "./client.ts";
 export type {
   LsppDiagnostic,
   LsppDryExercise,

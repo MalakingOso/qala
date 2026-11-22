@@ -64,34 +64,6 @@ export function Toggle(
   );
 }
 
-export function SegmentedControl<T extends string>({
-  options,
-  value,
-  onPick,
-  label,
-}: {
-  options: { value: T; label: string }[];
-  value: T;
-  onPick: (v: T) => void;
-  label: string;
-}) {
-  return (
-    <div className="seg" role="tablist" aria-label={label}>
-      {options.map((o) => (
-        <button
-          key={o.value}
-          type="button"
-          role="tab"
-          aria-selected={o.value === value}
-          onClick={() => onPick(o.value)}
-        >
-          {o.label}
-        </button>
-      ))}
-    </div>
-  );
-}
-
 /** One way to pick a value on a scale: recovery, soreness, RPE, effort,
  * theme. A single bordered strip; the picked cell fills with ink. Anchors
  * name the ends of the scale. */
@@ -146,13 +118,9 @@ export function ScalePicker<T extends string | number>({
 export function MemoryProposalList({
   memory,
   decideMemory,
-  acceptedLabel = "Accepted.",
-  rejectedLabel = "Rejected.",
 }: {
   memory: MemoryProposal[];
   decideMemory: (id: string, accept: boolean) => void;
-  acceptedLabel?: string;
-  rejectedLabel?: string;
 }) {
   return (
     <ul className="memory-list">
@@ -181,7 +149,7 @@ export function MemoryProposalList({
             )
             : (
               <p className="memory-done">
-                {m.accepted ? acceptedLabel : rejectedLabel}
+                {m.accepted ? "Accepted." : "Rejected."}
               </p>
             )}
         </li>

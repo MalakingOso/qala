@@ -12,8 +12,10 @@ import type {
   MuscleGroup,
   RestClass,
 } from "../../../../packages/core/exerciseTypes.ts";
-import { createBaselineDocument } from "../../../../packages/core/migrations.ts";
-import type { Lspp } from "../../../../packages/lspp/mod.ts";
+import {
+  BASELINE_CORE_SETTINGS,
+  type Lspp,
+} from "../../../../packages/lspp/mod.ts";
 
 /** The Exercises page's equipment chips, which the form offers too. */
 export type CustomEquipment = Extract<
@@ -226,7 +228,7 @@ export function isBuiltIn(
   api: Pick<Lspp, "dryRun" | "settingsFromCore">,
   name: string,
 ): boolean | null {
-  const settings = api.settingsFromCore(createBaselineDocument().settings);
+  const settings = api.settingsFromCore(BASELINE_CORE_SETTINGS);
   if (!settings.ok) return null;
   const r = api.dryRun({
     programText: lookupProgram(name),

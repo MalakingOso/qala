@@ -152,21 +152,22 @@ export function LandingPage() {
         <section className="landing-hero">
           <div className="landing-copy">
             <p className="group-label page-eyebrow">
-              Lifting + running / one adaptive plan
+              Lifting + running / built to start with
             </p>
             <h1 className="title">
-              Train with<br />the whole picture.
+              Serious training,<br />without the overwhelm.
             </h1>
             <p className="landing-intro">
-              Your barbell work, your runs, and the recovery between them, in
-              one plan. A local engine reads each logged set and check-in, then
-              moves today's loads — and tells you why.
+              Most serious training apps assume you already know how to program.
+              Most beginner apps are built to be outgrown. Qala gives you one
+              calm plan for your lifting and running — clear enough for a
+              beginner, and deep enough to grow with you for years.
             </p>
             <p className="landing-evidence">
-              No black box. The engine follows the published training
-              literature: a fitness-fatigue model, per-muscle recovery on its
-              own time constant, and RPE-based autoregulation. The reasoning
-              behind every adjustment is on screen.
+              You check in and follow today's session. Underneath, a local
+              engine grounded in published training research adjusts your loads
+              as you recover and get stronger — and explains every change in
+              plain language, so you learn as you go.
             </p>
             <div className="landing-actions">
               <a

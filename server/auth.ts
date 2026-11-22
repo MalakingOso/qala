@@ -36,20 +36,6 @@ export function requireUser(req: Request): string {
   return userId;
 }
 
-/**
- * Throw a 403 unless `docId` is the document owned by `userId`.
- * `ownedDocId` is the document id recorded for the user (null when unknown).
- */
-export function requireDocOwnership(
-  userId: string,
-  docId: string,
-  ownedDocId: string | null,
-): void {
-  if (ownedDocId === null || docId !== ownedDocId) {
-    throw new AuthError(403, `document not owned by user ${userId}`);
-  }
-}
-
 /** True for loopback hosts: 127.0.0.0/8, ::1, localhost. */
 export function isLoopbackHost(hostname: string): boolean {
   const h = hostname.trim().toLowerCase().replace(/^\[|\]$/g, "");
@@ -68,15 +54,6 @@ export function assertLoopbackBind(hostname: string): void {
   if (!isLoopbackHost(hostname)) {
     throw new Error(`refusing non-loopback bind: ${hostname}`);
   }
-}
-
-/**
- * WebSocket upgrade policy. Origin is ignored; identity comes from
- * `Tailscale-User-Login`. A request with the header is accepted whatever its
- * Origin (or none), and a request without it is rejected.
- */
-export function checkWsUpgrade(req: Request): { userId: string } {
-  return { userId: requireUser(req) };
 }
 
 /** Convert an AuthError (or anything else) into an HTTP response. */

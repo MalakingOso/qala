@@ -23,7 +23,6 @@ export function TrendPlot(
     axisLabel,
     axisHint,
     height = 224,
-    compact = false,
   }: {
     points: TrendPoint[];
     domain?: [number, number];
@@ -35,7 +34,6 @@ export function TrendPlot(
     /** Plain-language meaning of the axis, shown on hover and focus. */
     axisHint?: string;
     height?: number;
-    compact?: boolean;
   },
 ) {
   const [active, setActive] = useState<number | null>(null);
@@ -52,9 +50,9 @@ export function TrendPlot(
     <>
       <Plot height={height}>
         {(width) => {
-          const left = compact ? 8 : axisLabel ? 58 : 38;
+          const left = axisLabel ? 58 : 38;
           const right = 16;
-          const bottom = compact ? 12 : 32;
+          const bottom = 32;
           const x = scalePoint<number>({
             domain: points.map((_, i) => i),
             range: [left + 8, Math.max(left + 9, width - right)],
@@ -80,7 +78,7 @@ export function TrendPlot(
                 role="presentation"
                 onPointerLeave={() => setActive(null)}
               >
-                {!compact && y.ticks(4).map((tick) => (
+                {y.ticks(4).map((tick) => (
                   <g key={tick}>
                     <line
                       x1={left}
@@ -100,7 +98,7 @@ export function TrendPlot(
                     </text>
                   </g>
                 ))}
-                {!compact && axisLabel && (
+                {axisLabel && (
                   <g
                     role="img"
                     aria-label={axisHint ?? axisLabel}
@@ -207,8 +205,7 @@ export function TrendPlot(
                           />
                         )}
                       </g>
-                      {!compact &&
-                        (i % labelStep === 0 &&
+                      {(i % labelStep === 0 &&
                             i < points.length - Math.ceil(labelStep / 2) ||
                           last) &&
                         (
