@@ -94,7 +94,7 @@ fun Screen(
             WorkoutScreen(programDay(today), onBack, onRest = { onPush(Route.Rest) }, onAllExercises = { onPush(Route.AllExercises) }, onWarmup = { onPush(Route.WarmUp) }, onFinished = { onPush(Route.SessionComplete) })
         }
         Route.Rest -> OnSoftWash { RestScreen(onBack, onAllExercises = { onPush(Route.AllExercises) }) }
-        Route.Run -> Plain(scroll, topBar) { RunRoute(snapshot, onBack) }
+        Route.Run -> RunRoute(snapshot, onBack)
         Route.AllExercises -> OnSoftWash { AllExercisesScreen(programDay(today), onBack, onWorkout = { onPush(Route.Workout) }) }
     }
 }
