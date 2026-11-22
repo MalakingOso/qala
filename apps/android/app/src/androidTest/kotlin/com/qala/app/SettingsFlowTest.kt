@@ -121,7 +121,7 @@ class SettingsFlowTest {
         rule.onNodeWithContentDescription("35 lb").performScrollTo().performClick()
         waitFor { runBlocking { container.settings.gym.first().plates.defaultBar } == 35.0 }
 
-        rule.onNodeWithContentDescription("Open plate calculator").performClick()
+        rule.onNodeWithContentDescription("Open plate calculator").performScrollTo().performSemanticsAction(SemanticsActions.OnClick)
         waitForText("35 bar + 2 × 105 = 245")                                                  // 245 on the 35 lb bar, planned by the Rust math
         rule.onNode(hasContentDescription("35") and isSelected()).assertExists()
         assertTrue("the 45 cell is not the picked one", rule.onAllNodes(hasContentDescription("45") and isSelected()).fetchSemanticsNodes().isEmpty())
@@ -132,7 +132,7 @@ class SettingsFlowTest {
     fun theInventoryIsEditedWhereEditPlatesLandsAndTheCalculatorPlansOnIt() = runBlocking {
         val container = container()
         openSettings(container)
-        rule.onNodeWithContentDescription("Open plate calculator").performClick()
+        rule.onNodeWithContentDescription("Open plate calculator").performScrollTo().performSemanticsAction(SemanticsActions.OnClick)
         waitForText("45 bar + 2 × 100 = 245")
         assertTrue("the default inventory loads 245 with a ten", container.settings.gym.first().plates.pairsOf(10.0) == PlatePairs.Enough)
 
@@ -155,7 +155,7 @@ class SettingsFlowTest {
         rule.onNodeWithContentDescription("Back").performScrollTo().performClick()
         railSays("Day stages: check-in now, 0 of 6 done")
         rule.onNodeWithContentDescription("Settings").performClick()
-        rule.onNodeWithContentDescription("Open plate calculator").performClick()
+        rule.onNodeWithContentDescription("Open plate calculator").performScrollTo().performSemanticsAction(SemanticsActions.OnClick)
         waitForText("55 · 45 on each side", substring = true)                                   // 245 is now a 55 and a 45 a side
         rule.onNodeWithText("55 lb").performScrollTo().assertExists()                           // and the calculator lists the saved inventory, 55s included
         container.database.close()
