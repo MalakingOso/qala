@@ -22,7 +22,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -110,8 +110,9 @@ private fun Sub(text: String) {
     QalaText(text, style = QalaType.body.copy(fontSize = 13.sp, lineHeight = 17.sp, shadow = Wash.TextShadow), color = Wash.Text2)
 }
 
-/** The ring round the current card: 3 dp of ember just outside its edge, drawn behind the card so its own shadow sits over it. */
-private fun Modifier.currentRing(): Modifier = drawBehind {
+/** The ring round the current card: 3 dp of ember just outside its edge, drawn over the card's own shadow as the board's box-shadow stack does. */
+private fun Modifier.currentRing(): Modifier = drawWithContent {
+    drawContent()
     val w = 3.dp.toPx()
     drawRoundRect(
         Wash.ChartEmber,

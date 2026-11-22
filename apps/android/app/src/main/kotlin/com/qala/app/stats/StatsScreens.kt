@@ -215,12 +215,12 @@ private val BarRoom = 74.dp
 /** The big figures under the head: the title face at 52 sp, white on the wash. */
 private val FigureStyle = Wash.Title.copy(fontSize = 52.sp, lineHeight = 52.sp, letterSpacing = (-0.02).em)
 
-/** A kicker over a big figure, white on the wash. */
+/** A kicker over a big figure, white on the wash. A time of an hour or more ("1:05:20") drops to 44 sp so it stays inside its half of the row. */
 @Composable
 private fun SummaryFigure(label: String, value: String, modifier: Modifier = Modifier) {
     Column(modifier) {
         QalaText(label.uppercase(), style = Wash.Kicker, color = Wash.Text2)
-        QalaText(value, Modifier.padding(top = 4.dp), FigureStyle, Wash.Text)
+        QalaText(value, Modifier.padding(top = 4.dp), if (value.length > 5) FigureStyle.copy(fontSize = 44.sp, lineHeight = 44.sp) else FigureStyle, Wash.Text)
     }
 }
 
@@ -248,8 +248,8 @@ private fun SummaryBody(s: SessionSummary) {
     ) { Donut(parts.map { DonutSlice(it.first, it.second.toDouble(), it.third, "${elapsedText(it.second.toDouble())} · ${share(it.second)}") }, elapsedText(total.toDouble()), "total") }
     if (s.setsByMuscle.isNotEmpty()) {
         val top = s.setsByMuscle.take(8)
-        // A name keeps its letters when there is room under the bar (five or fewer bars); eight bars are 41 dp apiece, so those are cut to five.
-        val room = if (top.size > 5) 5 else 9
+        // A name stays whole while the bars are 66 dp apart (five or fewer); with more bars it is cut to five letters.
+        val room = if (top.size > 5) 5 else Int.MAX_VALUE
         ChartCard(
             title = "Sets by muscle",
             summary = "Sets this session: " + top.joinToString(", ") { "${muscleName(it.first)} ${it.second}" } + ".",
