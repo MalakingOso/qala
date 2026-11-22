@@ -171,7 +171,7 @@ Anatomy started from Beamer; phone controls scale up to a 44px minimum touch tar
 5b. **Stepper:** a big figure with two 48px bordered - / + buttons under it (weight and reps, plate target).
 5c. **Tool bar:** secondary per-exercise tools as one bordered strip, each an icon with a word under it (Info, Swap, Note, Joint pain).
 5d. **Flow header:** in-session screens (workout, rest, all exercises) share one header: zoom out to all exercises (or back), the session with its ticking clock, and a small Finish.
-6. **Tab bar:** 72px plus the device safe area, 2px top border, a 3px ember bar above the active tab's icon. Capped to the phone shell width.
+6. **Tab bar:** 72px plus the device safe area, 2px top border, a 3px ember bar above the active tab's icon. Capped to the phone shell width. Changed 2026-11-21 (S50), native phone: a floating island instead of a bar. It is 56 dp tall and fully rounded, dark, with a hairline and the hard shadow, 10 dp in from each screen edge (a touch wider than the 16 dp the cards keep). The open tab is an ember pill holding its icon and its name; the others are icons alone, and every tab keeps its name as semantics text. Nothing is drawn behind it: the shell lays it over the screen (`Modifier.align(BottomCenter)`) and provides `LocalBarClearance`, the bar's 72 dp zone plus the navigation inset (0 for the lifting flow, which has no bar, or with the keyboard up), which each scrolling screen adds to its bottom padding and the pinned bars lift by. It was dark glass over Today's film and the theme's ink elsewhere; since S51 it is the same dark glass on every screen and in both themes.
 7. **Exercise note card:** `--note` fill, `--note-border`, sticky-note icon, date label, Got it / Pin / Resolved.
 8. **Plates and bar are rendered in Blender (L10, L12).** After several rounds of hand-drawn SVG that the owner called fake, the plates and bar are real 3D models rendered to sprites. `assets/3d/build_sprites.py` builds the scene from scratch (1 unit = 1 inch) and renders, headless: every bumper (55, 45, 35, 25, 10 lb) in each of the seven named colors, the 5, 2.5 and 1.25 lb iron plates, and the bar. `assets/3d/pack_sprites.py` trims them to WebP in `apps/web/public/plates/` (about 0.7 MB) and writes `apps/web/src/shared/plateSprites.json`. Run: `blender -b -P assets/3d/build_sprites.py -- --out /tmp/s` then `python3 assets/3d/pack_sprites.py /tmp/s apps/web/public/plates apps/web/src/shared/plateSprites.json`. The plate has the real 17.7" bumper profile and thicknesses by weight: a high outer lip, a narrow recessed groove, a lower middle field, a raised ring round a steel hub, and raised Montserrat Bold lettering (the weight on both sides of the hub, the right one upside down, and QALA curved top and bottom), white on colored plates and dark on white and silver ones. The bar follows a standard bar: a 28 mm shaft, a collar with a seam, a 50 mm polished sleeve, a blue end cap. One orthographic camera made every sprite (52 degrees round from the plate's normal, 12 degrees up), so `PlateDrawing` (`shared/plates.tsx`) places a part by moving it along the bar's axis on screen: plates stack from the collar, the sleeve and knurled shaft are repeated strips (a polished tube lit evenly repeats cleanly) and the sleeve is shortened so the plates stay large, with its tip drawn over the outermost plate. Inner plates show only their rims, so their weights are written beneath, skipped where they would crowd; the caption lists them all. `PlateChips` uses nearly face-on renders with the weight in HTML on the outermost chip. Colors come from `settings.plates`; a color with no render falls back to charcoal. The earlier SVG drawings are gone. Blender 5.2.2 and the MCP server (`uvx mcp-for-blender`) were installed for this under `~/.local`; Montserrat is OFL (copy in `assets/3d/`).
 
@@ -179,6 +179,8 @@ Anatomy started from Beamer; phone controls scale up to a 44px minimum touch tar
 8b. **App icon (L15).** The plate with one raised Q: Montserrat ExtraBold, stretched about 6% so its counter is round, scaled so the counter hugs a flat brushed-steel hub (radius 1.8 in against the 2 in bore), the tail left as the font draws it. The brushed look is an anisotropic metal with the grain running round the disc, because a flat mirror seen face on only reflects the studio's dark horizon and goes grey. The full icon adds the plate's own lettering, set as on the plates: QALA on the arc over the top, 45LB each side; QALA along the bottom runs into the Q's tail, so it is left off. Sizes: `icon-32`, `icon-48` and `icon-96` are the plain Q (the lettering is specks under about 128 px); `icon-192` and `icon-512` are the lettered icon on a transparent background filling the canvas; `icon-maskable-512` and `apple-touch-icon` (180) sit inside the 40% safe circle on the light ground, since a mask or iOS fills clear pixels. The old hand-drawn SVG icons are gone; the manifest, `index.html` and the service worker (cache bumped to `qala-v2`) point at the PNGs. The native Kotlin app (S7, `apps/android`) ships an adaptive icon instead of the web maskable PNG, written by `python3 assets/3d/make_icons.py DIR DIR/out --android apps/android/app/src/main/res` from the same `icon_qk_both` render. Foreground: the lettered Qk on a transparent layer, scaled so every opaque pixel sits inside the central 66 dp circle of the 108 dp canvas (about 61%, tighter than the web's 80% safe zone), at 108, 162, 216, 324 and 432 px in `mipmap-{m,h,xh,xxh,xxxh}dpi/ic_launcher_foreground.png`. Background: `#f5f5f7`, the same ground as the web icons, in `values/ic_launcher_background.xml`. Monochrome (themed icons, Android 13 and up): the launcher tints an alpha silhouette, so the layer is a plain Q drawn with PIL from `Montserrat-ExtraBold.ttf` (clean edges, no Blender run), stretched about 6% the way the 3D one is so its counter is round, and scaled to fill the same 66 dp circle (`ic_launcher_monochrome.png`, five densities). `mipmap-anydpi/ic_launcher.xml` and `ic_launcher_round.xml` hold the `<adaptive-icon>`; there is no `-v26` qualifier and there are no legacy PNGs because minSdk is 34. The application id is `com.qala.app`. The owner picked the lettered Qk for the foreground (2026-10-01). The plate lands near 48 dp on screen, where the lettering is specks and the Q carries the icon, as it does on the web under 128 px; checked at 192, 96 and 48 px under circle, squircle and rounded-square masks on light and dark grounds, and the themed layer tinted dark and light. Rebuild: `blender -b -P assets/3d/build_sprites.py -- --out /tmp/qala-icons --icon --only icon_qk_both,icon_q_mont800_snug`, then `python3 assets/3d/make_icons.py /tmp/qala-icons /tmp/qala-icons/out --ship apps/web/public/icons` for the web icons and `--android apps/android/app/src/main/res` for the launcher icon (`--android` needs only `icon_qk_both`). Qb to Qe, the other Q candidates and the ember-on-run-color G stay in `build_sprites.py --icon` as the record of what was tried.
 9. **Readiness ring** (section 6.4).
 10. **Timeline rail** (section 7.1).
+
+Changed 2026-11-22 (S51), native phone: three carriers and one head, in `apps/android/design/.../Pages.kt` and `Surfaces.kt`. A screen hands one of three page frames its head, its scroll state and its content. `WashPage` puts content straight on the wash, with white cards only where something is read or filled in. `SheetPage` is a wash head over Today's cream sheet: 20 dp under the head, at least one screen high so a short page is cream to the bottom edge, a 20 dp rounded top with a white 2 dp edge, and 26 dp of air before the first row; the sheet is cream in Light and the theme's own background in Dark, 95% opaque. `GlassPage` is a `WashPage` on the glass scrim with its cards 12 dp apart. Each frame lays a `WashScrimLayer` behind the page (Board3, the heavy ramp; Soft, the light one; Glass, which lets the wash show between cards), scrolls the head with the content, keeps 16 dp gutters, and ends with `LocalBarClearance` plus 16 dp so the island floats over empty wash. `ScreenHead` is the one head: on a tab screen the kicker over a 34 sp title with its actions at the right; on a pushed screen a glass Back and a 30 sp title. It is white with a text shadow in both themes, the title may take two lines, and it is the heading TalkBack jumps to. `GlassCard` is the Glass carrier's card: a 10 dp radius and a hairline, no shadow (a hard one would show through the glass) and no blur (the wash is already a blurred still), with a header row, a body, and the chart's night panel running flush to the card's edges so the card reads as one two-tone object. Its fill and ink follow the theme: warm translucent white in Light, umber glass with white text in Dark. `SheetCard` is the card on the cream sheet, the Beamer card as before. `PinnedBar` is a bar fixed to the bottom of a page (a composer, a Save bar): the sheet colour down to the bottom edge with a soft shadow above, its content ending `LocalBarClearance` above the edge so the island floats over the bar's own colour. The other components in this list are unchanged.
 
 ## 6. Charts (S4)
 
@@ -198,6 +200,8 @@ Anatomy started from Beamer; phone controls scale up to a 44px minimum touch tar
 
 Code lives in `apps/web/src/shared/charts/`. The plate drawing and the readiness ring sit there too since they share scales and tokens, though they aren't library charts.
 
+Changed 2026-11-22 (S51), native phone: the Android app draws every chart on Compose Canvas, in `apps/android/app/.../charts/QalaCharts.kt`, and Vico (3.3.x, DECISIONS S10 and S42) is out of the build. The table above is the web's choice and stands for the landing page and the desktop shell, which keep visx and uPlot. Board 3's curve needs a custom monotone interpolator (Fritsch and Carlson) whatever draws it, and Canvas already drew the ring, the donut and the run series, so one drawing path replaces two. The table view and TalkBack sentence of D16 stand: every numeric chart is still a `ChartCard`, which keeps both.
+
 ### 6.2 Rules (from the dataviz method)
 
 - Pick the form by the job; a single number is a stat tile, not a chart. No pies except a part-to-whole of at most 6 segments, and prefer a stacked bar.
@@ -215,6 +219,8 @@ Code lives in `apps/web/src/shared/charts/`. The plate drawing and the readiness
   - Categorical (time split: warm-up, lifting, rest): light `#c2410c #485cc7 #08a49c` on `#ffffff` passes every check (worst adjacent CVD delta E 20.6); dark `#e0652b #6f80e6 #16a390` on `#121a33` passes (worst adjacent CVD delta E 15.2).
   - Ordinal (intensity zones): one-hue blue, light `#86b6ef #5598e7 #2a78d6 #1c5cab #104281`, dark `#184f95 #256abf #3987e5 #6da7ec #9ec5f4`, both pass `--ordinal`.
   - Emphasis: `--mark-gray` for context with ember for the point of the chart.
+
+Changed 2026-11-22 (S51), native phone: the Android charts follow board 3's language, and that overrides parts of the rules above. Dashes are allowed for a reference line and for nothing else (this reverses "never dashed"), and the line carries a mono label ("start 282", "avg 76"). A line is white and 2.6 dp over a teal fade, with one baseline, no gridlines and no y-axis; this replaces the 1px `--grid` lines and the 2px line. The value sits on every bar's cap, an exception to "never a number on every mark". The latest point is an ember dot with a white ring and a "now" label; the film's ember (#E0652B) means now and teal means done. A chart always sits on a dark ground: the night card (#1C120C), a glass card's night panel, or the scrim. Chart text is the mono face in white at an alpha, not an ink token, and every chart colour is fixed, so a chart looks the same in Light and Dark and the two-theme palette check above has one case to cover on the phone. The table view, the TalkBack sentence and the Table toggle (44 dp each way at least) stand.
 
 ### 6.3 Chart catalog
 
@@ -238,9 +244,13 @@ Changed 2026-11-18 (S46): Session complete's time split is a donut, not a stacke
 | Pace, heart rate, elevation | Run summary, desktop run detail | synced time series | uPlot |
 | Fitness and fatigue curves, calibration residuals | Desktop graphs, calibration | time series | uPlot |
 
+Changed 2026-11-22 (S51), native phone: every chart the app draws is Canvas, in five forms. `LineChart` is the white line over a teal fade with a baseline and the dated labels under it, an optional dashed reference line (the e1RM's start, the readiness 28-day average, the weight's 7-day mean) and the latest point as the ember dot with its "now" label; it draws the main-lift e1RM, readiness over 7 days and body weight. `ColumnChart` is bars with rounded tops from one baseline and the value on each cap, and it can make the latest bar ember so this week stands out among earlier ones; it draws sets by muscle. `Donut` is the time split as a segmented ring: arcs with 4 degree gaps from 12 o'clock, lifting in ember, warm-up in teal and resting in white at 35%, the total in the middle and a legend beside it. These colours replace the viz1 to viz3 of the 2026-11-18 paragraph above; a warm-up that was not measured is still left out. `ReadinessRing` is in 6.4. `RunSeries` is pace, heart rate and elevation as three stacked panels on their own scales, each pixel column keeping its minimum and maximum so a spike survives the thinning, with one crosshair that starts at the middle and moves by touch, its values in each panel's header; pace is drawn faster-is-higher.
+
 ### 6.4 Readiness ring
 
 `readiness` (0-1 from PLAN 6.2) x 100, drawn as a ring. The track is `--bg-active`; the low zone from 0 to the low line is a thin `--low-zone` band just outside the track, like the red zone on a gauge (changed 2026-09-30: tinting the track under a slimmer arc showed as pink edges around the value); the value arc fills the track width and is round-capped, `--progress-fill` at or above the low line and `--danger` below it with a "low" word next to the ring. A dark tick marks the owner's 28-day average; a red tick marks the low line at `mean - 1.5 SD` of the same window (the z <= -1.5 flag in PLAN 6.2). A check-in with PRS <= 4 counts as low whatever the number. Until 14 check-ins exist, the average tick is hidden and the low line sits at 50 (assumption). A two-line legend under the ring: "your avg 76", "low under 64".
+
+Changed 2026-11-22 (S51), native phone: the ring is `ReadinessRing`, on Canvas, on a dark ground. It is a white track at 22%, a teal arc from 12 o'clock for the score, the score in the middle with "of 100" under it, and one white tick across the track at the 28-day average, named beside it ("avg 76"); with no average yet the tick is not drawn. It draws no low zone, no red low tick, no danger arc and no "low" word, so the paragraph above describes the web ring only. The ring has a TalkBack description and no table (D16).
 
 ### 6.5 Load zoom motion (U27)
 
@@ -262,6 +272,10 @@ Sample numbers below match the mockups: Sunday, Strength block 2 week 3, Lower A
 ### 7.0 Navigation (U1, U2)
 
 Today, Plan, Body, Progress, Coach (decided 2026-09-13). Settings and history are header buttons. Starting a lift or run happens from Today or a Plan day; there is no Start tab.
+
+Changed 2026-11-21 (S50): on the phone the tab bar is a floating island (section 5, item 6).
+
+Changed 2026-11-22 (S51), native phone: the tab screens lose the wordmark bar, and History and Settings are reached from Today's two icon buttons instead of a header on every tab. One frosted wash (the S49 still) sits behind every screen except Today's film, and a screen puts its content on one of three carriers by what you do on it (section 5 has the components). Wash, for doing: Check-in (7.3), Warm-up, Workout and Rest (7.4 to 7.6), All exercises (7.7), Session complete (7.8) and the run screens (7.14). Sheet, for reading or asking: Today (7.1), Plan and the Plan picker (7.2), Coach (7.11), Plates (7.12), Settings (7.13) and History, which has no section of its own (Plan's See what you did opens it). Glass, for comparing numbers: Body (7.9) and Progress (7.10). The owner chose Body on Glass, Run summary on Wash and History on Sheet. The wash, the night panel behind a chart, the island and the glass controls are the same in Light and Dark; the sheet, the white cards and the glass follow the theme. Every screen has one head, which scrolls with the content: the kicker over a 34 sp title with its controls at the right on a tab screen, a glass Back and a 30 sp title on a pushed screen. The scrim over the wash has three ramps: the heavy one (board 3's) where a chart or text is drawn straight on the wash and under a sheet head, a light one where only cards and glass controls sit, and a glass one that lets the wash show between cards. The hand-over (7.1) also runs for Check-in, Run, History and Settings when they are pushed from Today; a tap on a tab in the island is a plain swap.
 
 ### 7.1 Today (U3)
 
@@ -293,6 +307,8 @@ Decided 2026-11-13 (D34): when a half-logged workout draft exists, the hero says
 
 Changed 2026-11-19 (S48): on the phone, Today is a film and a drawer, not a rail beside cards. A muted loop with a 1960s Super 8 look (faded warm colour, soft grain, a faint flicker, a vignette) fills the screen under the status bar and the tab bar, which is dark glass over it. The head (weekday and kind of day, the title, the preview bar) sits on the film with History and Settings as two white icon buttons at the top right. The day is a vertical list of six dots at the left while the drawer is closed, and a row of the same dots once it is open. The hero for the stage being looked at is white on the film: kicker, title, a meta line, and for a lift or a run a big figure with its unit and, for a barbell lift in pounds, the plates of one side with their shorthand. Under it the action block holds the stage's lines and its button. The cream drawer has three stops. Closed shows the top of the next run and readiness cards. Half shrinks the hero above it and pins the action block at its top, with the cards below. Full docks the hero into a dark now card under a day card holding the row, with the action block and the cards following, and the cards scroll. One drag moves everything together; nothing pops. Back closes the drawer in one press. A window under 480 dp high gets one scrolling column instead.
 
+Surface (S51): Sheet, over Today's film. Today is the one screen with no wash. The hand-over above also runs for Check-in, Run, History and Settings when they are pushed from Today (Claude's call); a tap on a tab in the island is a plain swap.
+
 ### 7.2 Plan (U4)
 
 Header: block name and periodization, `< Week 3 of 6 >` with arrows, a thin strip of the block's weeks (done, current in ember, deload lighter). Day tabs Monday to Sunday with the date and a glyph (`dumbbell`, `sport-shoe`, `bed`), the selected day underlined in ember. Below: day title and length including warm-up, the Start workout button, Overview / Details. Overview is a two-column grid of exercise cards (name, sets x reps x load, a note icon when a note is waiting, a chip such as "+1 set"). Details lists the warm-up, every set, and the day's run.
@@ -301,11 +317,15 @@ Build, 2026-09-30: each day carries its own exercises (the cards used to repeat 
 
 Build, 2026-10-13 (native phone, `apps/android/.../plan/`): the week switcher, a tab for each day (picked tab is ink like every picked cell, today's name in ember, a done check, a skipped day struck through with its reason's glyph), the day's own card and the week summary. Any week is laid out by `PlanCompute` from the same `Schedule` Today's strip reads, so this week matches it day for day; an earlier week is what the records say, a later one (eight ahead) is projected forward. A day not yet lifted shows what the program prescribes now (LS++ moves the loads when a session finishes, so a later day says "loads are what the program holds now"); a done day shows what was lifted. Today's button on Plan is Today's own: whatever stage the day is on (Check in, Start warm-up, Start workout, then Start run), read from `TodayModel`, with a line saying the lift comes after when it is not next. It is the one ember button and only on today; a run-only day has its own Start run. A done day offers See what you did, which opens History. A skipped day names its reason, whether it shifts the plan and which day the lift moved to, and the week line counts done, skipped and shifted days. No block name, week-of-6 strip, deload line or minutes: a program is a rotation of days and nothing supplies a block or a length, so the head says "gzclp, 4-day rotation". Not built: Do this today instead, Skip this day and Undo skip, opening a session in History rather than History itself, per-exercise notes and the "+1 set" chip.
 
+Surface (S51): Sheet, a wash head over the cream sheet. The Plan picker (DECISIONS S44), pushed from Change plan, has no section of its own and is a Sheet screen too.
+
 ### 7.3 Check-in
 
 Title "How are you walking in?". Recovery 0-10 as a row of buttons with anchors. Soreness 1-4 for each muscle today's session trains, with when it was last trained and the four meanings. A free-text line; the coach turns it into removable chips ("Sleep 6 h", "Left knee: watch"). On a rest day, the card also surfaces a suggested mobility/recovery line (foam roller, Theragun, stretching) drawn from soreness answers and owned equipment — a tip, not a tracked stage (DECISIONS U10; see docs/CONTEXT.md's "mobility" entry for how this differs from the warm-up's mobility block). Continue to warm-up.
 
 Build, 2026-09-30: recovery and soreness use the scale picker; each muscle shows the meaning of the picked value in place of a hover title. On a rest day the button saves the check-in and returns to Today instead of opening the warm-up.
+
+Surface (S51): Wash, with white cards only where something is filled in. It is pushed from Today, so it has a glass Back and takes the hand-over.
 
 ### 7.4 Warm-up (T6, T7)
 
@@ -316,6 +336,8 @@ Build, 2026-09-30: four numbered step cards with their times. Soft tissue and mo
 Changed 2026-11-18 (S45, S46): three steps. Easy cardio has a countdown (the planner's minutes, -1 min and +1 min, a Start cardio button, a buzz at zero) that keeps counting when the screen is left; Soft tissue and Mobility are check rows. The Ramp sets step moved into the workout (7.5). Looking at the warm-up opens nothing; the first action opens the draft and the ongoing notification, and the countdown, the ticks and the warm-up clock are kept in it. The Workout header's Warm-up button comes back here and Back returns to the workout.
 
 Changed 2026-11-20 (S49): the screen sits on the frosted wash, white on dark glass. The head is a glass Back, the kicker over "Warm-up", All exercises and Skip. Each step carries its own node on the rail: easy cardio is the open one in ember with the 100 sp clock, "-1 min" and "+1 min" on glass and "of 8:00" beside them, Start cardio under them and what the cardio is under that; Soft tissue and Mobility are white cards with numbered nodes beside their titles, and the rail ends on a Lift node. Start workout sits on the wash with no bar behind it.
+
+Surface (S51): Wash (since S49).
 
 ### 7.5 Workout: one exercise (U5, T9, T10)
 
@@ -329,6 +351,8 @@ Changed 2026-11-18 (S45, S46, S47): the header has a second line, a Warm-up butt
 
 Changed 2026-11-20 (S49): the segments and Prev and Next are gone. The rail down the left edge has the warm-up (done) first, then one node per exercise with its name under it; it is the way to another exercise (tap, or drag along it), and each node says "Back Squat, 2 of 3 sets done". The weight is the hero on the wash: glass minus and plus either side of the 76 sp figure, the loaded sleeve with a short stub of bar under it and the plates' numbers under that. They and the exercise's name stay put while the card of ramp rows, set rows and the open set's reps and RPE scrolls beneath; on a page under 560 dp high the hero is the compact one, and under 400 dp the whole page scrolls. The open set's row is outlined in ember. The Rest pill is an ember outline on dark glass.
 
+Surface (S51): Wash (since S49).
+
 ### 7.6 Rest (T8, T10)
 
 The workout top bar stays. "Back Squat · set 2 logged: 245 x 4 @ 9". The countdown as a ticking figure with "of 3:45", a progress bar, Ready early and +30 s. The next set's load as the plate drawing ("Same as last set" or the change instruction). "Why 3:45" lists base, pace, effort, readiness adjustments with their seconds. A card for the change to the next exercise ("After squats: RDL 205. Take off 45 and 10, add 35 each side.").
@@ -341,11 +365,15 @@ Changed 2026-11-18 (S45, S47): the countdown is the app's, not this screen's. A 
 
 Changed 2026-11-20 (S49): the screen sits on the wash. The logged line, the 104 sp clock, "of 3:45" and the 12 dp bar are white on it; the next set, the load adjustment and the ledger are white cards, and +30 s and Ready early sit on the wash with no bar behind them. The rail is a display here, with the hourglass on the open exercise.
 
+Surface (S51): Wash (since S49).
+
 ### 7.7 All exercises
 
 The zoomed-out view: warm-up done, then a two-column grid of exercises with set dots, the current one outlined in ember; tap to jump. Doing them out of order is fine and history keeps the actual order.
 
 Build, 2026-09-30: flow header with a way back, the warm-up line, then numbered cards with a box per set; the current exercise has the ember border.
+
+Surface (S51): Wash. S49 left it in its plain look; S51 puts it on the wash with the same head as the rest of the flow.
 
 ### 7.8 Session complete (U6)
 
@@ -353,17 +381,23 @@ Top to bottom: title ("Lower A, done"); four stat tiles (duration, volume, hard 
 
 Build, 2026-09-30: exercise rows carry a volume delta badge. The performance question uses words (Beat it, Hit it, Barely, Missed) on the scale picker, session RPE has CR-10 anchors, and the run handoff is the last card with Finish session.
 
+Surface (S51): Wash. Its charts are drawn in the chart language (6.2, 6.3): the time split is the segmented ring with the total in the middle, and each chart is a `ChartCard` on a night card or straight on the wash.
+
 ### 7.9 Body
 
 "Legs are still recovering". Readiness over 7 days. The front and back muscle map (liftosaur's SVGs). Fatigue by muscle split lifting and running, with when each is ready. Deload status. Recovery tools owned.
 
 Build, 2026-10-01: the muscle map is built (`shared/bodymap/RecoveryMap.tsx`): front and back figures from liftosaur's SVGs, each muscle tinted by how recovered it is with a label ("Quads, Ready Sat"), and a fatigue curve for the selected muscle with a swipe to the next. An earlier soreness list with a four-step meter per muscle stood in for it until then.
 
+Surface (S51): Glass. The readiness ring and each chart are floating glass cards with the chart in a night panel flush inside the card and titles in sentence case; readiness has its dashed 28-day average and the weight its dashed 7-day mean.
+
 ### 7.10 Progress
 
 The block and week, a headline ("Squat is up 4% this block"), squat 1RM with daily best, estimate and tested markers, reps at 85%+ against the block target, sets per muscle, running fitness and weekly miles, recent sessions and "All history".
 
 Build, 2026-09-30: the headline is the page title; reference, estimate and tested 1RM are three figures under it. Recent sessions use the shared session rows with a lift or run glyph.
+
+Surface (S51): Glass. Progress shows one lift at a time: a chip row (Squat, Bench, Deadlift, Press) and an e1RM hero card whose line has a dashed reference at the e1RM's start, instead of a card for every lift (Claude's call, overturnable). The other charts stay as glass cards below it.
 
 ### 7.11 Coach (U8)
 
@@ -373,6 +407,8 @@ Build, 2026-09-30: the thread is coach and you turns (you filled with ink, right
 
 Build, 2026-10-14 (native phone, `apps/android/.../coach/`): the title with "Runs on callisto" ("Offline" once a question could not be answered), chips for the day and today's check-in, the thread, the suggestion card with the limits the server enforced, and the composer over the tab bar. An empty thread offers two starter questions that fit the day. The plates under each number are the text lines the set rows use ("per side 45 · 35 · loads 205"), for a barbell lift in pounds and when Settings shows plates. A question that cannot be answered leaves the "Coach is offline" or "Coach is unavailable" card under the thread, with the reason (no connection, the model down, or a 401 because the server did not recognise the phone) and Try again; the thread keeps the question and every other screen keeps working. Not built: "Remember this?" (the phone has no memory record), and Use coach does not change the workout, so after it the card says to change the numbers there.
 
+Surface (S51): Sheet. The composer is a `PinnedBar`, lifted by `LocalBarClearance` so the island floats over its colour.
+
 ### 7.12 Plate calculator (T10)
 
 Target weight as a big figure with -/+, the bar choice, the plate drawing for one side, a summary (bar plus plates with counts and the arithmetic), and the owner's plate inventory with counts and an Edit action. Opened from the logging card, the rest screen, or Settings.
@@ -380,6 +416,8 @@ Target weight as a big figure with -/+, the bar choice, the plate drawing for on
 Build, 2026-09-30: target as a stepper, bar on the scale picker, the loaded bar, the arithmetic, and the inventory listed with a disc per plate. 55 lb bumpers are optional (owner, 2026-10-01): a switch at the top of the inventory adds them with a pair count, and the plate math uses them once on (245 becomes 55 · 45 a side). Settings are not persisted yet, so this resets on reload like every other setting.
 
 Decided 2026-11-13 (D33): the plate calculator and the workout hints round to the saved inventory, lb only. There is no kg plate inventory for now; kg keeps placeholder rounding.
+
+Surface (S51): Sheet (the Plates screen).
 
 ### 7.13 Settings
 
@@ -391,11 +429,15 @@ Build, 2026-10-13 (native phone, `apps/android/.../settings/`): Training status,
 
 Decided 2026-11-13 (D35): with "Build a warm-up" off, the Warm-up stage leaves Today's rail. Collars stay fixed at 0 lb and are not editable. The Appearance group (theme and title font) is next.
 
+Surface (S51): Sheet. Reached from Today's icon button; a pushed screen with a glass Back and the hand-over.
+
 ### 7.14 Running
 
 Start (map, GPS status, the planned run, Start run), Live (time, miles largest, current and average pace as ticking figures; pause as a square ember button), Guided (step name in ember, time left, the target pace band with the current pace marker, "Speed up a little", miles and time), Summary (map with mile markers, title, six figures, splits, effort, what it means for tomorrow, Save run). Run glyphs use `sport-shoe`.
 
 Build, 2026-09-30: the map is a drawn stand-in (streets, the loop in the run color, start dot, mile markers on the summary) until MapLibre lands. Start shows GPS and a cues switch. Live switches Numbers / Splits / Map with a segmented control, shows miles largest, and pairs a square ember pause with Finish run (no hold gesture yet). Guided draws the pace band slow to fast with both edges labeled and the current pace as a marker; Back to numbers is secondary. Summary uses the splits chart and the effort scale.
+
+Surface (S51): Wash for Start, Live and Summary (the owner chose Wash over Sheet for Summary). Pace, heart rate and elevation are the run series, three stacked panels with a crosshair, drawn straight on the wash under the heavy ramp. Run is pushed from Today and takes the hand-over.
 
 ### 7.15 Desktop: the refined shell (U11, U20-U23, U25, U27)
 
@@ -538,3 +580,5 @@ the rest-day shape, since there is no warm-up or lift to wait on.
 ## 8. Mockups
 
 `mockups/build.mjs` generates `mockups/qala-app-mockups.html`, published at https://claude.ai/code/artifact/250bf70f-3bed-4593-ad17-afc44bb14a0c (version 5, 2026-09-13; made private 2026-09-13, `docs/DECISIONS.md` section 7). Pages: Today (your pick), Today options (round 3), Phone, Desktop and web, Foundations. Regenerate with `LUCIDE_JSON=<extracted Lucide paths> node mockups/build.mjs`, then assemble and republish with the design canvas tool. The mockups are hand-drawn HTML and SVG with sample data: they do not use visx or uPlot. Runs show `sport-shoe` since version 5.
+
+Changed 2026-11-22 (S51): the native phone's surfaces and charts have two canvases. https://claude.ai/artifact/PtHVoVR1AikpFsUaKwgZFv is a surface for each screen, the system board and every screen, in Light and Dark. https://claude.ai/artifact/FzpjjBN8uv4ycqMrNwZCKw is its chart kit, which shows the chart language of 6.2 and 6.3 (board 3 is the Today canvas's day curve).
