@@ -88,12 +88,12 @@ object Stats {
      * only the sessions and check-ins before that moment go in. A Rust call per day, so off the main thread.
      */
     fun readiness(input: EngineInput, today: String, zone: ZoneId, nowMs: Long, days: Int = 7): List<DatedValue> {
-        val all: List<SessionRecord> = input.liftSessions.map { it.toRecord() } + input.runs.map { it.toRecord() }
         return (days - 1 downTo 0).mapNotNull { back ->
             val day = IsoTime.addDays(today, -back.toLong())
             val at = if (back == 0) nowMs else java.time.LocalDate.parse(day).atTime(12, 0).atZone(zone).toInstant().toEpochMilli()
             val offset = IsoTime.offsetMinAt(zone, at)
-            val records = all.filter { java.time.OffsetDateTime.parse(it.startedAt).toInstant().toEpochMilli() <= at }
+            val records: List<SessionRecord> =
+                input.liftSessions.filter { it.session.startedAtMs <= at }.map { it.toRecord() } + input.runs.filter { it.startedAtMs <= at }.map { it.toRecord() }
             val checkins = input.checkIns.filter { !it.deleted && it.atMs <= at }.map { it.toRecord() }
             runCatching {
                 val summary = QalaCore.readinessSummary(ReadinessSummaryRequest(records, checkins, input.settings, IsoTime.format(at, offset), offset, null))

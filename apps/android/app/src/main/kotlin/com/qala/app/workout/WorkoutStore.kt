@@ -608,17 +608,11 @@ class WorkoutStore(
         val gym = _gym.value
         val planned = service.plan(day) ?: return@withContext null
         val plan = buildWarmup(planned)
-        // The plates under each ramp step, unless Settings hides them.
-        val hints = if (!gym.rest.showPlates) emptyMap() else {
-            plan.ramps.filter { it.barbell }.flatMap { r -> r.steps.filter { !it.bar }.map { it.load } }.distinct()
-                .mapNotNull { w -> PlateMath.hint(w, gym.plates)?.let { w to it } }.toMap()
-        }
         WarmupView(
             dayName = planned.plan.dayName,
             programName = planned.plan.programName,
             unit = planned.unit,
             plan = plan,
-            plateHints = hints,
             blocksOff = !gym.warmup.enabled,
         )
     }
@@ -672,8 +666,6 @@ class WarmupView(
     val programName: String,
     val unit: WeightUnit,
     val plan: WarmupPlan,
-    /** The plates for each ramp step of a barbell lift, by load; empty when Settings hides plates. */
-    val plateHints: Map<Double, PlateHint> = emptyMap(),
     /** "Build a warm-up" is off in Settings, so only the ramp sets are here. */
     val blocksOff: Boolean = false,
 )

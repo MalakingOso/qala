@@ -26,12 +26,7 @@ import androidx.compose.ui.unit.Dp
  */
 @Immutable
 internal class RailColors(
-    val stripTint: Color,
-    val stripBorder: Color,
-    val dotOff: Color,
-    val dotOffBorder: Color,
     val dotRing: Color,
-    val halo: Color,
     val nodeBorder: Color,
     val rowSelBg: Color,
     val rowSelBorder: Color,
@@ -43,12 +38,7 @@ internal class RailColors(
 ) {
     companion object {
         val Light = RailColors(
-            stripTint = Color(255, 255, 255, 158),                  // surface at .62
-            stripBorder = Color(15, 21, 42, 61),
-            dotOff = Color(0xFFDFE3EC),
-            dotOffBorder = Color(15, 21, 42, 117),                  // .46, about 3:1 on the strip (the prototype's .2 is 1.7:1)
             dotRing = Color(0xFF94A0B8),
-            halo = Color(255, 255, 255, 179),
             nodeBorder = Color(15, 21, 42, 77),
             rowSelBg = Color(0xFF0F152A),
             rowSelBorder = Color(0xFF0F152A),
@@ -60,12 +50,7 @@ internal class RailColors(
         )
 
         val Dark = RailColors(
-            stripTint = Color(31, 42, 77, 184),                     // active surface at .72
-            stripBorder = Color(232, 236, 246, 87),
-            dotOff = Color(0xFF3A4466),
-            dotOffBorder = Color(232, 236, 246, 128),
             dotRing = Color(0xFFAAB4CC),
-            halo = Color(31, 42, 77, 242),
             nodeBorder = Color(232, 236, 246, 87),
             rowSelBg = Color(0xFF1F2A4D),
             rowSelBorder = Color(232, 236, 246, 153),

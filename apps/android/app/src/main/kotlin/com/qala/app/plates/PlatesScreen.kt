@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
 import androidx.compose.runtime.key
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -166,16 +167,25 @@ fun PlatesScreen(scroll: ScrollState, onBack: () -> Unit, onEditPlates: () -> Un
     }
 }
 
-/** A sprite decoded from the copied Blender renders in `assets/plates`. */
+/**
+ * The sprites in [files], decoded off the main thread from the copied Blender renders in `assets/plates`. The ones already decoded
+ * stay, so a plate that is swapped for another never leaves a hole while its image loads.
+ */
 @Composable
-private fun rememberSpriteBitmap(file: String): ImageBitmap? {
+private fun rememberSprites(files: List<String>): State<Map<String, ImageBitmap>> {
     val context = LocalContext.current
-    return remember(file) {
-        try {
-            context.assets.open("plates/$file").use { BitmapFactory.decodeStream(it)?.asImageBitmap() }
-        } catch (_: Exception) {
-            null
+    return produceState<Map<String, ImageBitmap>>(emptyMap(), files) {
+        val have = value
+        val fresh = withContext(Dispatchers.IO) {
+            files.filter { it !in have }.mapNotNull { file ->
+                try {
+                    context.assets.open("plates/$file").use { BitmapFactory.decodeStream(it)?.asImageBitmap() }?.let { file to it }
+                } catch (_: Exception) {
+                    null
+                }
+            }.toMap()
         }
+        value = have + fresh
     }
 }
 
@@ -221,22 +231,7 @@ fun LoadedSleeve(
             .semantics { if (description != null) contentDescription = description else hideFromAccessibility() },
     ) {
         val layout = remember(perSide, ez, maxWidth, inventory, height, labelled, barLength) { plateLayout(perSide, ez, maxWidth.value, inventory, height.value, labelled, barLength?.value) }
-        val context = LocalContext.current
-        val files = layout.draws.map { it.sprite.file }.distinct()
-        // The sprites already decoded stay, so a plate that is swapped for another never leaves a hole while its image loads.
-        val bitmaps by produceState<Map<String, ImageBitmap>>(emptyMap(), files) {
-            val have = value
-            val fresh = withContext(Dispatchers.IO) {
-                files.filter { it !in have }.mapNotNull { file ->
-                    try {
-                        context.assets.open("plates/$file").use { BitmapFactory.decodeStream(it)?.asImageBitmap() }?.let { file to it }
-                    } catch (_: Exception) {
-                        null
-                    }
-                }.toMap()
-            }
-            value = have + fresh
-        }
+        val bitmaps by rememberSprites(layout.draws.map { it.sprite.file }.distinct())
         layout.floor?.let { floor ->
             Canvas(Modifier.fillMaxSize()) {
                 drawOval(
@@ -307,7 +302,8 @@ private const val SlideInDp = 24f
 @Composable
 fun PlateFace(weight: Double, inventory: List<PlateEntry>, height: Float = FaceChipDp) {
     val sprite = plateSprite("face", weight, inventory)
-    val bitmap = sprite?.let { rememberSpriteBitmap(it.file) }
+    val bitmaps by rememberSprites(listOfNotNull(sprite?.file))
+    val bitmap = sprite?.let { bitmaps[it.file] }
     if (sprite != null && bitmap != null) {
         Image(
             bitmap = bitmap,

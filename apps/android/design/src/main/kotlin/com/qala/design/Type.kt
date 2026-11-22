@@ -119,7 +119,6 @@ object QalaType {
     // Brand moments: Qala Test.
     val pageTitle = title(32, 1.15f)
     val stageTitle = title(28, 1.15f)
-    val wordmark = title(27, 1f)
 
     /** Hero numerals (timers, top sets, stat tiles). Qala Test figures are proportional; a figure that ticks uses [ticking]. */
     val figure = title(32, 1.2f)

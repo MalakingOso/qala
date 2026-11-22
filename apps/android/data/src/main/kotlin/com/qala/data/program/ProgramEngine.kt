@@ -121,8 +121,10 @@ class ProgramEngine(private val uidSeed: Long = 0, private val cacheSize: Int = 
     }
 
     /** The exercises a day uses, in order: not marked unused, with a known exercise type. Empty for a missing day. */
-    fun usedExercises(p: EvaluatedProgram, day: Int): List<DayExercise> =
-        usedViews(p, day).mapIndexed { index, e ->
+    fun usedExercises(p: EvaluatedProgram, day: Int): List<DayExercise> = exercisesOf(usedViews(p, day))
+
+    private fun exercisesOf(views: List<JsonObject>): List<DayExercise> =
+        views.mapIndexed { index, e ->
             DayExercise(
                 key = e.getValue("key").jsonPrimitive.content,
                 exerciseId = e.getValue("exerciseType").jsonObject.getValue("id").jsonPrimitive.content,
@@ -163,7 +165,7 @@ class ProgramEngine(private val uidSeed: Long = 0, private val cacheSize: Int = 
     fun dayOverview(p: EvaluatedProgram, day: Int, mainLifts: List<String>, unit: WeightUnit, withSets: Boolean = true): DayOverview? {
         val views = usedViews(p, day)
         if (views.isEmpty()) return null
-        val used = usedExercises(p, day)
+        val used = exercisesOf(views)
         val main = mainIndex(used, mainLifts)
         val exercises = used.mapIndexed { i, ex ->
             val entry = if (withSets) entryFor(p, day, ex) else JsonObject(emptyMap())
@@ -199,7 +201,7 @@ class ProgramEngine(private val uidSeed: Long = 0, private val cacheSize: Int = 
     fun liftHero(p: EvaluatedProgram, day: Int, mainLifts: List<String>, programName: String): LiftHero? {
         val views = usedViews(p, day)
         if (views.isEmpty()) return null
-        val used = usedExercises(p, day)
+        val used = exercisesOf(views)
         val main = mainIndex(used, mainLifts)
         val entries = used.map { ex -> entryFor(p, day, ex).getValue("sets").jsonArray.map { it.jsonObject } }
         val sets = entries[main]

@@ -1,5 +1,7 @@
 package com.qala.app.history
 
+import com.qala.app.today.distanceIn
+import com.qala.app.today.distanceUnit
 import com.qala.data.db.LiftSessionWithEntries
 import com.qala.data.db.LiftStage
 import com.qala.data.db.RunSessionEntity
@@ -7,7 +9,6 @@ import com.qala.data.model.WeightUnit
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
-import java.util.Locale
 import kotlin.math.round
 
 /*
@@ -25,7 +26,7 @@ data class HistoryRow(
     /** "Mon", "Tue": the session's local weekday. */
     val day: String,
     val title: String,
-    /** "20.4k lb · 58 min", "7.0 mi · 1:04", or the marked-done line for a stub. */
+    /** "20.4k lb · 58 min", "7.0 mi · 1:04" ("11.3 km" in kg), or the marked-done line for a stub. */
     val detail: String,
     val startedAtMs: Long,
 )
@@ -95,15 +96,14 @@ private fun liftRow(s: LiftSessionWithEntries, dayNames: Map<Int, String>, unit:
     return HistoryRow(HistoryKind.Lift, dayLabel(date), title, parts.joinToString(" · "), session.startedAtMs)
 }
 
-private fun runRow(r: RunSessionEntity): HistoryRow {
+private fun runRow(r: RunSessionEntity, unit: WeightUnit): HistoryRow {
     val date = localDate(r.startedAtMs, r.offsetMin)
     if (r.stub) {
         return HistoryRow(HistoryKind.Run, dayLabel(date), "Run", "Marked done · no distance logged", r.startedAtMs)
     }
-    val miles = r.distanceM / 1609.344
-    val milesText = String.format(Locale.US, "%.1f", miles)
+    val distance = "${distanceIn(unit, r.distanceM)} ${distanceUnit(unit)}"
     val seconds = r.movingSec ?: r.elapsedSec
-    val detail = if (seconds > 0) "$milesText mi · ${durationText(seconds)}" else "$milesText mi"
+    val detail = if (seconds > 0) "$distance · ${durationText(seconds)}" else distance
     return HistoryRow(HistoryKind.Run, dayLabel(date), "Run", detail, r.startedAtMs)
 }
 
@@ -135,7 +135,7 @@ fun historyWeeks(
         val names = if (programSince == null || s.session.startedAtMs >= programSince) dayNames else emptyMap()
         liftRow(s, names, unit) to weekStartOf(s.session.startedAtMs, s.session.offsetMin)
     } +
-        runs.map { runRow(it) to weekStartOf(it.startedAtMs, it.offsetMin) }
+        runs.map { runRow(it, unit) to weekStartOf(it.startedAtMs, it.offsetMin) }
     return rows
         .groupBy({ it.second }, { it.first })
         .entries
