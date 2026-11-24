@@ -66,7 +66,6 @@ export function MuscleDetailPage({ muscle }: { muscle: string }) {
         xLabel="week"
         series={[{
           label: "sets",
-          color: "var(--viz-1)",
           values: m.weeklyHistory,
         }]}
         head={["Week", "Sets"]}

@@ -1,5 +1,5 @@
-/* Readiness over the last week, by weekday. Average and low lines are
- * hairlines, labeled in the legend below so they never cross the trend. */
+/* Readiness over the last week, by weekday. Average and low are dashed lines
+ * whose labels slide along them to a spot clear of the trend. */
 
 import { ChartShell } from "./ChartShell.tsx";
 import { TrendPlot } from "./TrendPlot.tsx";
@@ -18,6 +18,7 @@ export function ReadinessLine(
   return (
     <ChartShell
       title="Readiness, last 7 days"
+      surface="night"
       head={["Day", "Readiness"]}
       rows={values.map((v, i) => [labels[i], String(v)])}
       label={`Readiness last 7 days, today ${latest}, average ${avg}.`}
@@ -31,11 +32,10 @@ export function ReadinessLine(
       <TrendPlot
         points={values.map((v, i) => ({ label: labels[i], value: v }))}
         domain={[Math.min(40, Math.min(...values, low) - 5), 100]}
-        references={[{
-          label: "Your avg",
-          value: avg,
-          color: "var(--fg-muted)",
-        }, { label: "Low under", value: low, color: "var(--danger)" }]}
+        references={[
+          { label: "Your avg", value: avg },
+          { label: "Low under", value: low },
+        ]}
       />
     </ChartShell>
   );

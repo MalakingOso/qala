@@ -97,7 +97,6 @@ export function CalibrationPage() {
           xLabel="observation"
           series={[{
             label: "residual",
-            color: "var(--viz-3)",
             values: squat.residuals,
           }]}
           head={["Obs", "Residual"]}

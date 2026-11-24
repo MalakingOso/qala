@@ -54,19 +54,16 @@ export function RunDetailPage({ id }: { id?: string }) {
         {
           title: "Pace",
           label: "sec/mi",
-          color: "var(--run)",
           values: run.run.pace,
         },
         {
           title: "Heart rate",
           label: "bpm",
-          color: "var(--zone-5)",
           values: run.run.hr,
         },
         {
           title: "Elevation",
           label: "m",
-          color: "var(--viz-3)",
           values: run.run.elev,
         },
       ].map((metric) => (
@@ -77,7 +74,6 @@ export function RunDetailPage({ id }: { id?: string }) {
           xLabel="sec"
           series={[{
             label: metric.label,
-            color: metric.color,
             values: metric.values,
           }]}
           height={180}
