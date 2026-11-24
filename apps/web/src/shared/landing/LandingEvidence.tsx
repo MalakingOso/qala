@@ -120,18 +120,21 @@ const TABS: Tab[] = [
     ],
     phone: {
       img: phoneWorkout,
-      tone: "light",
+      tone: "dark",
       alt:
-        "Qala workout screen on an Android phone: set 3 of 3 on Back Squat " +
-        "at 245 lb, a coach suggestion to drop to 240 because quads are " +
-        "sore, an RPE entry, and a Rest 3:45 note before the next lift.",
+        "Qala workout screen on an Android phone, on a dark brown frosted " +
+        "background: a GZCLP day 4 header, Deadlift at 205 lb with a loaded " +
+        "barbell and plate shown per side, a progress rail down the left, " +
+        "three warm-up sets, the open set 1 at 205 lb for 3 reps, and a " +
+        "Log set 1 button.",
     },
     desktop: {
       img: desktopLifts,
       alt:
-        "Qala desktop Lifts: +2.5% average e1RM this block, with per-lift " +
-        "e1RM charts for squat, bench, deadlift and press against the " +
-        "block's reference 1RM.",
+        "Qala desktop Lifts page on sample data: average e1RM up 2.5% this " +
+        "block, a gain bar for each of the four lifts, and dark e1RM " +
+        "charts for squat and bench, each rising to its latest value, 283 " +
+        "and 245 lb.",
     },
   },
   {
@@ -152,16 +155,17 @@ const TABS: Tab[] = [
       img: phoneRun,
       tone: "dark",
       alt:
-        "Qala run start screen on an Android phone: a GPS route preview, " +
-        "GPS status, a cue interval, an easy-run note, and a Start run " +
-        "button.",
+        "Qala live run screen on an Android phone, on a dark brown frosted " +
+        "background: an easy run with 0.75 miles recorded in 4:46 at a " +
+        "6:22 pace (6:23 average), a pause button, and a Finish run button " +
+        "above the tab bar.",
     },
     desktop: {
       img: desktopRunning,
       alt:
-        "Qala desktop Running: a 40.5 VDOT with a six-week fitness line, " +
-        "weekly miles, run count and rTSS tiles, a runs table, and last " +
-        "run's pace splits.",
+        "Qala desktop Running page on sample data: a 40.5 VDOT with a " +
+        "six-week trend chart, tiles for 11.0 miles, 2 runs and 125 rTSS, " +
+        "a table of two runs, and pace splits for an easy run.",
     },
   },
   {
@@ -182,18 +186,21 @@ const TABS: Tab[] = [
     ],
     phone: {
       img: phoneCoach,
-      tone: "light",
+      tone: "dark",
       alt:
-        "Qala Coach screen on an Android phone: a suggested squat change " +
-        "from 245×4 to 240×4 with the engine and coach values side by side, " +
-        "the reasoning, and the clamped limits shown.",
+        "Qala Coach screen on an Android phone: a dark header with the " +
+        "status Runs on your server and two context chips, a cream sheet " +
+        "with an intro card, two suggested questions (Why this weight " +
+        "today? and Should I change anything?), and a message box with a " +
+        "Send button.",
     },
     desktop: {
       img: desktopMemory,
       alt:
-        "Qala desktop Coach memory: proposals waiting, the profile the " +
-        "coach reads, and a coach log showing clamped and discarded " +
-        "adjustments with the limits.",
+        "Qala desktop Coach memory page on sample data: two proposed facts " +
+        "with Accept and Reject buttons, the profile the coach reads, and a " +
+        "coach log with one clamped and one discarded suggestion, plus the " +
+        "limits, weight −10% to +2.5% and sets −2 to +1.",
     },
   },
 ];
