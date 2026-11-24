@@ -37,7 +37,7 @@ export function LiftsPage() {
             <div className="block-line">
               {allUp ? "All four lifts are up" : "Mixed across the four lifts"}
               <span>
-                {` · ${top.name.toLowerCase()} leads, ${last.name.toLowerCase()} has the least room`}
+                {` · ${top.name.toLowerCase()} up most, ${last.name.toLowerCase()} slowest`}
               </span>
             </div>
           </div>

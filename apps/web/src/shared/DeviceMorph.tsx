@@ -39,7 +39,7 @@ export function DeviceMorph() {
         <span>Phone</span>
         <span>Laptop</span>
         <span>Desktop</span>
-        <span>One plan, everywhere</span>
+        <span>Phone and desktop</span>
       </figcaption>
     </figure>
   );

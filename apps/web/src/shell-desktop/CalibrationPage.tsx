@@ -27,7 +27,7 @@ export function CalibrationPage() {
   return (
     <div>
       <PageHeader
-        kicker="Population defaults for about six weeks, then calibrate"
+        kicker="Population defaults until 20 observations per lift"
         title="Calibration"
       >
         <div className="lede-grid even">
@@ -87,8 +87,8 @@ export function CalibrationPage() {
           />
           <p className="note-line">
             <b>Run</b> · VDOT observations: {VDOT_OBS} of{" "}
-            {FREE_AT}. Threshold pace still from a recent race (Riegel) until CS
-            exists.
+            {FREE_AT}. Threshold pace still comes from a recent race (Riegel)
+            until critical speed is set.
           </p>
         </Panel>
         <DenseSeries

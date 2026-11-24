@@ -246,8 +246,8 @@ export function ExerciseDbPage() {
       </Panel>
       <Panel title="Yours">
         <p className="mine-line">
-          Custom entries must carry target and synergist muscle tags, so
-          recovery and sets by muscle stay honest. They last until the page
+          Custom entries need target and synergist muscle tags so recovery
+          and weekly set counts include them. They last until the page
           reloads, and the dry run on Programs resolves them by name.
         </p>
         <form className="add-ex" onSubmit={submit} noValidate>

@@ -152,22 +152,22 @@ export function LandingPage() {
         <section className="landing-hero">
           <div className="landing-copy">
             <p className="group-label page-eyebrow">
-              Lifting + running / built to start with
+              Self-hosted lifting + running
             </p>
             <h1 className="title">
-              Serious training,<br />without the overwhelm.
+              Lift and run<br />from one plan.
             </h1>
             <p className="landing-intro">
-              Most serious training apps assume you already know how to program.
-              Most beginner apps are built to be outgrown. Qala gives you one
-              calm plan for your lifting and running — clear enough for a
-              beginner, and deep enough to grow with you for years.
+              Pick a built-in program on your phone, or write your own as plain
+              text on desktop. Qala tracks your lifts and your runs in the same
+              fatigue model, so a hard long run shows up in your readiness and
+              your rest times.
             </p>
             <p className="landing-evidence">
-              You check in and follow today's session. Underneath, a local
-              engine grounded in published training research adjusts your loads
-              as you recover and get stronger — and explains every change in
-              plain language, so you learn as you go.
+              Before a session you log a quick recovery check-in. A local
+              engine built from published training research sets your rest from
+              your soreness, fatigue and recent sets, cuts the remaining sets
+              when grinds pile up, and says why next to each change.
             </p>
             <div className="landing-actions">
               <a
@@ -195,7 +195,7 @@ export function LandingPage() {
               </button>
             </div>
             <p className="landing-footnote">
-              Self-hosted. Your training stays yours.
+              Self-hosted. Your logs stay on your phone. The desktop workspace is a preview on sample data.
             </p>
           </div>
           <DeviceMorph />
@@ -205,7 +205,7 @@ export function LandingPage() {
       </main>
       <footer className="landing-footer" inert={mainInert ? true : undefined}>
         <p>
-          Qala is AGPL-3.0. Program language and exercise data build on
+          Qala is AGPL-3.0-or-later. LS++ and the exercise database build on
           liftosaur.
         </p>
       </footer>
@@ -217,7 +217,7 @@ export function LandingPage() {
             type="button"
             onClick={beginTransition}
           >
-            Scroll to explore <span aria-hidden="true">↓</span>
+            Scroll <span aria-hidden="true">↓</span>
           </button>
         </div>
       )}

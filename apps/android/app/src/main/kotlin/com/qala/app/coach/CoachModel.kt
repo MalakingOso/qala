@@ -126,4 +126,4 @@ fun unavailableCopy(why: Why): UnavailableCopy = when (why) {
 }
 
 /** The status next to the title: where the coach runs while it answers, "Offline" once a question could not be answered. */
-fun coachStatus(unavailable: Why?): String = if (unavailable == null) "Runs on callisto" else "Offline"
+fun coachStatus(unavailable: Why?): String = if (unavailable == null) "Runs on your server" else "Offline"

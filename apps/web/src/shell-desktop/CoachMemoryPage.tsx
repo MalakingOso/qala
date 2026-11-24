@@ -16,7 +16,7 @@ const LOG: {
     date: "Sep 13",
     tone: "warn",
     tag: "clamped",
-    text: "Squat −2% clamped inside the envelope. Reason logged.",
+    text: "Squat −2%, kept inside coach limits. Reason logged.",
   },
   {
     date: "Sep 12",

@@ -621,7 +621,7 @@ export const defaultSettings: SettingsModel = {
   },
   run: { audioCues: true, autoPause: true, hrStrap: false, offlineMaps: true },
   coach: {
-    status: "Runs on callisto",
+    status: "Runs on your server",
     limits: "weight -10% to +2.5%, sets -2 to +1",
   },
 };

@@ -122,7 +122,7 @@ class CoachScreenTest {
         // An empty thread: the day's chips, the coach's status and the questions to start from.
         rule.onNodeWithText("Today: Lower A").assertExists()
         rule.onNodeWithText("Check-in: recovery 7, quads 4").assertExists()
-        rule.onNodeWithText("Runs on callisto").assertExists()
+        rule.onNodeWithText("Runs on your server").assertExists()
         rule.onNodeWithText("Why this weight today?").performClick()
 
         waitForText("Your quads are still sore", substring = true)
@@ -172,7 +172,7 @@ class CoachScreenTest {
         rule.onNodeWithText("Try again").performClick()
         waitForText("Back now.")
         rule.onNodeWithText("Coach is unavailable").assertDoesNotExist()
-        rule.onNodeWithText("Runs on callisto").assertExists()
+        rule.onNodeWithText("Runs on your server").assertExists()
         assertEquals(2, client.asked.size)
         assertEquals(client.asked[0], client.asked[1])
     }

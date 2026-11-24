@@ -63,7 +63,7 @@ class CoachRouteTest {
         showApp(client)
 
         openTab("Coach")
-        waitForText("Runs on callisto")
+        waitForText("Runs on your server")
         assertTrue("opening the tab makes no request", client.asked.isEmpty())
         // The chips come from the seeded day, so they are the app's own words, not the fake's.
         waitForText("Today: ", substring = true)
@@ -95,7 +95,7 @@ class CoachRouteTest {
         val client = FakeCoachClient(CoachResult.Unavailable(Why.NotRecognised, "missing Tailscale identity"))
         showApp(client)
         openTab("Coach")
-        waitForText("Runs on callisto")
+        waitForText("Runs on your server")
         rule.onNodeWithContentDescription("Ask the coach").performTextInput("How is my recovery?")
         rule.onNode(hasText("Send") and hasClickAction()).performClick()
         waitForText("didn't recognise this phone", substring = true)

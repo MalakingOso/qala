@@ -1,8 +1,8 @@
-/* The "made for real life" section. Six short cards that say what Qala
- * does day to day, in the same voice as the literature cards below it:
- * plain titles, one short paragraph each, no icons. The last card is the
- * MCP work, marked as roadmap because it is not built; it must not read
- * as something the app does today. */
+/* The "day to day" section. Six short cards that say what Qala does in an
+ * ordinary week, in the same voice as the literature cards below it: plain
+ * titles, one short paragraph each, no icons. The last card is the MCP work,
+ * marked as roadmap because it is not built; it must not read as something
+ * the app does today. */
 
 interface Pillar {
   tag: string;
@@ -13,57 +13,58 @@ interface Pillar {
 const PILLARS: Pillar[] = [
   {
     tag: "Time away",
-    title: "Vacation without losing the thread",
+    title: "Time off without breaking the plan",
     body:
-      "Switching off for a trip is a first class status, not a miss. On " +
-      "vacation or sick the plan shifts out. On a break or a day that " +
-      "does not fit, it rests in place. Today says which, and coming back " +
-      "is a return, not a rebuild.",
+      "Mark a day or a stretch as vacation, sick, a break, a scheduling " +
+      "conflict or an injury. Vacation and sick push the plan forward. A " +
+      "break or a conflict rests in place. An injury names the muscle and " +
+      "carries into your check-ins as sore. None of them count as a miss.",
   },
   {
     tag: "Every session",
-    title: "Lifting and running on one plan",
+    title: "Lifting and running in one fatigue model",
     body:
-      "A run is load on the same readiness score as a squat day. Distance, " +
-      "pace and GPS feed the same fatigue model, so a hard long run is " +
-      "felt at the bar, and the plan says why.",
+      "Recorded runs add to the same systemic and leg fatigue as your " +
+      "lifts. Session effort carries into readiness, so a hard long run can " +
+      "lower tomorrow's score and lengthen your rests, and the app shows " +
+      "why.",
   },
   {
     tag: "Warm-up",
-    title: "Warm-ups that are part of the plan",
+    title: "Warm-ups generated for the session",
     body:
-      "You never have to guess how to warm up. Easy cardio with its own " +
-      "countdown, mobility picked for what is sore and what equipment you " +
-      "own, and ramp-up sets built right into the workout.",
+      "Each lifting day opens with a short cardio countdown, soft-tissue " +
+      "and dynamic mobility drills chosen from your soreness check-in and " +
+      "the gear you own, and ramp-up sets leading to your working weight.",
   },
   {
     tag: "The app",
-    title: "One clear step at a time",
+    title: "One action per screen on the phone",
     body:
-      "No dashboards full of sliders before your first set. Check in, warm " +
-      "up, lift, rest, run: one primary action per screen on the phone, " +
-      "readable mid-set with sweaty hands, backed by a full desktop " +
-      "workspace whenever you want the bigger view.",
+      "The Android app walks through check-in, warm-up, sets, rest and runs " +
+      "with one primary action on each screen and large numbers you can " +
+      "read between sets. On desktop, the web workspace holds the LS++ " +
+      "editor, program import and block-level charts.",
   },
   {
     tag: "Over months",
-    title: "An app that grows with you",
+    title: "From built-in plans to your own LS++",
     body:
-      "Start as a beginner with a proven plan and one screen at a time. As " +
-      "the months add up, the same engine tracks your strength trends, " +
-      "adapts to your recovery, and opens up a full program editor when " +
-      "you are ready to customize. You never have to graduate to another " +
-      "app.",
+      "Start with a built-in program, GZCLP or the Texas Method, and enter " +
+      "your starting weights. Over a few weeks the Kalman filter tracks " +
+      "each lift's estimated 1RM and your check-in baseline adjusts to " +
+      "your own history. To write or import a custom program, use the LS++ " +
+      "editor on desktop. Sending it to the phone is not built yet.",
   },
   {
     tag: "Roadmap",
-    title: "Your coach, your model",
+    title: "MCP access for your own model",
     body:
-      "Today the Coach runs local on your hardware and can only nudge " +
-      "inside the engine's clamped limits. On the roadmap, an MCP server " +
-      "will expose the plan, logged sessions, readiness and fatigue to " +
-      "the assistant you already use, with the same clamp on every " +
-      "suggestion.",
+      "Right now Coach runs locally on your hardware and stays inside the " +
+      "engine's limits (weight −10% to +2.5%, sets −2 to +1). On the " +
+      "roadmap, an MCP server will expose your plan, logged sessions, " +
+      "readiness and fatigue to any MCP client or local model you use, " +
+      "under the same limits.",
   },
 ];
 
@@ -74,14 +75,14 @@ export function LandingLife() {
       aria-labelledby="life-title"
     >
       <div className="landing-section-head">
-        <p className="group-label">Made for real life</p>
+        <p className="group-label">Day to day</p>
         <h2 className="title" id="life-title">
-          Train through the weeks, not just the session.
+          Built for ordinary weeks.
         </h2>
         <p className="life-lede">
-          You don't need to know how to write a program or read a wall of
-          charts to train well. Qala handles the load math quietly in the
-          background and keeps the plan honest when life gets in the way.
+          The engine runs the fatigue math from your check-ins and logged
+          sets, shifts the plan when you mark time off, and lets you open the
+          charts only when you want them.
         </p>
       </div>
       <div className="life-cards">

@@ -129,7 +129,7 @@ class CoachModelTest {
 
     @Test
     fun theStatusSaysWhereTheCoachRunsUntilItCannotAnswer() {
-        assertEquals("Runs on callisto", coachStatus(null))
+        assertEquals("Runs on your server", coachStatus(null))
         for (why in Why.entries) assertEquals("Offline", coachStatus(why))
     }
 }
