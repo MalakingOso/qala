@@ -89,7 +89,7 @@ Mirror the dark block under `@media (prefers-color-scheme: dark)` for `theme: 's
 | Big static number: weight x reps, stat tiles, readiness, session figures | Qala Test | 700 | 24-64 | default (proportional lining) |
 | Ticking number: rest countdown, "of 3:45", workout clock, live run numbers, warm-up timers | Qala Test | 700, 500 for "of 3:45" | 22-150 | `font-variant-numeric: lining-nums tabular-nums` |
 | Body, buttons, controls, set rows, table cells | DM Mono | 400, 500 for labels and emphasis | 13-15 / 13-14 | DM Mono's own |
-| Desktop shell UI text: nav, labels, table cells, body copy, buttons (L16) | DM Sans (`--font-ui` in `theme/desktop.css`, variable, Latin subset; the system stack behind it covers missing glyphs) | 400, 500, 600 for emphasis | 12-13 | tabular for numerals |
+| Desktop shell UI text: nav, labels, table cells, body copy, buttons (L20, replaces L16's DM Sans) | Recursive (`--font-ui` in `theme/fonts.css`, variable wght and slnt, tabular figures; the system stack behind it covers missing glyphs) | 400, 500, 600 for emphasis | 12-13 | tabular for numerals |
 | Desktop numerals, chart ticks, code: load and distance columns, axis ticks, times, LS++ | DM Mono | 400, 500 | 10-13 | DM Mono's own, tabular |
 | Group labels (uppercase band) | DM Mono | 500, letter-spacing .09em | 11 | |
 | Chart text: axis ticks, direct labels, legends | DM Mono | 400, 500 for the labeled value | 10-12 | tabular in axis ticks |
@@ -113,12 +113,16 @@ Already in the repo; copy to `apps/web/public/fonts/` at scaffold time and add t
 | `assets/fonts/DMMono-Regular.woff2`, `DMMono-Medium.woff2` | 14,820 / 14,988 | `e1896b13b2b1bb112fac2f9571bd6c40e118746e77a4511edbf43fbb41bf3e1e` / `9964608a849396bd00c4bfd7034afe03486469dcf20b4f6b8cbdfdd310369951` | copied from Beamer |
 | `assets/fonts/DMMono-Regular.ttf`, `DMMono-Medium.ttf` | 32,276 / 32,732 | `ded888159a3fb1b13dc82640298ac81be9f06451e6ee63507018bae01b350e1d` / `4f619b305f7ba3d9fb33bc3aaffcae1700899969d804e11f2903b6fb155be3b7` | the two woff2 files above converted for Android with `scripts/woff2_to_ttf.py` (container change only: same 229 glyphs and tables, name table untouched). The DM Mono OFL header names no Reserved Font Name, so no rename. |
 | `assets/fonts/DMMono-OFL.txt` | 4,484 | `2bada5ea45c3c63b7f1ea1f88ce9672c9e4f0c42b2c3b7378949084fe55a3066` | google/fonts |
+| `apps/web/public/fonts/Recursive-slnt-wght.woff2` | 107,568 | `d091e674ca59a2d19a0206386177a74de1fd22fb9c52cd4da08a365fd59ff5c2` | OFL 1.1, arrowtype/recursive; variable wght 300-1000 and slnt -15 to 0; copied from `mockups/fonts/recursive-slnt-wght.woff2` on 2026-11-23 (L20) |
+| `apps/web/public/fonts/Recursive-OFL.txt` | 4,381 | `f1e2252e4bb3f2df36cf2942441189a42082f096105ef5a6f731c76f41d951b5` | copied from the Android licenses directory |
 | `assets/fonts/Faustina-qala.woff2`, `Faustina-Italic-qala.woff2` | 25,168 / 26,548 | `0ee13dc9b35cc8677a62ce1c3c545f7e43d6a075685b6aea119dd9d862bec1ac` / `7cf80a7f9a25b5a7751a518701cdde63ca2589b824dc6bad914ac72acd382c9a` | fallback; google/fonts variable wght 300-800, Latin subset with all layout features |
 | `assets/fonts/Faustina-OFL.txt` | 4,390 | `2d8f6a7be96a15fd2deaa8e6b5320cec6c253216b5a8f7e1becccfc51147b877` | google/fonts; byte-identical to `QalaTest-OFL.txt` |
 
 The Android app loads TTF, not woff2. `apps/android/design/src/main/res/font/` holds byte-identical copies of `QalaTestV2-Bold.ttf`, `QalaTest-Medium.ttf`, `DMMono-Regular.ttf` and `DMMono-Medium.ttf` as `qalatest_bold.ttf`, `qalatest_medium.ttf`, `dmmono_regular.ttf` and `dmmono_medium.ttf` (Android resource names must be lowercase, so these are copies, not links). Use the resource ids with an explicit weight: Qala Test V2's family name is "Qala Test V2", so a lookup by name would miss. Convert more woff2 files with `uv run --with fonttools --with brotli scripts/woff2_to_ttf.py FILE.woff2`.
 
 `assets/fonts/Recursive-qala.woff2` and `Recursive-OFL.txt` were removed 2026-09-13; the Qala Test files moved up from `assets/fonts/qala-test/` to `assets/fonts/` the same day, leaving only `qala-test/work/` (build scripts) and `README-test.md` behind.
+
+`DMSans-Variable.woff2` and `DMSans-OFL.txt` were removed from `apps/web/public/fonts/` on 2026-11-23 when the desktop moved to Recursive (L20); nothing in the web app loads DM Sans any more.
 
 ### 3.3 CSS
 
@@ -457,6 +461,8 @@ Below 1100px the two-column rows stack; below 760px the sidebar becomes a menu a
 
 Decided 2026-11-13 (D40): the six leftover look questions are confirmed as built (4px rounded chips; no avatar; toolbar search and week switcher wanted; week 2 past and week 4 dashed as the plan; deload in week 6 everywhere; Muse's invented numbers stay out; the load zoom keeps its "Workouts" title and Table toggle). Where U27's rebuilt load zoom differs, U27 wins.
 
+Built 2026-11-23 (L20, L21): the desktop takes the phone's S51 look. The canvas is the warm cream sheet colour (`--sheet-bg`, navy in dark) and UI text is Recursive; cards keep the Beamer border and take the warm hard shadow, and the sidebar and bar stay on the white card surface. The load zoom's Day / Week / Month / Block picker is the dark floating island with an ember thumb and dark ink on it. TrendPlot (and E1rmLine, ReadinessLine and RunSpark on it), SetsByMuscle and DenseSeries draw on a flush `#1c120c` night panel inside the card (`ChartShell` takes `surface="night"`; the card head and the Table view stay on the card): a 2.5px white line over a teal fade, one baseline, dashed references, teal points, and the latest point as an ember dot with a white ring and a mono "now" callout. LoadZoom (U27 rules unchanged), RecoveryMap, RepsIntensity, the splits and the tables stay light. All of it is in `theme/desktop.css` and `shared/charts/`; `tokens.css` is untouched. The workspace still runs on `store/sample.ts`.
+
 ### 7.16 Desktop: coach memory
 
 Dated, sourced facts with Accept / Reject for pending ones, the profile the coach reads, and the coach log including clamped and discarded adjustments.
@@ -518,19 +524,23 @@ and small tag as the literature cards below them, with no icons and no
 nested cards.
 
 "Grounded in the literature" (U28) follows, in two halves. First, what the
-engine is built from: seven cards covering the fitness-fatigue model, the
-Kalman e1RM estimate, the check-in readiness measures, autoregulation,
-per-muscle recovery, concurrent running and lifting, and deload triggers,
-each with its key citations. Second, what you can do with it, as three tabs —
-Lifting, Running, Coach (arrow-key navigable, `aria-selected`). Each panel
-pairs a copy block and a feature list with a stage: the desktop capture in a
-light window chrome, and an Android capture in a CSS device shell (a thin
-bezel, a punch-hole camera, side keys and a gesture bar) overlapping its
-lower corner like a phone on a desk. All captures are taken from the built
-PWA (`shared/landing/*.webp`). The panel fades and rises on tab change; the
-stage collapses to one column under 900 px. Open Qala enters the desktop
-workspace on wide screens and Today on phones. AGPL and liftosaur credit
-remain in the footer.
+engine is built from: six cards covering the fitness-fatigue model, the
+Kalman e1RM estimate, the check-in readiness measures, autoregulation on
+grinds, per-muscle recovery, and concurrent running and lifting, each with
+its key citations (the deload card is gone: reactive deloads are not built).
+Second, what you can do with it, as three tabs: Lifting, Running, Coach
+(arrow-key navigable, `aria-selected`). Each panel pairs a copy block and a
+feature list with a stage: the desktop capture in a light window chrome, and
+an Android capture in a CSS device shell (a thin bezel, a punch-hole camera,
+side keys and a gesture bar) overlapping its lower corner like a phone on a
+desk. The phone captures are the native Android app on an emulator
+(2026-11-23: Workout, Run, Coach) and the desktop captures are the built
+workspace on sample data (`shared/landing/*.webp`). The panel fades and
+rises on tab change; the stage collapses to one column under 900 px. Open
+Qala enters the desktop workspace on wide screens and Today on phones. AGPL
+and liftosaur credit remain in the footer.
+
+Rebuilt 2026-11-23 (L20, L21, L22): the page runs wash, cream sheet, glass on wash, wash footer. The topbar is a floating dark island with an ember pill; the intro overlay keeps `--bg` so the clips stay seamless, and the hand-off closes an iris onto the plate while the wash shows through. The hero is the baked wash (`shared/wash/flow-wash.webp`) under umber scrims; the cream sheet (the six day-to-day cards and the six literature cards) rises 24px over it; the showcase band holds the three-tab island and the copy in a warm glass card beside the captures; the footer sits on the wash. Text on ember is dark ink (5.4:1), not white. The copy was rewritten to claim only what is built (L22) and the hero says the desktop workspace is a preview on sample data. The new tokens live in `theme/surfaces.css`.
 
 ### 7.18 Skipping a day and the training status (U24)
 

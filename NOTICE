@@ -27,15 +27,15 @@ removed from the tree on 2026-11-12; commit a4fd867 still has it.
   300-800, Latin subset): apps/web/public/fonts/Faustina-OFL.txt
 - DM Mono (body text, copied from the owner's Beamer app, google/fonts):
   apps/web/public/fonts/DMMono-OFL.txt
-- DM Sans (desktop UI text, google/fonts via @fontsource-variable/dm-sans
-  5.2.8, variable wght, Latin subset): apps/web/public/fonts/DMSans-OFL.txt
+- Recursive (UI text on the web and in the Android app, arrowtype/recursive,
+  variable wght 300-1000 and slnt -15 to 0): apps/web/public/fonts/Recursive-OFL.txt
 
-The Android app bundles TTF copies of Qala Test (Bold V2, Medium) and DM Mono
-(Regular, Medium); DM Mono was converted from the woff2 files with
+The Android app bundles TTF copies of Qala Test (Bold V2, Medium), DM Mono
+(Regular, Medium) and Recursive (variable); DM Mono was converted from the woff2 files with
 scripts/woff2_to_ttf.py, which changes only the container, and its OFL header
 names no Reserved Font Name. The OFL texts ship in the APK under
 apps/android/app/src/main/assets/licenses/ (QalaTest-OFL.txt, Faustina-OFL.txt,
-DMMono-OFL.txt).
+DMMono-OFL.txt, Recursive-OFL.txt).
 
 ## Icons
 
