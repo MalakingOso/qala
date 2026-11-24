@@ -4,11 +4,11 @@ package com.qala.design
 enum class StageDotState { Done, Now, Later, Skipped }
 
 /**
- * One stage of Today's day rail, as the rail and its menu see it. The list is never a fixed length: a lift day has
+ * One stage of Today's day rail, as the timeline sees it. The list is never a fixed length: a lift day has
  * six stages, a rest day three, so nothing downstream may assume six.
  *
  * An [interlude] stage (recover, wind down) has no doneness. "Now" skips it and it draws as a soft dot.
- * [doneTime] is the clock time the menu shows for a Done stage (for example "7:12"); later stages carry none.
+ * [doneTime] is the clock time the timeline shows for a Done stage (for example "7:12"); later stages carry none.
  */
 data class RailStage(
     val id: String,

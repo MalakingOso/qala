@@ -125,9 +125,6 @@ class TodayModel(private val snapshot: EngineSnapshot, val plan: TodayPlan, priv
     val nowIndex: Int = nowIndex(stages)
     val eyebrow: String = headEyebrow(snapshot, plan)
 
-    /** The day's name, as the menu's title. */
-    val menuTitle: String = weekdayName(plan.date)
-
     val nextRun: InfoCard = nextRunCard(snapshot)
     val readiness: InfoCard = readinessCard(snapshot)
     val week: WeekCard = weekCard(snapshot)
@@ -171,7 +168,7 @@ val StageId.railId: String
         StageId.WIND_DOWN -> "wind-down"
     }
 
-/** Today's stages as the rail and its menu read them. A done stage carries its time, read at the record's own offset. */
+/** Today's stages as the timeline reads them. A done stage carries its time, read at the record's own offset. */
 fun railStages(plan: TodayPlan, use24h: Boolean): List<RailStage> = plan.stages.map { s ->
     RailStage(
         id = s.id.railId,
