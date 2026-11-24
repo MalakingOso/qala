@@ -1,0 +1,101 @@
+/* S48 to S51 mobile aesthetic surface layer (Surfaces.kt, Pages.kt, Bars.kt,
+ * FlowRail.kt). Kept separate from tokens.css so Android Tokens.kt stays
+ * byte-for-byte synced via scripts/tokens_to_kotlin.ts. */
+
+:root {
+  /* Theme-invariant Wash, Night, and Floating Island tokens */
+  --wash-ground: #140a04;
+  --wash-night: #1c120c;
+  --wash-night-border: rgba(255, 255, 255, 0.08);
+  --wash-ember: #fb923c;
+  --wash-chart-ember: #e0652b;
+  --wash-ember-ink: #1b0e05;
+  --wash-teal: #2dd4bf;
+  --wash-teal-ink: #0b1b19;
+  --wash-text: #ffffff;
+  --wash-text-2: rgba(255, 255, 255, 0.92);
+  --wash-text-muted: rgba(255, 255, 255, 0.72);
+  --wash-line: rgba(255, 255, 255, 0.34);
+  --wash-glass-fill: rgba(24, 14, 8, 0.50);
+  --wash-glass-fill-hover: rgba(24, 14, 8, 0.68);
+  --wash-glass-border: rgba(255, 255, 255, 0.24);
+  --wash-card-shadow: 2px 4px 0 0 rgba(0, 0, 0, 0.28);
+  --wash-text-shadow: 0 2px 10px rgba(0, 0, 0, 0.50);
+
+  /* Umber scrim ramps (Pages.kt:55-62) */
+  --scrim-soft: linear-gradient(
+    180deg,
+    rgba(20, 10, 4, 0.30) 0%,
+    rgba(20, 10, 4, 0.18) 40%,
+    rgba(20, 10, 4, 0.08) 75%,
+    rgba(20, 10, 4, 0) 100%
+  );
+  --scrim-board3: linear-gradient(
+    180deg,
+    rgba(20, 10, 4, 0.70) 0%,
+    rgba(20, 10, 4, 0.52) 30%,
+    rgba(20, 10, 4, 0.60) 50%,
+    rgba(20, 10, 4, 0.88) 66%,
+    rgba(20, 10, 4, 0.94) 100%
+  );
+  --scrim-glass: linear-gradient(
+    180deg,
+    rgba(20, 10, 4, 0.58) 0%,
+    rgba(20, 10, 4, 0.34) 28%,
+    rgba(20, 10, 4, 0.26) 60%,
+    rgba(20, 10, 4, 0.42) 100%
+  );
+
+  /* Floating dark umber island (Bars.kt:59-63) */
+  --island-fill: rgba(22, 13, 8, 0.92);
+  --island-rule: rgba(255, 255, 255, 0.16);
+  --island-inactive: #bcc5da;
+  --island-ember: #e0652b;
+  --island-shadow: 2px 4px 0 0 rgba(0, 0, 0, 0.31);
+
+  /* Theme-following Sheet & Glass carriers, Light */
+  --sheet-bg: #f7f0e5;
+  --sheet-bg-95: rgba(247, 240, 229, 0.95);
+  --sheet-rim: rgba(255, 255, 255, 0.70);
+  --sheet-up-shadow: 0 -12px 34px rgba(20, 10, 4, 0.22);
+  --sheet-recessed: #efe7d8;
+  --sheet-hover: #f0e8da;
+  --sheet-border: rgba(27, 14, 5, 0.11);
+  --sheet-border-strong: rgba(27, 14, 5, 0.22);
+  --sheet-ink: #1b0e05;
+  --sheet-ink-secondary: #4e3f33;
+  --sheet-ink-muted: #655547;
+  --sheet-shadow-card: 2px 4px 0 0 rgba(27, 14, 5, 0.11);
+
+  --glass-fill: rgba(255, 248, 238, 0.74);
+  --glass-ink: #1b0e05;
+  --glass-muted: #4a3b2e;
+  --glass-line: rgba(255, 255, 255, 0.55);
+
+  /* Board 3 chart tokens (fixed dark/night language) */
+  --chart-night-grid: rgba(255, 255, 255, 0.12);
+  --chart-night-base: rgba(255, 255, 255, 0.28);
+  --chart-night-ref: rgba(255, 255, 255, 0.55);
+  --chart-night-label: rgba(255, 255, 255, 0.72);
+  --chart-night-label-strong: #ffffff;
+}
+
+[data-theme="dark"] {
+  --sheet-bg: #0b1020;
+  --sheet-bg-95: rgba(11, 16, 32, 0.95);
+  --sheet-rim: rgba(255, 255, 255, 0.16);
+  --sheet-up-shadow: 0 -14px 36px rgba(0, 0, 0, 0.48);
+  --sheet-recessed: #0f1529;
+  --sheet-hover: #18213f;
+  --sheet-border: rgba(232, 236, 246, 0.12);
+  --sheet-border-strong: rgba(232, 236, 246, 0.24);
+  --sheet-ink: #e8ecf6;
+  --sheet-ink-secondary: #aab4cc;
+  --sheet-ink-muted: #8a93ab;
+  --sheet-shadow-card: 2px 4px 0 0 #2a3350;
+
+  --glass-fill: rgba(24, 14, 8, 0.58);
+  --glass-ink: #ffffff;
+  --glass-muted: rgba(255, 255, 255, 0.72);
+  --glass-line: rgba(255, 255, 255, 0.16);
+}

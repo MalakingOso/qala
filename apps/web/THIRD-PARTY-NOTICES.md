@@ -9,6 +9,7 @@ time; checksums in docs/DESIGN.md 3.2):
   See `public/fonts/Faustina-OFL.txt`.
 - DM Mono (Regular + Medium): OFL 1.1, google/fonts, copied from Beamer.
   See `public/fonts/DMMono-OFL.txt`.
+- Recursive (variable, wght 300 to 1000, slnt -15 to 0): OFL 1.1, arrowtype/recursive. See `public/fonts/Recursive-OFL.txt`.
 
 Runtime libraries (see `package.json` for versions):
 

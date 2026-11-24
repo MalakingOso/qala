@@ -17,6 +17,13 @@
   font-display: swap;
 }
 @font-face {
+  font-family: "Recursive";
+  src: url(/fonts/Recursive-slnt-wght.woff2) format("woff2");
+  font-weight: 300 1000;
+  font-style: oblique -15deg 0deg;
+  font-display: swap;
+}
+@font-face {
   font-family: "DM Sans";
   src: url(/fonts/DMSans-Variable.woff2) format("woff2");
   font-weight: 100 1000;
@@ -32,14 +39,20 @@
   src: url(/fonts/DMMono-Medium.woff2) format("woff2");
   font-weight: 500;
 }
+:root {
+  --font-display: "Qala Test", "Faustina", Georgia, serif;
+  --font-ui: "Recursive", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "DM Mono", ui-monospace, monospace;
+}
 body {
-  font-family: "DM Mono", ui-monospace, monospace;
-  font-size: 14px;
+  font-family: var(--font-ui);
+  font-size: 14.5px;
   line-height: 1.5;
 }
 .title,
 .figure {
-  font-family: "Qala Test", "Faustina", Georgia, serif;
+  font-family: var(--font-display);
   font-weight: 700;
   letter-spacing: 0;
 }
@@ -47,10 +60,11 @@ body {
   font-variant-numeric: lining-nums tabular-nums;
 }
 .group-label {
-  font-family: "DM Mono", monospace;
+  font-family: var(--font-ui);
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 600;
   letter-spacing: .09em;
   text-transform: uppercase;
   color: var(--fg-muted);
 }
+.mono { font-family: var(--font-mono); }
