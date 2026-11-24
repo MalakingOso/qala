@@ -1,9 +1,12 @@
-/* The "Grounded in the literature" section (DESIGN 7.17). Two halves: the
- * published work the engine is built from (cards with citations), and what
- * you can actually do with it, shown as three tabs (Lifting, Running,
- * Coach), each pairing an Android capture with its desktop view. The
- * images are captures of the Android app on an emulator and of the desktop
- * workspace (apps/web/src/shared/landing/*.webp). */
+/* The "Grounded in the literature" half of the landing page (DESIGN 7.17),
+ * in two pieces that sit on different surfaces. LandingSources is the head
+ * and the published work the engine is built from (cards with citations);
+ * it goes on the cream sheet and carries the #how-it-decides anchor.
+ * LandingShowcase is what you can actually do with it, shown as three tabs
+ * (Lifting, Running, Coach), each pairing an Android capture with its
+ * desktop view; it gets its own band of wash. The images are captures of the
+ * Android app on an emulator and of the desktop workspace
+ * (apps/web/src/shared/landing/*.webp). */
 
 import { useState } from "react";
 import desktopLifts from "./desktop-lifts.webp";
@@ -195,11 +198,15 @@ const TABS: Tab[] = [
   },
 ];
 
-/** A phone capture inside an Android shell: a thin bezel, a centred
- * punch-hole camera, side keys, and the Android gesture bar. */
+/** A phone capture inside an Android shell: a dark umber titanium bezel, a
+ * centred punch-hole camera, side keys, and the Android gesture bar. The
+ * tone says what the capture's bottom edge looks like, so the gesture bar
+ * can be seen against it. */
 function PhoneFrame({ shot }: { shot: Shot }) {
   return (
-    <figure className={`evidence-device is-android tone-${shot.tone}`}>
+    <figure
+      className={`evidence-device is-android tone-${shot.tone ?? "dark"}`}
+    >
       <div className="device-body">
         <div className="device-screen">
           <img src={shot.img} alt={shot.alt} loading="lazy" />
@@ -213,10 +220,9 @@ function PhoneFrame({ shot }: { shot: Shot }) {
   );
 }
 
-export function LandingEvidence() {
-  const [active, setActive] = useState(TABS[0].id);
-  const tab = TABS.find((t) => t.id === active) ?? TABS[0];
-
+/** The head and the "01" cards. A section of its own so the hero's button
+ * can scroll to it and move focus to it. */
+export function LandingSources() {
   return (
     <section
       className="landing-features evidence"
@@ -251,9 +257,25 @@ export function LandingEvidence() {
           ))}
         </div>
       </div>
+    </section>
+  );
+}
 
-      <div className="evidence-app">
-        <h3 className="evidence-subhead">
+/** The "02" tabs on their own band of wash. */
+export function LandingShowcase() {
+  const [active, setActive] = useState(TABS[0].id);
+  const tab = TABS.find((t) => t.id === active) ?? TABS[0];
+
+  return (
+    <section
+      className="landing-showcase landing-wash"
+      aria-labelledby="landing-showcase-title"
+    >
+      <div className="evidence-app landing-showcase-inner">
+        <h3
+          className="evidence-subhead title"
+          id="landing-showcase-title"
+        >
           <span className="evidence-no">02</span> What you can do with it
         </h3>
         <div

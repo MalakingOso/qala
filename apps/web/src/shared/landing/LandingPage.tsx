@@ -8,7 +8,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowRight } from "../icons.ts";
 import { DeviceMorph } from "../DeviceMorph.tsx";
 import { IntroHero } from "../intro/IntroHero.tsx";
-import { LandingEvidence } from "./LandingEvidence.tsx";
+import { LandingShowcase, LandingSources } from "./LandingEvidence.tsx";
 import { LandingLife } from "./LandingLife.tsx";
 
 const TRANSITION_MS = 900;
@@ -149,59 +149,66 @@ export function LandingPage() {
         </div>
       </header>
       <main inert={mainInert ? true : undefined}>
-        <section className="landing-hero">
-          <div className="landing-copy">
-            <p className="group-label page-eyebrow">
-              Self-hosted lifting + running
-            </p>
-            <h1 className="title">
-              Lift and run<br />in one fatigue model.
-            </h1>
-            <p className="landing-intro">
-              Pick a built-in program on your phone, or write your own as plain
-              text on desktop. Record your runs in the same app, and a hard
-              long run shows up in your readiness and your rest times.
-            </p>
-            <p className="landing-evidence">
-              Before a session you log a quick recovery check-in. A local
-              engine built from published training research sets your rest from
-              your soreness, fatigue and recent sets, lowers the weight on the
-              remaining sets when grinds pile up, and says why next to each
-              change.
-            </p>
-            <div className="landing-actions">
-              <a
-                className="btn-primary"
-                href="#/desktop/overview"
-              >
-                Open Qala <ArrowRight size={18} />
-              </a>
-              <button
-                className="toolbar-link"
-                type="button"
-                onClick={() => {
-                  const section = document.getElementById("how-it-decides");
-                  section?.scrollIntoView({
-                    behavior:
-                      window.matchMedia("(prefers-reduced-motion: reduce)")
-                          .matches
-                        ? "instant"
-                        : "smooth",
-                  });
-                  section?.focus({ preventScroll: true });
-                }}
-              >
-                How it decides <span aria-hidden="true">↓</span>
-              </button>
+        <section className="landing-hero landing-wash">
+          <div className="landing-hero-inner">
+            <div className="landing-copy">
+              <p className="group-label page-eyebrow">
+                Self-hosted lifting + running
+              </p>
+              <h1 className="title">
+                Lift and run<br />in one fatigue model.
+              </h1>
+              <p className="landing-intro">
+                Pick a built-in program on your phone, or write your own as
+                plain text on desktop. Record your runs in the same app, and a
+                hard long run shows up in your readiness and your rest times.
+              </p>
+              <p className="landing-evidence">
+                Before a session you log a quick recovery check-in. A local
+                engine built from published training research sets your rest
+                from your soreness, fatigue and recent sets, lowers the weight
+                on the remaining sets when grinds pile up, and says why next to
+                each change.
+              </p>
+              <div className="landing-actions">
+                <a
+                  className="btn-primary"
+                  href="#/desktop/overview"
+                >
+                  Open Qala <ArrowRight size={18} />
+                </a>
+                <button
+                  className="toolbar-link"
+                  type="button"
+                  onClick={() => {
+                    const section = document.getElementById("how-it-decides");
+                    section?.scrollIntoView({
+                      behavior:
+                        window.matchMedia("(prefers-reduced-motion: reduce)")
+                            .matches
+                          ? "instant"
+                          : "smooth",
+                    });
+                    section?.focus({ preventScroll: true });
+                  }}
+                >
+                  How it decides <span aria-hidden="true">↓</span>
+                </button>
+              </div>
+              <p className="landing-footnote">
+                Self-hosted. Your logs stay on your phone. The desktop workspace is a preview on sample data.
+              </p>
             </div>
-            <p className="landing-footnote">
-              Self-hosted. Your logs stay on your phone. The desktop workspace is a preview on sample data.
-            </p>
+            <DeviceMorph />
           </div>
-          <DeviceMorph />
         </section>
-        <LandingLife />
-        <LandingEvidence />
+        <div className="landing-sheet">
+          <div className="landing-sheet-inner">
+            <LandingLife />
+            <LandingSources />
+          </div>
+        </div>
+        <LandingShowcase />
       </main>
       <footer className="landing-footer" inert={mainInert ? true : undefined}>
         <p>

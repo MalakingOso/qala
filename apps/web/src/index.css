@@ -746,53 +746,95 @@ table.data tr.row-link a:focus-visible {
   font-weight: 400;
   color: var(--fg-muted);
 }
+/* The landing page is three surfaces, top to bottom: the frosted wash (hero),
+ * the cream sheet that rises over it (day to day, the literature) and a
+ * second band of wash (the app tabs), then a wash-grounded footer. Tokens are
+ * in theme/surfaces.css. Everything is full bleed; each band keeps its own
+ * 1280 px measure. */
 .landing-page {
-  max-width: 1280px;
-  padding: 0 48px;
-  margin: 0 auto;
-}
-.landing-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 24px;
-  min-height: 100px;
-  border-bottom: var(--border-width) solid var(--border);
+  /* Active pills, the primary button and "now" marks: one ember, with the
+   * wash's ink on it. White on #e0652b is 3.5:1, the ink is 5.4:1. */
+  --landing-ember: var(--island-ember);
+  --landing-on-ember: var(--wash-ember-ink);
+  --landing-gutter: clamp(20px, 4vw, 48px);
+  min-height: 100dvh;
+  overflow-x: clip;
 }
 /* The nav bar fades in as the plate docks, so its Q mark holds still and
- * the plate can aim at it. A solid, even band of the page colour. */
+ * the plate can aim at it. It does not slide: the mark is measured before the
+ * fade starts. The header is only a positioning layer; the dark island inside
+ * it takes the clicks. */
 .landing-topbar {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   z-index: 60;
-  min-height: 0;
-  background: var(--bg);
-  border-bottom: var(--border-width) solid var(--border);
+  padding: 14px 16px 0;
   opacity: 0;
-  transform: translateY(-6px);
-  transition: opacity 0.5s ease, transform 0.5s ease;
+  transition: opacity 0.5s ease;
   pointer-events: none;
 }
 .landing-page[data-docking] .landing-topbar,
 .landing-page[data-phase="content"] .landing-topbar {
   opacity: 1;
-  transform: none;
-  pointer-events: auto;
 }
-/* Keep the bar's contents on the same 1280 px measure as the page. The
- * header is a flex row, so the inner must be told to fill it. */
 .landing-topbar-inner {
   display: flex;
-  flex: 1;
   align-items: center;
   justify-content: space-between;
-  gap: 24px;
-  max-width: 1280px;
-  min-height: 72px;
+  gap: 16px;
+  max-width: 1220px;
   margin: 0 auto;
-  padding: 0 48px;
+  padding: 10px 14px 10px 18px;
+  border: 1px solid var(--island-rule);
+  border-radius: 999px;
+  background: var(--island-fill);
+  box-shadow: var(--island-shadow);
+}
+.landing-page[data-docking] .landing-topbar-inner,
+.landing-page[data-phase="content"] .landing-topbar-inner {
+  pointer-events: auto;
+}
+.landing-topbar .brand {
+  color: var(--wash-text);
+  gap: 12px;
+}
+.landing-topbar .brand img {
+  display: block;
+  width: 40px;
+  height: 40px;
+}
+.landing-topbar .brand-name {
+  font-size: 28px;
+}
+.landing-topbar .brand-name em {
+  font-style: normal;
+  color: var(--island-ember);
+}
+.landing-topbar .toolbar-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: 999px;
+  background: var(--landing-ember);
+  color: var(--landing-on-ember);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: background var(--duration-fast) var(--ease);
+}
+.landing-topbar .toolbar-link:hover {
+  background: var(--wash-ember);
+  color: var(--landing-on-ember);
+  text-decoration: none;
+}
+.landing-topbar :focus-visible {
+  outline-color: var(--wash-text);
+  outline-offset: 3px;
 }
 @media (prefers-reduced-motion: reduce) {
   .landing-topbar {
@@ -804,7 +846,8 @@ table.data tr.row-link a:focus-visible {
 }
 /* The intro is the first full view, not a section you can scroll back to.
  * It is a fixed overlay over the content; a downward scroll fades it out
- * while the nav bar slides in, then it unmounts and never returns. */
+ * while the nav bar fades in, then it unmounts and never returns. The clip is
+ * rendered on the page colour (--bg), so the overlay keeps that colour. */
 .landing-intro-wrap {
   position: fixed;
   inset: 0;
@@ -823,19 +866,38 @@ table.data tr.row-link a:focus-visible {
   max-width: min(1080px, 100%);
   max-height: 100%;
   margin: 0;
+  /* Covers the whole figure; the dock closes it onto the plate (below). */
+  clip-path: ellipse(85% 85% at 50% 65.5%);
 }
-/* The dock: the whole scene fades, the plate shrinks and travels onto the
- * nav mark, and the wordmark and hint slip away first. */
+/* The dock: the overlay's page colour fades to show the wash, the plate
+ * shrinks and travels onto the nav mark, and the wordmark and hint slip away
+ * first. The clip is a render on the page colour, so over the wash it would
+ * show as a pale rectangle: it closes onto the plate (an ellipse round the
+ * plate and its floor, from intro.json), then the figure dissolves into the
+ * real mark as it arrives. */
 .landing-page[data-docking] .landing-intro-wrap {
   background: transparent;
   pointer-events: none;
   transition: background 0.5s ease;
 }
 .landing-page[data-docking] .intro-hero {
+  clip-path: ellipse(23.5% 24% at 50% 65.5%);
+  opacity: 0;
   transform:
     translate(var(--dock-x, 0), var(--dock-y, 0))
     scale(var(--dock-s, 0.1));
-  transition: transform 0.9s cubic-bezier(0.45, 0.02, 0.25, 1);
+  transition:
+    transform 0.9s cubic-bezier(0.45, 0.02, 0.25, 1),
+    clip-path 0.32s cubic-bezier(0.3, 0, 0.2, 1),
+    opacity 0.25s ease 0.65s;
+}
+/* Scrolled before the plate settled: it is not where the clip is aimed, so
+ * the figure just flies and dissolves. */
+.landing-page[data-docking] .intro-hero:not(.is-settled) {
+  clip-path: ellipse(85% 85% at 50% 65.5%);
+  transition:
+    transform 0.9s cubic-bezier(0.45, 0.02, 0.25, 1),
+    opacity 0.3s ease;
 }
 .landing-page[data-docking] .intro-hero .intro-wordmark,
 .landing-page[data-docking] .intro-scroll {
@@ -849,9 +911,11 @@ table.data tr.row-link a:focus-visible {
 .landing-page[data-phase="content"] .landing-intro-wrap {
   display: none;
 }
-/* The content rises into place as the intro hands off. */
-.landing-page[data-phase="content"] main,
-.landing-page[data-phase="content"] .landing-footer {
+/* The hero copy rises into place as the overlay fades. It starts with the
+ * dock and not with the content phase: the hero is already on screen by then,
+ * and restarting a fade at that point would flash the page colour between the
+ * wash and the sheet. */
+.landing-page[data-docking] .landing-hero-inner {
   animation: landing-rise 0.7s ease both;
 }
 @keyframes landing-rise {
@@ -897,71 +961,139 @@ table.data tr.row-link a:focus-visible {
   .landing-intro-wrap {
     transition: none;
   }
-  .landing-page[data-phase="content"] main,
-  .landing-page[data-phase="content"] .landing-footer {
+  .landing-page[data-docking] .landing-hero-inner {
     animation: none;
   }
   .intro-scroll {
     animation: none;
   }
 }
+/* A band of the frosted wash: the dark ground, the baked wash image, an
+ * umber scrim for the text, and a faint static grain. The scrim and where the
+ * image sits are set per band. Nothing here blurs live: the image is already
+ * blurred. */
+.landing-wash {
+  --landing-noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 1.2 -.1'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  position: relative;
+  isolation: isolate;
+  background-color: var(--wash-ground);
+  background-image: var(--landing-scrim, var(--scrim-glass)),
+    url("./shared/wash/flow-wash.webp");
+  background-size: cover, cover;
+  background-position: center, var(--landing-wash-pos, 50% 30%);
+  color: var(--wash-text);
+}
+.landing-wash::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image: var(--landing-noise);
+  opacity: 0.07;
+  pointer-events: none;
+}
+.landing-wash :focus-visible {
+  outline-color: var(--wash-ember);
+}
+/* Board3's ramp with a slightly deeper head, so the ember eyebrow keeps 4.5:1
+ * where the bright part of the image lands behind it on narrow screens. */
 .landing-hero {
+  --landing-scrim: linear-gradient(
+    180deg,
+    rgba(20, 10, 4, 0.78) 0%,
+    rgba(20, 10, 4, 0.58) 30%,
+    rgba(20, 10, 4, 0.60) 50%,
+    rgba(20, 10, 4, 0.88) 66%,
+    rgba(20, 10, 4, 0.94) 100%
+  );
+  --landing-wash-pos: 50% 28%;
+}
+.landing-hero-inner {
   display: grid;
   grid-template-columns: 1.1fr 1fr;
   gap: clamp(32px, 6vw, 96px);
   align-items: center;
-  padding: 80px 0 96px;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 132px var(--landing-gutter) 112px;
+}
+.landing-hero .page-eyebrow {
+  color: var(--wash-ember);
+  text-shadow: var(--wash-text-shadow);
 }
 .landing-hero h1 {
-  font-size: clamp(44px, 5.3vw, 72px);
+  font-size: clamp(40px, 5.3vw, 72px);
   line-height: 1.06;
   margin: 24px 0;
+  color: var(--wash-text);
+  text-shadow: var(--wash-text-shadow);
 }
 .landing-intro {
-  color: var(--fg-secondary);
-  max-width: 46ch;
-  line-height: 1.9;
+  color: var(--wash-text-2);
+  max-width: 48ch;
+  font-size: 16px;
+  line-height: 1.7;
 }
-/* The literature note under the intro copy: a touch of accent to mark it as
- * the "why", separate from the marketing line above. */
+/* The literature note under the intro copy: a rule of ember marks it as the
+ * "why", separate from the marketing line above. */
 .landing-evidence {
   max-width: 48ch;
   margin-top: 20px;
   padding-left: 16px;
-  border-left: 2px solid var(--accent);
-  color: var(--fg-muted);
-  font-size: 13px;
+  border-left: 2px solid var(--wash-ember);
+  color: var(--wash-text-muted);
+  font-size: 14px;
   line-height: 1.7;
 }
 .landing-actions {
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: 16px;
   flex-wrap: wrap;
   margin-top: 32px;
 }
-.landing-actions .btn-primary {
+.landing-page .landing-actions .btn-primary {
   width: auto;
   min-width: 180px;
+  background: var(--landing-ember);
+  color: var(--landing-on-ember);
+  box-shadow: 2px 4px 0 0 rgba(0, 0, 0, 0.45);
+  font-weight: 600;
 }
-.landing-actions button {
-  border: 0;
-  background: transparent;
+.landing-page .landing-actions .btn-primary:hover {
+  background: var(--wash-ember);
+}
+.landing-page .landing-actions .btn-primary:active {
+  box-shadow: none;
+}
+/* "How it decides": the wash's glass button. */
+.landing-actions .toolbar-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 52px;
+  padding: 0 18px;
+  border: 1px solid var(--wash-glass-border);
+  border-radius: 8px;
+  background: var(--wash-glass-fill);
+  color: var(--wash-text);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
   cursor: pointer;
+  transition: background var(--duration-fast) var(--ease);
+}
+.landing-actions .toolbar-link:hover {
+  background: var(--wash-glass-fill-hover);
+  color: var(--wash-text);
+  text-decoration: none;
 }
 .landing-footnote {
-  font-size: 11px;
-  color: var(--fg-muted);
   margin-top: 24px;
-}
-.landing-header .brand img {
-  display: block;
-  width: 40px;
-  height: 40px;
-}
-.landing-header .brand-name em {
-  font-style: normal;
-  color: var(--accent);
+  color: var(--wash-text-muted);
+  font-family: var(--font-mono);
+  font-size: 12px;
 }
 /* The intro (U26, shared/intro/IntroHero.tsx): the clip is 1080 x 720 rendered on
  * the page colour, so it is capped at its own width, never upscaled, and has no
@@ -1022,7 +1154,9 @@ table.data tr.row-link a:focus-visible {
 }
 /* Device morph (shared/DeviceMorph.tsx). Sizes are in a 450 x 400 box scaled
  * by --u, so the whole drawing follows the column width. The static look
- * (reduced motion) is the laptop. 15s loop: phone, laptop, desktop, app only. */
+ * (reduced motion) is the laptop. 15s loop: phone, laptop, desktop, app only.
+ * It sits on the wash, so it is drawn as a small night screen: dark umber
+ * bodies with a pale stroke, white figures, teal for done, ember for today. */
 .dm {
   margin: 0;
   min-width: 0;
@@ -1046,10 +1180,12 @@ table.data tr.row-link a:focus-visible {
   width: calc(var(--u) * 300);
   height: calc(var(--u) * 190);
   box-sizing: border-box;
-  border: calc(var(--u) * 5) solid var(--fg);
+  border: calc(var(--u) * 5) solid #1c120c;
   border-radius: calc(var(--u) * 12);
-  background: var(--bg-surface);
-  box-shadow: calc(var(--u) * 4) calc(var(--u) * 8) 0 0 var(--border-strong);
+  background: var(--wash-ground);
+  box-shadow:
+    0 0 0 2px rgba(255, 255, 255, 0.22),
+    calc(var(--u) * 4) calc(var(--u) * 6) 0 2px rgba(0, 0, 0, 0.42);
   animation: dm-frame 15s var(--dm-ease) infinite;
 }
 .dm-pill {
@@ -1060,7 +1196,7 @@ table.data tr.row-link a:focus-visible {
   width: calc(var(--u) * 44);
   height: calc(var(--u) * 5);
   border-radius: 99px;
-  background: var(--border-strong);
+  background: rgba(255, 255, 255, 0.42);
   opacity: 0;
   animation: dm-pill 15s linear infinite;
 }
@@ -1069,9 +1205,9 @@ table.data tr.row-link a:focus-visible {
   width: calc(var(--u) * 380);
   height: calc(var(--u) * 16);
   box-sizing: border-box;
-  border: calc(var(--u) * 5) solid var(--fg);
+  border: 2px solid rgba(255, 255, 255, 0.22);
   border-radius: 0 0 calc(var(--u) * 16) calc(var(--u) * 16);
-  background: var(--bg-active);
+  background: #1c120c;
   animation: dm-base 15s var(--dm-ease) infinite;
 }
 .dm-stand {
@@ -1089,8 +1225,8 @@ table.data tr.row-link a:focus-visible {
   left: 50%;
   translate: -50% 0;
   box-sizing: border-box;
-  border: calc(var(--u) * 5) solid var(--fg);
-  background: var(--bg-active);
+  border: 2px solid rgba(255, 255, 255, 0.22);
+  background: #1c120c;
 }
 .dm-stand::before {
   top: 0;
@@ -1111,11 +1247,11 @@ table.data tr.row-link a:focus-visible {
   font-size: calc(var(--u) * 10);
   display: grid;
   gap: 0.7em;
-  color: var(--fg);
+  color: var(--wash-text);
 }
 .dm-eyebrow {
   font-size: 1em;
-  color: var(--fg-muted);
+  color: var(--wash-ember);
   letter-spacing: .04em;
   text-transform: uppercase;
 }
@@ -1127,11 +1263,11 @@ table.data tr.row-link a:focus-visible {
 .dm-figure small {
   font-size: .4em;
   margin-left: .2em;
-  color: var(--fg-muted);
+  color: var(--wash-text-muted);
 }
 .dm-note {
   font-size: 1em;
-  color: var(--fg-secondary);
+  color: var(--wash-text-muted);
 }
 .dm-bars {
   display: flex;
@@ -1139,18 +1275,18 @@ table.data tr.row-link a:focus-visible {
   gap: 0.5em;
   height: 5em;
   margin-top: 0.4em;
-  border-bottom: 1px solid var(--border-strong);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.28);
 }
 .dm-bars i {
   flex: 1;
   border-radius: 2px 2px 0 0;
-  background: var(--progress-fill);
+  background: rgba(255, 255, 255, 0.22);
+}
+.dm-bars i.done {
+  background: var(--wash-teal);
 }
 .dm-bars i.today {
-  background: var(--accent);
-}
-.dm-bars i.rest {
-  background: var(--border-strong);
+  background: var(--wash-chart-ember);
 }
 .dm-caption {
   position: relative;
@@ -1161,7 +1297,7 @@ table.data tr.row-link a:focus-visible {
   font-size: 11px;
   letter-spacing: .08em;
   text-transform: uppercase;
-  color: var(--fg-muted);
+  color: var(--wash-text-muted);
 }
 .dm-caption span {
   grid-area: 1 / 1;
@@ -1332,146 +1468,203 @@ table.data tr.row-link a:focus-visible {
     opacity: 1;
   }
 }
+/* Band 2: the cream sheet. It rises 24 px over the bottom of the hero, with
+ * a 20 px top, a pale rim and an upward shadow, as on the phone. It follows the
+ * theme (cream in light, the navy in dark). */
+.landing-sheet {
+  position: relative;
+  z-index: 2;
+  margin-top: -24px;
+  padding: 64px 0 80px;
+  border-radius: 20px 20px 0 0;
+  background: var(--sheet-bg);
+  color: var(--sheet-ink);
+  box-shadow:
+    inset 0 2px 0 var(--sheet-rim),
+    var(--sheet-up-shadow);
+}
+.landing-sheet-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 var(--landing-gutter);
+}
+.landing-sheet .group-label {
+  color: var(--sheet-ink-muted);
+}
+.landing-sheet .title {
+  color: var(--sheet-ink);
+}
 .landing-features {
-  border-top: var(--border-width) solid var(--border);
-  padding: 48px 0 64px;
-  scroll-margin-top: 32px;
+  scroll-margin-top: 96px;
 }
 .landing-section-head h2 {
   font-size: 36px;
   line-height: 1.2;
   margin: 12px 0 40px;
 }
-/* The "made for real life" section (shared/landing/LandingLife.tsx): six
- * short cards, each with a top rule and a small tag, in the same plain
- * voice as the literature cards below it. No icons and no cards inside
+/* The "day to day" section (shared/landing/LandingLife.tsx): six short cards
+ * in the same plain voice as the literature cards below it. No icons and no
+ * cards inside cards. The cards are the sheet's own: a 2 px border, 8 px
+ * corners and a hard offset shadow, as in the app. */
+/* Specific enough to beat `p:last-child`, which would zero the gap to the
  * cards. */
-.life-lede {
+.landing-section-head .life-lede {
   max-width: 68ch;
   margin: -20px 0 40px;
-  color: var(--fg-secondary);
+  color: var(--sheet-ink-secondary);
   font-size: 15px;
-  line-height: 1.85;
+  line-height: 1.8;
 }
-.life-cards {
+.life-cards,
+.evidence-cards {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 32px 40px;
+  gap: 24px;
 }
-.life-card {
-  border-top: var(--border-width) solid var(--border);
-  padding-top: 16px;
+.life-card,
+.evidence-card {
+  display: flex;
+  flex-direction: column;
+  padding: 22px 24px;
+  border: var(--border-width) solid var(--sheet-border);
+  border-radius: 8px;
+  background: var(--bg-surface);
+  box-shadow: var(--sheet-shadow-card);
 }
-.life-tag {
-  display: inline-block;
-  font-size: 10px;
-  letter-spacing: .1em;
+.life-tag,
+.evidence-tag {
+  align-self: flex-start;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .09em;
   text-transform: uppercase;
   color: var(--accent);
 }
-.life-card h4 {
+.life-card h4,
+.evidence-card h4 {
   font-size: 19px;
-  margin: 10px 0 10px;
+  margin: 10px 0;
   line-height: 1.25;
 }
-.life-card p {
-  color: var(--fg-secondary);
-  font-size: 13px;
-  line-height: 1.8;
-  margin: 0;
+.life-card p,
+.evidence-card p {
+  color: var(--sheet-ink-secondary);
+  font-size: 14px;
+  line-height: 1.7;
+  margin: 0 0 10px;
 }
-/* The expanded "Grounded in the literature" section
- * (shared/landing/LandingEvidence.tsx): a lede, then the published work the
- * engine is built from, then what you can do with it, shown with real
- * captures of the app screens. */
-.evidence {
-  padding-bottom: 88px;
+.life-card p:last-child {
+  margin-bottom: 0;
+}
+.evidence-card .evidence-cite {
+  margin: auto 0 0;
+  padding-top: 6px;
+  color: var(--sheet-ink-muted);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  letter-spacing: .01em;
+  line-height: 1.5;
+}
+/* The literature head and the "01" cards, set off from the day-to-day cards
+ * by a strong rule. */
+.landing-sheet .evidence {
+  margin-top: 72px;
+  padding-top: 56px;
+  border-top: var(--border-width) solid var(--sheet-border-strong);
 }
 .evidence-lede {
   max-width: 68ch;
   margin: -20px 0 8px;
-  color: var(--fg-secondary);
+  color: var(--sheet-ink-secondary);
   font-size: 15px;
-  line-height: 1.85;
+  line-height: 1.8;
 }
 .evidence-subhead {
   display: flex;
   align-items: baseline;
   gap: 14px;
-  margin: 56px 0 28px;
+  margin: 48px 0 24px;
   font-size: 20px;
   font-weight: 600;
 }
 .evidence-no {
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-mono);
   font-size: 11px;
+  font-weight: 500;
   letter-spacing: .08em;
   color: var(--accent);
 }
-.evidence-cards {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 32px 40px;
+/* Band 3: the app tabs, glass on a second band of wash. Three tabs (Lifting,
+ * Running, Coach); each panel pairs a glass card of copy with a stage, the
+ * desktop window behind and the Android phone overlapping its corner, like a
+ * real device on a desk. */
+/* The glass ramp with a deeper head, for the ember "02" and the white
+ * heading, which sit at the top where the bright part of the image can land
+ * on narrow screens. Below the head it is the glass ramp. */
+.landing-showcase {
+  --landing-scrim: linear-gradient(
+    180deg,
+    rgba(20, 10, 4, 0.80) 0%,
+    rgba(20, 10, 4, 0.64) 8%,
+    rgba(20, 10, 4, 0.34) 28%,
+    rgba(20, 10, 4, 0.26) 60%,
+    rgba(20, 10, 4, 0.42) 100%
+  );
+  --landing-wash-pos: 50% 60%;
 }
-.evidence-card {
-  border-top: var(--border-width) solid var(--border);
-  padding-top: 16px;
+.landing-showcase-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 88px var(--landing-gutter) 96px;
 }
-.evidence-tag {
-  display: inline-block;
-  font-size: 10px;
-  letter-spacing: .1em;
-  text-transform: uppercase;
-  color: var(--accent);
+.landing-showcase .evidence-subhead {
+  margin: 0 0 28px;
+  font-size: clamp(28px, 3.4vw, 40px);
+  line-height: 1.15;
+  color: var(--wash-text);
+  text-shadow: var(--wash-text-shadow);
 }
-.evidence-card h4 {
-  font-size: 19px;
-  margin: 10px 0 10px;
-  line-height: 1.25;
-}
-.evidence-card p {
-  color: var(--fg-secondary);
+.landing-showcase .evidence-no {
   font-size: 13px;
-  line-height: 1.8;
-  margin: 0 0 10px;
+  color: var(--wash-ember);
+  text-shadow: none;
 }
-.evidence-cite {
-  color: var(--fg-muted);
-  font-size: 11px;
-  letter-spacing: .01em;
-}
-/* The app half: three tabs (Lifting, Running, Coach). Each panel pairs a
- * block of copy with a stage — the desktop window behind, the Android phone
- * overlapping its corner, like a real device on a desk. */
+/* The tabs are a dark island, like the phone's tab bar: the open one is an
+ * ember pill. */
 .evidence-tabs {
   display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  padding-bottom: 20px;
-  margin-bottom: 36px;
-  border-bottom: var(--border-width) solid var(--border);
+  width: fit-content;
+  max-width: 100%;
+  gap: 2px;
+  margin: 0 0 40px;
+  padding: 6px;
+  border: 1px solid var(--island-rule);
+  border-radius: 999px;
+  background: var(--island-fill);
+  box-shadow: var(--island-shadow);
 }
 .evidence-tab {
   font: inherit;
   font-size: 14px;
   font-weight: 600;
-  color: var(--fg-muted);
+  min-height: 40px;
+  padding: 0 22px;
+  color: var(--island-inactive);
   background: transparent;
   border: 0;
-  border-radius: 99px;
-  padding: 9px 18px;
+  border-radius: 999px;
   cursor: pointer;
   transition: color 0.15s ease, background 0.15s ease;
 }
 .evidence-tab:hover {
-  color: var(--fg);
+  color: var(--wash-text);
 }
 .evidence-tab[aria-selected="true"] {
-  color: var(--bg);
-  background: var(--accent);
+  color: var(--landing-on-ember);
+  background: var(--landing-ember);
 }
-.evidence-tab:focus-visible {
-  outline: 2px solid var(--accent);
+.landing-showcase .evidence-tab:focus-visible {
+  outline: 2px solid var(--wash-text);
   outline-offset: 2px;
 }
 .evidence-panel {
@@ -1491,15 +1684,25 @@ table.data tr.row-link a:focus-visible {
     transform: none;
   }
 }
+/* The copy is a warm glass card: a flat translucent fill and a hairline, no
+ * blur, because the wash behind it is already blurred. */
+.evidence-copy {
+  padding: 28px;
+  border: 1px solid var(--glass-line);
+  border-radius: 10px;
+  background: var(--glass-fill);
+  color: var(--glass-ink);
+}
 .evidence-copy h4 {
   font-size: 28px;
   margin: 0 0 14px;
   line-height: 1.15;
+  color: var(--glass-ink);
 }
 .evidence-copy p {
-  color: var(--fg-secondary);
+  color: var(--glass-muted);
   font-size: 15px;
-  line-height: 1.85;
+  line-height: 1.75;
   margin: 0 0 20px;
   max-width: 46ch;
 }
@@ -1515,7 +1718,7 @@ table.data tr.row-link a:focus-visible {
 .evidence-list li {
   position: relative;
   padding-left: 24px;
-  color: var(--fg-secondary);
+  color: var(--glass-ink);
   font-size: 14px;
   line-height: 1.6;
 }
@@ -1540,30 +1743,29 @@ table.data tr.row-link a:focus-visible {
   bottom: 0;
   z-index: 2;
   width: min(190px, 42%);
-  filter: drop-shadow(-14px 22px 30px rgb(0 0 0 / 0.32));
+  filter: drop-shadow(-14px 22px 30px rgb(0 0 0 / 0.5));
 }
-/* Desktop capture in a light window chrome. */
+/* Desktop capture in a dark window frame. */
 .evidence-shot {
   margin: 0;
-  border: var(--border-width) solid var(--border);
-  border-radius: 14px;
+  border: 1px solid rgb(255 255 255 / 0.16);
+  border-radius: 12px;
   overflow: hidden;
-  background: var(--bg-surface);
-  box-shadow: 0 18px 40px -28px rgb(0 0 0 / 0.35);
+  background: var(--wash-night);
+  box-shadow: 0 20px 44px -24px rgb(0 0 0 / 0.65);
 }
 .evidence-shot.is-window .window-bar {
   display: flex;
   gap: 7px;
   padding: 11px 14px;
-  border-bottom: 1px solid var(--border);
-  background: var(--bg);
+  border-bottom: 1px solid rgb(255 255 255 / 0.1);
+  background: var(--wash-night);
 }
 .window-dot {
   width: 11px;
   height: 11px;
   border-radius: 50%;
-  background: var(--border-strong, var(--border));
-  opacity: 0.5;
+  background: rgb(255 255 255 / 0.28);
 }
 .evidence-shot img {
   display: block;
@@ -1571,8 +1773,10 @@ table.data tr.row-link a:focus-visible {
   height: auto;
 }
 
-/* A phone capture inside an Android shell: a thin, even bezel, a centred
- * punch-hole camera, and the Android gesture bar. */
+/* A phone capture inside an Android shell: a dark umber titanium bezel, a
+ * thin even edge, a centred punch-hole camera, and the Android gesture bar.
+ * The bezel is the same for every capture; the tone (dark or light) only sets
+ * the gesture bar, so it shows against the capture's bottom edge. */
 .evidence-device {
   margin: 0;
 }
@@ -1580,16 +1784,10 @@ table.data tr.row-link a:focus-visible {
   position: relative;
   padding: 3.4%;
   border-radius: 8.5% / 4.4%;
-  background: linear-gradient(150deg, #43464d, #1d1f23 48%, #33363c);
+  background: linear-gradient(150deg, #2d241e, #140e0b 48%, #261e19);
   box-shadow:
-    inset 0 0 0 2px rgb(255 255 255 / 0.09),
+    inset 0 0 0 2px rgb(255 255 255 / 0.1),
     0 26px 54px -24px rgb(0 0 0 / 0.55);
-}
-.evidence-device.tone-light .device-body {
-  background: linear-gradient(150deg, #f4f5f7, #dadde2 48%, #eef0f3);
-  box-shadow:
-    inset 0 0 0 2px rgb(0 0 0 / 0.07),
-    0 26px 54px -24px rgb(0 0 0 / 0.38);
 }
 /* Side buttons, drawn as part of the body. */
 .device-key {
@@ -1597,7 +1795,7 @@ table.data tr.row-link a:focus-visible {
   right: -1.6%;
   width: 1.6%;
   border-radius: 0 3px 3px 0;
-  background: inherit;
+  background: #261e19;
 }
 .device-key-power {
   top: 20%;
@@ -1609,9 +1807,6 @@ table.data tr.row-link a:focus-visible {
   right: auto;
   left: -1.6%;
   border-radius: 3px 0 0 3px;
-}
-.evidence-device.tone-light .device-key {
-  filter: brightness(0.92);
 }
 .evidence-device .device-screen {
   position: relative;
@@ -1651,15 +1846,23 @@ table.data tr.row-link a:focus-visible {
   width: 30%;
   height: 0.65%;
   border-radius: 99px;
-  background: rgb(0 0 0 / 0.32);
-}
-.evidence-device.tone-dark .device-home {
   background: rgb(255 255 255 / 0.42);
 }
+.evidence-device.tone-light .device-home {
+  background: rgb(0 0 0 / 0.32);
+}
 @media (max-width: 900px) {
-  .life-cards {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .landing-hero-inner {
+    grid-template-columns: 1fr;
+    padding-top: 116px;
+    padding-bottom: 96px;
   }
+  .landing-hero .dm {
+    width: 100%;
+    max-width: 460px;
+    justify-self: center;
+  }
+  .life-cards,
   .evidence-cards {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -1674,40 +1877,73 @@ table.data tr.row-link a:focus-visible {
   }
 }
 @media (max-width: 760px) {
-  .life-cards {
-    grid-template-columns: 1fr;
-    gap: 28px;
+  .landing-topbar {
+    padding: 10px 10px 0;
   }
+  .landing-topbar-inner {
+    gap: 8px;
+    padding: 8px 10px 8px 14px;
+  }
+  .landing-topbar .brand {
+    gap: 10px;
+  }
+  .landing-topbar .brand-name {
+    font-size: 26px;
+  }
+  .landing-topbar .toolbar-link {
+    gap: 6px;
+    min-height: 40px;
+    padding: 0 14px;
+    font-size: 12px;
+  }
+  .landing-hero h1 {
+    font-size: clamp(42px, 9vw, 64px);
+  }
+  .landing-sheet {
+    padding: 48px 0 64px;
+  }
+  .landing-section-head h2 {
+    font-size: 30px;
+  }
+  .life-cards,
   .evidence-cards {
     grid-template-columns: 1fr;
-    gap: 28px;
   }
-  .evidence-tabs {
-    overflow-x: auto;
-    flex-wrap: nowrap;
-    scrollbar-width: none;
+  .landing-sheet .evidence {
+    margin-top: 56px;
+    padding-top: 44px;
   }
-  .evidence-stage .evidence-device {
-    width: min(150px, 46%);
+  .landing-showcase-inner {
+    padding-top: 64px;
+    padding-bottom: 72px;
+  }
+  .evidence-copy {
+    padding: 22px;
   }
   .evidence-copy h4 {
     font-size: 22px;
   }
+  .evidence-stage .evidence-device {
+    width: min(150px, 46%);
+  }
 }
+@media (max-width: 360px) {
+  .landing-topbar .toolbar-link svg {
+    display: none;
+  }
+}
+/* The footer is grounded on the wash colour, with a hairline on top. */
 .landing-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 24px;
-  padding: 24px 0;
-  border-top: 1px solid var(--border);
-  color: var(--fg-muted);
-  font-size: 11px;
+  border-top: 1px solid rgb(255 255 255 / 0.12);
+  background: var(--wash-ground);
+  color: var(--wash-text-muted);
+  font-family: var(--font-mono);
+  font-size: 12px;
 }
 .landing-footer p {
-  max-width: 64ch;
-  margin: 0;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 28px var(--landing-gutter);
 }
 
 .banner .why {
@@ -1847,29 +2083,8 @@ table.data tr.row-link a:focus-visible {
   }
 }
 @media (max-width: 760px) {
-  .landing-page {
-    padding-inline: 24px;
-  }
-  .landing-header {
-    min-height: 80px;
-  }
-  .landing-header .toolbar-link {
-    font-size: 10px;
-  }
-  .landing-hero {
-    grid-template-columns: 1fr;
-    padding: 48px 0;
-    gap: 40px;
-  }
-  .landing-topbar-inner {
-    padding: 0 24px;
-    min-height: 64px;
-  }
   .intro-hero {
     margin-top: 8px;
-  }
-  .landing-hero h1 {
-    font-size: clamp(42px, 9vw, 64px);
   }
 }
 @media (prefers-reduced-motion: reduce) {

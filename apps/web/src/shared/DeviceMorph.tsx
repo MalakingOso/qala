@@ -4,6 +4,14 @@
  * decorative; the label says what it shows. */
 
 const DAYS = [62, 78, 0, 90, 55, 0, 40];
+/* Index of today's bar; the bars before it are done, the rest are ahead. */
+const TODAY = 3;
+
+function barClass(h: number, i: number): string {
+  if (i === TODAY) return "today";
+  if (h === 0) return "rest";
+  return i < TODAY ? "done" : "ahead";
+}
 
 export function DeviceMorph() {
   return (
@@ -28,7 +36,7 @@ export function DeviceMorph() {
             {DAYS.map((h, i) => (
               <i
                 key={i}
-                className={i === 3 ? "today" : h === 0 ? "rest" : undefined}
+                className={barClass(h, i)}
                 style={{ height: `${h || 8}%` }}
               />
             ))}
