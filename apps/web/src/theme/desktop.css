@@ -814,7 +814,9 @@
   color: #fff;
 }
 .page-desktop .lz-picker button[aria-checked="true"] {
-  color: #fff;
+  /* Ink on ember: white on #e0652b is 3.5:1, the ink is 5.4:1. The landing
+   * island pills use the same ink. */
+  color: var(--wash-ember-ink);
 }
 .page-desktop .lz-picker button:focus-visible {
   outline: 2px solid var(--wash-text);
