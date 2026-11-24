@@ -56,10 +56,10 @@ const SOURCES: Source[] = [
     body:
       "Reported RPE tells the engine how hard a set really was. When a " +
       "grind (RPE 9.5 or more, or reps below the range) follows another " +
-      "grind or would push the rest past its cap, Qala cuts the remaining " +
-      "sets 5%, or 10% at RPE 10 or a miss, and drops them after a cut. The " +
-      "thresholds are Qala's own; the idea of adjusting load by RPE comes " +
-      "from the work cited.",
+      "grind or would push the rest past its cap, Qala lowers the weight on " +
+      "the remaining sets 5%, or 10% at RPE 10 or a miss, and drops those " +
+      "sets after a lowering. The thresholds are Qala's own; the idea of " +
+      "adjusting load by RPE comes from the work cited.",
     cite: "Helms 2018, Front Physiol · Mann 2010 · ACSM 2009",
   },
   {
@@ -111,7 +111,7 @@ const TABS: Tab[] = [
       "phone. Write your own in plain text with the LS++ editor on desktop.",
     bullets: [
       "Two built-in programs on Android, and a plain-text LS++ editor on desktop with inline checks, formatting and a dry run",
-      "Working sets rounded to the plates you own, with Rest saying why it cut the remaining sets",
+      "Working sets rounded to the plates you own, with Rest saying why it lowered the weight",
       "A plate calculator that shows what to load, a self-adjusting rest timer and per-set RPE",
       "Estimated 1RM (e1RM) tracked per lift across each block",
     ],
@@ -232,7 +232,7 @@ export function LandingEvidence() {
         <p className="evidence-lede">
           You do not need to read the papers below to use the app. The engine
           applies these rules from your first session and puts the reason next
-          to a rest time or a cut set.
+          to a rest time or a lowered weight.
         </p>
       </div>
 

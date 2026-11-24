@@ -155,19 +155,19 @@ export function LandingPage() {
               Self-hosted lifting + running
             </p>
             <h1 className="title">
-              Lift and run<br />from one plan.
+              Lift and run<br />in one fatigue model.
             </h1>
             <p className="landing-intro">
               Pick a built-in program on your phone, or write your own as plain
-              text on desktop. Qala tracks your lifts and your runs in the same
-              fatigue model, so a hard long run shows up in your readiness and
-              your rest times.
+              text on desktop. Record your runs in the same app, and a hard
+              long run shows up in your readiness and your rest times.
             </p>
             <p className="landing-evidence">
               Before a session you log a quick recovery check-in. A local
               engine built from published training research sets your rest from
-              your soreness, fatigue and recent sets, cuts the remaining sets
-              when grinds pile up, and says why next to each change.
+              your soreness, fatigue and recent sets, lowers the weight on the
+              remaining sets when grinds pile up, and says why next to each
+              change.
             </p>
             <div className="landing-actions">
               <a
