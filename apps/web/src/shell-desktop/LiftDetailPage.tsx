@@ -49,12 +49,10 @@ export function LiftDetailPage({ id }: { id: string }) {
         series={[
           {
             label: "daily best",
-            color: "var(--viz-2)",
             values: lift.fullHistory.map((h) => h.dailyBest),
           },
           {
             label: "Kalman",
-            color: "var(--accent)",
             values: lift.fullHistory.map((h) => h.kalman),
           },
         ]}
@@ -91,7 +89,6 @@ export function LiftDetailPage({ id }: { id: string }) {
         xLabel="observation"
         series={[{
           label: "residual",
-          color: "var(--viz-3)",
           values: lift.residuals,
         }]}
         head={["Obs", "Residual"]}

@@ -12,6 +12,7 @@ export function RunSpark(
     <ChartShell
       title="Running fitness"
       flat={flat}
+      surface="night"
       head={["Week", "VDOT"]}
       rows={points.map((p, i) => [`w${i + 1}`, p.toFixed(1)])}
       label={label}
@@ -19,7 +20,6 @@ export function RunSpark(
       <TrendPlot
         points={points.map((p, i) => ({ label: `W${i + 1}`, value: p }))}
         height={160}
-        color="var(--run)"
         axisLabel={"V\u0307"}
         axisHint="V-dot (VDOT): Daniels' running fitness score, the VO2max that a race or hard effort implies. Higher is fitter; 40 is about a 24 minute 5K."
       />

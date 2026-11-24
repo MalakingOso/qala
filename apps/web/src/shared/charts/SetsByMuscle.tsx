@@ -1,7 +1,7 @@
-/* Fixed-size labels and 16px bars. The 10-20 weekly sets band (DECISIONS
- * T2, fractional sets) is a green-tinted lane, no outline, behind the bars, so a bar
- * reads as under, in, or over the target at a glance; each bar ends with
- * its total. */
+/* Fixed-size labels and 16px bars on a night panel. The 10-20 weekly sets band
+ * (DECISIONS T2, fractional sets) is a teal-tinted lane, no outline, behind
+ * the bars: a bar is teal once it reaches the band and dim before it, and
+ * today's part is the ember "now" end. Each bar ends with its total in mono. */
 
 import { scaleLinear } from "@visx/scale";
 import { ChartShell } from "./ChartShell.tsx";
@@ -19,6 +19,7 @@ export function SetsByMuscle(
   return (
     <ChartShell
       title={title}
+      surface="night"
       head={["Muscle", "Earlier", "Today"]}
       rows={muscles.map((m) => [m.muscle, String(m.earlier), String(m.today)])}
       label={`${title}: ${
@@ -40,7 +41,15 @@ export function SetsByMuscle(
                 width={x(20) - x(10)}
                 height={height - 28}
                 rx={8}
-                fill="color-mix(in srgb, var(--progress-fill) 12%, transparent)"
+                fill="var(--wash-teal)"
+                fillOpacity={.14}
+              />
+              <line
+                x1={left}
+                x2={left}
+                y1={4}
+                y2={height - 24}
+                stroke="var(--chart-night-base)"
               />
               {[10, 20].map((v) => (
                 <text
@@ -49,7 +58,6 @@ export function SetsByMuscle(
                   y={height - 6}
                   textAnchor="middle"
                   fontSize={10}
-                  fill="var(--fg-muted)"
                 >
                   {v}
                 </text>
@@ -59,7 +67,6 @@ export function SetsByMuscle(
                 y={height - 6}
                 textAnchor="middle"
                 fontSize={10}
-                fill="var(--fg-muted)"
               >
                 target
               </text>
@@ -98,35 +105,36 @@ export function SetsByMuscle(
                       fill="transparent"
                     />
                     <text
+                      className="nt-name"
                       x={left - 10}
                       y={yy + 12}
                       textAnchor="end"
                       fontSize={12}
-                      fill="var(--fg-secondary)"
                     >
                       {m.muscle}
                     </text>
                     <path
+                      className={m.earlier + m.today < 10
+                        ? "nt-bar low"
+                        : "nt-bar"}
                       d={roundedBar(left, yy, end - left, 16)}
-                      fill="color-mix(in srgb, var(--accent) 35%, transparent)"
                     />
                     {m.today > 0 && (
                       <path
+                        className="nt-bar today"
                         d={roundedBar(
                           split + (m.earlier > 0 ? 2 : 0),
                           yy,
                           Math.max(0, end - split - (m.earlier > 0 ? 2 : 0)),
                           16,
                         )}
-                        fill="var(--accent)"
                       />
                     )}
                     <text
+                      className="nt-strong nt-value"
                       x={end + 6}
                       y={yy + 12}
                       fontSize={12}
-                      fontWeight={600}
-                      fill="var(--fg)"
                     >
                       {m.earlier + m.today}
                     </text>
@@ -138,10 +146,10 @@ export function SetsByMuscle(
         }}
       </Plot>
       <ChartLegend
-        items={[{ label: "Earlier this week", color: "color-mix(in srgb, var(--accent) 35%, transparent)" }, {
-          label: "Today",
-          color: "var(--accent)",
-        }]}
+        items={[
+          { label: "Earlier this week", color: "var(--wash-teal)" },
+          { label: "Today", color: "var(--wash-chart-ember)" },
+        ]}
       />
     </ChartShell>
   );

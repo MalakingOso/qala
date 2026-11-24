@@ -1,15 +1,17 @@
-/* Dense time series resize with the workspace and redraw when tokens change.
- * A separate plot component remounts correctly after switching to table view. */
+/* Dense time series on a night panel: a white line over a teal fade, one
+ * baseline, mono axes and an ember cursor dot with a white ring. They resize
+ * with the workspace. A separate plot component remounts correctly after
+ * switching to table view. A second series (the Kalman line next to the daily
+ * best) is a teal line with no fade. */
 
 import { useEffect, useRef } from "react";
 import uPlot from "uplot";
 import "uplot/dist/uPlot.min.css";
-import { resolveTokens } from "./tokens.ts";
+import { NIGHT } from "./tokens.ts";
 import { ChartShell } from "./ChartShell.tsx";
 
 export interface DenseSeriesInput {
   label: string;
-  color: string;
   values: (number | null)[];
 }
 
@@ -30,30 +32,44 @@ function DensePlot({ x, xLabel, series, height, syncKey }: PlotProps) {
     const draw = () => {
       if (el.clientWidth === 0) return;
       plot?.destroy();
-      const colors = resolveTokens(series.map((s) => s.color));
-      const [grid, ink] = resolveTokens(["var(--grid)", "var(--fg-muted)"]);
+      const stroke = (i: number) => (i === 0 ? NIGHT.line : NIGHT.teal);
       plot = new uPlot(
         {
           width: el.clientWidth,
           height,
           padding: [16, 16, 0, 0],
-          legend: { show: true },
+          legend: {
+            show: true,
+            markers: {
+              width: 2,
+              stroke: (_, i) => stroke(i - 1),
+              fill: (_, i) => stroke(i - 1),
+            },
+          },
           scales: { x: { time: false } },
           cursor: {
+            y: false,
             sync: syncKey ? { key: syncKey, scales: ["x", null] } : undefined,
+            points: {
+              size: 10,
+              width: 2,
+              stroke: NIGHT.ring,
+              fill: NIGHT.ember,
+            },
           },
           axes: [
             {
-              stroke: ink,
+              stroke: NIGHT.axis,
               grid: { show: false },
               ticks: { show: false },
+              border: { show: true, stroke: NIGHT.baseline, width: 1 },
               font: "11px DM Mono, monospace",
               space: 80,
               size: 36,
             },
             {
-              stroke: ink,
-              grid: { stroke: grid, width: 1 },
+              stroke: NIGHT.axis,
+              grid: { show: false },
               ticks: { show: false },
               font: "11px DM Mono, monospace",
               size: 48,
@@ -64,8 +80,21 @@ function DensePlot({ x, xLabel, series, height, syncKey }: PlotProps) {
             { label: xLabel },
             ...series.map((s, i) => ({
               label: s.label,
-              stroke: colors[i],
+              stroke: stroke(i),
               width: 2,
+              fill: i === 0
+                ? (u: uPlot) => {
+                  const fade = u.ctx.createLinearGradient(
+                    0,
+                    u.bbox.top,
+                    0,
+                    u.bbox.top + u.bbox.height,
+                  );
+                  fade.addColorStop(0, NIGHT.fadeTop);
+                  fade.addColorStop(1, NIGHT.fadeBottom);
+                  return fade;
+                }
+                : undefined,
               paths: uPlot.paths.spline?.(),
               points: { show: false },
               spanGaps: false,
@@ -85,14 +114,8 @@ function DensePlot({ x, xLabel, series, height, syncKey }: PlotProps) {
       }
     });
     resize.observe(el);
-    const theme = new MutationObserver(draw);
-    theme.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["data-theme"],
-    });
     return () => {
       resize.disconnect();
-      theme.disconnect();
       plot?.destroy();
     };
   }, [x, xLabel, series, height, syncKey]);
@@ -111,7 +134,13 @@ export function DenseSeries(
     },
 ) {
   return (
-    <ChartShell title={title} head={head} rows={rows} label={label}>
+    <ChartShell
+      title={title}
+      surface="night"
+      head={head}
+      rows={rows}
+      label={label}
+    >
       <DensePlot
         x={x}
         xLabel={xLabel}

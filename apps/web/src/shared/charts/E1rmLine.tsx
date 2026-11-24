@@ -1,4 +1,5 @@
-/* Recent e1RM: smooth trend with measured points and tested 1RM diamonds. */
+/* Recent e1RM: smooth trend with measured points and tested 1RM diamonds, on
+ * a night panel. */
 
 import { ChartShell } from "./ChartShell.tsx";
 import { ChartLegend } from "./Plot.tsx";
@@ -18,6 +19,7 @@ export function E1rmLine(
     <ChartShell
       title={flat ? "Recent trend" : `${lift} e1RM, recent`}
       flat={flat}
+      surface="night"
       head={["Session", "e1RM", "Kind"]}
       rows={points.map((
         p,
@@ -34,10 +36,17 @@ export function E1rmLine(
       />
       <ChartLegend
         items={[
-          { label: "Estimated 1RM", color: "var(--viz-2)", line: true },
-          { label: `${latest?.label ?? "Latest"}`, color: "var(--accent)" },
+          { label: "Estimated 1RM", color: "var(--wash-text)", line: true },
+          {
+            label: `${latest?.label ?? "Latest"}`,
+            color: "var(--wash-chart-ember)",
+          },
           ...(points.some((p) => p.tested)
-            ? [{ label: "Tested 1RM", color: "var(--viz-2)", diamond: true }]
+            ? [{
+              label: "Tested 1RM",
+              color: "var(--wash-text)",
+              diamond: true,
+            }]
             : []),
         ]}
       />

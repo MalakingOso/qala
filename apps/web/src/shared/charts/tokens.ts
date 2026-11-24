@@ -1,14 +1,15 @@
-/* Chart tokens (DESIGN 6.2). SVG charts use var(--token) directly so theme
- * changes need no re-render; the uPlot wrapper resolves tokens at mount. */
+/* Night-panel colours for the canvas chart (uPlot). The SVG charts read the
+ * same values from the --wash-* and --chart-night-* custom properties in
+ * surfaces.css; a canvas needs concrete strings. The night panel is the same
+ * dark in both themes, so nothing here follows the theme. */
 
-/** Resolve CSS tokens to concrete colors for canvas (uPlot). */
-export function resolveTokens(names: string[]): string[] {
-  if (typeof getComputedStyle === "undefined") return names.map(() => "#888");
-  const cs = getComputedStyle(document.documentElement);
-  return names.map((n) => {
-    const m = /^var\((--[^)]+)\)$/.exec(n.trim());
-    if (!m) return n;
-    return cs.getPropertyValue(m[1]).trim() || n;
-  });
-}
-
+export const NIGHT = {
+  line: "#ffffff",
+  teal: "#2dd4bf",
+  fadeTop: "rgba(45, 212, 191, 0.26)",
+  fadeBottom: "rgba(45, 212, 191, 0)",
+  baseline: "rgba(255, 255, 255, 0.20)",
+  axis: "rgba(255, 255, 255, 0.72)",
+  ember: "#e0652b",
+  ring: "#ffffff",
+};

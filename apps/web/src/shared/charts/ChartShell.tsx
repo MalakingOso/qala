@@ -12,6 +12,7 @@ export function ChartShell({
   rows,
   label,
   flat,
+  surface = "light",
   children,
 }: {
   title: string;
@@ -21,12 +22,19 @@ export function ChartShell({
   /** Skip the card chrome (border/shadow/padding) when the parent already
    * supplies it, so charts don't nest inside a second card (DESIGN 6, 7.1). */
   flat?: boolean;
+  /** "night" seats the plot in a flush dark panel (Board 3); the header and
+   * the table view stay on the card. Charts that draw their own light
+   * surface keep the default. */
+  surface?: "night" | "light";
   children: ReactNode;
 }) {
   const [table, setTable] = useState(false);
+  const night = surface === "night";
   return (
     <section
-      className={flat ? "chart-wrap" : "card flat-rest chart-wrap"}
+      className={`${flat ? "chart-wrap" : "card flat-rest chart-wrap"}${
+        night ? " chart-night" : ""
+      }`}
       aria-label={title}
     >
       <div className="chart-head">
@@ -44,14 +52,15 @@ export function ChartShell({
           <span>{table ? "Chart" : "Table"}</span>
         </button>
       </div>
-      {table
-        ? <DataTable head={head} rows={rows} />
-        : (
-          <div className="chart-plot" role="group" aria-label={label}>
-            {children}
-          </div>
-        )}
+      {table ? <DataTable head={head} rows={rows} /> : (
+        <div
+          className={night ? "chart-plot chart-night-panel" : "chart-plot"}
+          role="group"
+          aria-label={label}
+        >
+          {children}
+        </div>
+      )}
     </section>
   );
 }
-

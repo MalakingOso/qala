@@ -1,26 +1,35 @@
-/* Desktop, refined (DESIGN 7.15, DECISIONS L16, U20-U23). Everything here is
- * scoped to `.page-desktop`, and every color is an existing token, so dark
- * mode comes with it.
+/* Desktop, refined (DESIGN 7.15, DECISIONS U20-U23), moved to the S51 look.
+ * Everything here is scoped to `.page-desktop`, and every color is a token
+ * from tokens.css or surfaces.css, so dark mode comes with it.
  * tokens.css is untouched: the Beamer surface values (2px borders, hard
- * offset shadows, 4/6/8px radii) stay; what changes is hierarchy. UI text is
- * a proportional sans, titles and big figures stay Qala Test, and DM Mono is
- * kept for numerals, chart ticks and code. */
+ * offset shadows, 4/6/8px radii) stay. The canvas is the warm cream sheet,
+ * and the ink, line, recessed and shadow tokens are pointed at the sheet
+ * ones here so the cool navy ones never show on it. UI text is Recursive
+ * (the global --font-ui; DECISIONS L16 chose DM Sans, which Recursive
+ * supersedes on the web), titles and big figures stay Qala Test, and DM Mono
+ * stays for numerals, chart ticks and code. Chart plots sit in night panels
+ * (the `.chart-night-panel` section near the end). */
 
 .page-desktop {
-  /* DM Sans, DM Mono's sibling (DECISIONS L16). The Latin subset leaves
-   * glyphs like the arrows to the system faces behind it. */
-  --font-ui: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI",
-    "Helvetica Neue", Arial, sans-serif;
-  --font-mono: "DM Mono", ui-monospace, monospace;
-  --line: color-mix(in srgb, var(--fg) 12%, transparent);
-  --card-line: color-mix(in srgb, var(--fg) 14%, transparent);
-  --soft: color-mix(in srgb, var(--fg) 8%, transparent);
-  --wash: color-mix(in srgb, var(--fg) 5%, transparent);
-  --ink: var(--fg);
+  --line: var(--sheet-border);
+  --card-line: var(--sheet-border-strong);
+  --soft: color-mix(in srgb, var(--sheet-ink) 8%, transparent);
+  --wash: color-mix(in srgb, var(--sheet-ink) 5%, transparent);
+  --ink: var(--sheet-ink);
+  --fg: var(--sheet-ink);
+  --fg-secondary: var(--sheet-ink-secondary);
+  --fg-muted: var(--sheet-ink-muted);
+  --border: var(--sheet-border);
+  --border-strong: var(--sheet-border-strong);
+  --bg-recessed: var(--sheet-recessed);
+  --bg-hover: var(--sheet-hover);
+  --shadow-card: var(--sheet-shadow-card);
   font-family: var(--font-ui);
   font-size: 13px;
   line-height: 1.5;
   color: var(--fg);
+  background: var(--sheet-bg);
+  min-height: 100dvh;
 }
 .page-desktop .sr-only {
   position: absolute;
@@ -188,8 +197,8 @@
   gap: 8px;
   min-height: 40px;
   padding: 0 12px;
-  background: var(--bg-recessed);
-  border: var(--border-width) solid var(--soft);
+  background: var(--sheet-recessed);
+  border: 1px solid var(--sheet-border);
   border-radius: var(--radius-md);
   color: var(--fg-muted);
   font-size: 12px;
@@ -273,12 +282,13 @@
 /* ---------- Cards and headers ---------- */
 .page-desktop .card {
   border-color: var(--card-line);
-  box-shadow: var(--shadow-card);
+  box-shadow: var(--sheet-shadow-card);
+  border-radius: var(--radius-lg);
   padding: 24px 28px;
   margin-bottom: 14px;
 }
 .page-desktop .card.flat-rest:hover {
-  box-shadow: var(--shadow-card);
+  box-shadow: var(--sheet-shadow-card);
 }
 .page-lede {
   padding: 30px 32px;
@@ -398,9 +408,9 @@
   gap: 1px;
   min-width: 84px;
   padding: 8px 12px 9px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--sheet-border);
   border-radius: var(--radius-md);
-  background: var(--bg-recessed);
+  background: var(--sheet-recessed);
 }
 .bunch b {
   font-size: 20px;
@@ -605,6 +615,10 @@
   text-transform: none;
   color: var(--fg-faint);
 }
+.page-desktop .lz-ruler.focus .lz-ruler-range,
+.page-desktop .lz-ruler.current .lz-ruler-range {
+  color: var(--fg-muted);
+}
 /* Frosted glass: the Today chip over today's column and the hover tooltip. */
 .page-desktop .lz-glass {
   position: absolute;
@@ -754,7 +768,9 @@
     opacity: 1;
   }
 }
-/* The zoom picker: a soft track with an ink thumb that slides to the level. */
+/* The zoom picker: the phone's tab bar as a dark island (the same fill, rule
+ * and hard shadow in both themes), with an ember thumb that slides to the
+ * level. */
 .page-desktop .lz-picker {
   position: relative;
   flex: none;
@@ -763,8 +779,8 @@
   margin: 0 0 4px;
   padding: 3px;
   border-radius: 999px;
-  background: var(--bg-hover);
-  box-shadow: inset 0 0 0 1px var(--border);
+  background: var(--island-fill);
+  box-shadow: inset 0 0 0 1px var(--island-rule), var(--island-shadow);
 }
 .page-desktop .lz-picker::before {
   content: "";
@@ -774,7 +790,7 @@
   left: 3px;
   width: calc((100% - 6px) / 4);
   border-radius: 999px;
-  background: var(--fg);
+  background: var(--island-ember);
   transform: translateX(calc(var(--i, 0) * 100%));
   transition: transform 240ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
@@ -785,7 +801,7 @@
   border: 0;
   border-radius: 999px;
   background: transparent;
-  color: var(--fg-muted);
+  color: var(--island-inactive);
   font-family: var(--font-ui);
   font-size: 12px;
   font-weight: 600;
@@ -795,13 +811,13 @@
   transition: color 160ms ease;
 }
 .page-desktop .lz-picker button:hover {
-  color: var(--fg);
+  color: #fff;
 }
 .page-desktop .lz-picker button[aria-checked="true"] {
-  color: var(--bg-surface);
+  color: #fff;
 }
 .page-desktop .lz-picker button:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--wash-text);
   outline-offset: 1px;
 }
 @media (prefers-reduced-motion: reduce) {
@@ -823,7 +839,7 @@
   font-weight: 500;
   letter-spacing: 0.02em;
   text-transform: none;
-  color: var(--fg-faint);
+  color: var(--fg-muted);
 }
 
 /* ---------- Tables, tags, pills ---------- */
@@ -832,6 +848,7 @@
   width: 100%;
   border-collapse: collapse;
   font-size: 12px;
+  font-variant-numeric: tabular-nums;
 }
 .stable th,
 .page-desktop table.data th {
@@ -936,7 +953,7 @@
 }
 .type-tag.lift {
   background: var(--accent-subtle);
-  color: var(--accent);
+  color: var(--accent-hover);
 }
 .type-tag.run {
   background: color-mix(in srgb, var(--run) 12%, transparent);
@@ -956,7 +973,7 @@
 }
 .pill.warn {
   background: var(--accent-subtle);
-  color: var(--accent);
+  color: var(--accent-hover);
 }
 .pill.bad {
   background: color-mix(in srgb, var(--danger) 12%, transparent);
@@ -1873,6 +1890,93 @@ li.today .preview-day {
 }
 .page-desktop .chart-headline .figure {
   font-size: 32px;
+}
+
+/* ---------- Night chart panels (S51 Board 3) ---------- */
+/* ChartShell's surface="night" seats the plot in this flush dark panel inside
+ * the card; the card header and the table view stay on the card. The panel is
+ * the same dark in both themes, so everything in it takes an explicit
+ * --wash-* or --chart-night-* color. Nothing inherits --fg, which is dark ink
+ * in the Light theme. The text rules out-rank index.css, which sets DM Mono
+ * and a --fg hover fill on chart text. */
+.page-desktop .chart-night-panel {
+  background: var(--wash-night);
+  border: 1px solid var(--wash-night-border);
+  border-radius: 10px;
+  padding: 14px 12px 10px;
+  color: var(--wash-text);
+}
+.page-desktop .chart-night-panel svg text {
+  fill: var(--chart-night-label);
+}
+.page-desktop .chart-night-panel svg text.nt-strong {
+  fill: var(--chart-night-label-strong);
+}
+.page-desktop .chart-night-panel svg text.nt-value {
+  font-weight: 500;
+}
+.page-desktop .chart-night-panel svg text.nt-name {
+  font-family: var(--font-ui);
+  fill: var(--chart-night-label-strong);
+}
+.page-desktop .chart-night-panel .bar-row:hover > text,
+.page-desktop .chart-night-panel .bar-row:focus-visible > text {
+  fill: var(--chart-night-label-strong);
+}
+.page-desktop .chart-night-panel .bar-row:hover .nt-bar,
+.page-desktop .chart-night-panel .bar-row:focus-visible .nt-bar {
+  filter: brightness(1.18);
+}
+/* Bars: teal once the week reaches the 10-20 band, dim before it, and
+ * today's part is the ember "now" end. */
+.page-desktop .chart-night-panel .nt-bar {
+  fill: var(--wash-teal);
+}
+.page-desktop .chart-night-panel .nt-bar.low {
+  fill: var(--wash-text);
+  fill-opacity: 0.34;
+}
+.page-desktop .chart-night-panel .nt-bar.today {
+  fill: var(--wash-chart-ember);
+}
+.page-desktop .chart-night-panel .chart-headline .figure {
+  color: var(--wash-text);
+}
+.page-desktop .chart-night-panel .kbd-hint,
+.page-desktop .chart-night-panel .chart-legend {
+  color: var(--wash-text-muted);
+}
+.page-desktop .chart-night-panel .chart-legend {
+  margin-top: 12px;
+}
+/* Dark glass tooltip, as the phone's island. */
+.page-desktop .chart-night-panel .plot-tooltip {
+  background: var(--island-fill);
+  border-color: var(--island-rule);
+  box-shadow: var(--island-shadow);
+  color: var(--wash-text);
+}
+.page-desktop .chart-night-panel .plot-tooltip strong {
+  color: var(--wash-text);
+}
+/* uPlot: its legend is HTML under the canvas and its cursor is a dashed
+ * rule, both drawn in the panel's colors. */
+.page-desktop .chart-night-panel .uplot {
+  color: var(--wash-text-muted);
+}
+.page-desktop .chart-night-panel .u-legend .u-value {
+  color: var(--wash-text);
+}
+.page-desktop .chart-night-panel .u-hz .u-cursor-x {
+  border-right: 1px solid color-mix(in srgb, var(--wash-text) 45%, transparent);
+}
+/* In a page's lede the Table toggle floats over the plot's corner (the lede
+ * card has no header row); over a night panel it goes back into the flow
+ * above it, right aligned like the lift cards'. */
+.page-desktop .page-lede .chart-wrap.chart-night .chart-head {
+  position: static;
+  justify-content: flex-end;
+  margin: 0 0 10px;
 }
 
 /* ---------- Settings ---------- */
