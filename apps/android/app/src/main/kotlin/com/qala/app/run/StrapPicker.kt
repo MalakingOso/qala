@@ -16,11 +16,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -30,7 +30,9 @@ import com.qala.design.QalaSheet
 import com.qala.design.QalaText
 import com.qala.design.QalaType
 import com.qala.design.SecondaryButton
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 /** A heart-rate strap found by the scan. */
 data class FoundStrap(val name: String, val address: String)
@@ -49,6 +51,7 @@ fun StrapPicker(open: Boolean, onClose: () -> Unit, onPick: (FoundStrap?) -> Uni
     val context = LocalContext.current
     val found = remember { mutableStateListOf<FoundStrap>() }
     var scanning by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
     DisposableEffect(open) {
         val scanner = if (open && hasScanPermission(context)) context.getSystemService(BluetoothManager::class.java)?.adapter?.bluetoothLeScanner else null
         val callback = object : ScanCallback() {
@@ -57,6 +60,12 @@ fun StrapPicker(open: Boolean, onClose: () -> Unit, onPick: (FoundStrap?) -> Uni
                 if (found.none { it.address == address }) found += FoundStrap(result.scanRecord?.deviceName ?: result.device.name ?: "Heart-rate strap", address)
             }
         }
+        var stopped = false
+        fun stop() {
+            if (!stopped) scanner?.stopScan(callback)
+            stopped = true
+        }
+        var timeout: Job? = null
         if (scanner != null) {
             found.clear()
             scanning = true
@@ -65,16 +74,17 @@ fun StrapPicker(open: Boolean, onClose: () -> Unit, onPick: (FoundStrap?) -> Uni
                 ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).build(),
                 callback,
             )
+            // Ten seconds is long enough to find a strap that is on; the low-latency scan is stopped then, not left running behind the sheet.
+            timeout = scope.launch {
+                delay(10_000)
+                scanning = false
+                stop()
+            }
         }
         onDispose {
+            timeout?.cancel()
             scanning = false
-            scanner?.stopScan(callback)
-        }
-    }
-    LaunchedEffect(open, scanning) {
-        if (open && scanning) {
-            delay(10_000)
-            scanning = false
+            stop()
         }
     }
     QalaSheet(open = open, title = "Heart-rate strap", onClose = onClose) {
