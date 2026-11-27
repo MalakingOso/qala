@@ -1,5 +1,6 @@
 package com.qala.data.sync
 
+import java.util.Locale
 import kotlinx.serialization.Serializable
 
 /**
@@ -12,7 +13,7 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class Hlc(val wallMs: Long, val counter: Int, val nodeId: String) {
-    override fun toString(): String = "%013d-%05d-%s".format(wallMs, counter, nodeId)
+    override fun toString(): String = "%013d-%05d-%s".format(Locale.ROOT, wallMs, counter, nodeId)
 
     companion object {
         /** The clock a node starts from; any real time ticks past it. */

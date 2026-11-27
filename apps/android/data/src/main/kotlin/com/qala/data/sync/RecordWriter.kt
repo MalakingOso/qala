@@ -4,6 +4,7 @@ import com.qala.data.core.QalaCore
 import com.qala.data.db.MetaKeys
 import com.qala.data.db.OutboxEntity
 import java.security.SecureRandom
+import java.util.Locale
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -200,7 +201,7 @@ class RecordWriter(
         /** Random 128-bit hex, never derived from device data. */
         fun randomNodeId(): String {
             val bytes = ByteArray(16).also { SecureRandom().nextBytes(it) }
-            return bytes.joinToString("") { "%02x".format(it) }
+            return bytes.joinToString("") { "%02x".format(Locale.ROOT, it) }
         }
     }
 }
