@@ -376,7 +376,7 @@ private fun ExerciseList(card: DayCard) {
     val perSide = rememberPerSide(rows.flatMap { it.plateWeights }.filterNotNull(), gym.plates, enabled = gym.rest.showPlates && card.view != PlanView.WarmUp)
     Column(Modifier.padding(top = 12.dp)) {
         rows.forEachIndexed { i, e ->
-            // TODO: a tap on an exercise should open it in All exercises (as the mockup's chevron implies) once that route exists.
+            // TODO: a tap on an exercise should open it in All exercises (as the mockup's chevron implies); the route takes no argument yet, so it cannot open on one exercise.
             Row(
                 Modifier
                     .fillMaxWidth()

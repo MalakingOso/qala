@@ -49,7 +49,7 @@ abstract class QalaDatabase : RoomDatabase() {
         fun open(context: Context, name: String = FILE_NAME): QalaDatabase =
             Room.databaseBuilder(context.applicationContext, QalaDatabase::class.java, name).build()
 
-        /** A throwaway database for tests; queries may run on the calling thread. */
+        /** A throwaway database for tests: it lives in memory and is gone when it is closed. */
         fun inMemory(context: Context): QalaDatabase =
             Room.inMemoryDatabaseBuilder(context.applicationContext, QalaDatabase::class.java).build()
     }

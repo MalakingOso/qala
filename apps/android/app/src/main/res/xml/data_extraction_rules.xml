@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Nothing is backed up or transferred yet: the app holds no data. The policy for training records and
-     tracks is decided with the Room and sync work (A3). -->
+<!-- Nothing is backed up or transferred yet: every domain is excluded, though the app now holds training records and
+     run tracks. The policy for them is decided with the Room and sync work (A3). -->
 <data-extraction-rules>
     <cloud-backup>
         <exclude domain="root" />

@@ -79,8 +79,8 @@ private val GroupGap = 14.dp
  * (SettingsRepository: the core's training group for the unit and the days, the lifting groups for the rest) and the
  * lifting flow, the plate calculator and the warm-up read the stored values.
  *
- * Appearance (theme and title font) closes the screen. Left out on purpose: Check-ins (the daily sleep and stress check-in does not exist on Android), Running
- * (run recording is not built) and Coach (its screen shows the status).
+ * Appearance (theme and title font) closes the screen. Left out on purpose: Check-ins (the daily sleep and stress check-in does not exist on Android)
+ * and Coach (its screen shows the status).
  *
  * The groups sit on the cream sheet under a wash head (S51), so they follow the theme. Each tap shows its result at once and hands over to the stored value when it catches up, so two quick taps on a stepper
  * do not undo each other, and the writes go in tap order. Today's skip sheet opens over this screen from Change, and Set

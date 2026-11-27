@@ -23,7 +23,7 @@ import uniffi.qala_ffi.hlcTick
  * A failure from Rust surfaces as [QalaException] (`InvalidInput`, `Evaluation`, `Internal`).
  */
 object QalaCore {
-    /** The request version this client speaks; checked against the library once at startup. */
+    /** The request version this client speaks; [libraryMatches] compares it with the library's (only a test calls that today). */
     const val API_VERSION = 1
 
     @Serializable
