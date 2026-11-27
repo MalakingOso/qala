@@ -13,6 +13,9 @@ import kotlinx.serialization.json.JsonClassDiscriminator
  * Rust has no `deleted` flag: callers drop tombstoned rows before building these.
  */
 
+/** Pounds in a kilogram. */
+const val LbPerKg = 2.2046226218
+
 @Serializable
 enum class WeightUnit {
     @SerialName("lb") Lb,

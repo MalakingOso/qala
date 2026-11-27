@@ -1,5 +1,7 @@
 package com.qala.app.today
 
+import com.qala.app.run.unitM
+import com.qala.data.model.LbPerKg
 import com.qala.data.model.SkipReason
 import com.qala.data.model.WeightUnit
 import java.time.Instant
@@ -16,7 +18,6 @@ import kotlin.math.roundToInt
  * English on purpose (the app's copy is English), so nothing here reads the device locale.
  */
 
-private const val LbPerKg = 2.2046226218
 
 /**
  * The clock time of a record, read at the record's own UTC offset (not the device's): "7:12 am", or "07:12" when
@@ -81,7 +82,7 @@ fun distanceUnit(unit: WeightUnit): String = if (unit == WeightUnit.Lb) "mi" els
 
 /** Meters in the user's distance unit, to one decimal: "4.0". */
 fun distanceIn(unit: WeightUnit, meters: Double): String =
-    oneDecimal(meters / if (unit == WeightUnit.Lb) 1609.344 else 1000.0)
+    oneDecimal(meters / unitM(unit))
 
 /** The short word for why a day is off ("sick"), as the web writes it on a struck day. */
 fun reasonWord(reason: SkipReason): String = when (reason) {

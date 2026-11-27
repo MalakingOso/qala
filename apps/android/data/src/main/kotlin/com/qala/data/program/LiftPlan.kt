@@ -1,11 +1,12 @@
 package com.qala.data.program
 
+import com.qala.data.core.ExerciseMuscles
+import com.qala.data.core.FinishDayResult
 import com.qala.data.core.QalaCore
 import com.qala.data.core.dayName
 import com.qala.data.core.finishDay
-import com.qala.data.core.FinishDayResult
 import com.qala.data.core.runUpdateScript
-import com.qala.data.core.ExerciseMuscles
+import com.qala.data.model.LbPerKg
 import com.qala.data.model.LiftEntryRecord
 import com.qala.data.model.LiftSetRecord
 import com.qala.data.model.WeightUnit
@@ -175,8 +176,8 @@ internal fun weightIn(weight: JsonObject, unit: WeightUnit): Double? {
     val from = weightUnitOf(weight, unit)
     return when {
         from == unit -> v
-        from == WeightUnit.Kg -> v * 2.2046226218
-        else -> v / 2.2046226218
+        from == WeightUnit.Kg -> v * LbPerKg
+        else -> v / LbPerKg
     }
 }
 

@@ -7,7 +7,10 @@ import com.qala.data.model.CueEvery
 import com.qala.data.model.RunningSettings
 import com.qala.data.model.WeightUnit
 
-private const val MileM = 1609.344
+/** Meters in a mile, and in the run distance unit the settings name by weight unit (kg means kilometres). */
+internal const val MileM = 1609.344
+
+internal fun unitM(unit: WeightUnit) = if (unit == WeightUnit.Kg) 1000.0 else MileM
 
 /**
  * The recorder's options from Running in Settings: the cue interval in the lifter's unit (miles with pounds, kilometres with

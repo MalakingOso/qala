@@ -93,7 +93,6 @@ import kotlinx.coroutines.launch
  * rTSS, climb or "for tomorrow", and the guided run is not built (DECISIONS S40).
  */
 
-private const val MileM = 1609.344
 
 /**
  * Which of the three screens, from the run state. [onBack] leaves the route (a saved or discarded run goes back to where it started).
@@ -482,7 +481,6 @@ private fun Splits(run: ProcessedRun, unit: WeightUnit) {
 
 // ---- numbers as text ----
 
-private fun unitM(unit: WeightUnit) = if (unit == WeightUnit.Kg) 1000.0 else MileM
 
 /** Two decimals in the lifter's distance unit: "3.07". */
 fun distanceText(meters: Double, unit: WeightUnit): String = "%.2f".format(java.util.Locale.US, meters / unitM(unit))

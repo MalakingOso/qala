@@ -53,6 +53,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import com.qala.app.run.paceText
+import com.qala.app.run.unitM
 import com.qala.data.core.RunPoint
 import com.qala.data.model.WeightUnit
 import com.qala.design.GlassCard
@@ -519,7 +520,7 @@ private const val RunTop = 26f
 @Composable
 fun RunSeries(points: List<RunPoint>, unit: WeightUnit, modifier: Modifier = Modifier) {
     val km = unit == WeightUnit.Kg
-    val unitM = if (km) 1000.0 else 1609.344
+    val unitM = unitM(unit)
     val word = if (km) "km" else "mi"
     val series = remember(points, unit) {
         listOf(

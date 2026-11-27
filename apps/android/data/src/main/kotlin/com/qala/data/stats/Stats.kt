@@ -11,6 +11,7 @@ import com.qala.data.db.LiftSessionWithEntries
 import com.qala.data.db.RunSessionEntity
 import com.qala.data.engine.EngineInput
 import com.qala.data.engine.EngineSnapshot
+import com.qala.data.model.LbPerKg
 import com.qala.data.model.SessionRecord
 import com.qala.data.model.WeightUnit
 import com.qala.data.model.toRecord
@@ -39,7 +40,6 @@ data class BodyStats(val readiness: List<DatedValue>, val weights: List<DatedVal
 
 object Stats {
     const val RunWeeks = 8
-    private const val KgToLb = 2.2046226218
 
     /** "benchPress" as "Bench Press". */
     fun liftName(id: String): String = id.replace(Regex("([a-z0-9])([A-Z])"), "$1 $2").replaceFirstChar { it.uppercase() }
@@ -81,7 +81,7 @@ object Stats {
     /** The weigh-ins, the last [limit], oldest first, in [unit]. */
     fun weights(input: EngineInput, unit: WeightUnit, limit: Int = 30): List<DatedValue> =
         input.weights.filter { !it.deleted }.sortedBy { it.date }.takeLast(limit)
-            .map { DatedValue(it.date, if (unit == WeightUnit.Lb) it.kg * KgToLb else it.kg) }
+            .map { DatedValue(it.date, if (unit == WeightUnit.Lb) it.kg * LbPerKg else it.kg) }
 
     /**
      * Readiness (0 to 100) at noon on each of the last [days] days up to [today], from the engine's own score as it stood then:

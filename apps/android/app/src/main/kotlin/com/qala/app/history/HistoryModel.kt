@@ -5,6 +5,7 @@ import com.qala.app.today.distanceUnit
 import com.qala.data.db.LiftSessionWithEntries
 import com.qala.data.db.LiftStage
 import com.qala.data.db.RunSessionEntity
+import com.qala.data.model.LbPerKg
 import com.qala.data.model.WeightUnit
 import java.time.Instant
 import java.time.LocalDate
@@ -34,7 +35,6 @@ data class HistoryRow(
 /** One Monday-start week, newest first. */
 data class HistoryWeek(val label: String, val rows: List<HistoryRow>)
 
-private const val LB_PER_KG = 2.2046226218
 
 private fun localDate(startedAtMs: Long, offsetMin: Int): LocalDate =
     Instant.ofEpochMilli(startedAtMs).atOffset(ZoneOffset.ofTotalSeconds(offsetMin * 60)).toLocalDate()
@@ -83,8 +83,8 @@ private fun liftRow(s: LiftSessionWithEntries, dayNames: Map<Int, String>, unit:
         for (set in entry.sets) {
             if (!set.completed || set.warmup) continue
             val w = when {
-                unit == WeightUnit.Lb && set.unit == "kg" -> set.weight * LB_PER_KG
-                unit == WeightUnit.Kg && set.unit == "lb" -> set.weight / LB_PER_KG
+                unit == WeightUnit.Lb && set.unit == "kg" -> set.weight * LbPerKg
+                unit == WeightUnit.Kg && set.unit == "lb" -> set.weight / LbPerKg
                 else -> set.weight
             }
             volume += w * set.reps

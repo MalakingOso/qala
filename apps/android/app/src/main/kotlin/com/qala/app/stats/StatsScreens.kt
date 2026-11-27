@@ -51,6 +51,7 @@ import com.qala.app.charts.DonutSlice
 import com.qala.app.charts.LineChart
 import com.qala.app.charts.ReadinessRing
 import com.qala.app.run.elapsedText
+import com.qala.app.run.unitM
 import com.qala.app.today.againstAverage
 import com.qala.app.today.muscleName
 import com.qala.app.today.scorePoints
@@ -96,13 +97,11 @@ import kotlinx.coroutines.withContext
  * Beamer 85% chart, the recovery body map and fatigue by muscle.
  */
 
-private const val MileM = 1609.344
 
 /** "Nov 9" from a local date. */
 private fun dayLabel(date: String): String =
     LocalDate.parse(date.take(10)).let { "${it.month.getDisplayName(java.time.format.TextStyle.SHORT, Locale.US)} ${it.dayOfMonth}" }
 
-private fun unitMeters(unit: WeightUnit) = if (unit == WeightUnit.Kg) 1000.0 else MileM
 
 @Composable
 private fun Empty(text: String) {
@@ -153,12 +152,12 @@ fun ProgressScreen(snapshot: EngineSnapshot, scroll: ScrollState) {
             }
             if (s.weeklyRunM.any { it.second > 0.0 }) {
                 val km = unit == WeightUnit.Kg
-                val values = s.weeklyRunM.map { it.second / unitMeters(unit) }
+                val values = s.weeklyRunM.map { it.second / unitM(unit) }
                 val word = if (km) "km" else "mi"
                 ChartCard(
                     title = "Running, per week",
                     summary = "Distance run each week for the last ${values.size} weeks, the latest ${trimNumber(values.last())} $word.",
-                    table = s.weeklyRunM.map { dayLabel(it.first) to "${trimNumber(it.second / unitMeters(unit))} $word" },
+                    table = s.weeklyRunM.map { dayLabel(it.first) to "${trimNumber(it.second / unitM(unit))} $word" },
                     surface = ChartSurface.Glass,
                     meta = "${values.size} weeks · ${if (km) "kilometres" else "miles"}",
                 ) { ColumnChart(values, s.weeklyRunM.map { dayLabel(it.first) }, highlightLast = true) }

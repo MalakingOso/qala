@@ -47,14 +47,15 @@ import androidx.compose.ui.unit.sp
 import com.qala.app.LocalAppContainer
 import com.qala.app.plates.PlateFaces
 import com.qala.app.plates.rememberPerSide
-import com.qala.data.core.PlateEntry
-import com.qala.data.model.GymSettings
 import com.qala.app.skip.skipIcon
 import com.qala.app.today.CtaIcon
 import com.qala.app.today.Destination
 import com.qala.app.today.TodayLoad
+import com.qala.app.today.vector
 import com.qala.data.IsoTime
+import com.qala.data.core.PlateEntry
 import com.qala.data.engine.EngineSnapshot
+import com.qala.data.model.GymSettings
 import com.qala.data.plan.PlanWeekData
 import com.qala.design.ChoiceChip
 import com.qala.design.DayTabItem
@@ -287,14 +288,6 @@ private fun DayTab.item() = DayTabItem(
     done = state == TabState.Done,
     struck = state == TabState.Skipped || state == TabState.NotLogged,
 )
-
-private fun CtaIcon.vector() = when (this) {
-    CtaIcon.None -> null
-    CtaIcon.CircleCheck -> QalaIcons.CircleCheck
-    CtaIcon.Flame -> QalaIcons.Flame
-    CtaIcon.Dumbbell -> QalaIcons.Dumbbell
-    CtaIcon.SportShoe -> QalaIcons.SportShoe
-}
 
 /** The selected day on a sheet card. Today's eyebrow is ember, and its button is the one ember fill on the screen. */
 @Composable

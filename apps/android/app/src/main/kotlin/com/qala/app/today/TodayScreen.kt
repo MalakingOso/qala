@@ -405,7 +405,7 @@ private fun PlainNote(load: TodayLoad) {
 
 private val BodyStyle = QalaType.body.copy(fontSize = 13.sp, lineHeight = 19.sp)
 
-private fun CtaIcon.vector() = when (this) {
+internal fun CtaIcon.vector() = when (this) {
     CtaIcon.None -> null
     CtaIcon.CircleCheck -> QalaIcons.CircleCheck
     CtaIcon.Flame -> QalaIcons.Flame

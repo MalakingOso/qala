@@ -15,7 +15,6 @@ import java.util.Locale
 import kotlin.math.floor
 import kotlin.math.roundToInt
 
-private const val MileM = 1609.344
 
 /**
  * What a run says for [event], or null for the events that stay quiet (a step ending, which the next step's start covers). Speech
@@ -54,7 +53,6 @@ private fun stepStart(step: RunExpandedStep, unit: WeightUnit): String {
     return "$kind${amount?.let { ", $it" }.orEmpty()}$target."
 }
 
-private fun unitM(unit: WeightUnit) = if (unit == WeightUnit.Kg) 1000.0 else MileM
 private fun unitWord(unit: WeightUnit) = if (unit == WeightUnit.Kg) "kilometre" else "mile"
 
 private fun number(v: Double): String {
