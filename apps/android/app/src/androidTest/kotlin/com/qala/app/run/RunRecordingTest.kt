@@ -109,6 +109,7 @@ class RunRecordingTest {
         val summary = second.state.value as RunState.Finished
         assertEquals((first.state.value as RunState.Finished).result.distanceM, summary.result.distanceM, 1e-9)
         second.fix(fix(50))
+        second.attach()                           // queued behind the fix on the same actor, so the fix has been handled when this returns
         assertEquals("a fix after Finish is dropped", 30, c.database.runFixDao().fixes(summary.run.id).size)
 
         // Save writes the session under the run's id and closes the record; a later look finds nothing to resume.
