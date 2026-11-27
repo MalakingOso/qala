@@ -16,6 +16,8 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.qala.app.coach.CoachResult
 import com.qala.app.coach.Why
 import com.qala.data.db.QalaDatabase
+import com.qala.data.repo.DeviceClock
+import com.qala.data.repo.RepoEnv
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -26,6 +28,10 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.time.DayOfWeek
+import java.time.ZoneId
+import java.time.ZonedDateTime
+import java.time.temporal.TemporalAdjusters
 
 /**
  * The Coach tab inside the whole app, over the seeded container and a fake server. The A6 gate (docs/android-native.md
@@ -40,6 +46,13 @@ class CoachRouteTest {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val context = ApplicationProvider.getApplicationContext<Context>()
 
+    /** Noon on the next Friday on or after today, in the device zone, held still: the seeded Today names its program only on a lifting day. */
+    private val friday = object : DeviceClock {
+        override val zone: ZoneId = ZoneId.systemDefault()
+        private val noon = ZonedDateTime.now(zone).with(TemporalAdjusters.nextOrSame(DayOfWeek.FRIDAY)).withHour(12).withMinute(0).withSecond(0).withNano(0)
+        override fun nowMs(): Long = noon.toInstant().toEpochMilli()
+    }
+
     @After
     fun close() = scope.cancel()
 
@@ -51,7 +64,7 @@ class CoachRouteTest {
     private fun openTab(name: String) = rule.onNode(hasText(name) and hasClickAction()).performClick()      // the tab, not a page title
 
     private fun showApp(client: FakeCoachClient): AppContainer {
-        val container = AppContainer(QalaDatabase.inMemory(context), scope = scope, seedInDebug = true, coachClient = client).also { it.start() }
+        val container = AppContainer(QalaDatabase.inMemory(context), env = RepoEnv(clock = friday), scope = scope, seedInDebug = true, coachClient = client).also { it.start() }
         rule.setContent { CompositionLocalProvider(LocalAppContainer provides container) { QalaApp() } }
         waitForText("GZCLP DAY", substring = true)          // the seed ends with Today naming the program
         return container
