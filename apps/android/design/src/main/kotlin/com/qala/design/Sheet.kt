@@ -98,7 +98,6 @@ fun QalaSheet(
 
     val c = Qala.colors
     val rail = railColors()
-    val shape = RoundedCornerShape(topStart = SheetRadius, topEnd = SheetRadius)
     Box(modifier.fillMaxSize()) {
         Box(
             Modifier

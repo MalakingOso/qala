@@ -129,8 +129,6 @@ object QalaType {
     val body = ui(14.5f, 1.5f)
     val bodyStrong = ui(14.5f, 1.5f, FontWeight.SemiBold)
 
-    /** A stat in a column: tabular by default, so rows align without a feature flag. */
-    val stat = ui(15f, 1.4f, FontWeight.SemiBold)
     val button = ui(14f, 1.5f, FontWeight.SemiBold)
     val buttonLarge = ui(15f, 1.5f, FontWeight.SemiBold)
 

@@ -89,11 +89,6 @@ val PlateThick: Map<Double, Float> = mapOf(
     10.0 to 0.94f, 5.0 to 0.75f, 2.5 to 0.6f, 1.25 to 0.5f,
 )
 
-private val PlateDiameter: Map<Double, Float> = mapOf(
-    55.0 to 17.7f, 45.0 to 17.7f, 35.0 to 17.7f, 25.0 to 17.7f,
-    10.0 to 17.7f, 5.0 to 9f, 2.5 to 6.5f, 1.25 to 5f,
-)
-
 private val RenderedWeights: List<Double> = PlateThick.keys.sorted()
 
 private val SpriteColors = listOf("red", "blue", "yellow", "green", "white", "charcoal", "silver")

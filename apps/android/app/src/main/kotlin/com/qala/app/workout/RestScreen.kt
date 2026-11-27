@@ -44,7 +44,6 @@ import com.qala.design.PrimaryButton
 import com.qala.design.Qala
 import com.qala.design.QalaIcons
 import com.qala.design.QalaText
-import com.qala.design.QalaTokens
 import com.qala.design.QalaType
 import com.qala.design.SecondaryButton
 import com.qala.design.Wash

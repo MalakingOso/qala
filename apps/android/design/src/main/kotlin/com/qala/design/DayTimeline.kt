@@ -28,7 +28,6 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlin.math.abs
@@ -95,8 +94,6 @@ private val LabelInset = 24.dp
 private val VLabel = QalaType.button.copy(fontSize = 13.sp, lineHeight = 18.sp, shadow = Shadow(Color(0x73000000), Offset(0f, 2f), 8f))
 private val VTime = QalaType.log.copy(fontSize = 10.5.sp, lineHeight = 14.sp)
 
-/** The height of the vertical timeline for [count] stages. */
-fun verticalTimelineHeight(count: Int): Dp = RowPitch * count
 
 /** The vertical list on the film: a dot, a name and a time per stage, joined by a line that is teal as far as the day has got. */
 @Composable

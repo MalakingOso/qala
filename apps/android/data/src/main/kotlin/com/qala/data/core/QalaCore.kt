@@ -9,8 +9,6 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
 import kotlinx.serialization.builtins.serializer
 import uniffi.qala_ffi.QalaException
 import uniffi.qala_ffi.hlcCompare
@@ -91,7 +89,4 @@ object QalaCore {
             ClockedField.serializer(JsonElement.serializer()),
             MergeRequest(local, remote), ::hlcMergeField,
         )
-
-    /** An empty request body with only the version, for calls that take no fields. */
-    internal fun versionOnly(): String = buildJsonObject { put("v", API_VERSION) }.toString()
 }

@@ -5,7 +5,6 @@ import com.qala.data.core.TrendDirection
 import com.qala.data.core.WeightTrend
 import com.qala.data.engine.EngineSnapshot
 import com.qala.data.engine.LatestWeight
-import com.qala.data.model.RunPlanDay
 import com.qala.data.model.RunZone
 import com.qala.data.model.SkipReason
 import com.qala.data.model.WeightUnit

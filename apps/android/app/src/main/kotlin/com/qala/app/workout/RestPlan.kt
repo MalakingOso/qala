@@ -4,8 +4,6 @@ import com.qala.data.core.AutoregDto
 import com.qala.data.core.QalaCore
 import com.qala.data.core.RestCode
 import com.qala.data.core.RestFirstSet
-import com.qala.data.core.RestObservation
-import com.qala.data.core.RestPlanDto
 import com.qala.data.core.RestRequest
 import com.qala.data.core.RestRowDto
 import com.qala.data.core.planRest
