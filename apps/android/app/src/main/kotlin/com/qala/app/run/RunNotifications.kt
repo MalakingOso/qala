@@ -17,7 +17,7 @@ object RunNotifications {
     private const val PausedChannel = "run-paused"
 
     private fun open(context: Context): PendingIntent = PendingIntent.getActivity(
-        context, 3, Intent(context, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+        context, 3, Intent(context, MainActivity::class.java).putExtra(MainActivity.EXTRA_OPEN_RUN, true), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
     )
 
     private fun manager(context: Context): NotificationManager = context.getSystemService(NotificationManager::class.java)

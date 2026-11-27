@@ -25,7 +25,8 @@ class MainActivity : ComponentActivity() {
         container.start(seed = intent.getBooleanExtra(EXTRA_SEED, true))
         // Debug builds only: `--es qala.coach demo|offline|degraded|unauthorized` answers the Coach tab without a server.
         if (BuildConfig.DEBUG) intent.getStringExtra(EXTRA_COACH)?.let(::demoCoachClient)?.let { container.coach.client = it }
-        takeRoute(intent)
+        // A recreated activity (a theme or font-size change) still holds the intent it was launched with; it must not send the app back there.
+        if (savedInstanceState == null) takeRoute(intent)
         // Debug builds only: `--ez qala.startRun true` starts a run without the Start screen, for the emulator's GPS playback.
         if (BuildConfig.DEBUG && intent.getBooleanExtra(EXTRA_START_RUN, false)) {
             container.scope.launch {
@@ -46,8 +47,8 @@ class MainActivity : ComponentActivity() {
 
     private fun takeRoute(intent: Intent) {
         if (intent.getBooleanExtra(EXTRA_OPEN_WORKOUT, false)) container.pendingRoute.value = Route.Workout
-        // Debug builds only: `--ez qala.openRun true` opens the Run screen, for the emulator's GPS playback.
-        if (BuildConfig.DEBUG && intent.getBooleanExtra(EXTRA_OPEN_RUN, false)) container.pendingRoute.value = Route.Run
+        // The run notifications carry this, so a tap opens the Run screen; `--ez qala.openRun true` does the same from adb.
+        if (intent.getBooleanExtra(EXTRA_OPEN_RUN, false)) container.pendingRoute.value = Route.Run
     }
 
     override fun onStart() {
