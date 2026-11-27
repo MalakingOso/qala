@@ -1,6 +1,7 @@
 package com.qala.app.run
 
 import android.Manifest
+import android.app.ForegroundServiceStartNotAllowedException
 import android.app.Service
 import android.content.Context
 import android.content.Intent
@@ -76,7 +77,7 @@ class RunRecordingService : Service() {
             stopSelf()
             return
         }
-        wakeLock = getSystemService(PowerManager::class.java).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "qala:run").apply { acquire() }
+        wakeLock = getSystemService(PowerManager::class.java).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "qala:run").apply { acquire(MaxRunMs) }
         val fixes = LocationFixSource(this)
         source = fixes
         try {
@@ -115,8 +116,17 @@ class RunRecordingService : Service() {
     companion object {
         private const val TAG = "RunService"
 
+        /** The longest a run is held awake for; a service that leaked its lock would otherwise keep the phone up until the battery died. */
+        private const val MaxRunMs = 12 * 60 * 60 * 1000L
+
         fun start(context: Context) {
-            context.startForegroundService(Intent(context, RunRecordingService::class.java))
+            try {
+                context.startForegroundService(Intent(context, RunRecordingService::class.java))
+            } catch (e: ForegroundServiceStartNotAllowedException) {
+                // Reached after a suspension (the recorder was attached first), by which time the app may be in the background.
+                Log.w(TAG, "service start refused: ${e.message}")
+                RunNotifications.postPaused(context)
+            }
         }
 
         fun hasLocationPermission(context: Context): Boolean =
