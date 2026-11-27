@@ -29,6 +29,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.ui.Alignment
@@ -80,6 +81,7 @@ fun QalaSheet(
     body: @Composable ColumnScope.() -> Unit,
 ) {
     val context = LocalContext.current
+    val currentOnClose by rememberUpdatedState(onClose)           // the pointer handlers below outlive a recomposition
     val progress = remember { Animatable(if (open) 1f else 0f) }
     var settled by remember { mutableStateOf(open) }               // composed from the open request until the slide down ends
 
@@ -104,7 +106,7 @@ fun QalaSheet(
                 .fillMaxSize()
                 .graphicsLayer { alpha = progress.value }
                 .background(rail.scrim)
-                .pointerInput(Unit) { detectTapGestures { onClose() } }
+                .pointerInput(Unit) { detectTapGestures { currentOnClose() } }
                 .semantics {
                     role = Role.Button
                     contentDescription = "Close $title"
@@ -146,7 +148,7 @@ fun QalaSheet(
                             var travelled = 0f
                             detectVerticalDragGestures(
                                 onDragStart = { travelled = 0f },
-                                onDragEnd = { if (travelled > 56.dp.toPx()) onClose() },
+                                onDragEnd = { if (travelled > 56.dp.toPx()) currentOnClose() },
                             ) { _, delta -> travelled += delta }
                         }
                         .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 10.dp),
